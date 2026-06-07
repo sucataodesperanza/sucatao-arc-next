@@ -7,12 +7,308 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("user")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model app_entities {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  entity_type String
+  payload     Json     @default("{}")
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model banners {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  image_url     String
+  title         String?
+  description   String?
+  link_url      String?
+  display_order Int      @default(1)
+  active        Boolean  @default(true)
+  created_at    DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at    DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  placements    String[] @default(["landing_highlight", "store_carousel"])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model categories {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  value      String     @unique
+  label      String
+  created_at DateTime?  @default(now()) @db.Timestamp(6)
+  icon_url   String?
+  products   products[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model coupons {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code             String
+  discount         Decimal   @db.Decimal
+  discount_type    String    @default("percentage")
+  usage_count      Int       @default(0)
+  usage_limit      Int?
+  expiration_date  DateTime? @db.Date
+  status           String    @default("active")
+  total_discounted Decimal   @default(0) @db.Decimal
+  created_at       DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at       DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model gallery_images {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String
+  file_path   String?
+  public_url  String?
+  file_size   BigInt?  @default(0)
+  mime_type   String?
+  usage_count Int      @default(0)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model loot_boxes {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  price            Decimal  @db.Decimal
+  image_url        String
+  rarity           String
+  description      String
+  possible_rewards String[] @default([])
+  drop_rates       Json
+  times_opened     Int      @default(0)
+  total_revenue    Decimal  @default(0) @db.Decimal
+  status           String   @default("active")
+  created_at       DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at       DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model orders {
+  id                      String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                 String?   @db.Uuid
+  items                   Json      @default("[]")
+  total                   Decimal   @default(0) @db.Decimal
+  status                  String    @default("pending")
+  payment_method          String?
+  created_at              DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at              DateTime  @default(now()) @db.Timestamptz(6)
+  payment_provider        String?
+  payment_status          String    @default("pending")
+  payment_reference       String?
+  payment_provider_status String?
+  payment_metadata        Json      @default("{}")
+  paid_at                 DateTime? @db.Timestamptz(6)
+  cancelled_at            DateTime? @db.Timestamptz(6)
+  profiles                profiles? @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model partnership_applications {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  streamer_name   String
+  real_name       String
+  email           String
+  phone           String
+  platform        String
+  channel_url     String
+  average_viewers String
+  followers_count String
+  content_type    String
+  stream_schedule String
+  why_partner     String
+  additional_info String?
+  status          String   @default("pending")
+  created_at      DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at      DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model payment_webhook_events {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  provider          String
+  event_id          String
+  payment_reference String?
+  payload           Json     @default("{}")
+  processed_at      DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  created_at        DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model products {
+  id               String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name             String
+  description      String?
+  price            Decimal            @default(0) @db.Decimal
+  image_url        String?
+  category_id      String?            @db.Uuid
+  rarity_id        String?            @db.Uuid
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime           @default(now()) @db.Timestamptz(6)
+  stock            Int                @default(0)
+  featured         Boolean            @default(false)
+  rating           Decimal?           @default(0) @db.Decimal
+  pricing_options  Json               @default("[]")
+  categories       categories?        @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  rarities         rarities?          @relation(fields: [rarity_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  seller_inventory seller_inventory[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model profiles {
+  id                                                 String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at                                         DateTime                  @default(now()) @db.Timestamptz(6)
+  username                                           String?
+  avatar_url                                         String?
+  name                                               String?
+  nick                                               String?
+  phone                                              String?
+  game_id                                            String?
+  is_admin                                           Boolean                   @default(true)
+  is_seller                                          Boolean                   @default(false)
+  updated_at                                         DateTime                  @default(now()) @db.Timestamptz(6)
+  email                                              String?
+  status                                             String                    @default("active")
+  is_banned                                          Boolean                   @default(false)
+  total_spent                                        Decimal                   @default(0) @db.Decimal
+  total_orders                                       Int                       @default(0)
+  orders                                             orders[]
+  seller_inventory                                   seller_inventory[]
+  seller_payouts_seller_payouts_created_byToprofiles seller_payouts[]          @relation("seller_payouts_created_byToprofiles")
+  seller_payouts_seller_payouts_seller_idToprofiles  seller_payouts[]          @relation("seller_payouts_seller_idToprofiles")
+  support_ticket_messages                            support_ticket_messages[]
+  support_tickets                                    support_tickets[]
+  team_members                                       team_members[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model rarities {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  value      String     @unique
+  label      String
+  color      String
+  created_at DateTime?  @default(now()) @db.Timestamp(6)
+  products   products[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model seller_inventory {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seller_id  String   @db.Uuid
+  product_id String   @db.Uuid
+  stock      Int      @default(0)
+  created_at DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  products   products @relation(fields: [product_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profiles   profiles @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model seller_payouts {
+  id                                           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  seller_id                                    String    @db.Uuid
+  amount                                       Decimal   @db.Decimal
+  status                                       String    @default("paid")
+  notes                                        String?
+  paid_at                                      DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  created_at                                   DateTime  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  created_by                                   String?   @db.Uuid
+  profiles_seller_payouts_created_byToprofiles profiles? @relation("seller_payouts_created_byToprofiles", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  profiles_seller_payouts_seller_idToprofiles  profiles  @relation("seller_payouts_seller_idToprofiles", fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model site_visits {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  visitor_id String
+  path       String   @default("/")
+  created_at DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model streamers {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  username     String
+  platform     String
+  avatar_url   String
+  viewer_label String   @default("0")
+  viewer_count Int      @default(0)
+  status       String   @default("offline")
+  url          String
+  created_at   DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at   DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model support_ticket_messages {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  ticket_id       String          @db.Uuid
+  sender_id       String?         @db.Uuid
+  sender_name     String
+  sender_type     String
+  content         String
+  created_at      DateTime        @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  profiles        profiles?       @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  support_tickets support_tickets @relation(fields: [ticket_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model support_tickets {
+  id                      String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id                 String                    @db.Uuid
+  user_name               String
+  user_email              String
+  subject                 String
+  status                  String                    @default("open")
+  priority                String                    @default("medium")
+  created_at              DateTime                  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  last_message_at         DateTime                  @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  support_ticket_messages support_ticket_messages[]
+  profiles                profiles                  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model team_members {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  name        String
+  email       String    @unique
+  avatar_url  String?
+  role        String
+  status      String    @default("active")
+  joined_at   DateTime? @db.Date
+  last_access String?
+  profile_id  String?   @db.Uuid
+  permissions Json?
+  profiles    profiles? @relation(fields: [profile_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model testimonials {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  quote         String
+  meta_label    String?
+  meta_value    String?
+  rating        Int      @default(5)
+  verified      Boolean  @default(true)
+  active        Boolean  @default(true)
+  accent_color  String   @default("#00FFFF")
+  display_order Int      @default(1)
+  created_at    DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
+  updated_at    DateTime @default(dbgenerated("timezone('utc'::text, now())")) @db.Timestamptz(6)
 }
