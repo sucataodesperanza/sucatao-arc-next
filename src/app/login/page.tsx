@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, Suspense } from "react"
+import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Suspense } from "react"
 
 function AuthForm() {
   const router = useRouter()
@@ -50,7 +50,10 @@ function AuthForm() {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { name } },
+        options: {
+          data: { name },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       })
       setLoading(false)
       if (error) {
@@ -129,6 +132,14 @@ function AuthForm() {
             />
           </label>
         </div>
+
+        {mode === "login" && (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <Link href="/recuperar-senha" style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 800, textDecoration: "none" }}>
+              Esqueci minha senha
+            </Link>
+          </div>
+        )}
 
         <div className="marker-form-meta auth-form-meta">
           <span id="authStatusMessage">{status}</span>

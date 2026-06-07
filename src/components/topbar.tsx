@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { NavLinks } from "./nav-links"
+import { LogoutButton } from "./logout-button"
 
 export async function Topbar() {
   const supabase = await createClient()
@@ -27,6 +28,7 @@ export async function Topbar() {
               <Link href="/perfil" style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "0 12px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", display: "flex", alignItems: "center", textDecoration: "none" }}>
                 Perfil
               </Link>
+              <LogoutButton />
             </>
           ) : (
             <>
