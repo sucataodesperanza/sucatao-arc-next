@@ -21,22 +21,25 @@ type RawInventoryRow = {
     description: string | null
     price: number
     image_url: string | null
+    featured: boolean | null
     pricing_options: unknown
     rarities: { id: string; label: string; color: string } | null
     categories: { id: string; label: string } | null
   }
 }
 
-function parseInventory(rows: RawInventoryRow[]): SellerProduct[] {
+function parseInventory(rows: RawInventoryRow[], sellerId: string): SellerProduct[] {
   return rows.map(row => ({
     inventoryId: row.id,
     stock: row.stock,
+    sellerId,
     product: {
       id: row.products.id,
       name: row.products.name,
       description: row.products.description,
       price: Number(row.products.price),
       image_url: row.products.image_url,
+      featured: !!row.products.featured,
       pricing_options: Array.isArray(row.products.pricing_options) ? row.products.pricing_options as SellerProduct["product"]["pricing_options"] : [],
       rarity: row.products.rarities ?? null,
       category: row.products.categories ?? null,
@@ -60,7 +63,7 @@ export default async function SellerProfilePage({
       .single<SellerProfile>(),
     supabase
       .from("seller_inventory")
-      .select("id, stock, products ( id, name, description, price, image_url, pricing_options, rarities ( id, label, color ), categories ( id, label ) )")
+      .select("id, stock, products ( id, name, description, price, image_url, featured, pricing_options, rarities ( id, label, color ), categories ( id, label ) )")
       .eq("seller_id", id)
       .gt("stock", 0)
       .returns<RawInventoryRow[]>(),
@@ -68,7 +71,7 @@ export default async function SellerProfilePage({
 
   if (!profile || !profile.is_admin) notFound()
 
-  const inventory = parseInventory(inventoryRows ?? [])
+  const inventory = parseInventory(inventoryRows ?? [], id)
   const displayName = profile.name ?? profile.nick ?? "Vendedor"
   const initial = displayName[0]?.toUpperCase() ?? "S"
   const since = new Date(profile.created_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
