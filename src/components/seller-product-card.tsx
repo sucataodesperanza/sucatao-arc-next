@@ -11,6 +11,16 @@ export type PricingOption = {
   isDefault?: boolean
 }
 
+export type ArcItemSnapshot = {
+  value?: number
+  weightKg?: number
+  stackSize?: number
+  isWeapon?: boolean
+  isCraftable?: boolean
+  isBlueprint?: boolean
+  isRecyclable?: boolean
+}
+
 export type SellerProduct = {
   inventoryId: string
   stock: number
@@ -24,6 +34,7 @@ export type SellerProduct = {
     pricing_options: PricingOption[]
     rarity: { id: string; label: string; color: string } | null
     category: { id: string; label: string } | null
+    arcItem?: ArcItemSnapshot
   }
   sellerId: string
 }
@@ -36,13 +47,14 @@ export function SellerProductCard({ item }: { item: SellerProduct }) {
   const rarityColor = rarity?.color ?? "#64748b"
   const defaultOption = product.pricing_options.find(o => o.isDefault) ?? product.pricing_options[0]
   const displayPrice = defaultOption?.price ?? product.price
+  const arcValue = product.arcItem?.value
 
   return (
     <>
       <article
         style={{
           background: "var(--surface-2, #0d1117)",
-          border: `1px solid rgba(255,255,255,0.07)`,
+          border: "1px solid rgba(255,255,255,0.07)",
           display: "flex",
           flexDirection: "column",
           cursor: "pointer",
@@ -52,12 +64,12 @@ export function SellerProductCard({ item }: { item: SellerProduct }) {
         onClick={() => setOpen(true)}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 8px", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-          <span style={{ fontSize: "10px", fontWeight: 950, textTransform: "uppercase", color: rarityColor, background: `${rarityColor}20`, padding: "2px 8px", letterSpacing: "0.05em" }}>
-            {rarity?.label?.toUpperCase() ?? "COMUM"}
+          <span style={{ fontSize: "10px", fontWeight: 950, textTransform: "uppercase", color: rarityColor, background: `${rarityColor}28`, padding: "2px 8px", letterSpacing: "0.05em" }}>
+            {rarity?.label ?? "Comum"}
           </span>
           {category && (
             <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.05em" }}>
-              {category.label.toUpperCase()}
+              {category.label}
             </span>
           )}
         </div>
@@ -87,7 +99,7 @@ export function SellerProductCard({ item }: { item: SellerProduct }) {
 
         <div style={{ padding: "10px 12px", flex: 1, display: "flex", flexDirection: "column", gap: "8px" }}>
           <div>
-            <strong style={{ fontSize: "14px", fontWeight: 950, textTransform: "uppercase", display: "block", lineHeight: 1.2 }}>{product.name}</strong>
+            <strong style={{ fontSize: "14px", fontWeight: 950, display: "block", lineHeight: 1.2 }}>{product.name}</strong>
             {category && (
               <span style={{ fontSize: "11px", color: "var(--muted)", fontWeight: 800, textTransform: "uppercase" }}>{category.label}</span>
             )}
@@ -100,7 +112,9 @@ export function SellerProductCard({ item }: { item: SellerProduct }) {
             </div>
             <div>
               <p style={{ margin: "0 0 2px", fontSize: "9px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em" }}>Pontos do site</p>
-              <strong style={{ fontSize: "15px", color: "var(--muted)", opacity: 0.5 }}>—</strong>
+              <strong style={{ fontSize: "15px", color: arcValue != null ? "var(--cyan)" : "var(--muted)", opacity: arcValue != null ? 1 : 0.5 }}>
+                {arcValue != null ? arcValue.toLocaleString("pt-BR") : "—"}
+              </strong>
             </div>
           </div>
 

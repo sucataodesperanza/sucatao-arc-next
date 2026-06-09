@@ -1,6 +1,34 @@
 import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { SellerProductCard, type SellerProduct } from "@/components/seller-product-card"
+import arcData from "@/data/arc-data"
+import { SellerProductCard, type SellerProduct, type ArcItemSnapshot } from "@/components/seller-product-card"
+
+type ArcDataItem = {
+  id: string; name: string; nameEn?: string
+  value?: number; weightKg?: number; stackSize?: number
+  isWeapon?: boolean; isCraftable?: boolean; isBlueprint?: boolean; isRecyclable?: boolean
+}
+
+const arcItems = (arcData as unknown as { items: ArcDataItem[] }).items
+
+function normalizeText(s: string) {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim()
+}
+
+function findArcItem(name: string): ArcItemSnapshot | undefined {
+  const normalized = normalizeText(name)
+  const found = arcItems.find(i => normalizeText(i.name) === normalized)
+  if (!found) return undefined
+  return {
+    value: found.value,
+    weightKg: found.weightKg,
+    stackSize: found.stackSize,
+    isWeapon: found.isWeapon,
+    isCraftable: found.isCraftable,
+    isBlueprint: found.isBlueprint,
+    isRecyclable: found.isRecyclable,
+  }
+}
 
 type SellerProfile = {
   id: string
@@ -40,9 +68,12 @@ function parseInventory(rows: RawInventoryRow[], sellerId: string): SellerProduc
       price: Number(row.products.price),
       image_url: row.products.image_url,
       featured: !!row.products.featured,
-      pricing_options: Array.isArray(row.products.pricing_options) ? row.products.pricing_options as SellerProduct["product"]["pricing_options"] : [],
+      pricing_options: Array.isArray(row.products.pricing_options)
+        ? (row.products.pricing_options as SellerProduct["product"]["pricing_options"])
+        : [],
       rarity: row.products.rarities ?? null,
       category: row.products.categories ?? null,
+      arcItem: findArcItem(row.products.name),
     },
   }))
 }

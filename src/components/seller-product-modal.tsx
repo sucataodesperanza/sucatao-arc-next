@@ -19,6 +19,7 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
   const { product, stock } = item
   const rarity = product.rarity
   const category = product.category
+  const arc = product.arcItem
 
   const defaultOption = product.pricing_options.find(o => o.isDefault) ?? product.pricing_options[0]
   const [selectedOption, setSelectedOption] = useState(defaultOption)
@@ -79,12 +80,25 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
   const rarityLabel = rarity?.label?.toUpperCase() ?? "COMUM"
   const categoryLabel = category?.label?.toUpperCase() ?? ""
 
+  const displayPrice = selectedOption?.price ?? product.price
+
+  const peso = arc?.weightKg
+  const stack = arc?.stackSize
+  const porKg = peso && displayPrice ? Math.round(displayPrice / peso) : null
+
+  const tags: string[] = []
+  if (category?.label) tags.push(category.label.toUpperCase())
+  if (arc?.isWeapon) tags.push("ARMA")
+  if (arc?.isCraftable) tags.push("CRAFTÁVEL")
+  if (porKg != null) tags.push(`${porKg.toLocaleString("pt-BR")} POR KG`)
+  if (product.featured) tags.push("DESTAQUE DO MARKETPLACE")
+
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 100, display: "grid", placeItems: "center", padding: "16px", background: "rgba(2,5,10,0.92)", backdropFilter: "blur(12px)" }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div style={{ background: "var(--surface-2, #0d1117)", border: "1px solid var(--line)", width: "100%", maxWidth: "680px", display: "flex", flexDirection: "column", gap: 0, position: "relative" }}>
+      <div style={{ background: "var(--surface-2, #0d1117)", border: "1px solid var(--line)", width: "100%", maxWidth: "680px", display: "flex", flexDirection: "column", position: "relative" }}>
         <button
           type="button"
           onClick={onClose}
@@ -93,7 +107,7 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
         >×</button>
 
         <div style={{ display: "flex", gap: 0, minHeight: "280px" }}>
-          <div style={{ width: "220px", flexShrink: 0, background: "rgba(0,0,0,0.3)", display: "grid", placeItems: "center", padding: "24px" }}>
+          <div style={{ width: "220px", flexShrink: 0, background: "rgba(0,0,0,0.35)", display: "grid", placeItems: "center", padding: "24px" }}>
             {product.image_url ? (
               <img src={product.image_url} alt={product.name} style={{ width: "100%", maxHeight: "180px", objectFit: "contain" }} />
             ) : (
@@ -103,7 +117,7 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
             )}
           </div>
 
-          <div style={{ flex: 1, padding: "24px 24px 24px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+          <div style={{ flex: 1, padding: "24px 24px 20px 20px", display: "flex", flexDirection: "column", gap: "12px" }}>
             <div>
               <p style={{ margin: "0 0 6px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", color: rarityColor }}>
                 {rarityLabel}{categoryLabel ? ` // ${categoryLabel}` : ""}
@@ -117,14 +131,14 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {[
-                { label: "VALOR REAL", value: `${selectedOption?.price?.toLocaleString("pt-BR") ?? "—"}` },
-                { label: "PONTOS DO SITE", value: "Em breve" },
-                { label: "ESTOQUE", value: String(stock) },
-                { label: "OPÇÃO", value: selectedOption?.label ?? "—" },
-              ].map(({ label, value }) => (
-                <div key={label} style={{ background: "rgba(0,0,0,0.3)", padding: "10px 12px", border: "1px solid var(--line-soft, rgba(255,255,255,0.06))" }}>
+                { label: "VALOR REAL", value: displayPrice.toLocaleString("pt-BR"), color: "var(--yellow)" },
+                { label: "PONTOS DO SITE", value: arc?.value != null ? arc.value.toLocaleString("pt-BR") : "—", color: arc?.value != null ? "var(--cyan)" : "var(--muted)" },
+                { label: "PESO", value: peso != null ? `${peso} kg` : "—", color: "var(--text)" },
+                { label: "STACK", value: stack != null ? String(stack) : "—", color: "var(--text)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ background: "rgba(0,0,0,0.3)", padding: "10px 12px", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <p style={{ margin: "0 0 4px", fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)" }}>{label}</p>
-                  <strong style={{ fontSize: "16px", color: label === "VALOR REAL" ? "var(--yellow)" : label === "PONTOS DO SITE" ? "var(--muted)" : "var(--cyan)" }}>{value}</strong>
+                  <strong style={{ fontSize: "16px", color }}>{value}</strong>
                 </div>
               ))}
             </div>
@@ -146,7 +160,7 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
           </div>
         </div>
 
-        <div style={{ padding: "16px 24px", borderTop: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ padding: "16px 24px", borderTop: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: "10px" }}>
           {!done && (
             <div style={{ display: "flex", gap: "8px" }}>
               <button
@@ -167,12 +181,24 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
             </div>
           )}
 
-          {profile?.game_id && (
-            <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)", fontWeight: 800 }}>
-              Game ID: <strong style={{ color: "var(--text)" }}>{profile.game_id}</strong>
-              {" // "}Estoque: <strong style={{ color: "var(--text)" }}>{stock}</strong>
-            </p>
+          {tags.length > 0 && (
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+              {tags.map(tag => (
+                <span key={tag} style={{ fontSize: "10px", fontWeight: 950, textTransform: "uppercase", color: "var(--muted)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", padding: "2px 8px", letterSpacing: "0.04em" }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
           )}
+
+          <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)", fontWeight: 800 }}>
+            Saldo real{" "}
+            <strong style={{ color: "var(--text)" }}>—</strong>
+            {" // "}Pontos{" "}
+            <strong style={{ color: "var(--text)" }}>—</strong>
+            {" // "}Estoque{" "}
+            <strong style={{ color: stock <= 3 ? "var(--yellow)" : "var(--text)" }}>{stock}</strong>
+          </p>
 
           {!userId && (
             <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)", fontWeight: 800 }}>
