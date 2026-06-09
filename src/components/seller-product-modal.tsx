@@ -131,14 +131,14 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               {[
-                { label: "VALOR REAL", value: displayPrice.toLocaleString("pt-BR"), color: "var(--yellow)" },
-                { label: "PONTOS DO SITE", value: arc?.value != null ? arc.value.toLocaleString("pt-BR") : "—", color: arc?.value != null ? "var(--cyan)" : "var(--muted)" },
-                { label: "PESO", value: peso != null ? `${peso} kg` : "—", color: "var(--text)" },
-                { label: "STACK", value: stack != null ? String(stack) : "—", color: "var(--text)" },
-              ].map(({ label, value, color }) => (
+                { label: "VALOR REAL", value: displayPrice.toLocaleString("pt-BR"), active: true },
+                { label: "PONTOS DO SITE", value: arc?.value != null ? arc.value.toLocaleString("pt-BR") : "—", active: arc?.value != null },
+                { label: "PESO", value: peso != null ? `${peso} kg` : "—", active: peso != null },
+                { label: "STACK", value: stack != null ? String(stack) : "—", active: stack != null },
+              ].map(({ label, value, active }) => (
                 <div key={label} style={{ background: "rgba(0,0,0,0.3)", padding: "10px 12px", border: "1px solid rgba(255,255,255,0.06)" }}>
                   <p style={{ margin: "0 0 4px", fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)" }}>{label}</p>
-                  <strong style={{ fontSize: "16px", color }}>{value}</strong>
+                  <strong style={{ fontSize: "16px", color: active ? "var(--yellow)" : "var(--muted)" }}>{value}</strong>
                 </div>
               ))}
             </div>
@@ -191,18 +191,15 @@ export function SellerProductModal({ item, sellerId, onClose }: Props) {
             </div>
           )}
 
-          <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)", fontWeight: 800 }}>
-            Saldo real{" "}
-            <strong style={{ color: "var(--text)" }}>—</strong>
-            {" // "}Pontos{" "}
-            <strong style={{ color: "var(--text)" }}>—</strong>
-            {" // "}Estoque{" "}
-            <strong style={{ color: stock <= 3 ? "var(--yellow)" : "var(--text)" }}>{stock}</strong>
-          </p>
-
-          {!userId && (
+          {userId ? (
             <p style={{ margin: 0, fontSize: "12px", color: "var(--muted)", fontWeight: 800 }}>
-              <a href="/login" style={{ color: "var(--cyan)", textDecoration: "none" }}>Entre na sua conta</a> para comprar.
+              Saldo real{" "}<strong style={{ color: "var(--text)" }}>—</strong>
+              {" // "}Pontos{" "}<strong style={{ color: "var(--text)" }}>—</strong>
+              {" // "}Estoque{" "}<strong style={{ color: stock <= 3 ? "var(--yellow)" : "var(--text)" }}>{stock}</strong>
+            </p>
+          ) : (
+            <p style={{ margin: 0, fontSize: "13px", color: "var(--muted)" }}>
+              Entre em uma conta local para salvar compras e resgates.
             </p>
           )}
 

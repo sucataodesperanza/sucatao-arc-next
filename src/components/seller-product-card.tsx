@@ -105,22 +105,17 @@ export function SellerProductCard({ item }: { item: SellerProduct }) {
             )}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: "9px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em" }}>Valor Real</p>
-              <strong style={{ fontSize: "15px", color: "var(--yellow)" }}>{displayPrice.toLocaleString("pt-BR")}</strong>
-            </div>
-            <div>
-              <p style={{ margin: "0 0 2px", fontSize: "9px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em" }}>Pontos do site</p>
-              <strong style={{ fontSize: "15px", color: arcValue != null ? "var(--cyan)" : "var(--muted)", opacity: arcValue != null ? 1 : 0.5 }}>
-                {arcValue != null ? arcValue.toLocaleString("pt-BR") : "—"}
-              </strong>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "9px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em" }}>Estoque</span>
-            <strong style={{ fontSize: "14px", color: stock <= 3 ? "var(--yellow)" : "var(--text)" }}>{stock}</strong>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            {[
+              { label: "Valor Real", value: displayPrice.toLocaleString("pt-BR"), color: "var(--yellow)" },
+              { label: "Pontos do site", value: arcValue != null ? arcValue.toLocaleString("pt-BR") : "—", color: arcValue != null ? "var(--yellow)" : "var(--muted)" },
+              { label: "Estoque", value: String(stock), color: "var(--text)" },
+            ].map(({ label, value, color }) => (
+              <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "10px", fontWeight: 800, textTransform: "uppercase", color: "var(--muted)", letterSpacing: "0.06em" }}>{label}</span>
+                <strong style={{ fontSize: "14px", color }}>{value}</strong>
+              </div>
+            ))}
           </div>
         </div>
 
