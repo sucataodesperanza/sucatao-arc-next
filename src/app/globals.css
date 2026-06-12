@@ -753,7 +753,7 @@ select {
   transform: rotate(-135deg) translateX(-1px);
 }
 
-.admin-rail-nav button {
+.admin-nav-link {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -767,22 +767,23 @@ select {
   font-size: 13px;
   font-weight: 850;
   text-align: left;
+  text-decoration: none;
   transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease, transform 0.18s ease;
 }
 
-.admin-rail-nav button > span:nth-child(2) {
+.admin-nav-link > span:nth-child(2) {
   flex: 1 1 auto;
 }
 
-.admin-rail-nav button:hover,
-.admin-rail-nav button:focus-visible {
+.admin-nav-link:hover,
+.admin-nav-link:focus-visible {
   border-color: rgba(0, 217, 255, 0.08);
   background: rgba(0, 217, 255, 0.06);
   color: #dff7ff;
   outline: 0;
 }
 
-.admin-rail-nav button.active {
+.admin-nav-link.active {
   border-color: rgba(0, 217, 255, 0.08);
   background: rgba(0, 217, 255, 0.12);
   color: var(--cyan);
