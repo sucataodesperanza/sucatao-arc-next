@@ -21,6 +21,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
         <nav style={{ display: "flex", gap: "8px" }}>
           <Link
+            href="/admin/pedidos"
+            style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 14px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", textDecoration: "none" }}
+          >
+            Pedidos
+          </Link>
+          <Link
             href="/admin/catalogo"
             style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 14px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", textDecoration: "none" }}
           >
