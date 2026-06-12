@@ -15,14 +15,26 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient()
 
+  const { data: stockRows, error: stockError } = await supabase
+    .from("stock_items")
+    .select("catalog_item_id")
+
+  if (stockError) {
+    console.error("api/admin/stock/available stock error:", stockError)
+    return NextResponse.json({ error: "Erro ao carregar estoque." }, { status: 500 })
+  }
+
+  const stockedIds = (stockRows ?? []).map(r => r.catalog_item_id)
+
   let query = supabase
-    .from("catalog_items_unstocked")
+    .from("catalog_items")
     .select("id, name, item_type, rarity, icon_url", { count: "exact" })
     .eq("active", true)
     .order("name", { ascending: true })
     .range(from, to)
 
   if (q) query = query.ilike("name", `%${q}%`)
+  if (stockedIds.length > 0) query = query.not("id", "in", `(${stockedIds.join(",")})`)
 
   const { data, error, count } = await query
 

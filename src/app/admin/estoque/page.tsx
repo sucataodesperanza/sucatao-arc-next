@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback } from "react"
+import { Plus } from "lucide-react"
 import { getItemTypeLabel, getRarityLabel } from "@/lib/catalog"
 
 type StockItem = {
@@ -41,6 +42,7 @@ export default function AdminEstoquePage() {
   const [q, setQ] = useState("")
   const [loading, setLoading] = useState(false)
 
+  const [addModalOpen, setAddModalOpen] = useState(false)
   const [availableQuery, setAvailableQuery] = useState("")
   const [availableItems, setAvailableItems] = useState<AvailableItem[]>([])
   const [availableTotal, setAvailableTotal] = useState(0)
@@ -77,9 +79,16 @@ export default function AdminEstoquePage() {
   }, [availablePage, availableQuery])
 
   useEffect(() => {
+    if (!addModalOpen) return
     const timeout = setTimeout(loadAvailable, 300)
     return () => clearTimeout(timeout)
-  }, [loadAvailable])
+  }, [addModalOpen, loadAvailable])
+
+  function openAddModal() {
+    setAvailableQuery("")
+    setAvailablePage(1)
+    setAddModalOpen(true)
+  }
 
   async function patchItem(id: string, patch: Record<string, unknown>) {
     setItems(prev => prev.map(it => it.catalog_item_id === id ? { ...it, ...patch } as StockItem : it))
@@ -111,47 +120,6 @@ export default function AdminEstoquePage() {
 
   return (
     <>
-      <div className="utility-panel" style={{ marginBottom: "16px" }}>
-        <div className="utility-panel-head">
-          <strong>Adicionar item ao estoque</strong>
-        </div>
-        <input
-          type="search"
-          placeholder="Buscar no catálogo por nome..."
-          value={availableQuery}
-          onChange={e => { setAvailablePage(1); setAvailableQuery(e.target.value) }}
-          style={{ ...inputStyle, width: "100%", marginBottom: "10px" }}
-        />
-        {searchingAvailable ? (
-          <p style={{ color: "var(--muted)", fontSize: "12px" }}>Buscando...</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-            {availableItems.map(item => (
-              <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                {item.icon_url && <img src={item.icon_url} alt={item.name} style={{ width: "24px", height: "24px", objectFit: "contain" }} />}
-                <span style={{ flex: 1, fontSize: "12px", fontWeight: 800 }}>{item.name}</span>
-                <span style={{ fontSize: "11px", color: "var(--muted)" }}>{getItemTypeLabel(item.item_type)}</span>
-                <span style={{ fontSize: "11px", color: "var(--muted)" }}>{getRarityLabel(item.rarity)}</span>
-                <button type="button" onClick={() => addItem(item)} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)" }}>
-                  Adicionar
-                </button>
-              </div>
-            ))}
-            {availableItems.length === 0 && (
-              <p style={{ color: "var(--muted)", fontSize: "12px" }}>Nenhum item disponível para adicionar.</p>
-            )}
-          </div>
-        )}
-
-        {availableTotal > 0 && (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
-            <button type="button" onClick={() => setAvailablePage(p => Math.max(1, p - 1))} disabled={availablePage <= 1} style={{ ...btnStyle, opacity: availablePage <= 1 ? 0.4 : 1 }}>Anterior</button>
-            <span style={{ fontSize: "12px", color: "var(--muted)" }}>Página {availablePage} de {availableTotalPages} ({availableTotal} itens)</span>
-            <button type="button" onClick={() => setAvailablePage(p => Math.min(availableTotalPages, p + 1))} disabled={availablePage >= availableTotalPages} style={{ ...btnStyle, opacity: availablePage >= availableTotalPages ? 0.4 : 1 }}>Próxima</button>
-          </div>
-        )}
-      </div>
-
       <div className="utility-panel" style={{ marginBottom: "16px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
         <input
           type="search"
@@ -160,6 +128,9 @@ export default function AdminEstoquePage() {
           onChange={e => { setPage(1); setQ(e.target.value) }}
           style={{ ...inputStyle, flex: "1 1 220px" }}
         />
+        <button type="button" onClick={openAddModal} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+          <Plus size={14} /> Adicionar item ao estoque
+        </button>
       </div>
 
       <div className="utility-panel">
@@ -244,6 +215,58 @@ export default function AdminEstoquePage() {
           <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} style={{ ...btnStyle, opacity: page >= totalPages ? 0.4 : 1 }}>Próxima</button>
         </div>
       </div>
+
+      {addModalOpen && (
+        <div className="modal-backdrop" onClick={() => setAddModalOpen(false)}>
+          <div className="marker-modal" style={{ maxWidth: "560px" }} onClick={e => e.stopPropagation()}>
+            <p className="modal-kicker">Estoque</p>
+            <h2 style={{ fontSize: "20px" }}>Adicionar item ao estoque</h2>
+
+            <input
+              type="search"
+              placeholder="Buscar no catálogo por nome..."
+              value={availableQuery}
+              onChange={e => { setAvailablePage(1); setAvailableQuery(e.target.value) }}
+              autoFocus
+              style={{ ...inputStyle, width: "100%" }}
+            />
+
+            {searchingAvailable ? (
+              <p style={{ color: "var(--muted)", fontSize: "12px" }}>Buscando...</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", maxHeight: "320px", overflowY: "auto" }}>
+                {availableItems.map(item => (
+                  <div key={item.id} style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    {item.icon_url && <img src={item.icon_url} alt={item.name} style={{ width: "24px", height: "24px", objectFit: "contain" }} />}
+                    <span style={{ flex: 1, fontSize: "12px", fontWeight: 800 }}>{item.name}</span>
+                    <span style={{ fontSize: "11px", color: "var(--muted)" }}>{getItemTypeLabel(item.item_type)}</span>
+                    <span style={{ fontSize: "11px", color: "var(--muted)" }}>{getRarityLabel(item.rarity)}</span>
+                    <button type="button" onClick={() => addItem(item)} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)" }}>
+                      Adicionar
+                    </button>
+                  </div>
+                ))}
+                {availableItems.length === 0 && (
+                  <p style={{ color: "var(--muted)", fontSize: "12px" }}>Nenhum item disponível para adicionar.</p>
+                )}
+              </div>
+            )}
+
+            {availableTotal > 0 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <button type="button" onClick={() => setAvailablePage(p => Math.max(1, p - 1))} disabled={availablePage <= 1} style={{ ...btnStyle, opacity: availablePage <= 1 ? 0.4 : 1 }}>Anterior</button>
+                <span style={{ fontSize: "12px", color: "var(--muted)" }}>Página {availablePage} de {availableTotalPages} ({availableTotal} itens)</span>
+                <button type="button" onClick={() => setAvailablePage(p => Math.min(availableTotalPages, p + 1))} disabled={availablePage >= availableTotalPages} style={{ ...btnStyle, opacity: availablePage >= availableTotalPages ? 0.4 : 1 }}>Próxima</button>
+              </div>
+            )}
+
+            <div className="marker-form-meta">
+              <span />
+              <button type="button" onClick={() => setAddModalOpen(false)} style={btnStyle}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
