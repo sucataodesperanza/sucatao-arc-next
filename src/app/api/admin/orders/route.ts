@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("orders")
-    .select("id, user_id, total, status, payment_method, payment_status, payment_provider, payment_provider_status, payment_reference, items, created_at, paid_at, cancelled_at", { count: "exact" })
+    .select("id, user_id, total, status, payment_method, payment_status, items, created_at, paid_at, cancelled_at", { count: "exact" })
     .order("created_at", { ascending: false })
 
   if (status !== "all") query = query.eq("status", status)
@@ -59,25 +59,12 @@ export async function GET(request: NextRequest) {
     }))
   }
 
-  const refs = orders.map(o => o.payment_reference).filter((r): r is string => Boolean(r))
-  const webhookSeenRefs = new Set<string>()
-  if (refs.length) {
-    const { data: events } = await supabase.from("payment_webhook_events").select("payment_reference").in("payment_reference", refs)
-    for (const e of events ?? []) if (e.payment_reference) webhookSeenRefs.add(e.payment_reference)
-  }
-
   const items = orders.map(order => {
     const customer = order.user_id ? customers.get(order.user_id) : undefined
-    const webhookPending = Boolean(
-      order.payment_reference &&
-      (order.payment_status === "pending" || order.payment_status === "processing") &&
-      !webhookSeenRefs.has(order.payment_reference)
-    )
     return {
       ...order,
       customer_name: customer?.name ?? null,
       customer_email: customer?.email ?? null,
-      webhook_pending: webhookPending,
     }
   })
 

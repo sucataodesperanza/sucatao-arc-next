@@ -21,16 +21,12 @@ type Order = {
   status: string
   payment_method: string | null
   payment_status: string
-  payment_provider: string | null
-  payment_provider_status: string | null
-  payment_reference: string | null
   items: OrderItem[]
   created_at: string
   paid_at: string | null
   cancelled_at: string | null
   customer_name: string | null
   customer_email: string | null
-  webhook_pending: boolean
 }
 
 const PAGE_SIZE = 20
@@ -73,13 +69,6 @@ function formatNumber(n: number | undefined) {
 
 function formatDate(s: string) {
   return new Date(s).toLocaleString("pt-BR")
-}
-
-function formatElapsed(s: string) {
-  const minutes = Math.max(0, Math.floor((Date.now() - new Date(s).getTime()) / 60000))
-  const hours = Math.floor(minutes / 60)
-  const mins = minutes % 60
-  return hours > 0 ? `${hours}h${mins}m` : `${mins}m`
 }
 
 function orderTotal(order: Order) {
@@ -191,23 +180,9 @@ export default function AdminPedidosPage() {
                         <span style={badgeStyle(paymentStatusColors[order.payment_status] ?? "var(--muted)")}>
                           {paymentStatusLabels[order.payment_status] ?? order.payment_status}
                         </span>
-                        {order.webhook_pending && (
-                          <span style={badgeStyle("var(--orange)")}>
-                            Webhook pendente · {formatElapsed(order.created_at)}
-                          </span>
-                        )}
                         <span style={{ color: "var(--text)" }}>
                           {paymentMethodLabels[order.payment_method ?? ""] ?? order.payment_method ?? "—"}
                         </span>
-                        {order.payment_provider && (
-                          <span style={{ color: "var(--muted)" }}>{order.payment_provider}</span>
-                        )}
-                        {order.payment_provider_status && (
-                          <span style={{ color: "var(--muted)" }}>Status do provedor: {order.payment_provider_status}</span>
-                        )}
-                        {order.payment_reference && (
-                          <span style={{ color: "var(--muted)", wordBreak: "break-all" }}>{order.payment_reference}</span>
-                        )}
                       </div>
                     </td>
                     <td style={{ padding: "8px" }}>
