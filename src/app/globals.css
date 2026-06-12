@@ -651,6 +651,7 @@ select {
   grid-template-columns: 248px minmax(0, 1fr);
   gap: 24px;
   margin-top: 0;
+  min-height: calc(100vh - 48px);
 }
 
 .admin-rail,
@@ -867,8 +868,13 @@ select {
 }
 
 .admin-main {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 24px;
+}
+
+.admin-main > *:last-child {
+  flex: 1;
 }
 
 .admin-page-head,
@@ -4341,6 +4347,10 @@ button.utility-chip:focus-visible {
   .admin-tertiary-grid,
   .admin-workspace-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-shell {
+    min-height: calc(100vh - 40px);
   }
 
   .admin-content-grid {
