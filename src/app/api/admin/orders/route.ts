@@ -2,6 +2,34 @@ import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 
+const PENDING_PAYMENT_TIMEOUT_MS = 60 * 60 * 1000
+
+async function cancelExpiredPendingOrders(supabase: ReturnType<typeof createAdminClient>) {
+  const cutoff = new Date(Date.now() - PENDING_PAYMENT_TIMEOUT_MS).toISOString()
+
+  const { data: expired } = await supabase
+    .from("orders")
+    .select("id, items")
+    .eq("status", "pending")
+    .eq("payment_status", "pending")
+    .lt("created_at", cutoff)
+
+  if (!expired?.length) return
+
+  await supabase
+    .from("orders")
+    .update({ status: "cancelled", payment_status: "failed", cancelled_at: new Date().toISOString() })
+    .in("id", expired.map(o => o.id))
+
+  for (const order of expired) {
+    const items = (order.items ?? []) as Array<{ itemId?: string; quantity?: number }>
+    const stockItems = items.filter(i => i.itemId && i.quantity).map(i => ({ itemId: i.itemId, quantity: i.quantity }))
+    if (stockItems.length > 0) {
+      await supabase.rpc("restore_stock", { p_items: stockItems })
+    }
+  }
+}
+
 export async function GET(request: NextRequest) {
   const guard = await requireAdmin()
   if (guard.error) return guard.error
@@ -17,9 +45,11 @@ export async function GET(request: NextRequest) {
 
   const supabase = createAdminClient()
 
+  await cancelExpiredPendingOrders(supabase)
+
   let query = supabase
     .from("orders")
-    .select("id, user_id, total, status, payment_method, payment_status, payment_provider, payment_provider_status, payment_reference, items, created_at, paid_at, cancelled_at", { count: "exact" })
+    .select("id, user_id, total, status, payment_method, payment_status, items, created_at, paid_at, cancelled_at", { count: "exact" })
     .order("created_at", { ascending: false })
 
   if (status !== "all") query = query.eq("status", status)
@@ -59,25 +89,12 @@ export async function GET(request: NextRequest) {
     }))
   }
 
-  const refs = orders.map(o => o.payment_reference).filter((r): r is string => Boolean(r))
-  const webhookSeenRefs = new Set<string>()
-  if (refs.length) {
-    const { data: events } = await supabase.from("payment_webhook_events").select("payment_reference").in("payment_reference", refs)
-    for (const e of events ?? []) if (e.payment_reference) webhookSeenRefs.add(e.payment_reference)
-  }
-
   const items = orders.map(order => {
     const customer = order.user_id ? customers.get(order.user_id) : undefined
-    const webhookPending = Boolean(
-      order.payment_reference &&
-      (order.payment_status === "pending" || order.payment_status === "processing") &&
-      !webhookSeenRefs.has(order.payment_reference)
-    )
     return {
       ...order,
       customer_name: customer?.name ?? null,
       customer_email: customer?.email ?? null,
-      webhook_pending: webhookPending,
     }
   })
 
