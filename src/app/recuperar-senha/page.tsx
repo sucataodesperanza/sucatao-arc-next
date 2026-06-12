@@ -17,7 +17,7 @@ export default function RecuperarSenhaPage() {
 
     const supabase = createClient()
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/atualizar-senha`,
+      redirectTo: `${window.location.origin}/confirmar-email`,
     })
 
     setLoading(false)

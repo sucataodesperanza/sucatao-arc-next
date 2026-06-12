@@ -38,7 +38,7 @@ function AuthForm() {
       if (error) {
         setStatus("E-mail ou senha incorretos.")
       } else {
-        router.push("/")
+        router.push(searchParams.get("next") || "/")
         router.refresh()
       }
     } else {
@@ -52,7 +52,7 @@ function AuthForm() {
         password,
         options: {
           data: { name },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/confirmar-email`,
         },
       })
       setLoading(false)

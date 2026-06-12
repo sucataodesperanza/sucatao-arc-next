@@ -20,12 +20,17 @@ export default function PerfilPage() {
   const router = useRouter()
   const [user, setUser] = useState<{ email?: string; user_metadata?: Record<string, string> } | null>(null)
   const [loading, setLoading] = useState(true)
+  const [points, setPoints] = useState(0)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
       setLoading(false)
+      if (!user) return
+      supabase.from("profiles").select("points").eq("id", user.id).single().then(({ data }) => {
+        if (data) setPoints(data.points ?? 0)
+      })
     })
   }, [])
 
@@ -39,6 +44,7 @@ export default function PerfilPage() {
   const displayName = user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Visitante"
   const initial = displayName[0]?.toUpperCase() ?? "S"
   const readyMaps = data.maps.filter(m => m.status === "ready").length
+  const redeemableCount = data.items.filter(i => (i.value ?? 0) * 24 <= points).length
 
   return (
     <section className="utility-page">
@@ -80,12 +86,12 @@ export default function PerfilPage() {
             </article>
             <article>
               <span>Pontos do site</span>
-              <strong>0</strong>
+              <strong>{formatNumber(points)}</strong>
               <p>Inclui pontos base da conta e bônus das tarefas diárias concluídas.</p>
             </article>
             <article>
               <span>Resgates possíveis</span>
-              <strong>0</strong>
+              <strong>{formatNumber(redeemableCount)}</strong>
               <p>Quantidade estimada de itens que o jogador já pode trocar.</p>
             </article>
           </div>
