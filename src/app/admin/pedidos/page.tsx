@@ -36,6 +36,11 @@ const inputStyle: React.CSSProperties = {
   padding: "8px 10px", fontSize: "12px",
 }
 
+const btnStyle: React.CSSProperties = {
+  border: "1px solid var(--line)", background: "rgba(255,255,255,0.04)", color: "var(--text)",
+  padding: "8px 12px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", cursor: "pointer",
+}
+
 const statusLabels: Record<string, string> = {
   pending: "Pendente", completed: "Concluído", cancelled: "Cancelado",
 }
@@ -67,7 +72,15 @@ function formatNumber(n: number | undefined) {
   return (n ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
-function formatDate(s: string) {
+function formatTime(s: string) {
+  return new Date(s).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+}
+
+function formatDay(s: string) {
+  return new Date(s).toLocaleDateString("pt-BR")
+}
+
+function formatDateTime(s: string) {
   return new Date(s).toLocaleString("pt-BR")
 }
 
@@ -79,6 +92,11 @@ function orderTotal(order: Order) {
   return `R$ ${formatNumber(order.total)}`
 }
 
+function itemTotal(item: OrderItem) {
+  if (item.mode === "points") return `${(item.pointsCost ?? 0).toLocaleString("pt-BR")} pontos`
+  return `R$ ${formatNumber(item.lineTotal ?? (item.price ?? 0) * item.quantity)}`
+}
+
 export default function AdminPedidosPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [total, setTotal] = useState(0)
@@ -87,6 +105,7 @@ export default function AdminPedidosPage() {
   const [status, setStatus] = useState("all")
   const [paymentStatus, setPaymentStatus] = useState("all")
   const [loading, setLoading] = useState(false)
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -146,56 +165,37 @@ export default function AdminPedidosPage() {
               <tr style={{ textAlign: "left", borderBottom: "1px solid var(--line)" }}>
                 <th style={{ padding: "8px" }}>ID do pedido</th>
                 <th style={{ padding: "8px" }}>Cliente</th>
-                <th style={{ padding: "8px" }}>Itens</th>
-                <th style={{ padding: "8px" }}>Total</th>
-                <th style={{ padding: "8px" }}>Pagamento</th>
                 <th style={{ padding: "8px" }}>Status</th>
-                <th style={{ padding: "8px" }}>Data</th>
+                <th style={{ padding: "8px" }}>Horário</th>
+                <th style={{ padding: "8px" }}>Dia</th>
               </tr>
             </thead>
             <tbody>
-              {orders.map(order => {
-                const visibleItems = order.items.slice(0, 3)
-                const extraCount = order.items.length - visibleItems.length
-
-                return (
-                  <tr key={order.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", verticalAlign: "top" }}>
-                    <td style={{ padding: "8px", fontFamily: "monospace", color: "var(--cyan)" }}>
-                      {order.id.slice(0, 8).toUpperCase()}
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      <strong>{order.customer_name ?? "Sem nome"}</strong>
-                      <br />
-                      <span style={{ color: "var(--muted)" }}>{order.customer_email ?? "—"}</span>
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      {visibleItems.map((item, idx) => (
-                        <div key={idx}>{item.quantity}x {item.name}</div>
-                      ))}
-                      {extraCount > 0 && <div style={{ color: "var(--muted)" }}>+{extraCount}</div>}
-                    </td>
-                    <td style={{ padding: "8px", fontWeight: 800 }}>{orderTotal(order)}</td>
-                    <td style={{ padding: "8px" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "flex-start" }}>
-                        <span style={badgeStyle(paymentStatusColors[order.payment_status] ?? "var(--muted)")}>
-                          {paymentStatusLabels[order.payment_status] ?? order.payment_status}
-                        </span>
-                        <span style={{ color: "var(--text)" }}>
-                          {paymentMethodLabels[order.payment_method ?? ""] ?? order.payment_method ?? "—"}
-                        </span>
-                      </div>
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      <span style={badgeStyle(statusColors[order.status] ?? "var(--muted)")}>
-                        {statusLabels[order.status] ?? order.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "8px", color: "var(--muted)", whiteSpace: "nowrap" }}>{formatDate(order.created_at)}</td>
-                  </tr>
-                )
-              })}
+              {orders.map(order => (
+                <tr
+                  key={order.id}
+                  onClick={() => setSelectedOrder(order)}
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", verticalAlign: "top", cursor: "pointer" }}
+                >
+                  <td style={{ padding: "8px", fontFamily: "monospace", color: "var(--cyan)" }}>
+                    {order.id.slice(0, 8).toUpperCase()}
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    <strong>{order.customer_name ?? "Sem nome"}</strong>
+                    <br />
+                    <span style={{ color: "var(--muted)" }}>{order.customer_email ?? "—"}</span>
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    <span style={badgeStyle(statusColors[order.status] ?? "var(--muted)")}>
+                      {statusLabels[order.status] ?? order.status}
+                    </span>
+                  </td>
+                  <td style={{ padding: "8px", color: "var(--muted)", whiteSpace: "nowrap" }}>{formatTime(order.created_at)}</td>
+                  <td style={{ padding: "8px", color: "var(--muted)", whiteSpace: "nowrap" }}>{formatDay(order.created_at)}</td>
+                </tr>
+              ))}
               {orders.length === 0 && (
-                <tr><td colSpan={7} style={{ padding: "24px", textAlign: "center", color: "var(--muted)" }}>Nenhum pedido encontrado.</td></tr>
+                <tr><td colSpan={5} style={{ padding: "24px", textAlign: "center", color: "var(--muted)" }}>Nenhum pedido encontrado.</td></tr>
               )}
             </tbody>
           </table>
@@ -207,7 +207,7 @@ export default function AdminPedidosPage() {
           type="button"
           onClick={() => setPage(p => Math.max(1, p - 1))}
           disabled={page <= 1}
-          style={{ border: "1px solid var(--line)", background: "rgba(255,255,255,0.04)", color: "var(--text)", padding: "8px 12px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", cursor: "pointer", opacity: page <= 1 ? 0.4 : 1 }}
+          style={{ ...btnStyle, opacity: page <= 1 ? 0.4 : 1 }}
         >
           Anterior
         </button>
@@ -216,11 +216,61 @@ export default function AdminPedidosPage() {
           type="button"
           onClick={() => setPage(p => Math.min(totalPages, p + 1))}
           disabled={page >= totalPages}
-          style={{ border: "1px solid var(--line)", background: "rgba(255,255,255,0.04)", color: "var(--text)", padding: "8px 12px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", cursor: "pointer", opacity: page >= totalPages ? 0.4 : 1 }}
+          style={{ ...btnStyle, opacity: page >= totalPages ? 0.4 : 1 }}
         >
           Próxima
         </button>
       </div>
+
+      {selectedOrder && (
+        <div className="modal-backdrop" onClick={() => setSelectedOrder(null)}>
+          <div className="marker-modal" style={{ maxWidth: "640px" }} onClick={e => e.stopPropagation()}>
+            <p className="modal-kicker">Pedido {selectedOrder.id.slice(0, 8).toUpperCase()}</p>
+            <h2 style={{ fontSize: "20px" }}>{selectedOrder.customer_name ?? "Sem nome"}</h2>
+            <p style={{ margin: "-10px 0 0", color: "var(--muted)", fontSize: "13px" }}>{selectedOrder.customer_email ?? "—"}</p>
+
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+              <span style={badgeStyle(statusColors[selectedOrder.status] ?? "var(--muted)")}>
+                {statusLabels[selectedOrder.status] ?? selectedOrder.status}
+              </span>
+              <span style={badgeStyle(paymentStatusColors[selectedOrder.payment_status] ?? "var(--muted)")}>
+                {paymentStatusLabels[selectedOrder.payment_status] ?? selectedOrder.payment_status}
+              </span>
+              <span style={{ ...badgeStyle("var(--line)"), color: "var(--text)" }}>
+                {paymentMethodLabels[selectedOrder.payment_method ?? ""] ?? selectedOrder.payment_method ?? "—"}
+              </span>
+            </div>
+
+            <div style={{ fontSize: "12px", color: "var(--muted)", display: "grid", gap: "4px" }}>
+              <span>Criado em: {formatDateTime(selectedOrder.created_at)}</span>
+              {selectedOrder.paid_at && <span>Pago em: {formatDateTime(selectedOrder.paid_at)}</span>}
+              {selectedOrder.cancelled_at && <span>Cancelado em: {formatDateTime(selectedOrder.cancelled_at)}</span>}
+            </div>
+
+            <div>
+              <p style={{ margin: "0 0 8px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)" }}>Itens</p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                {selectedOrder.items.map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", gap: "10px", fontSize: "12px", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "4px" }}>
+                    <span>{item.quantity}x {item.name}</span>
+                    <span style={{ color: "var(--muted)", whiteSpace: "nowrap" }}>{itemTotal(item)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 800, fontSize: "14px" }}>
+              <span>Total</span>
+              <span>{orderTotal(selectedOrder)}</span>
+            </div>
+
+            <div className="marker-form-meta">
+              <span />
+              <button type="button" onClick={() => setSelectedOrder(null)} style={btnStyle}>Fechar</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

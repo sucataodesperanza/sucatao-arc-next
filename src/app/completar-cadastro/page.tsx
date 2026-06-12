@@ -9,9 +9,15 @@ function CompletarCadastroForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const next = searchParams.get("next") || "/perfil"
+  const cpfRequired = searchParams.get("cpf") === "1"
 
+  const [gameId, setGameId] = useState("")
   const [cpf, setCpf] = useState("")
-  const [status, setStatus] = useState("Para comprar itens com saldo real via PIX, precisamos do seu CPF.")
+  const [status, setStatus] = useState(
+    cpfRequired
+      ? "Informe seu ID do jogo e o CPF para finalizar o pedido com PIX."
+      : "Informe seu ID do jogo para finalizar o pedido."
+  )
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
 
@@ -22,8 +28,9 @@ function CompletarCadastroForm() {
         router.push(`/login?next=${encodeURIComponent(`/completar-cadastro?next=${next}`)}`)
         return
       }
-      supabase.from("profiles").select("cpf").eq("id", user.id).single().then(({ data }) => {
+      supabase.from("profiles").select("cpf, game_id").eq("id", user.id).single().then(({ data }) => {
         if (data?.cpf) setCpf(formatCpf(data.cpf))
+        if (data?.game_id) setGameId(data.game_id)
         setChecking(false)
       })
     })
@@ -33,7 +40,12 @@ function CompletarCadastroForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    if (!isValidCpf(cpf)) {
+    if (!gameId.trim()) {
+      setStatus("Informe seu ID do jogo.")
+      return
+    }
+
+    if (cpfRequired && !isValidCpf(cpf)) {
       setStatus("CPF inválido. Confira os números digitados.")
       return
     }
@@ -44,7 +56,7 @@ function CompletarCadastroForm() {
     const res = await fetch("/api/profile/cadastro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cpf: onlyDigits(cpf) }),
+      body: JSON.stringify({ gameId: gameId.trim(), ...(cpfRequired ? { cpf: onlyDigits(cpf) } : {}) }),
     })
 
     setLoading(false)
@@ -74,24 +86,39 @@ function CompletarCadastroForm() {
           Falta pouco
         </h2>
         <p style={{ margin: 0, color: "var(--muted)", fontSize: "13px", lineHeight: 1.6 }}>
-          Para comprar itens com saldo real (pagamento via PIX), o Mercado Pago exige o CPF do pagador por
-          regulamentação do Banco Central. Esse dado fica salvo no seu perfil e não precisa ser informado de novo.
+          Precisamos do seu ID do jogo para que o vendedor consiga te encontrar e entregar os itens.
+          {cpfRequired && " Para comprar itens com saldo real (pagamento via PIX), o Mercado Pago também exige o CPF do pagador por regulamentação do Banco Central."}
+          {" "}Esses dados ficam salvos no seu perfil e não precisam ser informados de novo.
         </p>
 
         <div className="marker-form-grid">
           <label>
-            <span>CPF</span>
+            <span>ID do jogo</span>
             <input
               type="text"
-              inputMode="numeric"
-              placeholder="000.000.000-00"
-              maxLength={14}
-              value={cpf}
-              onChange={e => setCpf(formatCpf(e.target.value))}
+              placeholder="Seu ID no ARC Raiders"
+              maxLength={64}
+              value={gameId}
+              onChange={e => setGameId(e.target.value)}
               required
               autoComplete="off"
             />
           </label>
+          {cpfRequired && (
+            <label>
+              <span>CPF</span>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="000.000.000-00"
+                maxLength={14}
+                value={cpf}
+                onChange={e => setCpf(formatCpf(e.target.value))}
+                required
+                autoComplete="off"
+              />
+            </label>
+          )}
         </div>
 
         <div className="marker-form-meta auth-form-meta">

@@ -11,19 +11,30 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}))
-  const cpf = onlyDigits(typeof body.cpf === "string" ? body.cpf : "")
+  const gameId = typeof body.gameId === "string" ? body.gameId.trim() : ""
+  const cpfRequired = typeof body.cpf === "string" && body.cpf.length > 0
 
-  if (!isValidCpf(cpf)) {
-    return NextResponse.json({ error: "Informe um CPF válido." }, { status: 400 })
+  if (!gameId) {
+    return NextResponse.json({ error: "Informe seu ID do jogo." }, { status: 400 })
   }
 
-  const { data, error } = await supabase.from("profiles").update({ cpf }).eq("id", user.id).select("id")
+  const updates: Record<string, string> = { game_id: gameId }
+
+  if (cpfRequired) {
+    const cpf = onlyDigits(body.cpf)
+    if (!isValidCpf(cpf)) {
+      return NextResponse.json({ error: "Informe um CPF válido." }, { status: 400 })
+    }
+    updates.cpf = cpf
+  }
+
+  const { data, error } = await supabase.from("profiles").update(updates).eq("id", user.id).select("id")
   if (error) {
-    return NextResponse.json({ error: "Erro ao salvar CPF.", detail: error.message }, { status: 500 })
+    return NextResponse.json({ error: "Erro ao salvar seu cadastro.", detail: error.message }, { status: 500 })
   }
 
   if (!data || data.length === 0) {
-    return NextResponse.json({ error: "Não foi possível salvar o CPF.", detail: "Nenhuma linha de profiles foi atualizada (verifique a policy de UPDATE)." }, { status: 500 })
+    return NextResponse.json({ error: "Não foi possível salvar seu cadastro.", detail: "Nenhuma linha de profiles foi atualizada (verifique a policy de UPDATE)." }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

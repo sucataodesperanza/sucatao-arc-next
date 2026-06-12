@@ -20,6 +20,7 @@ type AvailableItem = {
 }
 
 const PAGE_SIZE = 20
+const AVAILABLE_PAGE_SIZE = 10
 
 const inputStyle: React.CSSProperties = {
   background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)",
@@ -42,6 +43,8 @@ export default function AdminEstoquePage() {
 
   const [availableQuery, setAvailableQuery] = useState("")
   const [availableItems, setAvailableItems] = useState<AvailableItem[]>([])
+  const [availableTotal, setAvailableTotal] = useState(0)
+  const [availablePage, setAvailablePage] = useState(1)
   const [searchingAvailable, setSearchingAvailable] = useState(false)
 
   const load = useCallback(async () => {
@@ -60,18 +63,23 @@ export default function AdminEstoquePage() {
 
   useEffect(() => { load() }, [load])
 
-  useEffect(() => {
+  const loadAvailable = useCallback(async () => {
     setSearchingAvailable(true)
-    const timeout = setTimeout(async () => {
-      const params = new URLSearchParams()
-      if (availableQuery) params.set("q", availableQuery)
-      const res = await fetch(`/api/admin/stock/available?${params.toString()}`)
-      const body = await res.json().catch(() => ({}))
-      if (res.ok) setAvailableItems(body.items ?? [])
-      setSearchingAvailable(false)
-    }, 300)
+    const params = new URLSearchParams({ page: String(availablePage), pageSize: String(AVAILABLE_PAGE_SIZE) })
+    if (availableQuery) params.set("q", availableQuery)
+    const res = await fetch(`/api/admin/stock/available?${params.toString()}`)
+    const body = await res.json().catch(() => ({}))
+    if (res.ok) {
+      setAvailableItems(body.items ?? [])
+      setAvailableTotal(body.total ?? 0)
+    }
+    setSearchingAvailable(false)
+  }, [availablePage, availableQuery])
+
+  useEffect(() => {
+    const timeout = setTimeout(loadAvailable, 300)
     return () => clearTimeout(timeout)
-  }, [availableQuery])
+  }, [loadAvailable])
 
   async function patchItem(id: string, patch: Record<string, unknown>) {
     setItems(prev => prev.map(it => it.catalog_item_id === id ? { ...it, ...patch } as StockItem : it))
@@ -89,16 +97,17 @@ export default function AdminEstoquePage() {
   }
 
   async function addItem(item: AvailableItem) {
-    setAvailableItems(prev => prev.filter(i => i.id !== item.id))
     await fetch("/api/admin/stock", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ catalog_item_id: item.id, value: 0, quantity: 0, featured: false }),
     })
     load()
+    loadAvailable()
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+  const availableTotalPages = Math.max(1, Math.ceil(availableTotal / AVAILABLE_PAGE_SIZE))
 
   return (
     <>
@@ -110,7 +119,7 @@ export default function AdminEstoquePage() {
           type="search"
           placeholder="Buscar no catálogo por nome..."
           value={availableQuery}
-          onChange={e => setAvailableQuery(e.target.value)}
+          onChange={e => { setAvailablePage(1); setAvailableQuery(e.target.value) }}
           style={{ ...inputStyle, width: "100%", marginBottom: "10px" }}
         />
         {searchingAvailable ? (
@@ -131,6 +140,14 @@ export default function AdminEstoquePage() {
             {availableItems.length === 0 && (
               <p style={{ color: "var(--muted)", fontSize: "12px" }}>Nenhum item disponível para adicionar.</p>
             )}
+          </div>
+        )}
+
+        {availableTotal > 0 && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "12px" }}>
+            <button type="button" onClick={() => setAvailablePage(p => Math.max(1, p - 1))} disabled={availablePage <= 1} style={{ ...btnStyle, opacity: availablePage <= 1 ? 0.4 : 1 }}>Anterior</button>
+            <span style={{ fontSize: "12px", color: "var(--muted)" }}>Página {availablePage} de {availableTotalPages} ({availableTotal} itens)</span>
+            <button type="button" onClick={() => setAvailablePage(p => Math.min(availableTotalPages, p + 1))} disabled={availablePage >= availableTotalPages} style={{ ...btnStyle, opacity: availablePage >= availableTotalPages ? 0.4 : 1 }}>Próxima</button>
           </div>
         )}
       </div>

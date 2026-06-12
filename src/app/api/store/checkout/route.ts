@@ -41,12 +41,16 @@ export async function POST(request: NextRequest) {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("points, cpf")
+    .select("points, cpf, game_id")
     .eq("id", user.id)
     .single()
 
   if (profileError || !profile) {
     return NextResponse.json({ error: "Perfil não encontrado." }, { status: 404 })
+  }
+
+  if (!profile.game_id?.trim()) {
+    return NextResponse.json({ error: "Complete seu cadastro com o ID do jogo para finalizar o pedido.", code: "cadastro_incompleto" }, { status: 409 })
   }
 
   if (cashItems.length > 0 && !isValidCpf(profile.cpf ?? "")) {

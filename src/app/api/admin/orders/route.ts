@@ -2,6 +2,34 @@ import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 
+const PENDING_PAYMENT_TIMEOUT_MS = 60 * 60 * 1000
+
+async function cancelExpiredPendingOrders(supabase: ReturnType<typeof createAdminClient>) {
+  const cutoff = new Date(Date.now() - PENDING_PAYMENT_TIMEOUT_MS).toISOString()
+
+  const { data: expired } = await supabase
+    .from("orders")
+    .select("id, items")
+    .eq("status", "pending")
+    .eq("payment_status", "pending")
+    .lt("created_at", cutoff)
+
+  if (!expired?.length) return
+
+  await supabase
+    .from("orders")
+    .update({ status: "cancelled", payment_status: "failed", cancelled_at: new Date().toISOString() })
+    .in("id", expired.map(o => o.id))
+
+  for (const order of expired) {
+    const items = (order.items ?? []) as Array<{ itemId?: string; quantity?: number }>
+    const stockItems = items.filter(i => i.itemId && i.quantity).map(i => ({ itemId: i.itemId, quantity: i.quantity }))
+    if (stockItems.length > 0) {
+      await supabase.rpc("restore_stock", { p_items: stockItems })
+    }
+  }
+}
+
 export async function GET(request: NextRequest) {
   const guard = await requireAdmin()
   if (guard.error) return guard.error
@@ -16,6 +44,8 @@ export async function GET(request: NextRequest) {
   const to = from + pageSize - 1
 
   const supabase = createAdminClient()
+
+  await cancelExpiredPendingOrders(supabase)
 
   let query = supabase
     .from("orders")

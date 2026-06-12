@@ -15,6 +15,7 @@ export default function CarrinhoPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [points, setPoints] = useState(0)
   const [hasCpf, setHasCpf] = useState(false)
+  const [hasGameId, setHasGameId] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
   const [message, setMessage] = useState("")
   const [loadingUser, setLoadingUser] = useState(true)
@@ -25,10 +26,11 @@ export default function CarrinhoPage() {
       setLoadingUser(false)
       if (!user) return
       setUserId(user.id)
-      supabase.from("profiles").select("points, cpf").eq("id", user.id).single().then(({ data }) => {
+      supabase.from("profiles").select("points, cpf, game_id").eq("id", user.id).single().then(({ data }) => {
         if (data) {
           setPoints(data.points ?? 0)
           setHasCpf(isValidCpf(data.cpf ?? ""))
+          setHasGameId(Boolean(data.game_id?.trim()))
         }
       })
     })
@@ -43,8 +45,14 @@ export default function CarrinhoPage() {
   async function handleCheckout() {
     if (!userId) { router.push("/login"); return }
 
+    if (!hasGameId) {
+      const cpfParam = cashItems.length > 0 && !hasCpf ? "&cpf=1" : ""
+      router.push(`/completar-cadastro?next=/carrinho${cpfParam}`)
+      return
+    }
+
     if (cashItems.length > 0 && !hasCpf) {
-      router.push("/completar-cadastro?next=/carrinho")
+      router.push("/completar-cadastro?next=/carrinho&cpf=1")
       return
     }
 
@@ -149,7 +157,13 @@ export default function CarrinhoPage() {
               </div>
             )}
 
-            {cashItems.length > 0 && userId && !hasCpf && (
+            {userId && !hasGameId && (
+              <p className="modal-purchase-status cart-summary-warn">
+                Complete seu cadastro com o ID do jogo antes de finalizar o pedido.
+              </p>
+            )}
+
+            {cashItems.length > 0 && userId && hasGameId && !hasCpf && (
               <p className="modal-purchase-status cart-summary-warn">
                 Para pagar com PIX, complete seu cadastro com o CPF antes de finalizar o pedido.
               </p>
@@ -161,7 +175,7 @@ export default function CarrinhoPage() {
               <button type="button" className="cart-checkout-button" disabled={checkingOut || (pointsTotal > points && pointsItems.length > 0)} onClick={handleCheckout}>
                 {checkingOut
                   ? "Processando..."
-                  : cashItems.length > 0 && !hasCpf
+                  : !hasGameId || (cashItems.length > 0 && !hasCpf)
                     ? "Completar cadastro"
                     : "Finalizar pedido"}
               </button>
