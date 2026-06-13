@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ClipboardList, Gift, Package, Ticket, Warehouse } from "lucide-react"
+import { ArrowLeft, ClipboardList, Gift, Package, Ticket, Warehouse } from "lucide-react"
 
 const links = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
@@ -35,6 +35,10 @@ export function AdminSidebar() {
           )
         })}
       </nav>
+      <Link href="/" className="admin-nav-link" style={{ borderTop: "1px solid var(--line-soft)", paddingTop: "14px", marginTop: "4px" }}>
+        <span className="admin-nav-icon"><ArrowLeft size={14} /></span>
+        <span>Voltar ao site</span>
+      </Link>
     </aside>
   )
 }
