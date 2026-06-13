@@ -1,12 +1,14 @@
 "use client"
 
 import { useState, Suspense } from "react"
+import { Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { AuthShell } from "@/components/auth-shell"
 
 const copy = {
   signup: {
-    kicker: "Conta local",
+    kicker: "Conta Sucatão",
     title: "Confirmar e-mail",
     intro: "Clique no botão abaixo para confirmar seu e-mail e ativar sua conta.",
     confirmLabel: "Confirmar e-mail",
@@ -14,7 +16,7 @@ const copy = {
     redirectTo: "/",
   },
   recovery: {
-    kicker: "Conta local",
+    kicker: "Conta Sucatão",
     title: "Redefinir senha",
     intro: "Clique no botão abaixo para confirmar e continuar para a redefinição de senha.",
     confirmLabel: "Confirmar e continuar",
@@ -59,28 +61,32 @@ function ConfirmForm() {
   }
 
   return (
-    <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: "24px", background: "rgba(2,5,10,0.9)", backdropFilter: "blur(12px)" }}>
-      <div className="marker-modal auth-modal" aria-labelledby="confirmEmailTitle">
-        <p className="modal-kicker">{texts.kicker}</p>
-        <h2 id="confirmEmailTitle" style={{ margin: "-10px 0 0", color: "#fff", fontSize: "30px", lineHeight: 1, textTransform: "uppercase" }}>
-          {texts.title}
-        </h2>
+    <AuthShell>
+      <div className="auth-form" aria-labelledby="confirmEmailTitle">
+        <div>
+          <p className="auth-shell-kicker">{texts.kicker}</p>
+          <h1 id="confirmEmailTitle" className="auth-shell-title">{texts.title}</h1>
+        </div>
 
-        <div className="marker-form-meta auth-form-meta">
-          <span id="confirmEmailStatus">{status}</span>
-          {!done && (
+        <div className="auth-actions">
+          <p className="auth-status">{status}</p>
+          {done ? (
+            <button type="button" className="auth-submit" disabled>
+              <Loader2 size={18} className="auth-spinner" />
+            </button>
+          ) : (
             <button
               type="button"
               onClick={handleConfirm}
               disabled={loading || !tokenHash}
-              style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", cursor: "pointer", minHeight: "42px", padding: "0 20px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase" }}
+              className="auth-submit"
             >
               {loading ? "Confirmando..." : texts.confirmLabel}
             </button>
           )}
         </div>
       </div>
-    </div>
+    </AuthShell>
   )
 }
 

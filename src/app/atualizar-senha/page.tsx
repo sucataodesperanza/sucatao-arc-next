@@ -1,8 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { AuthShell } from "@/components/auth-shell"
 
 export default function AtualizarSenhaPage() {
   const router = useRouter()
@@ -59,20 +61,19 @@ export default function AtualizarSenhaPage() {
   }
 
   return (
-    <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: "24px", background: "rgba(2,5,10,0.9)", backdropFilter: "blur(12px)" }}>
-      <form onSubmit={handleSubmit} className="marker-modal auth-modal" aria-labelledby="updatePasswordTitle">
-        <p className="modal-kicker">Conta local</p>
-        <h2 id="updatePasswordTitle" style={{ margin: "-10px 0 0", color: "#fff", fontSize: "30px", lineHeight: 1, textTransform: "uppercase" }}>
-          Nova senha
-        </h2>
+    <AuthShell>
+      <form onSubmit={handleSubmit} className="auth-form" aria-labelledby="updatePasswordTitle">
+        <div>
+          <p className="auth-shell-kicker">Conta Sucatão</p>
+          <h1 id="updatePasswordTitle" className="auth-shell-title">Nova senha</h1>
+        </div>
 
         {ready && !done && (
-          <div className="marker-form-grid">
+          <div className="auth-form-grid">
             <label>
-              <span>Nova senha</span>
+              <span className={password ? "auth-field-label-hidden" : ""}>Nova senha</span>
               <input
                 type="password"
-                placeholder="Mínimo 6 caracteres"
                 maxLength={48}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -81,10 +82,9 @@ export default function AtualizarSenhaPage() {
               />
             </label>
             <label>
-              <span>Confirmar senha</span>
+              <span className={confirmPassword ? "auth-field-label-hidden" : ""}>Confirmar senha</span>
               <input
                 type="password"
-                placeholder="Repita a nova senha"
                 maxLength={48}
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
@@ -95,19 +95,15 @@ export default function AtualizarSenhaPage() {
           </div>
         )}
 
-        <div className="marker-form-meta auth-form-meta">
-          <span id="updatePasswordStatus">{status}</span>
-          {ready && !done && (
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", cursor: "pointer", minHeight: "42px", padding: "0 20px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase" }}
-            >
-              {loading ? "Salvando..." : "Salvar nova senha"}
+        <div className="auth-actions">
+          <p className="auth-status">{status}</p>
+          {ready && (
+            <button type="submit" className="auth-submit" disabled={loading || done}>
+              {done ? <Loader2 size={18} className="auth-spinner" /> : loading ? "Salvando..." : "Salvar nova senha"}
             </button>
           )}
         </div>
       </form>
-    </div>
+    </AuthShell>
   )
 }

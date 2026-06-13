@@ -1,7 +1,16 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-export async function middleware(request: NextRequest) {
+const PUBLIC_PATHS = [
+  "/login",
+  "/registro",
+  "/recuperar-senha",
+  "/completar-cadastro",
+  "/atualizar-senha",
+  "/confirmar-email",
+]
+
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -23,7 +32,21 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const { pathname } = request.nextUrl
+  const isPublicPath =
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/auth") ||
+    PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`))
+
+  if (!user && !isPublicPath) {
+    const redirectUrl = new URL("/login", request.url)
+    redirectUrl.searchParams.set("next", pathname)
+    const redirectResponse = NextResponse.redirect(redirectUrl)
+    supabaseResponse.cookies.getAll().forEach(cookie => redirectResponse.cookies.set(cookie))
+    return redirectResponse
+  }
 
   return supabaseResponse
 }

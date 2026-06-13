@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { formatCpf, isValidCpf, onlyDigits } from "@/lib/cpf"
+import { AuthShell } from "@/components/auth-shell"
 
 function CompletarCadastroForm() {
   const router = useRouter()
@@ -72,31 +73,30 @@ function CompletarCadastroForm() {
 
   if (checking) {
     return (
-      <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: "24px", background: "rgba(2,5,10,0.9)", backdropFilter: "blur(12px)" }}>
-        <p style={{ color: "var(--muted)" }}>Carregando...</p>
-      </div>
+      <AuthShell>
+        <p className="auth-status">Carregando...</p>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: "24px", background: "rgba(2,5,10,0.9)", backdropFilter: "blur(12px)" }}>
-      <form onSubmit={handleSubmit} className="marker-modal auth-modal" aria-labelledby="cadastroModalTitle">
-        <p className="modal-kicker">Complete seu cadastro</p>
-        <h2 id="cadastroModalTitle" style={{ margin: "-10px 0 0", color: "#fff", fontSize: "30px", lineHeight: 1, textTransform: "uppercase" }}>
-          Falta pouco
-        </h2>
-        <p style={{ margin: 0, color: "var(--muted)", fontSize: "13px", lineHeight: 1.6 }}>
-          Precisamos do seu ID do jogo para que o vendedor consiga te encontrar e entregar os itens.
-          {cpfRequired && " Para comprar itens com saldo real (pagamento via PIX), o Mercado Pago também exige o CPF do pagador por regulamentação do Banco Central."}
-          {" "}Esses dados ficam salvos no seu perfil e não precisam ser informados de novo.
-        </p>
+    <AuthShell>
+      <form onSubmit={handleSubmit} className="auth-form" aria-labelledby="cadastroShellTitle">
+        <div>
+          <p className="auth-shell-kicker">Complete seu cadastro</p>
+          <h1 id="cadastroShellTitle" className="auth-shell-title">Falta pouco</h1>
+          <p className="auth-shell-text" style={{ marginTop: "12px" }}>
+            Precisamos do seu ID do jogo para que o vendedor consiga te encontrar e entregar os itens.
+            {cpfRequired && " Para comprar itens com saldo real (pagamento via PIX), o Mercado Pago também exige o CPF do pagador por regulamentação do Banco Central."}
+            {" "}Esses dados ficam salvos no seu perfil e não precisam ser informados de novo.
+          </p>
+        </div>
 
-        <div className="marker-form-grid">
+        <div className="auth-form-grid">
           <label>
-            <span>ID do jogo</span>
+            <span className={gameId ? "auth-field-label-hidden" : ""}>ID do jogo</span>
             <input
               type="text"
-              placeholder="Seu ID no ARC Raiders"
               maxLength={64}
               value={gameId}
               onChange={e => setGameId(e.target.value)}
@@ -106,11 +106,10 @@ function CompletarCadastroForm() {
           </label>
           {cpfRequired && (
             <label>
-              <span>CPF</span>
+              <span className={cpf ? "auth-field-label-hidden" : ""}>CPF</span>
               <input
                 type="text"
                 inputMode="numeric"
-                placeholder="000.000.000-00"
                 maxLength={14}
                 value={cpf}
                 onChange={e => setCpf(formatCpf(e.target.value))}
@@ -121,18 +120,14 @@ function CompletarCadastroForm() {
           )}
         </div>
 
-        <div className="marker-form-meta auth-form-meta">
-          <span id="cadastroStatusMessage">{status}</span>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", cursor: "pointer", minHeight: "42px", padding: "0 20px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase" }}
-          >
+        <div className="auth-actions">
+          <p className="auth-status">{status}</p>
+          <button type="submit" className="auth-submit" disabled={loading}>
             {loading ? "Salvando..." : "Salvar e continuar"}
           </button>
         </div>
       </form>
-    </div>
+    </AuthShell>
   )
 }
 

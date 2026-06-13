@@ -2,8 +2,10 @@
 
 import { useState, Suspense } from "react"
 import Link from "next/link"
+import { ArrowRight, Loader2 } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { AuthShell } from "@/components/auth-shell"
 
 function AuthForm() {
   const router = useRouter()
@@ -14,12 +16,12 @@ function AuthForm() {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [status, setStatus] = useState("Entre com sua conta Sucatao.")
+  const [status, setStatus] = useState("")
   const [loading, setLoading] = useState(false)
 
   function switchMode(next: "login" | "register") {
     setMode(next)
-    setStatus(next === "login" ? "Entre com sua conta Sucatao." : "Crie sua conta gratuita.")
+    setStatus(next === "login" ? "" : "Crie sua conta gratuita.")
     setName("")
     setEmail("")
     setPassword("")
@@ -34,8 +36,8 @@ function AuthForm() {
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
-      setLoading(false)
       if (error) {
+        setLoading(false)
         setStatus("E-mail ou senha incorretos.")
       } else {
         router.push(searchParams.get("next") || "/")
@@ -68,20 +70,21 @@ function AuthForm() {
   }
 
   return (
-    <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: "24px", background: "rgba(2,5,10,0.9)", backdropFilter: "blur(12px)" }}>
-      <form onSubmit={handleSubmit} className="marker-modal auth-modal" aria-labelledby="authModalTitle">
-        <p className="modal-kicker">Conta local</p>
-        <h2 id="authModalTitle" style={{ margin: "-10px 0 0", color: "#fff", fontSize: "30px", lineHeight: 1, textTransform: "uppercase" }}>
-          Entrar no Sucatao
-        </h2>
-
+    <AuthShell
+      footer={
+        <Link href="/recuperar-senha" className="auth-shell-footer-link">
+          Não consegue fazer login?
+        </Link>
+      }
+    >
+      <form onSubmit={handleSubmit} className="auth-form auth-form-grow" aria-label={mode === "login" ? "Fazer login" : "Criar conta"}>
         <div className="auth-toggle-row">
           <button
             type="button"
             className={`auth-mode-button${mode === "login" ? " active" : ""}`}
             onClick={() => switchMode("login")}
           >
-            Entrar
+            Fazer login
           </button>
           <button
             type="button"
@@ -90,15 +93,15 @@ function AuthForm() {
           >
             Criar conta
           </button>
+          <span className={`auth-toggle-indicator${mode === "register" ? " register" : ""}`} />
         </div>
 
-        <div className="marker-form-grid">
+        <div className="auth-form-grid">
           {mode === "register" && (
             <label>
-              <span>Nome</span>
+              <span className={name ? "auth-field-label-hidden" : ""}>Nome</span>
               <input
                 type="text"
-                placeholder="Seu nome no site"
                 maxLength={32}
                 value={name}
                 onChange={e => setName(e.target.value)}
@@ -108,10 +111,9 @@ function AuthForm() {
             </label>
           )}
           <label>
-            <span>E-mail</span>
+            <span className={email ? "auth-field-label-hidden" : ""}>E-mail</span>
             <input
               type="email"
-              placeholder="voce@email.com"
               maxLength={80}
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -120,10 +122,9 @@ function AuthForm() {
             />
           </label>
           <label>
-            <span>Senha</span>
+            <span className={password ? "auth-field-label-hidden" : ""}>Senha</span>
             <input
               type="password"
-              placeholder={mode === "register" ? "Mínimo 6 caracteres" : "Sua senha"}
               maxLength={48}
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -133,26 +134,19 @@ function AuthForm() {
           </label>
         </div>
 
-        {mode === "login" && (
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <Link href="/recuperar-senha" style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 800, textDecoration: "none" }}>
-              Esqueci minha senha
-            </Link>
-          </div>
-        )}
-
-        <div className="marker-form-meta auth-form-meta">
-          <span id="authStatusMessage">{status}</span>
+        <div className="auth-actions auth-actions-end">
+          <p className="auth-status">{status}</p>
           <button
             type="submit"
+            className="auth-submit-arrow"
             disabled={loading}
-            style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", cursor: "pointer", minHeight: "42px", padding: "0 20px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase" }}
+            aria-label={mode === "login" ? "Fazer login" : "Criar conta"}
           >
-            {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
+            {loading ? <Loader2 size={20} className="auth-spinner" /> : <ArrowRight size={20} />}
           </button>
         </div>
       </form>
-    </div>
+    </AuthShell>
   )
 }
 

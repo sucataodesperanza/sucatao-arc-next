@@ -3,6 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import { AuthShell } from "@/components/auth-shell"
 
 export default function RecuperarSenhaPage() {
   const [email, setEmail] = useState("")
@@ -31,20 +32,19 @@ export default function RecuperarSenhaPage() {
   }
 
   return (
-    <div className="modal-backdrop" style={{ position: "fixed", inset: 0, zIndex: 50, display: "grid", placeItems: "center", padding: "24px", background: "rgba(2,5,10,0.9)", backdropFilter: "blur(12px)" }}>
-      <form onSubmit={handleSubmit} className="marker-modal auth-modal" aria-labelledby="recoverModalTitle">
-        <p className="modal-kicker">Conta local</p>
-        <h2 id="recoverModalTitle" style={{ margin: "-10px 0 0", color: "#fff", fontSize: "30px", lineHeight: 1, textTransform: "uppercase" }}>
-          Recuperar senha
-        </h2>
+    <AuthShell>
+      <form onSubmit={handleSubmit} className="auth-form" aria-labelledby="recoverShellTitle">
+        <div>
+          <p className="auth-shell-kicker">Conta Sucatão</p>
+          <h1 id="recoverShellTitle" className="auth-shell-title">Recuperar senha</h1>
+        </div>
 
         {!sent && (
-          <div className="marker-form-grid">
+          <div className="auth-form-grid">
             <label>
-              <span>E-mail</span>
+              <span className={email ? "auth-field-label-hidden" : ""}>E-mail</span>
               <input
                 type="email"
-                placeholder="voce@email.com"
                 maxLength={80}
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -55,25 +55,21 @@ export default function RecuperarSenhaPage() {
           </div>
         )}
 
-        <div className="marker-form-meta auth-form-meta">
-          <span id="recoverStatusMessage">{status}</span>
+        <div className="auth-actions">
+          <p className="auth-status">{status}</p>
           {!sent && (
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ border: "1px solid var(--line)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", cursor: "pointer", minHeight: "42px", padding: "0 20px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase" }}
-            >
+            <button type="submit" className="auth-submit" disabled={loading}>
               {loading ? "Enviando..." : "Enviar link"}
             </button>
           )}
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          <Link href="/login" style={{ color: "var(--muted)", fontSize: "12px", fontWeight: 800, textDecoration: "none" }}>
+        <div className="auth-link-row">
+          <Link href="/login" className="auth-link">
             ← Voltar para o login
           </Link>
         </div>
       </form>
-    </div>
+    </AuthShell>
   )
 }
