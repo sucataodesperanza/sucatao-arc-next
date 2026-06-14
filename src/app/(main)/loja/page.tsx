@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ArrowRight, CircleDollarSign, Clock, Coins, Medal, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
+import { ArrowRight, Banknote, CircleDollarSign, Clock, Coins, Medal, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useCart } from "@/lib/cart-context"
@@ -193,8 +193,14 @@ export default function LojaPage() {
                           <h3>{item.name}</h3>
                           <div className="store-highlight-footer">
                             <span className="store-highlight-price">
-                              <Coins size={14} />
-                              {formatNumber(Math.round((item.value ?? 0) * 24))}
+                              <span className="store-highlight-price-cash">
+                                <Banknote size={14} />
+                                R$ {formatNumber(item.value)}
+                              </span>
+                              <span className="store-highlight-price-points">
+                                <Coins size={14} />
+                                {formatNumber(Math.round((item.value ?? 0) * 24))}
+                              </span>
                             </span>
                             <button
                               type="button"
