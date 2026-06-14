@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { Camera } from "lucide-react"
+import type { Area } from "react-easy-crop"
 import { createClient } from "@/lib/supabase/client"
+import { getCroppedImageBlob } from "@/lib/crop-image"
+import { AvatarCropModal } from "@/components/avatar-crop-modal"
 import arcData from "@/data/arc-data"
+
+const MAX_AVATAR_SIZE = 2 * 1024 * 1024
+const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
 type Item = { id: string; name: string; type?: string; value?: number }
 const rawPerfilData = arcData as unknown as { items: Item[]; bots: unknown[]; maps: Array<{ status?: string }>; trades: { value: unknown[]; Count: number } }
@@ -18,9 +25,13 @@ function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("p
 
 export default function PerfilPage() {
   const router = useRouter()
-  const [user, setUser] = useState<{ email?: string; user_metadata?: Record<string, string> } | null>(null)
+  const [user, setUser] = useState<{ id: string; email?: string; user_metadata?: Record<string, string> } | null>(null)
   const [loading, setLoading] = useState(true)
   const [points, setPoints] = useState(0)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const [avatarError, setAvatarError] = useState("")
+  const [cropImage, setCropImage] = useState<{ src: string; type: string } | null>(null)
 
   useEffect(() => {
     const supabase = createClient()
@@ -28,8 +39,11 @@ export default function PerfilPage() {
       setUser(user)
       setLoading(false)
       if (!user) return
-      supabase.from("profiles").select("points").eq("id", user.id).single().then(({ data }) => {
-        if (data) setPoints(data.points ?? 0)
+      supabase.from("profiles").select("points, avatar_url").eq("id", user.id).single().then(({ data }) => {
+        if (data) {
+          setPoints(data.points ?? 0)
+          setAvatarUrl(data.avatar_url ?? null)
+        }
       })
     })
   }, [])
@@ -41,98 +55,201 @@ export default function PerfilPage() {
     router.refresh()
   }
 
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ""
+    if (!file || !user) return
+
+    if (!ALLOWED_AVATAR_TYPES.includes(file.type)) {
+      setAvatarError("Formato inválido. Envie uma imagem JPG, PNG ou WEBP.")
+      return
+    }
+    if (file.size > MAX_AVATAR_SIZE) {
+      setAvatarError("A imagem deve ter até 2MB.")
+      return
+    }
+
+    setAvatarError("")
+
+    const reader = new FileReader()
+    reader.onload = () => setCropImage({ src: reader.result as string, type: file.type })
+    reader.readAsDataURL(file)
+  }
+
+  async function handleCropConfirm(area: Area) {
+    if (!user || !cropImage) return
+
+    setAvatarUploading(true)
+    setAvatarError("")
+
+    try {
+      const blob = await getCroppedImageBlob(cropImage.src, area, cropImage.type)
+      const supabase = createClient()
+      const ext = cropImage.type === "image/png" ? "png" : cropImage.type === "image/webp" ? "webp" : "jpg"
+      const path = `${user.id}/avatar.${ext}`
+
+      const { error: uploadError } = await supabase.storage.from("avatars").upload(path, blob, {
+        upsert: true,
+        contentType: cropImage.type,
+      })
+
+      if (uploadError) {
+        setAvatarError("Não foi possível enviar a imagem. Tente novamente.")
+        return
+      }
+
+      const { data: publicUrlData } = supabase.storage.from("avatars").getPublicUrl(path)
+      const publicUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`
+
+      const { error: updateError } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id)
+
+      if (updateError) {
+        setAvatarError("Não foi possível salvar a foto no perfil.")
+        return
+      }
+
+      setAvatarUrl(publicUrl)
+      setCropImage(null)
+      router.refresh()
+    } catch {
+      setAvatarError("Não foi possível processar a imagem.")
+    } finally {
+      setAvatarUploading(false)
+    }
+  }
+
+  function handleCropCancel() {
+    setCropImage(null)
+  }
+
+  async function handleRemoveAvatar() {
+    if (!user) return
+    setAvatarError("")
+    setAvatarUploading(true)
+
+    const supabase = createClient()
+    const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id)
+
+    setAvatarUploading(false)
+
+    if (error) {
+      setAvatarError("Não foi possível remover a foto.")
+      return
+    }
+
+    setAvatarUrl(null)
+    router.refresh()
+  }
+
   const displayName = user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Visitante"
   const initial = displayName[0]?.toUpperCase() ?? "S"
   const readyMaps = data.maps.filter(m => m.status === "ready").length
   const redeemableCount = data.items.filter(i => (i.value ?? 0) * 24 <= points).length
 
   return (
-    <section className="utility-page">
-      <h2>Perfil</h2>
-      <p>Conta com saldo, pontos, progresso diário e leitura rápida do usuário.</p>
+    <div className="profile-page-bg">
+    <div className="profile-page">
+      <h1 className="page-title">Perfil</h1>
 
-      <section className="profile-layout">
-        <section className="profile-panel profile-identity">
-          <div className="utility-panel-head">
-            <strong>Identidade</strong>
-            <small>{loading ? "Carregando..." : user ? "Conectado" : "Visitante"}</small>
-          </div>
-          <div className="profile-hero">
-            <div className="profile-avatar" id="profileAvatar">{initial}</div>
-            <div>
-              <h3>{displayName}</h3>
-              <p>{user?.email ?? "Entre para salvar progresso por usuário no navegador."}</p>
+      {cropImage && (
+        <AvatarCropModal
+          imageSrc={cropImage.src}
+          loading={avatarUploading}
+          onCancel={handleCropCancel}
+          onConfirm={handleCropConfirm}
+        />
+      )}
+
+      <section aria-label="Identidade">
+        <p className="home-section-label">Identidade</p>
+        <div className="profile-card profile-identity-card">
+          <div className="profile-avatar-wrap">
+            <div className="profile-avatar">
+              {avatarUrl ? <img src={avatarUrl} alt={displayName} /> : initial}
             </div>
-          </div>
-          <div className="profile-action-row">
-            {user ? (
-              <button type="button" onClick={handleLogout}>Sair da conta</button>
-            ) : (
-              <button type="button" onClick={() => router.push("/login")}>Entrar / criar conta</button>
+            {user && (
+              <label className="profile-avatar-edit" data-tooltip="Trocar foto">
+                <Camera size={13} />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleAvatarChange}
+                  disabled={avatarUploading}
+                />
+              </label>
             )}
           </div>
-        </section>
-
-        <section className="profile-panel">
-          <div className="utility-panel-head">
-            <strong>Carteira</strong>
-            <small>Valores atuais</small>
+          <div className="profile-identity-info">
+            <h2>
+              {displayName}
+              <span className={`profile-status-badge${user ? " online" : ""}`}>
+                {loading ? "Carregando..." : user ? "Conectado" : "Visitante"}
+              </span>
+            </h2>
+            <p>{user?.email ?? "Entre para salvar seu progresso na conta."}</p>
+            {user && avatarUrl && (
+              <button type="button" className="profile-remove-avatar" onClick={handleRemoveAvatar} disabled={avatarUploading}>
+                Remover foto
+              </button>
+            )}
+            {avatarError && <p className="profile-avatar-error">{avatarError}</p>}
           </div>
-          <div className="wallet-overview">
-            <article>
-              <span>Carteira real</span>
-              <strong>0</strong>
-              <p>Saldo reaproveitado para compra direta de itens no marketplace.</p>
-            </article>
-            <article>
-              <span>Pontos do site</span>
-              <strong>{formatNumber(points)}</strong>
-              <p>Inclui pontos base da conta e bônus das tarefas diárias concluídas.</p>
-            </article>
-            <article>
-              <span>Resgates possíveis</span>
-              <strong>{formatNumber(redeemableCount)}</strong>
-              <p>Quantidade estimada de itens que o jogador já pode trocar.</p>
-            </article>
-          </div>
-        </section>
-
-        <section className="profile-panel">
-          <div className="utility-panel-head">
-            <strong>Progresso diário</strong>
-            <small>Reset diário</small>
-          </div>
-          <div className="reward-strip">
-            <article><span>Concluídas</span><strong>0/0</strong></article>
-            <article><span>Pontos do dia</span><strong>0</strong></article>
-            <article><span>Bônus</span><strong>N/D</strong></article>
-          </div>
-        </section>
-
-        <section className="profile-panel">
-          <div className="utility-panel-head">
-            <strong>Resumo da conta</strong>
-            <small>Leitura rápida</small>
-          </div>
-          <div className="profile-summary-grid">
-            <article><span>Favoritos</span><strong>0</strong></article>
-            <article><span>Itens no catálogo</span><strong>{formatNumber(data.items.length)}</strong></article>
-            <article><span>Trades ativos</span><strong>{formatNumber(Array.isArray(data.trades) ? data.trades.length : 0)}</strong></article>
-            <article><span>Mapas prontos</span><strong>{readyMaps}</strong></article>
-          </div>
-        </section>
-
-        <section className="profile-panel">
-          <div className="utility-panel-head">
-            <strong>Histórico</strong>
-            <small>0 eventos</small>
-          </div>
-          <div className="profile-history-list">
-            <p style={{ color: "var(--muted)", fontSize: "13px" }}>Nenhum evento registrado.</p>
-          </div>
-        </section>
+          {user ? (
+            <button type="button" className="profile-action-btn" onClick={handleLogout}>Sair da conta</button>
+          ) : (
+            <button type="button" className="profile-action-btn profile-action-btn-primary" onClick={() => router.push("/login")}>Entrar / criar conta</button>
+          )}
+        </div>
       </section>
-    </section>
+
+      <section aria-label="Carteira">
+        <p className="home-section-label">Carteira</p>
+        <div className="profile-stat-grid">
+          <article className="profile-stat-card">
+            <span>Carteira real</span>
+            <strong>0</strong>
+            <p>Saldo reaproveitado para compra direta de itens no marketplace.</p>
+          </article>
+          <article className="profile-stat-card">
+            <span>Pontos do site</span>
+            <strong>{formatNumber(points)}</strong>
+            <p>Inclui pontos base da conta e bônus das tarefas diárias concluídas.</p>
+          </article>
+          <article className="profile-stat-card">
+            <span>Resgates possíveis</span>
+            <strong>{formatNumber(redeemableCount)}</strong>
+            <p>Quantidade estimada de itens que o jogador já pode trocar.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-label="Progresso diário">
+        <p className="home-section-label">Progresso diário</p>
+        <div className="profile-stat-grid">
+          <article className="profile-stat-card"><span>Concluídas</span><strong>0/0</strong></article>
+          <article className="profile-stat-card"><span>Pontos do dia</span><strong>0</strong></article>
+          <article className="profile-stat-card"><span>Bônus</span><strong>N/D</strong></article>
+        </div>
+      </section>
+
+      <section aria-label="Resumo da conta">
+        <p className="home-section-label">Resumo da conta</p>
+        <div className="profile-stat-grid">
+          <article className="profile-stat-card"><span>Favoritos</span><strong>0</strong></article>
+          <article className="profile-stat-card"><span>Itens no catálogo</span><strong>{formatNumber(data.items.length)}</strong></article>
+          <article className="profile-stat-card"><span>Trades ativos</span><strong>{formatNumber(Array.isArray(data.trades) ? data.trades.length : 0)}</strong></article>
+          <article className="profile-stat-card"><span>Mapas prontos</span><strong>{readyMaps}</strong></article>
+        </div>
+      </section>
+
+      <section aria-label="Histórico">
+        <p className="home-section-label">Histórico</p>
+        <div className="profile-card">
+          <p className="profile-empty">Nenhum evento registrado.</p>
+        </div>
+      </section>
+    </div>
+    </div>
   )
 }
 
