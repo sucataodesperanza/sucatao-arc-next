@@ -103,11 +103,11 @@ select {
 .site-rail-brand {
   display: block;
   align-self: flex-start;
-  width: 156px;
+  width: 180px;
   aspect-ratio: 2 / 1;
   margin-bottom: 8px;
   overflow: hidden;
-  border-bottom-right-radius: 84px;
+  border-bottom-right-radius: 96px;
   background: #04090e;
 }
 
