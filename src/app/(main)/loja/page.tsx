@@ -1,13 +1,16 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { ArrowRight, Banknote, CircleDollarSign, Clock, Coins, Medal, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
+import { ArrowRight, Banknote, CircleDollarSign, Clock, Coins, Medal, Package, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { useCart } from "@/lib/cart-context"
 import { getItemTypeLabel, type CatalogItem } from "@/lib/catalog"
+import { ArcIntelPanel } from "@/components/arc-intel-panel"
+import { CatalogFilters } from "@/components/catalog-filters"
+import { CatalogGrid } from "@/components/catalog-grid"
+import { CatalogItemModal } from "@/components/catalog-item-modal"
+import { useItemsCatalog } from "@/lib/use-items-catalog"
 
 function resolveImage(image?: string) {
   if (!image) return undefined
@@ -30,7 +33,7 @@ function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("p
 
 const tabs: { key: string; label: string; href?: string }[] = [
   { key: "destaques", label: "Destaques" },
-  { key: "itens", label: "Itens", href: "/itens" },
+  { key: "itens", label: "Itens" },
   { key: "passes", label: "Passes" },
   { key: "sorteios", label: "Sorteios" },
   { key: "servicos", label: "Serviços" },
@@ -54,14 +57,14 @@ const categories: { key: string; tag: string; tone: string; image: string; title
 ]
 
 export default function LojaPage() {
-  const router = useRouter()
-  const cart = useCart()
+  const catalog = useItemsCatalog()
   const [activeTab, setActiveTab] = useState("destaques")
   const [userId, setUserId] = useState<string | null>(null)
   const [points, setPoints] = useState(0)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState("Visitante")
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([])
+  const [loadingHighlights, setLoadingHighlights] = useState(true)
 
   useEffect(() => {
     const supabase = createClient()
@@ -82,29 +85,27 @@ export default function LojaPage() {
     fetch("/api/catalog")
       .then(res => res.json())
       .then(body => setCatalogItems(body.items ?? []))
+      .finally(() => setLoadingHighlights(false))
   }, [])
-
-  function handleAddToCart(item: CatalogItem, mode: "points" | "cash", e?: React.MouseEvent) {
-    e?.stopPropagation()
-    if (!userId) { router.push("/login"); return }
-    cart.addItem({
-      itemId: item.id,
-      name: item.name,
-      type: getType(item),
-      rarity: getRarity(item),
-      value: item.value ?? 0,
-      weightKg: item.weightKg,
-      image: item.image,
-      mode,
-    })
-    cart.openDrawer()
-  }
 
   const highlightItems = useMemo(() => {
     const featured = catalogItems.filter(i => i.featured)
     const rest = catalogItems.filter(i => !i.featured).sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
     return [...featured, ...rest].slice(0, 5)
   }, [catalogItems])
+
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 })
+
+  useLayoutEffect(() => {
+    function updateIndicator() {
+      const el = tabRefs.current[activeTab]
+      if (el) setTabIndicator({ left: el.offsetLeft, width: el.offsetWidth })
+    }
+    updateIndicator()
+    window.addEventListener("resize", updateIndicator)
+    return () => window.removeEventListener("resize", updateIndicator)
+  }, [activeTab])
 
   const initial = displayName[0]?.toUpperCase() ?? "S"
 
@@ -130,12 +131,14 @@ export default function LojaPage() {
               <button
                 key={tab.key}
                 type="button"
+                ref={el => { tabRefs.current[tab.key] = el }}
                 className={`store-tab${activeTab === tab.key ? " active" : ""}`}
                 onClick={() => setActiveTab(tab.key)}
               >
                 {tab.label}
               </button>
             ))}
+            <span className="store-tab-indicator" style={{ left: tabIndicator.left, width: tabIndicator.width }} />
           </div>
 
           {activeTab === "destaques" ? (
@@ -178,10 +181,32 @@ export default function LojaPage() {
                   </Link>
                 </div>
                 <div className="store-highlight-grid">
-                  {highlightItems.map(item => {
+                  {loadingHighlights ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <article key={i} className="store-highlight-card skeleton">
+                        <div className="store-highlight-media skeleton-block" />
+                        <div className="store-highlight-body">
+                          <div className="skeleton-line skeleton-line-sm" />
+                          <div className="skeleton-line skeleton-line-lg" />
+                          <div className="store-highlight-footer">
+                            <div className="skeleton-line skeleton-line-md" />
+                          </div>
+                        </div>
+                      </article>
+                    ))
+                  ) : highlightItems.map(item => {
                     const r = getRarity(item)
                     return (
-                      <article key={item.id} className="store-highlight-card" style={{ "--rarity-color": rarityColors[r] } as React.CSSProperties}>
+                      <article
+                        key={item.id}
+                        className="store-highlight-card"
+                        style={{ "--rarity-color": rarityColors[r] } as React.CSSProperties}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Abrir detalhe de ${item.name}`}
+                        onClick={() => catalog.setSelectedItem(item)}
+                        onKeyDown={e => { if (e.key === "Enter") catalog.setSelectedItem(item) }}
+                      >
                         <div className="store-highlight-media">
                           {item.image
                             ? <img src={resolveImage(item.image)} alt={item.name} loading="lazy" />
@@ -206,8 +231,8 @@ export default function LojaPage() {
                               type="button"
                               className="store-highlight-cart"
                               disabled={item.quantity === 0}
-                              aria-label="Adicionar ao carrinho"
-                              onClick={e => handleAddToCart(item, "points", e)}
+                              tabIndex={-1}
+                              aria-hidden
                             >
                               <ShoppingCart size={14} />
                             </button>
@@ -244,6 +269,30 @@ export default function LojaPage() {
                     </button>
                   ))}
                 </div>
+              </section>
+            </>
+          ) : activeTab === "itens" ? (
+            <>
+              <section aria-label="Sobre o catálogo de itens">
+                <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/bots/arc_sentinel.png)" }}>
+                  <div className="hero-banner-content">
+                    <span className="hero-banner-tag">
+                      <Package size={12} />
+                      Catálogo completo
+                    </span>
+                    <h2>Todos os itens do jogo em um só lugar</h2>
+                    <p>Pesquise pelo nome, filtre por raridade ou tipo e veja os detalhes de cada item. Resgate com pontos do site ou compre direto com saldo real.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section aria-label="Itens do catálogo">
+                <div className="store-section-head">
+                  <h2>Itens</h2>
+                  <span>Exibindo {catalog.filteredItems.length} de {catalog.catalogItems.length}</span>
+                </div>
+                <CatalogFilters catalog={catalog} />
+                <CatalogGrid catalog={catalog} className="store-items-grid" />
               </section>
             </>
           ) : (
@@ -285,45 +334,51 @@ export default function LojaPage() {
             </div>
           </div>
 
-          <div className="store-side-card">
-            <div className="store-side-head">
-              <h2>Destaques da semana</h2>
-              <span className="store-side-timer">
-                <Clock size={11} />
-                5d 12h 34m
-              </span>
+          {activeTab === "itens" ? (
+            <ArcIntelPanel catalog={catalog} />
+          ) : (
+            <div className="store-side-card">
+              <div className="store-side-head">
+                <h2>Destaques da semana</h2>
+                <span className="store-side-timer">
+                  <Clock size={11} />
+                  5d 12h 34m
+                </span>
+              </div>
+              <div className="store-side-list">
+                {weeklyHighlights.map(item => (
+                  <div key={item.id} className="store-side-item">
+                    <div className="store-side-thumb" style={{ background: item.bg }}>
+                      {item.image
+                        ? <img src={item.image} alt={item.name} loading="lazy" />
+                        : item.icon && <item.icon size={18} color={item.fg} />}
+                    </div>
+                    <div className="store-side-info">
+                      <strong>{item.name}</strong>
+                      <span>Estoque: {item.stock}</span>
+                    </div>
+                    <div className="store-side-price">
+                      <span>
+                        <CircleDollarSign size={14} />
+                        {formatNumber(item.price)}
+                      </span>
+                      <button type="button" className="store-side-cart" disabled aria-label="Em breve">
+                        <ShoppingCart size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Link href="/itens" className="trades-footer-btn">
+                Ver todos os itens
+                <ArrowRight size={16} />
+              </Link>
             </div>
-            <div className="store-side-list">
-              {weeklyHighlights.map(item => (
-                <div key={item.id} className="store-side-item">
-                  <div className="store-side-thumb" style={{ background: item.bg }}>
-                    {item.image
-                      ? <img src={item.image} alt={item.name} loading="lazy" />
-                      : item.icon && <item.icon size={18} color={item.fg} />}
-                  </div>
-                  <div className="store-side-info">
-                    <strong>{item.name}</strong>
-                    <span>Estoque: {item.stock}</span>
-                  </div>
-                  <div className="store-side-price">
-                    <span>
-                      <CircleDollarSign size={14} />
-                      {formatNumber(item.price)}
-                    </span>
-                    <button type="button" className="store-side-cart" disabled aria-label="Em breve">
-                      <ShoppingCart size={14} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link href="/itens" className="trades-footer-btn">
-              Ver todos os itens
-              <ArrowRight size={16} />
-            </Link>
-          </div>
+          )}
         </aside>
       </div>
+
+      <CatalogItemModal catalog={catalog} />
     </div>
   )
 }
