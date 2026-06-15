@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import arcData from "@/data/arc-data"
+import "../../../styles/arcs.css"
 
 type Item = { id: string; name: string }
 type Bot = {

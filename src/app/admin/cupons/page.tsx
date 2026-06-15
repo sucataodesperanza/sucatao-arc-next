@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Copy, Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react"
+import "../../../styles/admin-cupons.css"
 
 type Coupon = {
   id: string

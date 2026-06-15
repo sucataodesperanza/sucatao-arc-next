@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react"
 import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight, Handshake, History, Plus, RefreshCw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react"
+import "../../../styles/trades.css"
 
 type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
 

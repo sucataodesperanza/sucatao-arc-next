@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import arcData from "@/data/arc-data"
 import { SellerProductCard, type SellerProduct, type ArcItemSnapshot } from "@/components/seller-product-card"
+import "../../../../styles/perfil.css"
 
 type ArcDataItem = {
   id: string; name: string; nameEn?: string

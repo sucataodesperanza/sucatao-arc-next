@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react"
 import { Plus } from "lucide-react"
 import { getItemTypeLabel, getRarityLabel } from "@/lib/catalog"
+import "../../../styles/admin-estoque.css"
 
 type StockItem = {
   catalog_item_id: string

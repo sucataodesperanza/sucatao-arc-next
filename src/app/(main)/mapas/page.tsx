@@ -3,6 +3,7 @@
 import { useState } from "react"
 import arcData from "@/data/arc-data"
 import { mapMarkers, markerCategories, routeCategories } from "@/data/map-markers"
+import "../../../styles/mapas.css"
 
 type ArcMap = { id: string; name: string; label?: string; status?: string; description?: string; image?: string }
 type Marker = { mapId: string; type: string; x: number; y: number; title: string; note?: string }

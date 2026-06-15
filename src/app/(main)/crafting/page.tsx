@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import arcData from "@/data/arc-data"
+import "../../../styles/crafting.css"
 
 type Item = { id: string; name: string; nameEn?: string; type?: string; rarity?: string; value?: number; isCraftable?: boolean; image?: string; description?: string; craftingMaterials?: string[] }
 
