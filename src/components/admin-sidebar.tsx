@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ArrowLeft, ClipboardList, Gift, Package, Ticket, Warehouse } from "lucide-react"
+import { ArrowLeft, Bot, ClipboardList, Gift, Package, Ticket, Warehouse } from "lucide-react"
 
 const links = [
   { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
@@ -10,6 +10,7 @@ const links = [
   { href: "/admin/estoque", label: "Estoque", icon: Warehouse },
   { href: "/admin/cupons", label: "Cupons", icon: Ticket },
   { href: "/admin/loot-boxes", label: "Loot Boxes", icon: Gift },
+  { href: "/admin/arcpedia", label: "Arcpedia", icon: Bot },
 ]
 
 export function AdminSidebar() {

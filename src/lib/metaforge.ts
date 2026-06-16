@@ -1,4 +1,5 @@
 const METAFORGE_API = "https://metaforge.app/api/arc-raiders/items"
+const METAFORGE_ARCS_API = "https://metaforge.app/api/arc-raiders/arcs"
 
 export type MetaForgeItem = {
   id: string
@@ -60,6 +61,43 @@ export async function fetchMetaForgeItems(): Promise<CatalogItemRow[]> {
   }
 
   return items.map(mapMetaForgeItem)
+}
+
+export type MetaForgeArc = {
+  id: string
+  name: string
+  description: string | null
+  icon: string | null
+  image: string | null
+  guide_url: string | null
+}
+
+type MetaForgeArcsResponse = {
+  data: MetaForgeArc[]
+  pagination: { page: number; limit: number; total: number; totalPages: number; hasNextPage: boolean; hasPrevPage: boolean }
+}
+
+export async function fetchMetaForgeArcs(): Promise<MetaForgeArc[]> {
+  const arcs: MetaForgeArc[] = []
+  let page = 1
+
+  while (true) {
+    const response = await fetch(`${METAFORGE_ARCS_API}?limit=100&page=${page}`, {
+      signal: AbortSignal.timeout(8000),
+    })
+
+    if (!response.ok) {
+      throw new Error(`MetaForge API retornou ${response.status} na página ${page}.`)
+    }
+
+    const json = (await response.json()) as MetaForgeArcsResponse
+    arcs.push(...json.data)
+
+    if (!json.pagination?.hasNextPage) break
+    page += 1
+  }
+
+  return arcs
 }
 
 export function mapMetaForgeItem(raw: MetaForgeItem): CatalogItemRow {

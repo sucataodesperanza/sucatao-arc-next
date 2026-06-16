@@ -11,7 +11,7 @@ const navLinks = [
   { href: "/", label: "Início", icon: Home },
   { href: "/loja", label: "Loja", icon: Store },
   { href: "/trades", label: "Trades", icon: Repeat2 },
-  { href: "/arcs", label: "ARCs", icon: Bot },
+  { href: "/arcpedia", label: "Arcpedia", icon: Bot },
   { href: "/crafting", label: "Crafting", icon: Hammer },
   { href: "/reciclagem", label: "Reciclagem", icon: Recycle },
   { href: "/mapas", label: "Mapas", icon: Map },
