@@ -1158,6 +1158,38 @@ select {
   opacity: 0.5;
 }
 
+.crafting-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+  margin-top: 8px;
+}
+
+.crafting-layout .store-highlight-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.crafting-recipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.crafting-recipe-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.crafting-recipe-qty {
+  min-width: 28px;
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
 .arcpedia-modal-section {
   border-top: 1px solid var(--stroke);
   padding-top: 12px;
@@ -1197,6 +1229,29 @@ select {
 .arcpedia-threat-chip.active {
   border-color: var(--stroke-strong);
   color: var(--paper);
+}
+
+.crafting-bench-select select {
+  appearance: none;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: var(--surface-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7785' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;
+  color: var(--paper-dim);
+  cursor: pointer;
+  height: 40px;
+  padding: 0 36px 0 14px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 220px;
+}
+
+.crafting-bench-select select:focus {
+  border-color: var(--stroke-strong);
+  color: var(--paper);
+  outline: none;
 }
 
 .store-highlight-card.sold-out {
@@ -2505,7 +2560,8 @@ select {
     border: 1px solid var(--stroke);
   }
 
-  .catalog-layout {
+  .catalog-layout,
+  .crafting-layout {
     grid-template-columns: 1fr;
   }
 

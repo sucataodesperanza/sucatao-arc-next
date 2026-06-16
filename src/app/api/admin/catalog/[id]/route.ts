@@ -11,6 +11,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const update: Record<string, unknown> = {}
   if (typeof body.active === "boolean") update.active = body.active
+  if ("recipe" in body) update.recipe = body.recipe ?? null
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nenhum campo válido para atualizar." }, { status: 400 })
