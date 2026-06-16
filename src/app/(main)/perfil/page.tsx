@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { getCroppedImageBlob } from "@/lib/crop-image"
 import { AvatarCropModal } from "@/components/avatar-crop-modal"
 import arcData from "@/data/arc-data"
+import "../../../styles/perfil.css"
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"]

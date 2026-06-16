@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import "../../../styles/admin-pedidos.css"
 
 type OrderItem = {
   itemId?: string

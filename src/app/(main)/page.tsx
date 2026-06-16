@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ArrowLeftRight, ArrowRight, ChevronRight, Coins, Megaphone, Plus, Sparkles, TrendingUp } from "lucide-react"
 import arcData from "@/data/arc-data"
+import "../../styles/home.css"
 
 type Item = { id: string; name: string; rarity?: string; value?: number; image?: string }
 

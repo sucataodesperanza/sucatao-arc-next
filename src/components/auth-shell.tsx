@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { BrandMark } from "@/components/brand-mark"
+import "../styles/auth.css"
 
 export function AuthShell({
   children,

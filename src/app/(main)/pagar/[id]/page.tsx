@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 import { useParams, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
+import "../../../../styles/pagar.css"
 
 type Order = {
   id: string

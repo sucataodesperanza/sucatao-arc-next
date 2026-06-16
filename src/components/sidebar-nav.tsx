@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bot, Hammer, Home, LogIn, Map, Recycle, Repeat2, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
+import { Bot, Flag, Hammer, Home, LogIn, Map, Recycle, Repeat2, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { BrandMark } from "./brand-mark"
 import { LogoutButton } from "./logout-button"
@@ -11,10 +11,11 @@ const navLinks = [
   { href: "/", label: "Início", icon: Home },
   { href: "/loja", label: "Loja", icon: Store },
   { href: "/trades", label: "Trades", icon: Repeat2 },
-  { href: "/arcs", label: "ARCs", icon: Bot },
+  { href: "/arcpedia", label: "Arcpedia", icon: Bot },
   { href: "/crafting", label: "Crafting", icon: Hammer },
   { href: "/reciclagem", label: "Reciclagem", icon: Recycle },
   { href: "/mapas", label: "Mapas", icon: Map },
+  { href: "/faccoes", label: "Facções", icon: Flag },
 ]
 
 export function SidebarNav({ isLoggedIn, isAdmin, avatarUrl }: { isLoggedIn: boolean; isAdmin: boolean; avatarUrl: string | null }) {

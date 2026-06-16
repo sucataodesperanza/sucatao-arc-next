@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react"
+import "../../../styles/admin-loot-boxes.css"
 
 type Rarity = "common" | "rare" | "epic" | "legendary"
 

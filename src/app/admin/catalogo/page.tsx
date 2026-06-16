@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { getItemTypeLabel, getRarityLabel } from "@/lib/catalog"
+import "../../../styles/admin-catalogo.css"
 
 type AdminCatalogItem = {
   id: string
