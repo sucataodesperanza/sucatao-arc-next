@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef, useState } from "react"
 import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight, Handshake, History, Plus, RefreshCw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react"
+import "../../../styles/trades.css"
 
 type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
 
@@ -29,7 +30,7 @@ type TradeOffer = {
   seeking: TradeItem[]
 }
 
-const tradeOffers: TradeOffer[] = [
+const initialTradeOffers: TradeOffer[] = [
   {
     id: "1",
     offering: [
@@ -127,6 +128,32 @@ export default function TradesPage() {
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
   const [confirmOffer, setConfirmOffer] = useState<TradeOffer | null>(null)
+  const [tradeOffers, setTradeOffers] = useState<TradeOffer[]>(initialTradeOffers)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [offerName, setOfferName] = useState("")
+  const [offerRarity, setOfferRarity] = useState<Rarity>("Common")
+  const [offerQty, setOfferQty] = useState(1)
+  const [wantName, setWantName] = useState("")
+  const [wantRarity, setWantRarity] = useState<Rarity>("Common")
+  const [wantQty, setWantQty] = useState(1)
+
+  function handleCreateTrade() {
+    if (!offerName.trim() || !wantName.trim()) return
+    const newOffer: TradeOffer = {
+      id: `new-${Date.now()}`,
+      offering: [{ name: offerName.trim(), rarity: offerRarity, qty: offerQty > 1 ? offerQty : undefined }],
+      seeking: [{ name: wantName.trim(), rarity: wantRarity, qty: wantQty > 1 ? wantQty : undefined }],
+    }
+    setTradeOffers(prev => [newOffer, ...prev])
+    setOfferName("")
+    setOfferRarity("Common")
+    setOfferQty(1)
+    setWantName("")
+    setWantRarity("Common")
+    setWantQty(1)
+    setActiveTab("Todos")
+    setShowCreateModal(false)
+  }
 
   useLayoutEffect(() => {
     function updateIndicator() {
@@ -145,7 +172,7 @@ export default function TradesPage() {
           <div className="trades-topbar">
             <h1 className="page-title">Trades</h1>
             <div className="trades-topbar-actions">
-              <button type="button" className="trades-btn-primary">
+              <button type="button" className="trades-btn-primary" onClick={() => setShowCreateModal(true)}>
                 <Plus size={16} />
                 Novo Trade
               </button>
@@ -468,6 +495,66 @@ export default function TradesPage() {
             <div className="trade-confirm-actions">
               <button type="button" className="trade-confirm-cancel" onClick={() => setConfirmOffer(null)}>Cancelar</button>
               <button type="button" className="trade-confirm-accept" onClick={() => setConfirmOffer(null)}>Confirmar Troca</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showCreateModal && (
+        <div className="trade-confirm-overlay" onClick={() => setShowCreateModal(false)}>
+          <div className="trade-confirm-modal trade-create-modal" onClick={e => e.stopPropagation()}>
+            <button type="button" className="trade-confirm-close" aria-label="Fechar" onClick={() => setShowCreateModal(false)}>
+              <X size={16} strokeWidth={4} />
+            </button>
+            <div className="trade-confirm-icon">
+              <Plus size={24} />
+            </div>
+            <h2>Criar Novo Trade</h2>
+            <p>Informe o item que você oferece e o item que você procura para publicar uma nova oferta de troca.</p>
+            <div className="trade-create-body">
+              <div className="trade-create-side">
+                <span className="trade-offer-label">Você Oferece</span>
+                <label className="trade-create-field">
+                  <span>Nome do item</span>
+                  <input type="text" placeholder="Ex: Rifle Ferrox" autoComplete="off" value={offerName} onChange={e => setOfferName(e.target.value)} />
+                </label>
+                <label className="trade-create-field">
+                  <span>Raridade</span>
+                  <select value={offerRarity} onChange={e => setOfferRarity(e.target.value as Rarity)}>
+                    {(Object.keys(rarityLabels) as Rarity[]).map(r => (
+                      <option key={r} value={r}>{rarityLabels[r]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="trade-create-field">
+                  <span>Quantidade</span>
+                  <input type="number" min={1} value={offerQty} onChange={e => setOfferQty(Math.max(1, Number(e.target.value) || 1))} />
+                </label>
+              </div>
+              <ArrowLeftRight size={18} className="trade-offer-swap trade-create-swap" />
+              <div className="trade-create-side">
+                <span className="trade-offer-label">Você Procura</span>
+                <label className="trade-create-field">
+                  <span>Nome do item</span>
+                  <input type="text" placeholder="Ex: Núcleo ARC" autoComplete="off" value={wantName} onChange={e => setWantName(e.target.value)} />
+                </label>
+                <label className="trade-create-field">
+                  <span>Raridade</span>
+                  <select value={wantRarity} onChange={e => setWantRarity(e.target.value as Rarity)}>
+                    {(Object.keys(rarityLabels) as Rarity[]).map(r => (
+                      <option key={r} value={r}>{rarityLabels[r]}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="trade-create-field">
+                  <span>Quantidade</span>
+                  <input type="number" min={1} value={wantQty} onChange={e => setWantQty(Math.max(1, Number(e.target.value) || 1))} />
+                </label>
+              </div>
+            </div>
+            <div className="trade-confirm-actions">
+              <button type="button" className="trade-confirm-cancel" onClick={() => setShowCreateModal(false)}>Cancelar</button>
+              <button type="button" className="trade-confirm-accept" onClick={handleCreateTrade} disabled={!offerName.trim() || !wantName.trim()}>Criar Trade</button>
             </div>
           </div>
         </div>

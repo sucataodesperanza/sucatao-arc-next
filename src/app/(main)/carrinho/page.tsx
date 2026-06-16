@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 import { useCart } from "@/lib/cart-context"
 import { CartItemRow } from "@/components/cart-item-row"
 import { isValidCpf } from "@/lib/cpf"
+import "../../../styles/carrinho.css"
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
 

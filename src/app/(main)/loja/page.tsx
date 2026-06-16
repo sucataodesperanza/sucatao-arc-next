@@ -11,6 +11,7 @@ import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { useItemsCatalog } from "@/lib/use-items-catalog"
+import "../../../styles/loja.css"
 
 function resolveImage(image?: string) {
   if (!image) return undefined
