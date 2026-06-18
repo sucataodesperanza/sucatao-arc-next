@@ -386,6 +386,16 @@ button.utility-chip:focus-visible {
   align-items: start;
 }
 
+.arcpedia-layout {
+  margin-left: 84px;
+  margin-right: calc(var(--side-panel-width) + var(--side-panel-gap));
+  transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.arcpedia-layout--no-panel {
+  margin-right: 84px;
+}
+
 .catalog-aside {
   position: sticky;
   top: 0;

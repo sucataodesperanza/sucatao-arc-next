@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Banknote, CircleDollarSign, Clock, Coins, Medal, Package, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
+import { ArrowRight, Banknote, ChevronLeft, ChevronRight, CircleDollarSign, Clock, Coins, Package, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getItemTypeLabel, type CatalogItem } from "@/lib/catalog"
@@ -11,6 +11,7 @@ import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { useItemsCatalog } from "@/lib/use-items-catalog"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/loja.css"
 
 function resolveImage(image?: string) {
@@ -60,10 +61,17 @@ const categories: { key: string; tag: string; tone: string; image: string; title
 export default function LojaPage() {
   const catalog = useItemsCatalog()
   const [activeTab, setActiveTab] = useState("destaques")
-  const [userId, setUserId] = useState<string | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
+
+  useEffect(() => {
+    if (localStorage.getItem("store-panel-open") === "false") setPanelOpen(false)
+  }, [])
+
+  function setPanel(val: boolean) {
+    setPanelOpen(val)
+    localStorage.setItem("store-panel-open", String(val))
+  }
   const [points, setPoints] = useState(0)
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
-  const [displayName, setDisplayName] = useState("Visitante")
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([])
   const [loadingHighlights, setLoadingHighlights] = useState(true)
 
@@ -71,13 +79,8 @@ export default function LojaPage() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
-      setUserId(user.id)
-      setDisplayName(user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Visitante")
-      supabase.from("profiles").select("points, avatar_url").eq("id", user.id).single().then(({ data }) => {
-        if (data) {
-          setPoints(data.points ?? 0)
-          setAvatarUrl(data.avatar_url ?? null)
-        }
+      supabase.from("profiles").select("points").eq("id", user.id).single().then(({ data }) => {
+        if (data) setPoints(data.points ?? 0)
       })
     })
   }, [])
@@ -108,11 +111,9 @@ export default function LojaPage() {
     return () => window.removeEventListener("resize", updateIndicator)
   }, [activeTab])
 
-  const initial = displayName[0]?.toUpperCase() ?? "S"
-
   return (
-    <div className="store-page">
-      <div className="store-layout">
+    <div className={`store-page${panelOpen ? "" : " store-page--panel-closed"}`}>
+      <div className={`store-layout${panelOpen ? "" : " store-layout--no-panel"}`}>
         <div className="store-main">
           <div className="store-topbar">
             <h1 className="page-title">Loja do Sucatão</h1>
@@ -304,36 +305,8 @@ export default function LojaPage() {
           )}
         </div>
 
-        <aside className="store-side-panel" aria-label="Painel do jogador">
-          <div className="store-user-card">
-            <div className="store-user-avatar">
-              {avatarUrl ? <img src={avatarUrl} alt={displayName} /> : initial}
-              <span className="store-user-level">1</span>
-            </div>
-            <div className="store-user-info">
-              <strong>{displayName}</strong>
-              <span className="store-user-online">
-                {userId && <span className="store-user-online-dot" />}
-                {userId ? "Online" : "Visitante"}
-              </span>
-            </div>
-          </div>
-
-          <div className="store-user-stats">
-            <div className="store-stats-row">
-              <div className="store-reputation">
-                <span>Reputação</span>
-                <strong>5.250</strong>
-              </div>
-              <div className="store-merchant-badge">
-                <span>Mercador</span>
-                <Medal size={28} />
-              </div>
-            </div>
-            <div className="store-reputation-bar">
-              <span style={{ width: "90%" }} />
-            </div>
-          </div>
+        <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel do jogador">
+          <SidePanelUserHeader onClose={() => setPanel(false)} />
 
           {activeTab === "itens" ? (
             <ArcIntelPanel catalog={catalog} />
@@ -380,6 +353,16 @@ export default function LojaPage() {
       </div>
 
       <CatalogItemModal catalog={catalog} />
+
+      <button
+        type="button"
+        className="store-panel-reopen"
+        onClick={() => setPanel(true)}
+        aria-label="Abrir painel"
+      >
+        <ChevronLeft size={16} />
+        <span>Painel</span>
+      </button>
     </div>
   )
 }
