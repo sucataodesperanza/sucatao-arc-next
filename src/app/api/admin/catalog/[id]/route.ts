@@ -11,6 +11,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const update: Record<string, unknown> = {}
   if (typeof body.active === "boolean") update.active = body.active
+  if ("recipe" in body)        update.recipe         = body.recipe         ?? null
+  if ("obtained_from" in body) update.obtained_from  = body.obtained_from  ?? []
+  if ("recycled_into" in body) update.recycled_into  = body.recycled_into  ?? []
+  if ("recovered_into" in body) update.recovered_into = body.recovered_into ?? []
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nenhum campo válido para atualizar." }, { status: 400 })

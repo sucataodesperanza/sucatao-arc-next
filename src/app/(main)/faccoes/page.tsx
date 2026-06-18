@@ -1,9 +1,15 @@
 "use client"
 
+<<<<<<< HEAD
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowRight, Check, ChevronRight, Eye, Gem, Hexagon, Recycle, Scale, Skull, Star, Users, X } from "lucide-react"
+=======
+import { useEffect, useState } from "react"
+import { AlertTriangle, ArrowRight, Check, ChevronLeft, ChevronRight, Eye, Gem, Hexagon, Recycle, Scale, Skull, Star, Users, X } from "lucide-react"
+>>>>>>> 7acc60bb12b6647fbf205432a1c1eaeb6507f76e
 import type { LucideIcon } from "lucide-react"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/faccoes.css"
 
 type Faction = {
@@ -100,10 +106,23 @@ const factionActivity: { color: string; text: string; timeAgo: string }[] = [
   { color: "#b477ff", text: "Os Sobreviventes completaram 780 resgates", timeAgo: "há 42 min" },
 ]
 
+const PANEL_KEY = "faccoes-panel-open"
+
 export default function FaccoesPage() {
   const router = useRouter()
   const [selectedFaction, setSelectedFaction] = useState<string | null>(null)
   const [confirmFaction, setConfirmFaction] = useState<Faction | null>(null)
+  const [panelOpen, setPanelOpen] = useState(true)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(PANEL_KEY)
+    if (stored !== null) setPanelOpen(stored === "true")
+  }, [])
+
+  function setPanel(val: boolean) {
+    setPanelOpen(val)
+    localStorage.setItem(PANEL_KEY, String(val))
+  }
 
   function handleConfirm() {
     if (confirmFaction) {
@@ -114,8 +133,8 @@ export default function FaccoesPage() {
   }
 
   return (
-    <div className="faccoes-page">
-      <div className="faccoes-layout">
+    <div className={`faccoes-page${panelOpen ? "" : " faccoes-page--panel-closed"}`}>
+      <div className={`faccoes-layout${panelOpen ? "" : " faccoes-layout--no-panel"}`}>
         <div className="faccoes-main">
           <section className="faccoes-hero" style={{ "--hero-image": "url(/assets/bots/arc_the_queen.png)" } as React.CSSProperties}>
             <div className="faccoes-hero-content">
@@ -196,20 +215,8 @@ export default function FaccoesPage() {
           </div>
         </div>
 
-        <aside className="store-side-panel" aria-label="Painel de facções">
-          <div className="store-user-card">
-            <div className="store-user-avatar">
-              D
-              <span className="store-user-level">42</span>
-            </div>
-            <div className="store-user-info">
-              <strong>Draakaarrysss</strong>
-              <span className="store-user-online">
-                <span className="store-user-online-dot" />
-                Online
-              </span>
-            </div>
-          </div>
+        <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de facções">
+          <SidePanelUserHeader onClose={() => setPanel(false)} showStats={false} />
 
           <div className="faccoes-reputation">
             <div className="faccoes-reputation-row">
@@ -297,6 +304,11 @@ export default function FaccoesPage() {
             </div>
           </div>
         </aside>
+
+        <button type="button" className="store-panel-reopen" aria-label="Abrir painel" onClick={() => setPanel(true)}>
+          <ChevronLeft size={16} strokeWidth={2.5} />
+          <span>Painel</span>
+        </button>
       </div>
 
       {confirmFaction && (

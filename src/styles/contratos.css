@@ -19,6 +19,11 @@
   align-items: start;
   margin-left: 84px;
   margin-right: calc(var(--side-panel-width) + var(--side-panel-gap));
+  transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.contratos-layout--no-panel {
+  margin-right: 84px;
 }
 
 .contratos-main {
@@ -946,101 +951,6 @@
   font-weight: 950;
 }
 
-.store-side-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  width: var(--side-panel-width);
-  overflow-y: auto;
-  border-left: 1px solid var(--stroke);
-  background: #03090d;
-  padding: 16px;
-}
-
-.store-user-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--stroke);
-}
-
-.store-user-avatar {
-  position: relative;
-  display: grid;
-  flex-shrink: 0;
-  width: 60px;
-  height: 60px;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--surface-3);
-  color: var(--yellow);
-  font-size: 22px;
-  font-weight: 950;
-  overflow: hidden;
-}
-
-.store-user-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.store-user-level {
-  position: absolute;
-  right: -6px;
-  bottom: -6px;
-  display: grid;
-  min-width: 26px;
-  height: 26px;
-  place-items: center;
-  border: 3px solid #03090d;
-  border-radius: 999px;
-  background: #e8503a;
-  padding: 0 6px;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 950;
-}
-
-.store-user-online-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--green);
-}
-
-.store-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.store-user-info strong {
-  overflow: hidden;
-  color: var(--paper);
-  font-size: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.store-user-online {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--green);
-  font-size: 10px;
-  font-weight: 950;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .store-reputation-bar {
   height: 6px;
   border-radius: 3px;
@@ -1378,6 +1288,7 @@
   }
 }
 
+<<<<<<< HEAD
 @media (max-width: 780px) {
   .store-side-panel {
     position: static;
@@ -1840,3 +1751,5 @@
   background: var(--surface-2);
   color: var(--paper);
 }
+=======
+>>>>>>> 7acc60bb12b6647fbf205432a1c1eaeb6507f76e
