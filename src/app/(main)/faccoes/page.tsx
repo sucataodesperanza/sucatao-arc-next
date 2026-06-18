@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowRight, Check, ChevronRight, Eye, Gem, Hexagon, Recycle, Scale, Skull, Star, Users, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import "../../../styles/faccoes.css"
@@ -100,12 +101,16 @@ const factionActivity: { color: string; text: string; timeAgo: string }[] = [
 ]
 
 export default function FaccoesPage() {
+  const router = useRouter()
   const [selectedFaction, setSelectedFaction] = useState<string | null>(null)
   const [confirmFaction, setConfirmFaction] = useState<Faction | null>(null)
 
   function handleConfirm() {
-    if (confirmFaction) setSelectedFaction(confirmFaction.id)
-    setConfirmFaction(null)
+    if (confirmFaction) {
+      setSelectedFaction(confirmFaction.id)
+      setConfirmFaction(null)
+      router.push("/faccoes/visao-geral")
+    }
   }
 
   return (
