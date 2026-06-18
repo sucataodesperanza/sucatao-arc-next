@@ -1,8 +1,9 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useRef, useState, useEffect } from "react"
 import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight, Handshake, History, Plus, RefreshCw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react"
 import "../../../styles/trades.css"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 
 type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
 
@@ -127,6 +128,11 @@ export default function TradesPage() {
   const [activeTab, setActiveTab] = useState(tabs[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+  const [panelOpen, setPanelOpen] = useState(true)
+
+  useLayoutEffect(() => {
+    if (localStorage.getItem("trades-panel-open") === "false") setPanelOpen(false)
+  }, [])
   const [confirmOffer, setConfirmOffer] = useState<TradeOffer | null>(null)
   const [tradeOffers, setTradeOffers] = useState<TradeOffer[]>(initialTradeOffers)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -136,6 +142,11 @@ export default function TradesPage() {
   const [wantName, setWantName] = useState("")
   const [wantRarity, setWantRarity] = useState<Rarity>("Common")
   const [wantQty, setWantQty] = useState(1)
+
+  function setPanel(val: boolean) {
+    setPanelOpen(val)
+    localStorage.setItem("trades-panel-open", String(val))
+  }
 
   function handleCreateTrade() {
     if (!offerName.trim() || !wantName.trim()) return
@@ -166,8 +177,8 @@ export default function TradesPage() {
   }, [activeTab])
 
   return (
-    <div className="trades-page">
-      <div className="trades-layout">
+    <div className={`trades-page${panelOpen ? "" : " trades-page--panel-closed"}`}>
+      <div className={`trades-layout${panelOpen ? "" : " trades-layout--no-panel"}`}>
         <div className="trades-main">
           <div className="trades-topbar">
             <h1 className="page-title">Trades</h1>
@@ -371,36 +382,8 @@ export default function TradesPage() {
           )}
         </div>
 
-        <aside className="store-side-panel" aria-label="Painel de trades">
-          <div className="store-user-card">
-            <div className="store-user-avatar">
-              D
-              <span className="store-user-level">42</span>
-            </div>
-            <div className="store-user-info">
-              <strong>Draakaarrysss</strong>
-              <span className="store-user-online">
-                <span className="store-user-online-dot" />
-                Online
-              </span>
-            </div>
-          </div>
-
-          <div className="store-user-stats">
-            <div className="store-stats-row">
-              <div className="store-reputation">
-                <span>Reputação</span>
-                <strong>5.250</strong>
-              </div>
-              <div className="store-merchant-badge">
-                <span>Mercador</span>
-                <ShieldCheck size={28} />
-              </div>
-            </div>
-            <div className="store-reputation-bar">
-              <span style={{ width: "90%" }} />
-            </div>
-          </div>
+        <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de trades">
+          <SidePanelUserHeader onClose={() => setPanel(false)} />
 
           <div className="store-side-card trades-activity-card">
             <div className="trades-activity-head">
@@ -499,6 +482,16 @@ export default function TradesPage() {
           </div>
         </div>
       )}
+
+      <button
+        type="button"
+        className="store-panel-reopen"
+        onClick={() => setPanel(true)}
+        aria-label="Abrir painel"
+      >
+        <ChevronLeft size={16} />
+        <span>Painel</span>
+      </button>
 
       {showCreateModal && (
         <div className="trade-confirm-overlay" onClick={() => setShowCreateModal(false)}>

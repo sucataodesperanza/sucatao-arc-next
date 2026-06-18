@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { Check, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Trophy, Truck, Wallet, Zap } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Trophy, Truck, Wallet, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
 
 type ContractType = "Principal" | "Secundário" | "Diário" | "Facção"
@@ -378,7 +379,10 @@ function DailyRewardBadge({ reward }: { reward: ContractReward }) {
   )
 }
 
+const PANEL_KEY = "contratos-panel-open"
+
 export default function ContratosPage() {
+  const [panelOpen, setPanelOpen] = useState(true)
   const [activeTab, setActiveTab] = useState(tabs[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
@@ -386,6 +390,16 @@ export default function ContratosPage() {
   const [weekSecondsLeft, setWeekSecondsLeft] = useState(0)
   const [acceptedContracts, setAcceptedContracts] = useState<Set<number>>(new Set())
   const [acceptedWeeklyContracts, setAcceptedWeeklyContracts] = useState<Set<number>>(new Set())
+
+  useEffect(() => {
+    const stored = localStorage.getItem(PANEL_KEY)
+    if (stored !== null) setPanelOpen(stored === "true")
+  }, [])
+
+  function setPanel(val: boolean) {
+    setPanelOpen(val)
+    localStorage.setItem(PANEL_KEY, String(val))
+  }
 
   useEffect(() => {
     setSecondsLeft(getSecondsUntilMidnight())
@@ -424,8 +438,8 @@ export default function ContratosPage() {
   }, [activeTab])
 
   return (
-    <div className="contratos-page">
-      <div className="contratos-layout">
+    <div className={`contratos-page${panelOpen ? "" : " contratos-page--panel-closed"}`}>
+      <div className={`contratos-layout${panelOpen ? "" : " contratos-layout--no-panel"}`}>
         <div className="contratos-main">
           <div className="contratos-topbar">
             <div>
@@ -765,20 +779,8 @@ export default function ContratosPage() {
           )}
         </div>
 
-        <aside className="store-side-panel" aria-label="Painel de contratos">
-          <div className="store-user-card">
-            <div className="store-user-avatar">
-              D
-              <span className="store-user-level">42</span>
-            </div>
-            <div className="store-user-info">
-              <strong>Draakaarrysss</strong>
-              <span className="store-user-online">
-                <span className="store-user-online-dot" />
-                Online
-              </span>
-            </div>
-          </div>
+        <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de contratos">
+          <SidePanelUserHeader onClose={() => setPanel(false)} showStats={false} />
 
           <div className="contratos-reputation">
             <div className="contratos-reputation-row">
@@ -907,6 +909,11 @@ export default function ContratosPage() {
             </div>
           )}
         </aside>
+
+        <button type="button" className="store-panel-reopen" aria-label="Abrir painel" onClick={() => setPanel(true)}>
+          <ChevronLeft size={16} strokeWidth={2.5} />
+          <span>Painel</span>
+        </button>
       </div>
     </div>
   )

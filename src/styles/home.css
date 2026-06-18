@@ -299,6 +299,27 @@
   border-left: 1px solid var(--stroke);
   background: #03090d;
   padding: 20px;
+  transform: translateX(0);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.trades-panel--hidden {
+  transform: translateX(100%);
+}
+
+.home-layout {
+  transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.home-layout--no-panel {
+  margin-right: 84px;
+}
+
+.trades-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
 }
 
 .trades-panel-head h2 {
@@ -307,6 +328,61 @@
   font-size: 22px;
   font-weight: 950;
   text-transform: uppercase;
+}
+
+.trades-panel-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  background: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.trades-panel-close:hover {
+  border-color: var(--stroke-strong);
+  color: var(--paper);
+}
+
+.trades-reopen-btn {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--stroke);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  background: #03090d;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 14px 8px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(40px);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, color 0.15s, border-color 0.15s;
+}
+
+.home--trades-closed .trades-reopen-btn {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.trades-reopen-btn:hover {
+  border-color: var(--stroke-strong);
+  color: var(--paper);
 }
 
 .trades-tabs {

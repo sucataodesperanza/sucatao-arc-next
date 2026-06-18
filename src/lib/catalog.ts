@@ -80,6 +80,9 @@ export type StockJoinRow = {
   }
 }
 
+// Tipo auxiliar para checagem de active (usado só no admin)
+export type CatalogItemActive = { active: boolean }
+
 export function mapStockItem(row: StockJoinRow): CatalogItem {
   const item = row.catalog_items
   return {

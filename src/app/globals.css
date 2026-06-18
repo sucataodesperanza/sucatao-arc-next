@@ -1058,6 +1058,45 @@ select {
   object-fit: cover;
 }
 
+.store-highlight-card.arcpedia-arc-card {
+  position: relative;
+  height: 200px;
+}
+
+.arcpedia-arc-card .store-highlight-media {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  background: var(--surface-2);
+}
+
+.arcpedia-arc-card .store-highlight-media img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  object-fit: cover;
+}
+
+.arcpedia-arc-card .store-highlight-body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  padding: 48px 12px 12px;
+  background: linear-gradient(to bottom, transparent, rgba(3, 9, 13, 0.85) 40%, rgba(3, 9, 13, 0.97) 100%);
+}
+
+.arcpedia-arc-card .store-highlight-body h3 {
+  min-height: unset;
+}
+
 .store-highlight-media .placeholder {
   display: grid;
   width: 100%;
@@ -1158,16 +1197,22 @@ select {
   opacity: 0.5;
 }
 
-.crafting-layout {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 40px;
-  margin-top: 8px;
+.crafting-page-layout {
+  margin-left: 84px;
+  margin-right: calc(var(--side-panel-width) + var(--side-panel-gap));
+  transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.crafting-layout .store-highlight-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.crafting-page-layout--no-panel {
+  margin-right: 84px;
 }
+
+.crafting-main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
 
 .crafting-recipe-list {
   display: flex;
@@ -1188,6 +1233,242 @@ select {
   font-size: 11px;
   font-weight: 950;
   text-transform: uppercase;
+}
+
+/* ── User card padrão (compartilhado entre todas as telas) ── */
+
+.store-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.store-user-avatar {
+  position: relative;
+  display: grid;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--surface-3);
+  color: var(--yellow);
+  font-size: 22px;
+  font-weight: 950;
+  overflow: hidden;
+}
+
+.store-user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.store-user-level {
+  position: absolute;
+  right: -6px;
+  bottom: -6px;
+  display: grid;
+  min-width: 26px;
+  height: 26px;
+  place-items: center;
+  border: 3px solid #03090d;
+  border-radius: 999px;
+  background: #e8503a;
+  padding: 0 6px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.store-user-online-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+}
+
+.store-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.store-user-info strong {
+  overflow: hidden;
+  color: var(--paper);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.store-user-online {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--green);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.store-user-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--stroke);
+}
+
+.store-stats-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.store-reputation {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.store-reputation span {
+  color: var(--gray-500);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.store-reputation strong {
+  color: var(--paper);
+  font-size: 18px;
+}
+
+.store-reputation-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.store-reputation-bar span {
+  display: block;
+  height: 100%;
+  background: #e8503a;
+}
+
+.store-merchant-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.store-merchant-badge span {
+  color: var(--gray-500);
+  font-size: 10px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.store-merchant-badge svg {
+  color: var(--yellow);
+}
+
+/* ── Painel lateral direito (compartilhado entre todas as telas) ── */
+
+.store-side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  width: var(--side-panel-width);
+  overflow-y: auto;
+  border-left: 1px solid var(--stroke);
+  background: #03090d;
+  padding: 20px;
+  transform: translateX(0);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.store-side-panel--hidden {
+  transform: translateX(100%);
+}
+
+.store-panel-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  background: none;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.store-panel-close:hover {
+  border-color: var(--stroke-strong);
+  color: var(--paper);
+}
+
+.store-panel-reopen {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--stroke);
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  background: #03090d;
+  color: var(--gray-500);
+  cursor: pointer;
+  padding: 14px 8px;
+  font-size: 9px;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(40px);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, color 0.15s, border-color 0.15s;
+}
+
+.store-panel-reopen:hover {
+  border-color: var(--stroke-strong);
+  color: var(--paper);
+}
+
+/* Visibilidade do botão reabrir — uma regra por página */
+.store-page--panel-closed .store-panel-reopen,
+.trades-page--panel-closed .store-panel-reopen,
+.faccoes-page--panel-closed .store-panel-reopen,
+.contratos-page--panel-closed .store-panel-reopen,
+.arcpedia-page--panel-closed .store-panel-reopen,
+.crafting-page--panel-closed .store-panel-reopen {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
 }
 
 .arcpedia-modal-section {

@@ -176,7 +176,12 @@ body.modal-open {
 }
 
 .content:has(.home-page),
-.content:has(.store-page) {
+.content:has(.store-page),
+.content:has(.trades-page),
+.content:has(.faccoes-page),
+.content:has(.contratos-page),
+.content:has(.catalog-page),
+.content:has(.crafting-page) {
   height: 100vh;
   overflow-y: auto;
   scrollbar-width: none;
@@ -184,7 +189,12 @@ body.modal-open {
 }
 
 .content:has(.home-page)::-webkit-scrollbar,
-.content:has(.store-page)::-webkit-scrollbar {
+.content:has(.store-page)::-webkit-scrollbar,
+.content:has(.trades-page)::-webkit-scrollbar,
+.content:has(.faccoes-page)::-webkit-scrollbar,
+.content:has(.contratos-page)::-webkit-scrollbar,
+.content:has(.catalog-page)::-webkit-scrollbar,
+.content:has(.crafting-page)::-webkit-scrollbar {
   display: none;
 }
 

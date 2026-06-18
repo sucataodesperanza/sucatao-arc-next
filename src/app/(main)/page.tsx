@@ -1,7 +1,13 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { ArrowLeftRight, ArrowRight, ChevronRight, Coins, Megaphone, Plus, Sparkles, TrendingUp } from "lucide-react"
+import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight, Coins, Medal, Megaphone, Plus, Sparkles, TrendingUp } from "lucide-react"
 import arcData from "@/data/arc-data"
+import { createClient } from "@/lib/supabase/client"
 import "../../styles/home.css"
+
+const TRADES_OPEN_KEY = "trades-panel-open"
 
 type Item = { id: string; name: string; rarity?: string; value?: number; image?: string }
 
@@ -58,9 +64,38 @@ const categories = [
 ]
 
 export default function HomePage() {
+  const [tradesOpen, setTradesOpen] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState("Visitante")
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(TRADES_OPEN_KEY)
+    if (stored === "false") setTradesOpen(false)
+  }, [])
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      setUserId(user.id)
+      setDisplayName(user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Visitante")
+      supabase.from("profiles").select("avatar_url").eq("id", user.id).single().then(({ data }) => {
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url)
+      })
+    })
+  }, [])
+
+  function setOpen(val: boolean) {
+    setTradesOpen(val)
+    localStorage.setItem(TRADES_OPEN_KEY, String(val))
+  }
+
+  const initial = displayName[0]?.toUpperCase() ?? "S"
+
   return (
-    <div className="home-page">
-    <div className="home-layout">
+    <div className={`home-page${tradesOpen ? "" : " home--trades-closed"}`}>
+    <div className={`home-layout${tradesOpen ? "" : " home-layout--no-panel"}`}>
       <div className="home-main">
         <h1 className="page-title">Início</h1>
 
@@ -119,7 +154,45 @@ export default function HomePage() {
         </section>
       </div>
 
-      <aside className="trades-panel" aria-label="Trades">
+      <aside className={`trades-panel${tradesOpen ? "" : " trades-panel--hidden"}`} aria-label="Trades">
+        <div className="store-user-card">
+          <div className="store-user-avatar">
+            {avatarUrl ? <img src={avatarUrl} alt={displayName} /> : initial}
+            <span className="store-user-level">1</span>
+          </div>
+          <div className="store-user-info">
+            <strong>{displayName}</strong>
+            <span className="store-user-online">
+              {userId && <span className="store-user-online-dot" />}
+              {userId ? "Online" : "Visitante"}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="store-panel-close"
+            onClick={() => setOpen(false)}
+            aria-label="Fechar painel de trades"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        <div className="store-user-stats">
+          <div className="store-stats-row">
+            <div className="store-reputation">
+              <span>Reputação</span>
+              <strong>5.250</strong>
+            </div>
+            <div className="store-merchant-badge">
+              <span>Mercador</span>
+              <Medal size={28} />
+            </div>
+          </div>
+          <div className="store-reputation-bar">
+            <span style={{ width: "90%" }} />
+          </div>
+        </div>
+
         <div className="trades-panel-head">
           <h2>Trades</h2>
         </div>
@@ -178,6 +251,16 @@ export default function HomePage() {
         </Link>
       </aside>
     </div>
+
+    <button
+      type="button"
+      className="trades-reopen-btn"
+      onClick={() => setOpen(true)}
+      aria-label="Abrir painel de trades"
+    >
+      <ChevronLeft size={16} />
+      <span>Trades</span>
+    </button>
     </div>
   )
 }
