@@ -72,6 +72,10 @@ export default function CraftingPage() {
   const [query, setQuery] = useState("")
   const [workbenchGroup, setWorkbenchGroup] = useState("all")
   const [filterMaterial, setFilterMaterial] = useState<string | null>(null)
+  const [filterMaterialId, setFilterMaterialId] = useState<string | null>(null)
+  const [filterMaterialExtras, setFilterMaterialExtras] = useState<string[]>([])
+  const [filterExtraItems, setFilterExtraItems] = useState<CraftingItem[]>([])
+  const [loadingFilter, setLoadingFilter] = useState(false)
   const [materialDetail, setMaterialDetail] = useState<MaterialItem | null>(null)
   const [selected, setSelected] = useState<CraftingItem | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
@@ -85,6 +89,35 @@ export default function CraftingPage() {
     setPanelOpen(val)
     localStorage.setItem(PANEL_KEY, String(val))
   }
+
+  // Quando o filtro de material muda, busca os craftáveis do campo used_in_crafting
+  useEffect(() => {
+    if (!filterMaterialId) {
+      setFilterMaterialExtras([])
+      setFilterExtraItems([])
+      setLoadingFilter(false)
+      return
+    }
+    setLoadingFilter(true)
+    fetch(`/api/items/${encodeURIComponent(filterMaterialId)}`)
+      .then(r => r.json())
+      .then(async d => {
+        const names: string[] = d.used_in_crafting ?? []
+        setFilterMaterialExtras(names)
+        if (names.length > 0) {
+          const res = await fetch("/api/crafting/by-names", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ names }),
+          }).then(r => r.json()).catch(() => ({ items: [] }))
+          setFilterExtraItems(res.items ?? [])
+        } else {
+          setFilterExtraItems([])
+        }
+      })
+      .catch(() => { setFilterMaterialExtras([]); setFilterExtraItems([]) })
+      .finally(() => setLoadingFilter(false))
+  }, [filterMaterialId])
 
   useEffect(() => {
     fetch("/api/materials")
@@ -129,11 +162,21 @@ export default function CraftingPage() {
       if (!i.workbench || !groupRaws.includes(i.workbench)) return false
     }
     if (filterMaterial) {
-      if (!i.recipe?.some(r => normalizeText(r.name) === normalizeText(filterMaterial))) return false
+      const inRecipe  = i.recipe?.some(r => normalizeText(r.name) === normalizeText(filterMaterial)) ?? false
+      const inExtras  = filterMaterialExtras.some(e => normalizeText(e) === normalizeText(i.name))
+      if (!inRecipe && !inExtras) return false
     }
     if (!q) return true
     return normalizeText(`${i.name} ${i.item_type ?? ""} ${i.workbench ?? ""}`).includes(q)
-  }), [craftable, workbenchGroup, workbenchGroups, filterMaterial, q])
+  }), [craftable, workbenchGroup, workbenchGroups, filterMaterial, filterMaterialExtras, q])
+
+  // Combina craftáveis filtrados com itens extras do used_in_crafting (podem não ter workbench)
+  const displayCraftable = useMemo(() => {
+    if (!filterMaterial || filterExtraItems.length === 0) return filteredCraftable
+    const filteredIds = new Set(filteredCraftable.map(i => i.id))
+    const extras = filterExtraItems.filter(i => !filteredIds.has(i.id))
+    return [...filteredCraftable, ...extras]
+  }, [filteredCraftable, filterExtraItems, filterMaterial])
 
   const filteredMaterials = useMemo(() =>
     !q ? materials : materials.filter(i => normalizeText(`${i.name} ${i.item_type ?? ""}`).includes(q))
@@ -170,13 +213,19 @@ export default function CraftingPage() {
               <button
                 type="button"
                 className="crafting-clear-filters"
-                onClick={() => { setWorkbenchGroup("all"); setFilterMaterial(null) }}
+                onClick={() => { setWorkbenchGroup("all"); setFilterMaterial(null); setFilterMaterialId(null); setFilterMaterialExtras([]); setFilterExtraItems([]) }}
               >
                 <X size={13} />
                 Limpar filtros
               </button>
             )}
           </div>
+
+          {filterMaterial && (
+            <p className="crafting-filter-hint">
+              Mostrando craftáveis que usam <strong>{filterMaterial}</strong>
+            </p>
+          )}
 
           <div className="crafting-layout">
             <section className="crafting-materials-section">
@@ -187,11 +236,6 @@ export default function CraftingPage() {
                 </div>
                 <span>{filteredMaterials.length} de {materials.length}</span>
               </div>
-              {filterMaterial && (
-                <p className="crafting-filter-hint">
-                  Mostrando craftáveis que usam <strong>{filterMaterial}</strong>
-                </p>
-              )}
               {loadingMaterials ? (
                 <p className="catalog-empty">Carregando...</p>
               ) : filteredMaterials.length === 0 ? (
@@ -234,15 +278,15 @@ export default function CraftingPage() {
                     <span className="crafting-active-filter">{workbenchGroup}</span>
                   )}
                 </div>
-                <span>{filteredCraftable.length} de {craftable.length}</span>
+                <span>{displayCraftable.length} de {craftable.length}</span>
               </div>
-              {loadingCraftable ? (
+              {loadingCraftable || loadingFilter ? (
                 <p className="catalog-empty">Carregando...</p>
-              ) : filteredCraftable.length === 0 ? (
+              ) : displayCraftable.length === 0 ? (
                 <p className="catalog-empty">Nenhum item encontrado com os filtros ativos.</p>
               ) : (
                 <div className="store-highlight-grid">
-                  {filteredCraftable.map(item => (
+                  {displayCraftable.map(item => (
                     <article
                       key={item.id}
                       className="store-highlight-card"
@@ -349,7 +393,7 @@ export default function CraftingPage() {
       <MaterialDetailModal
         item={materialDetail}
         onClose={() => setMaterialDetail(null)}
-        onFilterBy={name => { setFilterMaterial(name); setMaterialDetail(null) }}
+        onFilterBy={(id, name) => { setFilterMaterialId(id); setFilterMaterial(name); setMaterialDetail(null) }}
       />
     </div>
   )

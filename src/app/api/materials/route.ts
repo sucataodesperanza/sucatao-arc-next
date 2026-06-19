@@ -25,6 +25,7 @@ export async function GET() {
     .from("catalog_items")
     .select("id, name, item_type, rarity, icon_url, description, value, weight_kg, stack_size")
     .in("item_type", MATERIAL_TYPES)
+    .is("workbench", null)   // ingredientes puros — sem bancada de fabricação
     .eq("active", true)
     .order("name")
     .returns<MaterialRow[]>()

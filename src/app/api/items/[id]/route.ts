@@ -1,14 +1,15 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-const EMPTY = { obtained_from: [], recycled_into: [], recovered_into: [] }
+type ItemSource = { qty: number; name: string }
+const EMPTY = { obtained_from: [] as ItemSource[], recycled_into: [] as ItemSource[], recovered_into: [] as ItemSource[], used_in_crafting: [] as string[] }
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const name = decodeURIComponent(id)
   const supabase = await createClient()
 
-  const FIELDS = "obtained_from, recycled_into, recovered_into"
+  const FIELDS = "obtained_from, recycled_into, recovered_into, used_in_crafting"
 
   // 1. arc_item_id — preenchido pelo MetaForge sync quando há match com arc-data
   // 2. id direto — materiais inseridos via sync-materials usam arc-data ID
@@ -24,8 +25,9 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   if (!data) return NextResponse.json(EMPTY)
 
   return NextResponse.json({
-    obtained_from:  data.obtained_from  ?? [],
-    recycled_into:  data.recycled_into  ?? [],
-    recovered_into: data.recovered_into ?? [],
+    obtained_from:    data.obtained_from    ?? [],
+    recycled_into:    data.recycled_into    ?? [],
+    recovered_into:   data.recovered_into   ?? [],
+    used_in_crafting: data.used_in_crafting ?? [],
   })
 }
