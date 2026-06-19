@@ -2,11 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Plus, Search, Trash2, X } from "lucide-react"
-import arcData from "@/data/arc-data"
 import type { AdminCatalogItem } from "@/app/api/admin/crafting/items/route"
-
-type ArcItem = { id: string; name: string }
-const allItemNames = [...new Set((arcData as unknown as { items: ArcItem[] }).items.map(i => i.name))]
 
 type ItemSource = { qty: number; name: string }
 
@@ -37,6 +33,7 @@ function fieldCount(item: AdminCatalogItem): number {
   if (item.obtained_from && item.obtained_from.length > 0) n++
   if (item.recycled_into && item.recycled_into.length > 0) n++
   if (item.recovered_into && item.recovered_into.length > 0) n++
+  if (item.used_in_crafting && item.used_in_crafting.length > 0) n++
   return n
 }
 
@@ -124,6 +121,7 @@ function SourceEditor({
 /* ── Página principal ── */
 export default function AdminCraftingPage() {
   const [items, setItems] = useState<AdminCatalogItem[]>([])
+  const [allItemNames, setAllItemNames] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [category, setCategory] = useState<"all" | "materials" | "craftable">("all")
   const [search, setSearch] = useState("")
@@ -133,6 +131,7 @@ export default function AdminCraftingPage() {
   const [obtainedFrom, setObtainedFrom] = useState<ItemSource[]>([])
   const [recycledInto, setRecycledInto] = useState<ItemSource[]>([])
   const [recoveredInto, setRecoveredInto] = useState<ItemSource[]>([])
+  const [usedInCrafting, setUsedInCrafting] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState("")
 
@@ -146,6 +145,17 @@ export default function AdminCraftingPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Carrega nomes do catalog_items (fonte de verdade para autocomplete)
+  useEffect(() => {
+    fetch("/api/admin/crafting/items?category=all")
+      .then(r => r.json())
+      .then(b => {
+        const names = [...new Set<string>((b.items ?? []).map((i: AdminCatalogItem) => i.name))].sort()
+        setAllItemNames(names)
+      })
+      .catch(() => {})
+  }, [])
+
   const filtered = useMemo(() => {
     if (!search.trim()) return items
     const q = normalizeText(search)
@@ -158,6 +168,7 @@ export default function AdminCraftingPage() {
     setObtainedFrom(item.obtained_from?.length ? item.obtained_from : [])
     setRecycledInto(item.recycled_into?.length ? item.recycled_into : [])
     setRecoveredInto(item.recovered_into?.length ? item.recovered_into : [])
+    setUsedInCrafting(item.used_in_crafting?.length ? item.used_in_crafting : [] as string[])
     setSaveStatus("")
   }
 
@@ -175,8 +186,9 @@ export default function AdminCraftingPage() {
 
     const body: Record<string, unknown> = {
       obtained_from:  cleanList(obtainedFrom),
-      recycled_into:  cleanList(recycledInto),
-      recovered_into: cleanList(recoveredInto),
+      recycled_into:    cleanList(recycledInto),
+      recovered_into:   cleanList(recoveredInto),
+      used_in_crafting: usedInCrafting.filter(n => n.trim()),
     }
     if (editing.workbench) {
       body.recipe = cleanList(recipe).length > 0 ? cleanList(recipe) : null
@@ -360,6 +372,51 @@ export default function AdminCraftingPage() {
               onChange={setRecoveredInto}
               datalistId="admin-item-names"
             />
+
+            {/* Usado na fabricação — só nomes, sem quantidade */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>
+                Usado na fabricação de (itens que usam este como ingrediente)
+              </span>
+              {usedInCrafting.length === 0 && (
+                <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)", fontStyle: "italic" }}>
+                  Nenhum registro — clique em Adicionar para começar.
+                </p>
+              )}
+              {usedInCrafting.map((name, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={e => setUsedInCrafting(prev => prev.map((v, idx) => idx === i ? e.target.value : v))}
+                    list="admin-item-names"
+                    placeholder="Nome do item craftável..."
+                    style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        setUsedInCrafting(prev => [...prev, ""])
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setUsedInCrafting(prev => prev.filter((_, idx) => idx !== i))}
+                    style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", padding: 6, display: "flex", alignItems: "center", flexShrink: 0 }}
+                    aria-label="Remover"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setUsedInCrafting(prev => [...prev, ""])}
+                style={{ ...btnStyle, display: "inline-flex", alignItems: "center", gap: 6, alignSelf: "flex-start", marginTop: 2 }}
+              >
+                <Plus size={12} /> Adicionar
+              </button>
+            </div>
 
             {saveStatus && (
               <p style={{ fontSize: 12, color: saveStatus.startsWith("Salvo") ? "var(--green)" : "var(--red)", margin: 0 }}>
