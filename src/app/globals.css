@@ -282,7 +282,8 @@ select {
 .content:has(.home-page),
 .content:has(.store-page),
 .content:has(.inventario-page),
-.content:has(.reciclagem-page) {
+.content:has(.reciclagem-page),
+.content:has(.mapas-page) {
   height: 100vh;
   overflow-y: auto;
   scrollbar-width: none;
@@ -292,7 +293,8 @@ select {
 .content:has(.home-page)::-webkit-scrollbar,
 .content:has(.store-page)::-webkit-scrollbar,
 .content:has(.inventario-page)::-webkit-scrollbar,
-.content:has(.reciclagem-page)::-webkit-scrollbar {
+.content:has(.reciclagem-page)::-webkit-scrollbar,
+.content:has(.mapas-page)::-webkit-scrollbar {
   display: none;
 }
 
@@ -1516,6 +1518,7 @@ select {
 .arcpedia-page--panel-closed .store-panel-reopen,
 .inventario-page--panel-closed .store-panel-reopen,
 .reciclagem-page--panel-closed .store-panel-reopen,
+.mapas-page--panel-closed .store-panel-reopen,
 .crafting-page--panel-closed .store-panel-reopen {
   opacity: 1;
   pointer-events: auto;
