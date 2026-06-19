@@ -11,6 +11,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const update: Record<string, unknown> = {}
   if (typeof body.active === "boolean") update.active = body.active
+  if (typeof body.name === "string" && body.name.trim()) update.name = body.name.trim()
   if ("recipe" in body)           update.recipe           = body.recipe           ?? null
   if ("obtained_from" in body)    update.obtained_from    = body.obtained_from    ?? []
   if ("recycled_into" in body)    update.recycled_into    = body.recycled_into    ?? []
