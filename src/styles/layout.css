@@ -181,7 +181,9 @@ body.modal-open {
 .content:has(.faccoes-page),
 .content:has(.contratos-page),
 .content:has(.catalog-page),
-.content:has(.crafting-page) {
+.content:has(.crafting-page),
+.content:has(.reciclagem-page),
+.content:has(.mapas-page) {
   height: 100vh;
   overflow-y: auto;
   scrollbar-width: none;
@@ -194,7 +196,9 @@ body.modal-open {
 .content:has(.faccoes-page)::-webkit-scrollbar,
 .content:has(.contratos-page)::-webkit-scrollbar,
 .content:has(.catalog-page)::-webkit-scrollbar,
-.content:has(.crafting-page)::-webkit-scrollbar {
+.content:has(.crafting-page)::-webkit-scrollbar,
+.content:has(.reciclagem-page)::-webkit-scrollbar,
+.content:has(.mapas-page)::-webkit-scrollbar {
   display: none;
 }
 
