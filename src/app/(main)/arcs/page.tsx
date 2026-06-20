@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState, useMemo } from "react"
 import arcData from "@/data/arc-data"
@@ -98,7 +98,7 @@ export default function ArcsPage() {
                     <small>Drops</small>
                     <div className="arc-drop-list">
                       {drops.map(dropId => (
-                        <a key={dropId} href={`/itens`} className="arc-drop-chip" title={itemNameForId(dropId)}>
+                        <a key={dropId} href="/loja" className="arc-drop-chip" title={itemNameForId(dropId)}>
                           {itemNameForId(dropId)}
                         </a>
                       ))}

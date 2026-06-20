@@ -38,9 +38,9 @@ const paymentStatusLabels: Record<string, string> = {
 }
 
 const paymentBannerLabels: Record<string, string> = {
-  success: "Pagamento aprovado! Seu pedido já está sendo processado.",
+  success: "Pagamento aprovado! Seu pedido jÃ¡ estÃ¡ sendo processado.",
   pending: "Pagamento via PIX pendente. Assim que o Mercado Pago confirmar, atualizaremos seu pedido automaticamente.",
-  failure: "O pagamento não foi concluído. Você pode tentar novamente pelo carrinho.",
+  failure: "O pagamento nÃ£o foi concluÃ­do. VocÃª pode tentar novamente pelo carrinho.",
 }
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
@@ -72,7 +72,7 @@ function OrderCard({ order, onSync, syncing }: { order: Order; onSync: (orderId:
             </div>
             <div className="cart-item-info">
               <strong>{item.name}</strong>
-              <span>{item.type ?? "Item"} · Quantidade: {item.quantity}</span>
+              <span>{item.type ?? "Item"} Â· Quantidade: {item.quantity}</span>
             </div>
             <div className="cart-item-value">
               <strong>{formatNumber(item.mode === "points" ? item.pointsCost : item.lineTotal)}</strong>
@@ -91,7 +91,7 @@ function OrderCard({ order, onSync, syncing }: { order: Order; onSync: (orderId:
       </div>
       {isPixPending && (
         <>
-          <p className="modal-purchase-status">Aguardando confirmação do pagamento PIX no Mercado Pago.</p>
+          <p className="modal-purchase-status">Aguardando confirmaÃ§Ã£o do pagamento PIX no Mercado Pago.</p>
           <button type="button" className="cart-checkout-button cash" onClick={() => onSync(order.id)} disabled={syncing}>
             {syncing ? "Verificando..." : "Verificar pagamento"}
           </button>
@@ -151,8 +151,8 @@ function PedidoConfirmadoContent() {
   if (orders.length === 0) {
     return (
       <div className="cart-empty">
-        <p>Não encontramos esse pedido.</p>
-        <Link href="/itens">Voltar ao catálogo</Link>
+        <p>NÃ£o encontramos esse pedido.</p>
+        <Link href="/loja">Voltar ao catÃ¡logo</Link>
       </div>
     )
   }
@@ -166,7 +166,7 @@ function PedidoConfirmadoContent() {
         <OrderCard key={order.id} order={order} onSync={syncOrder} syncing={syncingIds.has(order.id)} />
       ))}
       <div className="cart-confirm-actions">
-        <Link href="/itens" className="cart-checkout-button">Continuar comprando</Link>
+        <Link href="/loja" className="cart-checkout-button">Continuar comprando</Link>
         <Link href="/perfil" className="cart-checkout-button cash">Ver no perfil</Link>
       </div>
     </div>

@@ -159,7 +159,7 @@ function PagarContent() {
         <h2>Pagamento PIX</h2>
         <div className="cart-empty">
           <p>Não foi possível carregar este pedido.</p>
-          <Link href="/itens">Voltar ao catálogo</Link>
+          <Link href="/loja">Voltar ao catálogo</Link>
         </div>
       </section>
     )

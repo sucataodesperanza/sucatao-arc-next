@@ -45,7 +45,7 @@ const tabs: { key: string; label: string; href?: string }[] = [
 type RewardItem = { id: string; name: string; description: string | null; image_url: string | null; price: number; stock: number; expires_at: string | null }
 
 const categories: { key: string; tag: string; tone: string; image: string; title: string; text: string; href?: string }[] = [
-  { key: "itens", tag: "CATÁLOGO", tone: "yellow", image: "/assets/bots/arc_leaper.png", title: "Itens", text: "Catálogo completo para resgatar ou comprar com pontos.", href: "/itens" },
+  { key: "itens", tag: "CATÁLOGO", tone: "yellow", image: "/assets/bots/arc_leaper.png", title: "Itens", text: "Catálogo completo para resgatar ou comprar com pontos.", href: "/loja" },
   { key: "passes", tag: "CONTRATOS", tone: "cyan", image: "/assets/maps/the_spaceport.png", title: "Contratos à Venda", text: "Compre contratos exclusivos e ganhe recompensas especiais." },
   { key: "sorteios", tag: "SORTEIOS", tone: "red", image: "/assets/bots/arc_pop.png", title: "Sorteios", text: "Participe de sorteios e concorra a itens raros." },
   { key: "servicos", tag: "LEILÕES", tone: "green", image: "/assets/maps/stella_montis_upper.png", title: "Leilões", text: "Dispute itens raros em leilões com tempo limitado." },
@@ -319,7 +319,7 @@ export default function LojaPage() {
                     </span>
                     <h2>Pacote Mercador do Sucatão</h2>
                     <p>Um lote selecionado de itens raros e materiais de alto valor, direto do estoque do Sucatão. Disponível por tempo limitado.</p>
-                    <Link href="/itens" className="hero-banner-cta">
+                    <Link href="/loja" className="hero-banner-cta">
                       Ver pacote
                       <ArrowRight size={16} />
                     </Link>
@@ -342,7 +342,7 @@ export default function LojaPage() {
                       Atualiza em breve
                     </span>
                   </h2>
-                  <Link href="/itens" className="store-see-all">
+                  <Link href="/loja" className="store-see-all">
                     Ver todos os itens
                     <ArrowRight size={14} />
                   </Link>
@@ -646,7 +646,7 @@ export default function LojaPage() {
                   </div>
                 ))}
               </div>
-              <Link href="/itens" className="trades-footer-btn">
+              <Link href="/loja" className="trades-footer-btn">
                 Ver todos os itens
                 <ArrowRight size={16} />
               </Link>

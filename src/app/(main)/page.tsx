@@ -45,7 +45,7 @@ const heroSlides = [
     icon: Sparkles,
     title: "O Sucatão Tem Tudo Que Você Precisa",
     text: "Itens, componentes e equipamentos para sua jornada na Superfície. Compre, troque e recicle direto pelo catálogo.",
-    cta: { label: "Ver catálogo", href: "/itens" },
+    cta: { label: "Ver catálogo", href: "/loja" },
   },
   {
     image: "/assets/bots/arc_sentinel.png",
@@ -74,7 +74,7 @@ const heroSlides = [
 ]
 
 const categories = [
-  { href: "/itens", tag: "EVENTO", tone: "yellow", image: "/assets/bots/arc_wasp.png", title: "Itens", text: "Catálogo completo com valores e raridades." },
+  { href: "/loja", tag: "EVENTO", tone: "yellow", image: "/assets/bots/arc_wasp.png", title: "Itens", text: "Catálogo completo com valores e raridades." },
   { href: "/trades", tag: "TROCAS", tone: "red", image: "/assets/bots/arc_hornet.png", title: "Trades", text: "Ofertas do marketplace e custo de troca." },
   { href: "/crafting", tag: "CRAFTING", tone: "green", image: "/assets/bots/arc_sentinel.png", title: "Crafting", text: "Receitas e materiais necessários." },
   { href: "/mapas", tag: "MAPAS", tone: "cyan", image: "/assets/maps/buried_city.png", title: "Mapas", text: "Rotas e pontos de interesse nos mapas." },

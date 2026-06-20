@@ -89,8 +89,8 @@ export default function CarrinhoPage() {
 
       {cart.items.length === 0 ? (
         <div className="cart-empty">
-          <p>Seu carrinho está vazio.</p>
-          <a href="/itens">Voltar ao catálogo</a>
+          <p>Seu carrinho estÃ¡ vazio.</p>
+          <a href="/loja">Voltar ao catÃ¡logo</a>
         </div>
       ) : (
         <div className="cart-layout">
