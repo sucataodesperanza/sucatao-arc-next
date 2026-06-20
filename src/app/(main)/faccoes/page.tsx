@@ -1,13 +1,8 @@
 "use client"
 
-<<<<<<< HEAD
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { AlertTriangle, ArrowRight, Check, ChevronRight, Eye, Gem, Hexagon, Recycle, Scale, Skull, Star, Users, X } from "lucide-react"
-=======
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowRight, Check, ChevronLeft, ChevronRight, Eye, Gem, Hexagon, Recycle, Scale, Skull, Star, Users, X } from "lucide-react"
->>>>>>> 7acc60bb12b6647fbf205432a1c1eaeb6507f76e
 import type { LucideIcon } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/faccoes.css"

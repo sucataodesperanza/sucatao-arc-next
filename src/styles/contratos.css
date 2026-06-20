@@ -1288,7 +1288,6 @@
   }
 }
 
-<<<<<<< HEAD
 @media (max-width: 780px) {
   .store-side-panel {
     position: static;
@@ -1751,5 +1750,3 @@
   background: var(--surface-2);
   color: var(--paper);
 }
-=======
->>>>>>> 7acc60bb12b6647fbf205432a1c1eaeb6507f76e
