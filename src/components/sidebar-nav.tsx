@@ -1,13 +1,19 @@
 "use client"
 
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+<<<<<<< HEAD
 import { BarChart2, Bot, Flag, Hammer, Home, LogIn, Map, Recycle, Repeat2, ScrollText, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
+=======
+import { Bot, Flag, Hammer, Home, LogIn, Map, MoreHorizontal, Package, Recycle, Repeat2, ScrollText, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
+>>>>>>> ab3d173bf93d873d3df9498e1fb1dafcd9ad39bd
 import { useCart } from "@/lib/cart-context"
 import { BrandMark } from "./brand-mark"
 import { LogoutButton } from "./logout-button"
 
 const navLinks = [
+<<<<<<< HEAD
   { href: "/", label: "Início", icon: Home },
   { href: "/loja", label: "Loja", icon: Store },
   { href: "/trades", label: "Trades", icon: Repeat2 },
@@ -18,11 +24,62 @@ const navLinks = [
   { href: "/faccoes", label: "Facções", icon: Flag },
   { href: "/contratos", label: "Contratos", icon: ScrollText },
   { href: "/rankings", label: "Rankings", icon: BarChart2 },
+=======
+  { href: "/",          label: "Início",     icon: Home      },
+  { href: "/loja",      label: "Loja",       icon: Store     },
+  { href: "/inventario",label: "Inventário", icon: Package   },
+  { href: "/trades",    label: "Trades",     icon: Repeat2   },
+  { href: "/arcpedia",  label: "Arcpedia",   icon: Bot       },
+  { href: "/crafting",  label: "Crafting",   icon: Hammer    },
+  { href: "/reciclagem",label: "Reciclagem", icon: Recycle   },
+  { href: "/mapas",     label: "Mapas",      icon: Map       },
+  { href: "/faccoes",   label: "Facções",    icon: Flag      },
+  { href: "/contratos", label: "Contratos",  icon: ScrollText},
+>>>>>>> ab3d173bf93d873d3df9498e1fb1dafcd9ad39bd
 ]
+
+const VISIBLE_COUNT = 6
+const visibleLinks = navLinks.slice(0, VISIBLE_COUNT)
+const extraLinks   = navLinks.slice(VISIBLE_COUNT)
+
+const SIDEBAR_WIDTH = 92
 
 export function SidebarNav({ isLoggedIn, isAdmin, avatarUrl }: { isLoggedIn: boolean; isAdmin: boolean; avatarUrl: string | null }) {
   const pathname = usePathname()
   const cart = useCart()
+
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [popoverTop, setPopoverTop] = useState(0)
+  const moreRef = useRef<HTMLButtonElement>(null)
+  const popoverRef = useRef<HTMLDivElement>(null)
+
+  function toggleMore() {
+    if (!moreOpen && moreRef.current) {
+      const rect = moreRef.current.getBoundingClientRect()
+      setPopoverTop(rect.top)
+    }
+    setMoreOpen(prev => !prev)
+  }
+
+  // Fecha ao clicar fora
+  useEffect(() => {
+    if (!moreOpen) return
+    function onMouseDown(e: MouseEvent) {
+      const target = e.target as Node
+      if (!moreRef.current?.contains(target) && !popoverRef.current?.contains(target)) {
+        setMoreOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown)
+    return () => document.removeEventListener("mousedown", onMouseDown)
+  }, [moreOpen])
+
+  // Fecha ao navegar
+  useEffect(() => { setMoreOpen(false) }, [pathname])
+
+  const hasActiveExtra = extraLinks.some(({ href }) =>
+    href === "/" ? pathname === "/" : pathname?.startsWith(href)
+  )
 
   return (
     <aside className="site-rail">
@@ -31,7 +88,7 @@ export function SidebarNav({ isLoggedIn, isAdmin, avatarUrl }: { isLoggedIn: boo
       </Link>
 
       <nav className="site-rail-nav" aria-label="Navegação principal">
-        {navLinks.map(({ href, label, icon: Icon }) => {
+        {visibleLinks.map(({ href, label, icon: Icon }) => {
           const active = href === "/" ? pathname === "/" : pathname?.startsWith(href)
           return (
             <Link
@@ -44,6 +101,47 @@ export function SidebarNav({ isLoggedIn, isAdmin, avatarUrl }: { isLoggedIn: boo
             </Link>
           )
         })}
+
+        {/* Botão "mais" */}
+        {extraLinks.length > 0 && (
+          <>
+            <button
+              ref={moreRef}
+              type="button"
+              className={`sidebar-link${moreOpen || hasActiveExtra ? " active" : ""}`}
+              data-tooltip="Mais"
+              onClick={toggleMore}
+              aria-label="Mais opções"
+              aria-expanded={moreOpen}
+            >
+              <MoreHorizontal size={22} />
+            </button>
+
+            {/* Popover flutuante */}
+            {moreOpen && (
+              <div
+                ref={popoverRef}
+                className="sidebar-more-popover"
+                style={{ top: popoverTop, left: SIDEBAR_WIDTH + 6 }}
+              >
+                {extraLinks.map(({ href, label, icon: Icon }) => {
+                  const active = href === "/" ? pathname === "/" : pathname?.startsWith(href)
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`sidebar-more-item${active ? " active" : ""}`}
+                      onClick={() => setMoreOpen(false)}
+                    >
+                      <Icon size={18} />
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </>
+        )}
 
         <button type="button" className="sidebar-link" data-tooltip="Carrinho" onClick={cart.toggleDrawer}>
           <ShoppingCart size={22} />

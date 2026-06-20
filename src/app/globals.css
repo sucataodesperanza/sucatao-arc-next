@@ -182,6 +182,56 @@ select {
   transform: translateY(-50%) translateX(0);
 }
 
+/* ── Sidebar popover "mais" ── */
+
+.sidebar-more-popover {
+  position: fixed;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px;
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  background: var(--surface-2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  min-width: 168px;
+  animation: popover-in 0.12s ease;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes popover-in {
+  from { opacity: 0; transform: translateX(-6px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.sidebar-more-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 6px;
+  color: var(--gray-500);
+  font-size: 12px;
+  font-weight: 850;
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+}
+
+.sidebar-more-item:hover {
+  background: var(--surface-3);
+  color: var(--paper);
+}
+
+.sidebar-more-item.active {
+  color: var(--paper);
+  background: rgba(255, 97, 113, 0.1);
+}
+
 .sidebar-avatar {
   position: relative;
   display: grid;
@@ -235,7 +285,10 @@ select {
 }
 
 .content:has(.home-page),
-.content:has(.store-page) {
+.content:has(.store-page),
+.content:has(.inventario-page),
+.content:has(.reciclagem-page),
+.content:has(.mapas-page) {
   height: 100vh;
   overflow-y: auto;
   scrollbar-width: none;
@@ -243,7 +296,10 @@ select {
 }
 
 .content:has(.home-page)::-webkit-scrollbar,
-.content:has(.store-page)::-webkit-scrollbar {
+.content:has(.store-page)::-webkit-scrollbar,
+.content:has(.inventario-page)::-webkit-scrollbar,
+.content:has(.reciclagem-page)::-webkit-scrollbar,
+.content:has(.mapas-page)::-webkit-scrollbar {
   display: none;
 }
 
@@ -1465,6 +1521,9 @@ select {
 .faccoes-page--panel-closed .store-panel-reopen,
 .contratos-page--panel-closed .store-panel-reopen,
 .arcpedia-page--panel-closed .store-panel-reopen,
+.inventario-page--panel-closed .store-panel-reopen,
+.reciclagem-page--panel-closed .store-panel-reopen,
+.mapas-page--panel-closed .store-panel-reopen,
 .crafting-page--panel-closed .store-panel-reopen {
   opacity: 1;
   pointer-events: auto;
@@ -2445,6 +2504,29 @@ select {
   color: var(--paper);
   font-size: 13px;
   outline: 0;
+}
+
+.catalog-select {
+  height: 40px;
+  padding: 0 28px 0 12px;
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.03);
+  color: var(--paper);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236f7785' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: border-color 0.15s;
+}
+
+.catalog-select:focus {
+  outline: none;
+  border-color: var(--stroke-strong);
 }
 
 .catalog-dropdown {

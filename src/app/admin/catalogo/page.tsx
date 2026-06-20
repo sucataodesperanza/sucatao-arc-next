@@ -44,6 +44,8 @@ export default function AdminCatalogoPage() {
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [syncStatus, setSyncStatus] = useState("")
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -86,6 +88,20 @@ export default function AdminCatalogoPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     })
+  }
+
+  function startEditName(item: AdminCatalogItem) {
+    setEditingId(item.id)
+    setEditingName(item.name)
+  }
+
+  async function commitName(id: string) {
+    const name = editingName.trim()
+    setEditingId(null)
+    if (!name) return
+    const original = items.find(i => i.id === id)?.name
+    if (name === original) return
+    await patchItem(id, { name })
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -142,7 +158,29 @@ export default function AdminCatalogoPage() {
                         <img src={item.icon_url} alt={item.name} style={{ width: "32px", height: "32px", objectFit: "contain" }} />
                       ) : null}
                     </td>
-                    <td style={{ padding: "8px", fontWeight: 800 }}>{item.name}</td>
+                    <td style={{ padding: "8px" }}>
+                      {editingId === item.id ? (
+                        <input
+                          autoFocus
+                          value={editingName}
+                          onChange={e => setEditingName(e.target.value)}
+                          onBlur={() => commitName(item.id)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") { e.preventDefault(); commitName(item.id) }
+                            if (e.key === "Escape") setEditingId(null)
+                          }}
+                          style={{ ...inputStyle, width: "100%", fontWeight: 800 }}
+                        />
+                      ) : (
+                        <span
+                          style={{ fontWeight: 800, cursor: "text", display: "block" }}
+                          onClick={() => startEditName(item)}
+                          title="Clique para editar o nome"
+                        >
+                          {item.name}
+                        </span>
+                      )}
+                    </td>
                     <td style={{ padding: "8px", color: "var(--muted)" }}>{getItemTypeLabel(item.item_type)}</td>
                     <td style={{ padding: "8px", color: "var(--muted)" }}>{getRarityLabel(item.rarity)}</td>
                     <td style={{ padding: "8px" }}>
