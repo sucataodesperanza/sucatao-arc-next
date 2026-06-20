@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Banknote, ChevronLeft, ChevronRight, CircleDollarSign, Clock, Coins, Package, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
+import { ArrowRight, Banknote, ChevronLeft, ChevronRight, CircleDollarSign, Clock, Coins, Gavel, Package, Plus, ScrollText, Shirt, ShoppingCart, Sparkles, Star, Target, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getItemTypeLabel, type CatalogItem } from "@/lib/catalog"
@@ -36,9 +36,9 @@ function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("p
 const tabs: { key: string; label: string; href?: string }[] = [
   { key: "destaques", label: "Destaques" },
   { key: "itens", label: "Itens" },
-  { key: "passes", label: "Passes" },
+  { key: "passes", label: "Contratos à Venda" },
   { key: "sorteios", label: "Sorteios" },
-  { key: "servicos", label: "Serviços" },
+  { key: "servicos", label: "Leilões" },
   { key: "giftcards", label: "Gift Cards" },
 ]
 
@@ -52,11 +52,151 @@ const weeklyHighlights: { id: string; name: string; stock: number; price: number
 
 const categories: { key: string; tag: string; tone: string; image: string; title: string; text: string; href?: string }[] = [
   { key: "itens", tag: "CATÁLOGO", tone: "yellow", image: "/assets/bots/arc_leaper.png", title: "Itens", text: "Catálogo completo para resgatar ou comprar com pontos.", href: "/itens" },
-  { key: "passes", tag: "PASSES", tone: "cyan", image: "/assets/maps/the_spaceport.png", title: "Passes", text: "Passes de temporada com recompensas exclusivas." },
+  { key: "passes", tag: "CONTRATOS", tone: "cyan", image: "/assets/maps/the_spaceport.png", title: "Contratos à Venda", text: "Compre contratos exclusivos e ganhe recompensas especiais." },
   { key: "sorteios", tag: "SORTEIOS", tone: "red", image: "/assets/bots/arc_pop.png", title: "Sorteios", text: "Participe de sorteios e concorra a itens raros." },
-  { key: "servicos", tag: "SERVIÇOS", tone: "green", image: "/assets/maps/stella_montis_upper.png", title: "Serviços", text: "Serviços especiais para acelerar sua jornada." },
+  { key: "servicos", tag: "LEILÕES", tone: "green", image: "/assets/maps/stella_montis_upper.png", title: "Leilões", text: "Dispute itens raros em leilões com tempo limitado." },
   { key: "giftcards", tag: "GIFT CARDS", tone: "yellow", image: "/assets/bots/arc_snitch.png", title: "Gift Cards", text: "Cartões de presente para usar dentro da loja." },
 ]
+
+type ContractTier = "Básico" | "Avançado" | "Épico"
+type ContractSaleType = "Diário" | "Semanal"
+
+const contractsForSale: {
+  id: string
+  name: string
+  description: string
+  type: ContractSaleType
+  tier: ContractTier
+  price: number
+  objective: string
+  rewards: { icon: typeof Coins; label: string; color: string }[]
+  image: string
+}[] = [
+  {
+    id: "c1",
+    name: "Coleta Rápida",
+    description: "Colete recursos espalhados pelo mapa antes que outros Raiders cheguem.",
+    type: "Diário",
+    tier: "Básico",
+    price: 500,
+    objective: "Colete 10 recursos",
+    rewards: [
+      { icon: Coins, label: "+300 Sucatas", color: "#ffd400" },
+      { icon: Zap, label: "+150 XP", color: "#5fa8ff" },
+    ],
+    image: "/assets/bots/arc_leaper.png",
+  },
+  {
+    id: "c2",
+    name: "Caçada Noturna",
+    description: "Elimine unidades ARC patrulhando a zona de exclusão.",
+    type: "Diário",
+    tier: "Avançado",
+    price: 900,
+    objective: "Elimine 8 ARC",
+    rewards: [
+      { icon: Coins, label: "+600 Sucatas", color: "#ffd400" },
+      { icon: Zap, label: "+300 XP", color: "#5fa8ff" },
+    ],
+    image: "/assets/bots/arc_shredder.png",
+  },
+  {
+    id: "c3",
+    name: "Operação Resgate",
+    description: "Recupere equipamentos perdidos em zonas de alta periculosidade.",
+    type: "Semanal",
+    tier: "Avançado",
+    price: 2000,
+    objective: "Recupere 5 equipamentos",
+    rewards: [
+      { icon: Coins, label: "+2.000 Sucatas", color: "#ffd400" },
+      { icon: Zap, label: "+800 XP", color: "#5fa8ff" },
+      { icon: Star, label: "+50 REP", color: "#b477ff" },
+    ],
+    image: "/assets/bots/arc_spotter.png",
+  },
+  {
+    id: "c4",
+    name: "Titan Caído",
+    description: "Confronte e elimine um ARC Titan nas ruínas da Cidade Alta.",
+    type: "Semanal",
+    tier: "Épico",
+    price: 5000,
+    objective: "Elimine 1 ARC Titan",
+    rewards: [
+      { icon: Coins, label: "+5.000 Sucatas", color: "#ffd400" },
+      { icon: Zap, label: "+2.500 XP", color: "#5fa8ff" },
+      { icon: Star, label: "+200 REP", color: "#b477ff" },
+    ],
+    image: "/assets/bots/arc_the_queen.png",
+  },
+  {
+    id: "c5",
+    name: "Entrega Expressa",
+    description: "Transporte suprimentos críticos para os postos aliados sem ser detectado.",
+    type: "Diário",
+    tier: "Básico",
+    price: 400,
+    objective: "Entregue 3 suprimentos",
+    rewards: [
+      { icon: Coins, label: "+250 Sucatas", color: "#ffd400" },
+      { icon: Zap, label: "+100 XP", color: "#5fa8ff" },
+    ],
+    image: "/assets/bots/arc_snitch.png",
+  },
+  {
+    id: "c6",
+    name: "Domínio Total",
+    description: "Controle todos os pontos estratégicos do mapa durante uma sessão completa.",
+    type: "Semanal",
+    tier: "Épico",
+    price: 4500,
+    objective: "Domine 5 pontos",
+    rewards: [
+      { icon: Coins, label: "+4.000 Sucatas", color: "#ffd400" },
+      { icon: Zap, label: "+2.000 XP", color: "#5fa8ff" },
+      { icon: Star, label: "+150 REP", color: "#b477ff" },
+    ],
+    image: "/assets/bots/arc_matriarch.png",
+  },
+]
+
+const tierColors: Record<ContractTier, { bg: string; color: string; border: string }> = {
+  Básico:   { bg: "rgba(91,166,255,0.12)",  color: "#5fa8ff", border: "rgba(91,166,255,0.3)"  },
+  Avançado: { bg: "rgba(255,196,0,0.12)",   color: "#ffd400", border: "rgba(255,196,0,0.3)"   },
+  Épico:    { bg: "rgba(180,119,255,0.14)", color: "#b477ff", border: "rgba(180,119,255,0.32)" },
+}
+
+const typeColors: Record<ContractSaleType, { bg: string; color: string }> = {
+  Diário:  { bg: "rgba(255,65,65,0.15)",  color: "#ff4141" },
+  Semanal: { bg: "rgba(255,196,0,0.12)",  color: "#ffc400" },
+}
+
+const auctionItems: {
+  id: string
+  name: string
+  description: string
+  rarity: string
+  currentBid: number
+  minIncrement: number
+  endsAt: string
+  bids: number
+  image?: string
+}[] = [
+  { id: "a1", name: "Capacete ARC Sentinel", description: "Capacete de combate de alta tecnologia recuperado de um ARC Sentinel.", rarity: "Épico", currentBid: 12500, minIncrement: 500, endsAt: "2h 14m", bids: 8, image: "/assets/bots/arc_sentinel.png" },
+  { id: "a2", name: "Lâmina da Matriarca", description: "Arma lendária extraída do núcleo de energia de um ARC Matriarch.", rarity: "Lendário", currentBid: 48000, minIncrement: 2000, endsAt: "4h 52m", bids: 23, image: "/assets/bots/arc_matriarch.png" },
+  { id: "a3", name: "Módulo Furtivo", description: "Dispositivo raro que reduz a assinatura de radar dos Raiders.", rarity: "Raro", currentBid: 4200, minIncrement: 200, endsAt: "0h 38m", bids: 5, image: "/assets/bots/arc_snitch.png" },
+  { id: "a4", name: "Núcleo ARC Pop", description: "Fonte de energia instável com grande potencial de modificação.", rarity: "Incomum", currentBid: 1800, minIncrement: 100, endsAt: "6h 05m", bids: 3, image: "/assets/bots/arc_pop.png" },
+  { id: "a5", name: "Exoesqueleto Shredder", description: "Armadura pesada recuperada de uma unidade ARC Shredder destruída.", rarity: "Épico", currentBid: 21000, minIncrement: 1000, endsAt: "1h 20m", bids: 14, image: "/assets/bots/arc_shredder.png" },
+  { id: "a6", name: "Caixa Pintada", description: "Caixa misteriosa com decorações únicas. Conteúdo desconhecido.", rarity: "Raro", currentBid: 3500, minIncrement: 150, endsAt: "3h 47m", bids: 6, image: "/assets/items/painted_box.png" },
+]
+
+const auctionRarityColors: Record<string, { color: string; bg: string; border: string }> = {
+  Incomum:  { color: "#3df28b", bg: "rgba(61,242,139,0.12)",  border: "rgba(61,242,139,0.28)"  },
+  Raro:     { color: "#5fa8ff", bg: "rgba(95,168,255,0.12)",  border: "rgba(95,168,255,0.28)"  },
+  Épico:    { color: "#b477ff", bg: "rgba(180,119,255,0.12)", border: "rgba(180,119,255,0.28)" },
+  Lendário: { color: "#ffd400", bg: "rgba(255,212,0,0.12)",   border: "rgba(255,212,0,0.28)"   },
+}
 
 export default function LojaPage() {
   const catalog = useItemsCatalog()
@@ -252,7 +392,8 @@ export default function LojaPage() {
                 </div>
                 <div className="store-category-row">
                   {categories.map(cat => cat.href ? (
-                    <Link key={cat.key} href={cat.href} className="category-card" style={{ backgroundImage: `url(${cat.image})` }}>
+                    <Link key={cat.key} href={cat.href} className="category-card">
+                      <div className="category-card-bg" style={{ backgroundImage: `url(${cat.image})` }} />
                       <span className={`category-card-tag tone-${cat.tone}`}>{cat.tag}</span>
                       <strong>{cat.title}</strong>
                       <span>{cat.text}</span>
@@ -262,9 +403,9 @@ export default function LojaPage() {
                       key={cat.key}
                       type="button"
                       className="category-card category-card-button"
-                      style={{ backgroundImage: `url(${cat.image})` }}
                       onClick={() => setActiveTab(cat.key)}
                     >
+                      <div className="category-card-bg" style={{ backgroundImage: `url(${cat.image})` }} />
                       <span className={`category-card-tag tone-${cat.tone}`}>{cat.tag}</span>
                       <strong>{cat.title}</strong>
                       <span>{cat.text}</span>
@@ -295,6 +436,137 @@ export default function LojaPage() {
                 </div>
                 <CatalogFilters catalog={catalog} />
                 <CatalogGrid catalog={catalog} className="store-items-grid" />
+              </section>
+            </>
+          ) : activeTab === "passes" ? (
+            <>
+              <section aria-label="Contratos à Venda">
+                <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/maps/the_spaceport.png)" }}>
+                  <div className="hero-banner-content">
+                    <span className="hero-banner-tag">
+                      <ScrollText size={12} />
+                      Contratos à Venda
+                    </span>
+                    <h2>Compre contratos e maximize suas recompensas</h2>
+                    <p>Escolha entre contratos diários e semanais de diferentes níveis de dificuldade. Cada contrato oferece recompensas exclusivas em Sucatas, XP e Reputação.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section aria-label="Lista de contratos">
+                <div className="store-section-head">
+                  <h2>Contratos Disponíveis</h2>
+                  <span>{contractsForSale.length} contratos</span>
+                </div>
+                <div className="store-contracts-grid">
+                  {contractsForSale.map(contract => {
+                    const tier = tierColors[contract.tier]
+                    const type = typeColors[contract.type]
+                    return (
+                      <div key={contract.id} className="store-contract-card">
+                        <div className="store-contract-banner" style={{ backgroundImage: `url(${contract.image})` }}>
+                          <span className="store-contract-type-badge" style={{ background: type.bg, color: type.color }}>
+                            {contract.type}
+                          </span>
+                          <span className="store-contract-tier-badge" style={{ background: tier.bg, color: tier.color, borderColor: tier.border }}>
+                            {contract.tier}
+                          </span>
+                        </div>
+                        <div className="store-contract-body">
+                          <strong className="store-contract-name">{contract.name}</strong>
+                          <p className="store-contract-desc">{contract.description}</p>
+                          <div className="store-contract-objective">
+                            <Target size={12} />
+                            {contract.objective}
+                          </div>
+                          <div className="store-contract-rewards">
+                            {contract.rewards.map((r, i) => {
+                              const Icon = r.icon
+                              return (
+                                <span key={i} className="store-contract-reward" style={{ color: r.color }}>
+                                  <Icon size={11} />
+                                  {r.label}
+                                </span>
+                              )
+                            })}
+                          </div>
+                          <div className="store-contract-footer">
+                            <span className="store-contract-price">
+                              <Coins size={13} />
+                              {contract.price.toLocaleString("pt-BR")}
+                            </span>
+                            <button type="button" className="store-contract-buy">
+                              <ShoppingCart size={13} />
+                              Comprar
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            </>
+          ) : activeTab === "servicos" ? (
+            <>
+              <section aria-label="Leilões">
+                <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/maps/stella_montis_upper.png)" }}>
+                  <div className="hero-banner-content">
+                    <span className="hero-banner-tag">
+                      <Gavel size={12} />
+                      Leilões
+                    </span>
+                    <h2>Dispute itens raros com outros Raiders</h2>
+                    <p>Faça seus lances antes do tempo acabar. Cada leilão é único — itens raros, lendários e exclusivos disponíveis por tempo limitado.</p>
+                  </div>
+                </div>
+              </section>
+
+              <section aria-label="Itens em leilão">
+                <div className="store-section-head">
+                  <h2>Leilões Ativos</h2>
+                  <span>{auctionItems.length} itens</span>
+                </div>
+                <div className="store-auction-grid">
+                  {auctionItems.map(item => {
+                    const rar = auctionRarityColors[item.rarity] ?? auctionRarityColors["Raro"]
+                    const isEnding = item.endsAt.startsWith("0h")
+                    return (
+                      <div key={item.id} className="store-auction-card">
+                        <div className="store-auction-banner" style={{ backgroundImage: item.image ? `url(${item.image})` : undefined }}>
+                          <span className="store-auction-rarity" style={{ background: rar.bg, color: rar.color, borderColor: rar.border }}>
+                            {item.rarity}
+                          </span>
+                          <span className={`store-auction-timer${isEnding ? " store-auction-timer--ending" : ""}`}>
+                            <Clock size={11} />
+                            {item.endsAt}
+                          </span>
+                        </div>
+                        <div className="store-auction-body">
+                          <strong className="store-auction-name">{item.name}</strong>
+                          <p className="store-auction-desc">{item.description}</p>
+                          <div className="store-auction-bid-row">
+                            <div>
+                              <span className="store-auction-bid-label">Lance atual</span>
+                              <span className="store-auction-bid-value">
+                                <Coins size={13} />
+                                {item.currentBid.toLocaleString("pt-BR")}
+                              </span>
+                            </div>
+                            <span className="store-auction-bids-count">{item.bids} lances</span>
+                          </div>
+                          <div className="store-auction-increment">
+                            Incremento mínimo: <strong>{item.minIncrement.toLocaleString("pt-BR")} Sucatas</strong>
+                          </div>
+                          <button type="button" className="store-auction-bid-btn">
+                            <Gavel size={13} />
+                            Fazer Lance
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </section>
             </>
           ) : (

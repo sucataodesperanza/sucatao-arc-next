@@ -371,7 +371,9 @@
   display: grid;
   place-items: center;
   height: 100px;
-  background: color-mix(in srgb, var(--item-color, #566171) 6%, rgba(255,255,255,0.02));
+  background:
+    radial-gradient(ellipse 70% 65% at 50% 60%, color-mix(in srgb, var(--item-color, #566171) 28%, transparent) 0%, transparent 100%),
+    color-mix(in srgb, var(--item-color, #566171) 4%, rgba(255,255,255,0.01));
   font-size: 32px;
   font-weight: 950;
   color: color-mix(in srgb, var(--item-color, var(--gray-500)) 40%, transparent);

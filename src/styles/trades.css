@@ -45,7 +45,7 @@
   border: 1px solid rgba(232, 80, 58, 0.4);
   border-radius: 4px;
   background: rgba(232, 80, 58, 0.16);
-  color: #e8503a;
+  color: #F5090D;
   padding: 4px 10px;
   font-size: 10px;
   font-weight: 950;
@@ -153,7 +153,7 @@
 }
 
 .store-tab.active {
-  color: #e8503a;
+  color: #F5090D;
 }
 
 .trades-tabs {
@@ -526,9 +526,9 @@
 }
 
 .trades-page-btn.active {
-  border-color: #e8503a;
+  border-color: #F5090D;
   background: rgba(232, 80, 58, 0.16);
-  color: #e8503a;
+  color: #F5090D;
 }
 
 .trades-page-btn:disabled {
@@ -796,8 +796,8 @@
 }
 
 .trades-activity-tab.active {
-  border-bottom-color: #e8503a;
-  color: #e8503a;
+  border-bottom-color: #F5090D;
+  color: #F5090D;
 }
 
 .trades-activity-filter {
