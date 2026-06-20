@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react"
+import { useConfirm } from "@/components/admin-notifications"
 import "../../../styles/admin-loot-boxes.css"
 
 type Rarity = "common" | "rare" | "epic" | "legendary"
@@ -79,6 +80,7 @@ function formatNumber(n: number | undefined) {
 }
 
 export default function AdminLootBoxesPage() {
+  const { confirm } = useConfirm()
   const [lootBoxes, setLootBoxes] = useState<LootBox[]>([])
   const [q, setQ] = useState("")
   const [loading, setLoading] = useState(false)
@@ -188,7 +190,8 @@ export default function AdminLootBoxesPage() {
   }
 
   async function removeLootBox(lootBox: LootBox) {
-    if (!confirm(`Tem certeza que deseja excluir "${lootBox.name}"?`)) return
+    const ok = await confirm(`Tem certeza que deseja excluir "${lootBox.name}"?`)
+    if (!ok) return
     setLootBoxes(prev => prev.filter(l => l.id !== lootBox.id))
     await fetch(`/api/admin/loot-boxes/${lootBox.id}`, { method: "DELETE" })
   }

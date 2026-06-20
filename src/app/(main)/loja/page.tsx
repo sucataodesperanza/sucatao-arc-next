@@ -2,8 +2,8 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Banknote, ChevronLeft, ChevronRight, CircleDollarSign, Clock, Coins, Package, Plus, Shirt, ShoppingCart, Sparkles } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import { ArrowRight, Banknote, ChevronLeft, ChevronRight, CircleDollarSign, Clock, Coins, Package, Plus, ShoppingCart, Sparkles } from "lucide-react"
+
 import { createClient } from "@/lib/supabase/client"
 import { getItemTypeLabel, type CatalogItem } from "@/lib/catalog"
 import { ArcIntelPanel } from "@/components/arc-intel-panel"
@@ -42,13 +42,7 @@ const tabs: { key: string; label: string; href?: string }[] = [
   { key: "giftcards", label: "Gift Cards" },
 ]
 
-const weeklyHighlights: { id: string; name: string; stock: number; price: number; image?: string; icon?: LucideIcon; bg?: string; fg?: string }[] = [
-  { id: "gc-steam", name: "Gift Card Steam R$50", stock: 3, price: 5000, image: "/assets/brand/gift-card-steam.jpg" },
-  { id: "gc-xbox", name: "Gift Card Xbox R$50", stock: 2, price: 5000, image: "/assets/brand/gift-card-xbox.jpg" },
-  { id: "gc-psn", name: "Gift Card PlayStation R$50", stock: 2, price: 5000, image: "/assets/brand/gift-card-playstation.jpg" },
-  { id: "sorteio-headset", name: "Sorteio - Headset Gamer", stock: 10, price: 2000, image: "/assets/brand/headset-gamer.jpg" },
-  { id: "camiseta-arc", name: "Camiseta ARC Raiders", stock: 5, price: 3000, icon: Shirt, bg: "#20262e", fg: "#f3f5f8" },
-]
+type RewardItem = { id: string; name: string; description: string | null; image_url: string | null; price: number; stock: number; expires_at: string | null }
 
 const categories: { key: string; tag: string; tone: string; image: string; title: string; text: string; href?: string }[] = [
   { key: "itens", tag: "CATÁLOGO", tone: "yellow", image: "/assets/bots/arc_leaper.png", title: "Itens", text: "Catálogo completo para resgatar ou comprar com pontos.", href: "/itens" },
@@ -62,6 +56,15 @@ export default function LojaPage() {
   const catalog = useItemsCatalog()
   const [activeTab, setActiveTab] = useState("destaques")
   const [panelOpen, setPanelOpen] = useState(true)
+  const [weeklyItems, setWeeklyItems] = useState<RewardItem[]>([])
+  const [timer, setTimer] = useState("")
+
+  useEffect(() => {
+    fetch("/api/loja/weekly")
+      .then(r => r.json())
+      .then(d => setWeeklyItems(d.items ?? []))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (localStorage.getItem("store-panel-open") === "false") setPanelOpen(false)
@@ -97,6 +100,28 @@ export default function LojaPage() {
     const rest = catalogItems.filter(i => !i.featured).sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
     return [...featured, ...rest].slice(0, 5)
   }, [catalogItems])
+
+  // Timer do destaque da semana (countdown para a menor expires_at dos itens)
+  useEffect(() => {
+    const nearest = weeklyItems
+      .map(i => i.expires_at ? new Date(i.expires_at).getTime() : null)
+      .filter(Boolean)
+      .sort()[0]
+
+    if (!nearest) { setTimer(""); return }
+
+    function tick() {
+      const diff = nearest! - Date.now()
+      if (diff <= 0) { setTimer("Expirado"); return }
+      const d = Math.floor(diff / 86400000)
+      const h = Math.floor((diff % 86400000) / 3600000)
+      const m = Math.floor((diff % 3600000) / 60000)
+      setTimer(`${d}d ${h}h ${m}m`)
+    }
+    tick()
+    const id = setInterval(tick, 60000)
+    return () => clearInterval(id)
+  }, [weeklyItems])
 
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 })
@@ -314,18 +339,24 @@ export default function LojaPage() {
             <div className="store-side-card">
               <div className="store-side-head">
                 <h2>Destaques da semana</h2>
-                <span className="store-side-timer">
-                  <Clock size={11} />
-                  5d 12h 34m
-                </span>
+                {timer && (
+                  <span className="store-side-timer">
+                    <Clock size={11} />
+                    {timer}
+                  </span>
+                )}
               </div>
               <div className="store-side-list">
-                {weeklyHighlights.map(item => (
+                {weeklyItems.length === 0 ? (
+                  <p style={{ margin: "8px 0", color: "var(--gray-500)", fontSize: 12 }}>
+                    Nenhum destaque no momento.
+                  </p>
+                ) : weeklyItems.map(item => (
                   <div key={item.id} className="store-side-item">
-                    <div className="store-side-thumb" style={{ background: item.bg }}>
-                      {item.image
-                        ? <img src={item.image} alt={item.name} loading="lazy" />
-                        : item.icon && <item.icon size={18} color={item.fg} />}
+                    <div className="store-side-thumb">
+                      {item.image_url
+                        ? <img src={item.image_url} alt={item.name} loading="lazy" />
+                        : <span style={{ fontSize: 16 }}>🎁</span>}
                     </div>
                     <div className="store-side-info">
                       <strong>{item.name}</strong>

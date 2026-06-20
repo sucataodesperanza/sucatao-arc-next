@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { getItemTypeLabel, getRarityLabel } from "@/lib/catalog"
+import { useToast } from "@/components/admin-notifications"
 import "../../../styles/admin-catalogo.css"
 
 type AdminCatalogItem = {
@@ -41,9 +42,9 @@ export default function AdminCatalogoPage() {
   const [q, setQ] = useState("")
   const [rarity, setRarity] = useState("all")
   const [type, setType] = useState("all")
+  const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [syncStatus, setSyncStatus] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
 
@@ -67,17 +68,16 @@ export default function AdminCatalogoPage() {
 
   async function handleSync() {
     setSyncing(true)
-    setSyncStatus("Sincronizando com a API do MetaForge...")
     const res = await fetch("/api/admin/catalog/sync", { method: "POST" })
     const body = await res.json().catch(() => ({}))
     setSyncing(false)
     if (res.ok) {
       let msg = `Sincronizado! ${body.synced} itens atualizados.`
       if (body.translated) msg += ` ${body.translated} traduzidos automaticamente.`
-      setSyncStatus(msg)
+      toast.success(msg)
       load()
     } else {
-      setSyncStatus(body.error ?? "Erro ao sincronizar.")
+      toast.error(body.error ?? "Erro ao sincronizar.")
     }
   }
 
@@ -127,7 +127,6 @@ export default function AdminCatalogoPage() {
         <button type="button" onClick={handleSync} disabled={syncing} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", opacity: syncing ? 0.6 : 1 }}>
           {syncing ? "Sincronizando..." : "Sincronizar com MetaForge"}
         </button>
-        {syncStatus && <span style={{ fontSize: "12px", color: "var(--muted)" }}>{syncStatus}</span>}
       </div>
 
       <div className="utility-panel">

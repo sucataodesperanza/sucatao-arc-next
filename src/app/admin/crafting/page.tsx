@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Plus, Search, Trash2, X } from "lucide-react"
 import type { AdminCatalogItem } from "@/app/api/admin/crafting/items/route"
+import { useToast } from "@/components/admin-notifications"
 
 type ItemSource = { qty: number; name: string }
 
@@ -132,8 +133,8 @@ export default function AdminCraftingPage() {
   const [recycledInto, setRecycledInto] = useState<ItemSource[]>([])
   const [recoveredInto, setRecoveredInto] = useState<ItemSource[]>([])
   const [usedInCrafting, setUsedInCrafting] = useState<string[]>([])
+  const toast = useToast()
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -169,18 +170,15 @@ export default function AdminCraftingPage() {
     setRecycledInto(item.recycled_into?.length ? item.recycled_into : [])
     setRecoveredInto(item.recovered_into?.length ? item.recovered_into : [])
     setUsedInCrafting(item.used_in_crafting?.length ? item.used_in_crafting : [] as string[])
-    setSaveStatus("")
   }
 
   function closeEdit() {
     setEditing(null)
-    setSaveStatus("")
   }
 
   async function handleSave() {
     if (!editing) return
     setSaving(true)
-    setSaveStatus("")
 
     const cleanList = (arr: ItemSource[]) => arr.filter(r => r.name.trim()).map(r => ({ qty: r.qty, name: r.name.trim() }))
 
@@ -202,12 +200,12 @@ export default function AdminCraftingPage() {
 
     setSaving(false)
     if (res.ok) {
-      setSaveStatus("Salvo!")
+      toast.success("Salvo!")
       await load()
       closeEdit()
     } else {
       const err = await res.json().catch(() => ({}))
-      setSaveStatus(err.error ?? "Erro ao salvar.")
+      toast.error(err.error ?? "Erro ao salvar.")
     }
   }
 
@@ -417,12 +415,6 @@ export default function AdminCraftingPage() {
                 <Plus size={12} /> Adicionar
               </button>
             </div>
-
-            {saveStatus && (
-              <p style={{ fontSize: 12, color: saveStatus.startsWith("Salvo") ? "var(--green)" : "var(--red)", margin: 0 }}>
-                {saveStatus}
-              </p>
-            )}
 
             {/* Footer */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>

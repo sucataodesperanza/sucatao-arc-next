@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import arcData from "@/data/arc-data"
 import { ARC_THREAT_ORDER, getArcThreatLabel, getArcTypeLabel, type ArcEntry } from "@/lib/arcpedia"
+import { useToast } from "@/components/admin-notifications"
 
 type LocalItem = { id: string; name: string }
 const localItems = (arcData as unknown as { items: LocalItem[] }).items
@@ -45,14 +46,13 @@ function arcToForm(arc: ArcEntry): FormState {
 }
 
 export default function AdminArcpediaPage() {
+  const toast = useToast()
   const [arcs, setArcs] = useState<ArcEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
-  const [syncStatus, setSyncStatus] = useState("")
   const [editing, setEditing] = useState<ArcEntry | null>(null)
   const [form, setForm] = useState<FormState | null>(null)
   const [saving, setSaving] = useState(false)
-  const [saveStatus, setSaveStatus] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -66,36 +66,32 @@ export default function AdminArcpediaPage() {
 
   async function handleSync() {
     setSyncing(true)
-    setSyncStatus("Sincronizando com a API do MetaForge...")
     const res = await fetch("/api/admin/arcs/sync", { method: "POST" })
     const body = await res.json().catch(() => ({}))
     setSyncing(false)
     if (res.ok) {
       let msg = `Sincronizado! ${body.synced} ARCs atualizados.`
       if (body.translated) msg += ` ${body.translated} traduzidos automaticamente.`
-      setSyncStatus(msg)
+      toast.success(msg)
       load()
     } else {
-      setSyncStatus(body.error ?? "Erro ao sincronizar.")
+      toast.error(body.error ?? "Erro ao sincronizar.")
     }
   }
 
   function openEdit(arc: ArcEntry) {
     setEditing(arc)
     setForm(arcToForm(arc))
-    setSaveStatus("")
   }
 
   function closeEdit() {
     setEditing(null)
     setForm(null)
-    setSaveStatus("")
   }
 
   async function handleSave() {
     if (!editing || !form) return
     setSaving(true)
-    setSaveStatus("")
 
     const resolvedDrops = namesToIds(form.dropsText)
     const unknowns = form.dropsText.split(",").map(s => s.trim()).filter(Boolean)
@@ -117,12 +113,12 @@ export default function AdminArcpediaPage() {
     if (res.ok) {
       let msg = "Salvo!"
       if (unknowns.length > 0) msg += ` Drops não reconhecidos (ignorados): ${unknowns.join(", ")}`
-      setSaveStatus(msg)
+      toast.success(msg)
       await load()
       closeEdit()
     } else {
       const err = await res.json().catch(() => ({}))
-      setSaveStatus(err.error ?? "Erro ao salvar.")
+      toast.error(err.error ?? "Erro ao salvar.")
     }
   }
 
@@ -132,7 +128,6 @@ export default function AdminArcpediaPage() {
         <button type="button" onClick={handleSync} disabled={syncing} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", opacity: syncing ? 0.6 : 1 }}>
           {syncing ? "Sincronizando..." : "Sincronizar com MetaForge"}
         </button>
-        {syncStatus && <span style={{ fontSize: "12px", color: "var(--muted)" }}>{syncStatus}</span>}
       </div>
 
       <div className="utility-panel">
@@ -215,8 +210,6 @@ export default function AdminArcpediaPage() {
               <textarea style={{ ...inputStyle, resize: "vertical", minHeight: 60 }} value={form.dropsText} onChange={e => setForm(f => f ? { ...f, dropsText: e.target.value } : f)} placeholder="Ex: Bateria ARC, Liga ARC, Circuito ARC" />
               <span style={{ fontSize: 10, color: "var(--gray-500)" }}>Use os nomes exatos dos itens do catálogo.</span>
             </label>
-
-            {saveStatus && <p style={{ fontSize: 12, color: saveStatus.startsWith("Salvo") ? "var(--green)" : "var(--red)", margin: 0 }}>{saveStatus}</p>}
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" onClick={closeEdit} style={btnStyle}>Cancelar</button>

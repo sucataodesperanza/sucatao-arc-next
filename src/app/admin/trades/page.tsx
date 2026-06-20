@@ -5,6 +5,7 @@ import { CheckCircle, Plus, Trash2 } from "lucide-react"
 import arcData from "@/data/arc-data"
 import { getRarityLabel } from "@/lib/catalog"
 import { rarityColors } from "@/lib/use-items-catalog"
+import { useToast, useConfirm } from "@/components/admin-notifications"
 
 type ArcItem = { id: string; name: string }
 const allItemNames = [...new Set((arcData as unknown as { items: ArcItem[] }).items.map(i => i.name))]
@@ -41,13 +42,14 @@ const EMPTY_FORM = {
 }
 
 export default function AdminTradesPage() {
+  const toast = useToast()
+  const { confirm } = useConfirm()
   const [trades, setTrades]   = useState<Trade[]>([])
   const [loading, setLoading] = useState(false)
   const [editing, setEditing] = useState<Trade | null>(null)
   const [form, setForm]       = useState(EMPTY_FORM)
   const [formOpen, setFormOpen]       = useState(false)
   const [saving, setSaving]           = useState(false)
-  const [msg, setMsg]                 = useState("")
   const [lookingUp, setLookingUp]     = useState(false)
 
   const load = useCallback(async () => {
@@ -90,7 +92,6 @@ export default function AdminTradesPage() {
   function openCreate() {
     setEditing(null)
     setForm(EMPTY_FORM)
-    setMsg("")
     setFormOpen(true)
   }
 
@@ -105,13 +106,11 @@ export default function AdminTradesPage() {
       status: t.status,
       expires_at: t.expires_at ? t.expires_at.slice(0, 16) : "",
     })
-    setMsg("")
     setFormOpen(true)
   }
 
   async function handleSave() {
     setSaving(true)
-    setMsg("")
 
     const body = {
       offer_points:     form.offer_points,
@@ -134,18 +133,19 @@ export default function AdminTradesPage() {
 
     setSaving(false)
     if (res.ok) {
-      setMsg(editing ? "Trade atualizado!" : "Trade criado!")
+      toast.success(editing ? "Trade atualizado!" : "Trade criado!")
       setEditing(null)
       setFormOpen(false)
       await load()
     } else {
       const err = await res.json().catch(() => ({}))
-      setMsg(err.error ?? "Erro ao salvar.")
+      toast.error(err.error ?? "Erro ao salvar.")
     }
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Remover este trade?")) return
+    const ok = await confirm("Remover este trade?")
+    if (!ok) return
     await fetch(`/api/admin/trades/${id}`, { method: "DELETE" })
     await load()
   }
@@ -261,10 +261,8 @@ export default function AdminTradesPage() {
               </label>
             </div>
 
-            {msg && <p style={{ margin: 0, fontSize: 12, color: msg.includes("!") ? "var(--green)" : "var(--red)" }}>{msg}</p>}
-
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button type="button" onClick={() => { setEditing(null); setForm(EMPTY_FORM); setMsg(""); setFormOpen(false) }} style={btnStyle}>Cancelar</button>
+              <button type="button" onClick={() => { setEditing(null); setForm(EMPTY_FORM); setFormOpen(false) }} style={btnStyle}>Cancelar</button>
               <button type="button" onClick={handleSave} disabled={saving || !form.want_item_name.trim()}
                 style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", opacity: saving ? 0.6 : 1 }}>
                 {saving ? "Salvando..." : editing ? "Salvar alterações" : "Criar trade"}
@@ -349,13 +347,14 @@ export default function AdminTradesPage() {
 type Slot = { id: string; label: string; scheduled_for: string; capacity: number; active: boolean }
 
 function SlotsSection() {
+  const toast = useToast()
+  const { confirm } = useConfirm()
   const [slots, setSlots]     = useState<Slot[]>([])
   const [loading, setLoading] = useState(false)
   const [label, setLabel]     = useState("")
   const [datetime, setDatetime] = useState("")
   const [capacity, setCapacity] = useState(1)
   const [saving, setSaving]   = useState(false)
-  const [msg, setMsg]         = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -376,8 +375,8 @@ function SlotsSection() {
       body: JSON.stringify({ label, scheduled_for: datetime, capacity }),
     })
     setSaving(false)
-    if (res.ok) { setLabel(""); setDatetime(""); setCapacity(1); setMsg("Slot criado!"); await load() }
-    else setMsg("Erro ao criar slot.")
+    if (res.ok) { setLabel(""); setDatetime(""); setCapacity(1); toast.success("Slot criado!"); await load() }
+    else toast.error("Erro ao criar slot.")
   }
 
   async function toggleActive(id: string, active: boolean) {
@@ -389,7 +388,8 @@ function SlotsSection() {
   }
 
   async function deleteSlot(id: string) {
-    if (!confirm("Remover slot?")) return
+    const ok = await confirm("Remover slot?")
+    if (!ok) return
     await fetch(`/api/admin/trades/slots/${id}`, { method: "DELETE" })
     await load()
   }
@@ -423,8 +423,6 @@ function SlotsSection() {
           <Plus size={12} /> {saving ? "..." : "Criar"}
         </button>
       </div>
-      {msg && <p style={{ margin: "0 0 12px", fontSize: 12, color: msg.includes("!") ? "var(--green)" : "var(--red)" }}>{msg}</p>}
-
       {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
@@ -484,10 +482,10 @@ const ACCEPTANCE_STATUS: Record<string, string> = {
 }
 
 function AcceptancesSection() {
+  const toast = useToast()
   const [items, setItems]     = useState<Acceptance[]>([])
   const [loading, setLoading] = useState(false)
   const [completing, setCompleting] = useState<string | null>(null)
-  const [msg, setMsg]         = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -505,10 +503,10 @@ function AcceptancesSection() {
     setCompleting(null)
     if (res.ok) {
       const body = await res.json()
-      setMsg(`✓ Trade concluído! ${body.points_credited} pts creditados.`)
+      toast.success(`Trade concluído! ${body.points_credited} pts creditados.`)
       await load()
     } else {
-      setMsg("Erro ao concluir trade.")
+      toast.error("Erro ao concluir trade.")
     }
   }
 
@@ -518,7 +516,6 @@ function AcceptancesSection() {
         <strong>Aceitações de Trade</strong>
         <small>{items.filter(a => a.status !== "completed").length} pendentes</small>
       </div>
-      {msg && <p style={{ margin: "0 0 12px", fontSize: 12, color: msg.startsWith("✓") ? "var(--green)" : "var(--red)" }}>{msg}</p>}
       {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>

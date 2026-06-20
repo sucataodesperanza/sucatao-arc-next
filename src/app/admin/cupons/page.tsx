@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { Copy, Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react"
+import { useConfirm } from "@/components/admin-notifications"
 import "../../../styles/admin-cupons.css"
 
 type Coupon = {
@@ -69,6 +70,7 @@ function generateRandomCode() {
 }
 
 export default function AdminCuponsPage() {
+  const { confirm } = useConfirm()
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [q, setQ] = useState("")
   const [loading, setLoading] = useState(false)
@@ -160,7 +162,8 @@ export default function AdminCuponsPage() {
   }
 
   async function removeCoupon(coupon: Coupon) {
-    if (!confirm(`Remover o cupom ${coupon.code}?`)) return
+    const ok = await confirm(`Remover o cupom ${coupon.code}?`)
+    if (!ok) return
     setCoupons(prev => prev.filter(c => c.id !== coupon.id))
     await fetch(`/api/admin/coupons/${coupon.id}`, { method: "DELETE" })
   }

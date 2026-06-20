@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AdminSidebar } from "@/components/admin-sidebar"
+import { AdminNotificationsProvider } from "@/components/admin-notifications"
 import "../../styles/admin-layout.css"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -12,19 +13,21 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!profile?.is_admin) redirect("/")
 
   return (
-    <section className="utility-page admin-shell">
-      <AdminSidebar />
-      <div className="admin-main">
-        <div className="utility-panel-head" style={{ marginBottom: "20px" }}>
-          <div>
-            <p style={{ margin: "0 0 6px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)" }}>
-              Painel administrativo
-            </p>
-            <strong style={{ fontSize: "22px" }}>Admin</strong>
+    <AdminNotificationsProvider>
+      <section className="utility-page admin-shell">
+        <AdminSidebar />
+        <div className="admin-main">
+          <div className="utility-panel-head" style={{ marginBottom: "20px" }}>
+            <div>
+              <p style={{ margin: "0 0 6px", fontSize: "11px", fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)" }}>
+                Painel administrativo
+              </p>
+              <strong style={{ fontSize: "22px" }}>Admin</strong>
+            </div>
           </div>
+          {children}
         </div>
-        {children}
-      </div>
-    </section>
+      </section>
+    </AdminNotificationsProvider>
   )
 }
