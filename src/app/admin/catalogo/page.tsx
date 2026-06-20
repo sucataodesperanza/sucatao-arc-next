@@ -83,11 +83,18 @@ export default function AdminCatalogoPage() {
 
   async function patchItem(id: string, patch: Record<string, unknown>) {
     setItems(prev => prev.map(it => it.id === id ? { ...it, ...patch } as AdminCatalogItem : it))
-    await fetch(`/api/admin/catalog/${id}`, {
+    const res = await fetch(`/api/admin/catalog/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     })
+    if (res.ok) {
+      if ("active" in patch) toast.success(patch.active ? "Item ativado!" : "Item desativado.")
+      else toast.success("Salvo!")
+    } else {
+      toast.error("Erro ao salvar.")
+      await load()
+    }
   }
 
   function startEditName(item: AdminCatalogItem) {

@@ -89,10 +89,23 @@ export default function AdminRecompensasPage() {
   }
 
   async function patchItem(id: string, patch: Record<string, unknown>) {
+    // Optimistic update
     setItems(prev => prev.map(i => i.id === id ? { ...i, ...patch } as RewardItem : i))
-    await fetch(`/api/admin/reward-items/${id}`, {
+    const res = await fetch(`/api/admin/reward-items/${id}`, {
       method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch),
     })
+    if (res.ok) {
+      const label = "featured" in patch
+        ? (patch.featured ? "Marcado como destaque!" : "Removido do destaque.")
+        : "active" in patch
+          ? (patch.active ? "Item ativado!" : "Item desativado.")
+          : "Salvo!"
+      toast.success(label)
+    } else {
+      // Reverte o optimistic update em caso de erro
+      toast.error("Erro ao salvar. Tente novamente.")
+      await load()
+    }
   }
 
   async function handleDelete(id: string) {
