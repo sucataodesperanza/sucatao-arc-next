@@ -124,11 +124,50 @@ function ItemThumb({ item, className }: { item: TradeItem; className: string }) 
   )
 }
 
+const heroSlides = [
+  {
+    image: "/assets/bots/arc_sentinel.png",
+    tag: "Faça Trocas Justas",
+    icon: Handshake,
+    title: "Comunidade de Trades ARC Raiders",
+    text: "Troque itens com outros Raiders de forma segura e construa relacionamentos de confiança.",
+  },
+  {
+    image: "/assets/bots/arc_shredder.png",
+    tag: "Itens Raros",
+    icon: ArrowLeftRight,
+    title: "Encontre os Itens que Você Precisa",
+    text: "Milhares de ofertas disponíveis. Busque por nome, raridade ou categoria e negocie agora.",
+  },
+  {
+    image: "/assets/bots/arc_spotter.png",
+    tag: "Segurança",
+    icon: ShieldCheck,
+    title: "Trades Seguros e Verificados",
+    text: "Todas as trocas passam por verificação da comunidade. Negocie com confiança e tranquilidade.",
+  },
+  {
+    image: "/assets/bots/arc_leaper.png",
+    tag: "Histórico",
+    icon: History,
+    title: "Acompanhe Suas Trocas",
+    text: "Visualize o histórico completo de todas as suas negociações e o status de cada oferta.",
+  },
+]
+
 export default function TradesPage() {
+  const [activeSlide, setActiveSlide] = useState(0)
   const [activeTab, setActiveTab] = useState(tabs[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
   const [panelOpen, setPanelOpen] = useState(true)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % heroSlides.length)
+    }, 10000)
+    return () => clearInterval(timer)
+  }, [])
 
   useLayoutEffect(() => {
     if (localStorage.getItem("trades-panel-open") === "false") setPanelOpen(false)
@@ -215,20 +254,33 @@ export default function TradesPage() {
           {activeTab === "Todos" && (
           <>
           <section aria-label="Comunidade de trades">
-            <div className="hero-banner" style={{ backgroundImage: "url(/assets/bots/arc_sentinel.png)" }}>
-              <div className="hero-banner-content">
-                <span className="hero-banner-tag hero-banner-tag-yellow">
-                  <Handshake size={12} />
-                  Faça Trocas Justas
-                </span>
-                <h2>Comunidade de Trades ARC Raiders</h2>
-                <p>Troque itens com outros Raiders de forma segura e construa relacionamentos de confiança.</p>
+            <div className="hero-banner">
+              {heroSlides.map((slide, i) => (
+                <div
+                  key={i}
+                  className="hero-banner-bg"
+                  style={{ backgroundImage: `url(${slide.image})`, opacity: i === activeSlide ? 1 : 0 }}
+                />
+              ))}
+              <div className="hero-banner-content" key={activeSlide}>
+                {(() => { const Icon = heroSlides[activeSlide].icon; return (
+                  <span className="hero-banner-tag hero-banner-tag-yellow">
+                    <Icon size={12} />
+                    {heroSlides[activeSlide].tag}
+                  </span>
+                )})()}
+                <h2>{heroSlides[activeSlide].title}</h2>
+                <p>{heroSlides[activeSlide].text}</p>
               </div>
               <div className="hero-banner-dots">
-                <span className="active" />
-                <span />
-                <span />
-                <span />
+                {heroSlides.map((_, i) => (
+                  <span
+                    key={i}
+                    className={i === activeSlide ? "active" : ""}
+                    onClick={() => setActiveSlide(i)}
+                    style={{ cursor: "pointer" }}
+                  />
+                ))}
               </div>
             </div>
           </section>

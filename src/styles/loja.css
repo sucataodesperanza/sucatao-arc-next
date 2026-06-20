@@ -41,7 +41,7 @@
   border: 1px solid rgba(232, 80, 58, 0.4);
   border-radius: 4px;
   background: rgba(232, 80, 58, 0.16);
-  color: #e8503a;
+  color: #F5090D;
   padding: 4px 10px;
   font-size: 10px;
   font-weight: 950;
@@ -170,8 +170,8 @@
 }
 
 .category-card-tag.tone-red {
-  background: #e8503a;
-  color: #2a0509;
+  background: #F5090D;
+  color: #fff;
 }
 
 .category-card-tag.tone-green {
@@ -278,7 +278,7 @@
   margin-left: 4px;
   border: none;
   border-radius: 50%;
-  background: #e8503a;
+  background: #F5090D;
   color: var(--paper);
   cursor: pointer;
 }
@@ -397,7 +397,8 @@
 
 .store-highlight-card:hover,
 .store-highlight-card:focus-visible {
-  border-color: var(--stroke-strong);
+  border-color: color-mix(in srgb, var(--rarity-color, var(--stroke-strong)) 50%, transparent);
+  box-shadow: 0 0 16px -4px color-mix(in srgb, var(--rarity-color, transparent) 30%, transparent);
   transform: translateY(-2px);
   outline: 0;
 }
@@ -409,6 +410,21 @@
   background: var(--surface-2);
 }
 
+.store-highlight-media::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rarity-color, #566171) 35%, transparent);
+  filter: blur(28px);
+  z-index: 0;
+  pointer-events: none;
+}
+
 .store-highlight-media img {
   position: absolute;
   top: 0;
@@ -417,6 +433,7 @@
   height: 100%;
   padding: 14px;
   object-fit: contain;
+  z-index: 1;
 }
 
 .store-highlight-media .placeholder {
@@ -1169,6 +1186,352 @@
 @media (max-width: 520px) {
 
   .store-items-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================
+   CONTRATOS À VENDA
+   ========================================== */
+
+.store-contracts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.store-contract-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.store-contract-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.store-contract-banner {
+  position: relative;
+  height: 90px;
+  background-color: var(--surface-3);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+  gap: 6px;
+}
+
+.store-contract-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6));
+}
+
+.store-contract-type-badge,
+.store-contract-tier-badge {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.store-contract-tier-badge {
+  border: 1px solid;
+}
+
+.store-contract-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  flex: 1;
+}
+
+.store-contract-name {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.store-contract-desc {
+  font-size: 12px;
+  color: var(--gray-500);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.store-contract-objective {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--paper);
+  background: var(--surface-3);
+  border: 1px solid var(--stroke);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.store-contract-rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.store-contract-reward {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 3px 8px;
+}
+
+.store-contract-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--stroke);
+}
+
+.store-contract-price {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 15px;
+  font-weight: 900;
+  color: #ffd400;
+}
+
+.store-contract-buy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--red, #e83a3a);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.store-contract-buy:hover {
+  filter: brightness(1.15);
+}
+
+@media (max-width: 900px) {
+  .store-contracts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* ==========================================
+   LEILOES
+   ========================================== */
+
+.store-auction-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.store-auction-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: var(--surface-2);
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.store-auction-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.store-auction-banner {
+  position: relative;
+  height: 180px;
+  background-color: var(--surface-3);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.store-auction-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.65));
+}
+
+.store-auction-rarity,
+.store-auction-timer {
+  position: relative;
+  z-index: 1;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.store-auction-rarity {
+  border: 1px solid;
+}
+
+.store-auction-timer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--paper);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+.store-auction-timer--ending {
+  color: #ff4141;
+  background: rgba(255, 65, 65, 0.18);
+  border-color: rgba(255, 65, 65, 0.3);
+  animation: pulse-red 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+.store-auction-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  flex: 1;
+}
+
+.store-auction-name {
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.store-auction-desc {
+  font-size: 12px;
+  color: var(--gray-500);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.store-auction-bid-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  background: var(--surface-3);
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.store-auction-bid-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 3px;
+}
+
+.store-auction-bid-value {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 16px;
+  font-weight: 900;
+  color: #ffd400;
+}
+
+.store-auction-bids-count {
+  font-size: 11px;
+  color: var(--gray-500);
+  white-space: nowrap;
+}
+
+.store-auction-increment {
+  font-size: 11px;
+  color: var(--gray-500);
+}
+
+.store-auction-increment strong {
+  color: var(--paper);
+}
+
+.store-auction-bid-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  background: var(--red, #e83a3a);
+  border: none;
+  border-radius: 7px;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px;
+  cursor: pointer;
+  margin-top: auto;
+  transition: filter 0.15s;
+}
+
+.store-auction-bid-btn:hover {
+  filter: brightness(1.15);
+}
+
+@media (max-width: 900px) {
+  .store-auction-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

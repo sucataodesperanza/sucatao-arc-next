@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowRight, Check, ChevronLeft, ChevronRight, Eye, Gem, Hexagon, Recycle, Scale, Skull, Star, Users, X } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
@@ -103,6 +104,7 @@ const factionActivity: { color: string; text: string; timeAgo: string }[] = [
 const PANEL_KEY = "faccoes-panel-open"
 
 export default function FaccoesPage() {
+  const router = useRouter()
   const [selectedFaction, setSelectedFaction] = useState<string | null>(null)
   const [confirmFaction, setConfirmFaction] = useState<Faction | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
@@ -118,8 +120,11 @@ export default function FaccoesPage() {
   }
 
   function handleConfirm() {
-    if (confirmFaction) setSelectedFaction(confirmFaction.id)
-    setConfirmFaction(null)
+    if (confirmFaction) {
+      setSelectedFaction(confirmFaction.id)
+      setConfirmFaction(null)
+      router.push("/faccoes/visao-geral")
+    }
   }
 
   return (
