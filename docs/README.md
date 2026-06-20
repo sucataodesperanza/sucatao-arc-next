@@ -7,7 +7,7 @@ Documentação técnica e funcional das telas do site ARC Raiders.
 ```
 docs/
 ├── telas/
-│   ├── publicas/    → 17 telas acessíveis pelos usuários
+│   ├── publicas/    → 16 telas acessíveis pelos usuários
 │   └── admin/       → 9 telas do painel administrativo
 └── apis/
     └── trades.md    → endpoints do sistema de trades
@@ -21,7 +21,6 @@ docs/
 |---|---|---|
 | [Início](telas/publicas/inicio.md) | `/` | arc-data, profiles |
 | [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, reward_items, profiles |
-| [Itens](telas/publicas/itens.md) | `/itens` | catalog_items, arc-data |
 | [Inventário](telas/publicas/inventario.md) | `/inventario` | mock (profiles para carteira) |
 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
