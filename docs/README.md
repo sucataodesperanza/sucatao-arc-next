@@ -41,6 +41,7 @@ docs/
 | [Dashboard](telas/admin/dashboard.md) | `/admin` | Redireciona para /admin/catalogo |
 | [Catálogo](telas/admin/catalogo.md) | `/admin/catalogo` | catalog_items |
 | [Estoque](telas/admin/estoque.md) | `/admin/estoque` | stock_items, catalog_items |
+| [Trades](telas/admin/trades.md) | `/admin/trades` | trades |
 | [Crafting](telas/admin/crafting.md) | `/admin/crafting` | catalog_items |
 | [Arcpedia](telas/admin/arcpedia.md) | `/admin/arcpedia` | arcs |
 | [Cupons](telas/admin/cupons.md) | `/admin/cupons` | coupons |
@@ -56,6 +57,8 @@ Tabelas principais usadas no site:
 | `catalog_items` | Catálogo de itens (sincronizado via MetaForge) |
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
+| `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
+| `trade_acceptances` | Registro de usuários que aceitaram um trade |
 | `orders` | Pedidos dos usuários |
 | `profiles` | Perfis dos usuários (points, avatar, game_id, etc.) |
 | `coupons` | Cupons de desconto |
