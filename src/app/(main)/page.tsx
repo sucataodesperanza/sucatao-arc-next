@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowLeftRight, ArrowRight, CheckCircle, ChevronLeft, ChevronRight, Coins, Medal, Megaphone, Plus, Sparkles, TrendingUp } from "lucide-react"
+import { ArrowLeftRight, ArrowRight, CheckCircle, ChevronLeft, ChevronRight, Coins, Flag, Medal, Megaphone, ScrollText, Sparkles, TrendingUp } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import type { Trade } from "@/app/api/trades/route"
 import type { MyTrade } from "@/app/api/trades/my/route"
@@ -34,6 +34,42 @@ const newsItems = [
     date: "08 DE JUNHO DE 2026",
     title: "Ranking de Recicladores",
     text: "Veja quem mais reciclou componentes essa semana e dispute o topo do ranking da comunidade.",
+    href: "/rankings",
+  },
+]
+
+const heroSlides = [
+  {
+    image: "/assets/bots/arc_matriarch.png",
+    tag: "Atualizações da Loja",
+    icon: Sparkles,
+    title: "O Sucatão Tem Tudo Que Você Precisa",
+    text: "Itens, componentes e equipamentos para sua jornada na Superfície. Compre, troque e recicle direto pelo catálogo.",
+    cta: { label: "Ver catálogo", href: "/itens" },
+  },
+  {
+    image: "/assets/bots/arc_sentinel.png",
+    tag: "Marketplace",
+    icon: ArrowLeftRight,
+    title: "Troque Itens Com Outros Raiders",
+    text: "Compre e venda equipamentos raros no marketplace. Novas ofertas todos os dias da comunidade.",
+    cta: { label: "Ver trades", href: "/trades" },
+  },
+  {
+    image: "/assets/bots/arc_the_queen.png",
+    tag: "Facções",
+    icon: Flag,
+    title: "Escolha Sua Facção e Domine",
+    text: "Junte-se a uma das 5 facções e dispute o topo dos rankings. Recompensas exclusivas para os melhores.",
+    cta: { label: "Ver facções", href: "/faccoes" },
+  },
+  {
+    image: "/assets/bots/arc_leaper.png",
+    tag: "Contratos",
+    icon: ScrollText,
+    title: "Complete Contratos e Ganhe Recompensas",
+    text: "Missões diárias e semanais com Sucatas, XP e itens exclusivos. Acumule reputação e suba no ranking.",
+    cta: { label: "Ver contratos", href: "/contratos" },
   },
 ]
 
@@ -45,6 +81,7 @@ const categories = [
 ]
 
 export default function HomePage() {
+  const [activeSlide, setActiveSlide] = useState(0)
   const [tradesOpen, setTradesOpen] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState("Visitante")
@@ -62,6 +99,13 @@ export default function HomePage() {
   const [tradeTabIndicator, setTradeTabIndicator] = useState({ left: 0, width: 0 })
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
   const [accepting, setAccepting] = useState<string | null>(null)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide(prev => (prev + 1) % heroSlides.length)
+    }, 10000)
+    return () => clearInterval(timer)
+  }, [])
 
   useEffect(() => {
     const stored = localStorage.getItem(TRADES_OPEN_KEY)
@@ -168,41 +212,63 @@ export default function HomePage() {
         <section aria-label="Notas de atualização">
           <p className="home-section-label">Notas de atualização mais recentes</p>
           <div className="news-grid">
-            {newsItems.map((news, i) => (
-              <article key={i} className="news-card">
-                <div className="news-card-media" style={{ backgroundImage: `url(${news.image})` }}>
-                  <span className="news-card-badge"><news.icon size={16} /></span>
-                </div>
-                <div className="news-card-body">
-                  <h3>{news.title}</h3>
-                  <p>{news.text}</p>
-                  <span className="news-card-date">{news.date}</span>
-                </div>
-              </article>
-            ))}
+            {newsItems.map((news, i) => {
+              const inner = (
+                <>
+                  <div className="news-card-media" style={{ backgroundImage: `url(${news.image})` }}>
+                    <span className="news-card-badge"><news.icon size={16} /></span>
+                  </div>
+                  <div className="news-card-body">
+                    <h3>{news.title}</h3>
+                    <p>{news.text}</p>
+                    <span className="news-card-date">{news.date}</span>
+                  </div>
+                </>
+              )
+              return news.href ? (
+                <Link key={i} href={news.href} className="news-card news-card--link">
+                  {inner}
+                </Link>
+              ) : (
+                <article key={i} className="news-card">{inner}</article>
+              )
+            })}
           </div>
         </section>
 
         <section aria-label="Novidades">
           <p className="home-section-label">Novidades</p>
-          <div className="hero-banner" style={{ backgroundImage: "url(/assets/bots/arc_matriarch.png)" }}>
-            <div className="hero-banner-content">
-              <span className="hero-banner-tag">
-                <Sparkles size={12} />
-                Atualizações da loja
-              </span>
-              <h2>O Sucatão Tem Tudo Que Você Precisa</h2>
-              <p>Itens, componentes e equipamentos para sua jornada na Superfície. Compre, troque e recicle direto pelo catálogo.</p>
-              <Link href="/itens" className="hero-banner-cta">
-                Ver catálogo
+          <div className="hero-banner">
+            {heroSlides.map((slide, i) => (
+              <div
+                key={i}
+                className="hero-banner-bg"
+                style={{ backgroundImage: `url(${slide.image})`, opacity: i === activeSlide ? 1 : 0 }}
+              />
+            ))}
+            <div className="hero-banner-content" key={activeSlide}>
+              {(() => { const Icon = heroSlides[activeSlide].icon; return (
+                <span className="hero-banner-tag">
+                  <Icon size={12} />
+                  {heroSlides[activeSlide].tag}
+                </span>
+              )})()}
+              <h2>{heroSlides[activeSlide].title}</h2>
+              <p>{heroSlides[activeSlide].text}</p>
+              <Link href={heroSlides[activeSlide].cta.href} className="hero-banner-cta">
+                {heroSlides[activeSlide].cta.label}
                 <ArrowRight size={16} />
               </Link>
             </div>
             <div className="hero-banner-dots">
-              <span className="active" />
-              <span />
-              <span />
-              <span />
+              {heroSlides.map((_, i) => (
+                <span
+                  key={i}
+                  className={i === activeSlide ? "active" : ""}
+                  onClick={() => setActiveSlide(i)}
+                  style={{ cursor: "pointer" }}
+                />
+              ))}
             </div>
           </div>
         </section>
@@ -210,7 +276,8 @@ export default function HomePage() {
         <section aria-label="Categorias">
           <div className="category-row">
             {categories.map(({ href, tag, tone, image, title, text }) => (
-              <Link key={href} href={href} className="category-card" style={{ backgroundImage: `url(${image})` }}>
+              <Link key={href} href={href} className="category-card">
+                <div className="category-card-bg" style={{ backgroundImage: `url(${image})` }} />
                 <span className={`category-card-tag tone-${tone}`}>{tag}</span>
                 <strong>{title}</strong>
                 <span>{text}</span>

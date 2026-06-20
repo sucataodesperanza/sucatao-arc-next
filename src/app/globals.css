@@ -17,7 +17,7 @@
   --green: #3df28b;
   --blue: #5fa8ff;
   --purple: #b477ff;
-  --red: #ff6171;
+  --red: #F5090D;
   --ink: #05070a;
   --surface: #0d1117;
   --surface-2: #161b22;
@@ -197,6 +197,11 @@ select {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   min-width: 168px;
   animation: popover-in 0.12s ease;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes shimmer {
@@ -396,7 +401,7 @@ select {
   width: 30px;
   height: 30px;
   border-radius: 6px;
-  background: #e8503a;
+  background: #F5090D;
   color: var(--paper);
 }
 
@@ -427,7 +432,7 @@ select {
   display: block;
   margin-top: auto;
   padding-top: 12px;
-  color: #e8503a;
+  color: #F5090D;
   font-size: 10px;
   font-weight: 950;
   letter-spacing: 0.04em;
@@ -473,7 +478,7 @@ select {
   border: 1px solid rgba(232, 80, 58, 0.4);
   border-radius: 4px;
   background: rgba(232, 80, 58, 0.16);
-  color: #e8503a;
+  color: #F5090D;
   padding: 4px 10px;
   font-size: 10px;
   font-weight: 950;
@@ -614,7 +619,7 @@ select {
 }
 
 .category-card-tag.tone-red {
-  background: #e8503a;
+  background: #F5090D;
   color: #2a0509;
 }
 
@@ -688,8 +693,8 @@ select {
 }
 
 .trades-tab.active {
-  border-bottom-color: #e8503a;
-  color: #e8503a;
+  border-bottom-color: #F5090D;
+  color: #F5090D;
 }
 
 .trades-add-btn {
@@ -952,7 +957,7 @@ select {
   margin-left: 4px;
   border: none;
   border-radius: 50%;
-  background: #e8503a;
+  background: #F5090D;
   color: var(--paper);
   cursor: pointer;
 }
@@ -984,7 +989,7 @@ select {
 }
 
 .store-tab.active {
-  color: #e8503a;
+  color: #F5090D;
 }
 
 .trades-tabs {
@@ -1008,7 +1013,7 @@ select {
   bottom: -1px;
   height: 2px;
   border-radius: 1px;
-  background: #e8503a;
+  background: #F5090D;
   transition: left 0.25s ease, width 0.25s ease;
 }
 
@@ -1332,7 +1337,7 @@ select {
   place-items: center;
   border: 3px solid #03090d;
   border-radius: 999px;
-  background: #e8503a;
+  background: #F5090D;
   padding: 0 6px;
   color: #ffffff;
   font-size: 12px;
@@ -1419,7 +1424,7 @@ select {
 .store-reputation-bar span {
   display: block;
   height: 100%;
-  background: #e8503a;
+  background: #F5090D;
 }
 
 .store-merchant-badge {

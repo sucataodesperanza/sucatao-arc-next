@@ -6,9 +6,11 @@ Documentação técnica e funcional das telas do site ARC Raiders.
 
 ```
 docs/
-└── telas/
-    ├── publicas/    → 16 telas acessíveis pelos usuários
-    └── admin/       → 8 telas do painel administrativo
+├── telas/
+│   ├── publicas/    → 16 telas acessíveis pelos usuários
+│   └── admin/       → 9 telas do painel administrativo
+└── apis/
+    └── trades.md    → endpoints do sistema de trades
 ```
 
 ## Telas Públicas
@@ -18,7 +20,7 @@ docs/
 | Tela | Rota | Dados principais |
 |---|---|---|
 | [Início](telas/publicas/inicio.md) | `/` | arc-data, profiles |
-| [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, profiles |
+| [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, reward_items, profiles |
 | [Itens](telas/publicas/itens.md) | `/itens` | catalog_items, arc-data |
 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
@@ -46,6 +48,7 @@ docs/
 | [Arcpedia](telas/admin/arcpedia.md) | `/admin/arcpedia` | arcs |
 | [Cupons](telas/admin/cupons.md) | `/admin/cupons` | coupons |
 | [Loot Boxes](telas/admin/loot-boxes.md) | `/admin/loot-boxes` | loot_boxes |
+| [Recompensas](telas/admin/recompensas.md) | `/admin/recompensas` | reward_items, Storage |
 | [Pedidos](telas/admin/pedidos.md) | `/admin/pedidos` | orders, profiles |
 
 ## Banco de Dados (Supabase)
@@ -58,12 +61,42 @@ Tabelas principais usadas no site:
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
 | `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
-| `trade_acceptances` | Registro de usuários que aceitaram um trade |
+| `trade_acceptances` | Registro de usuários que aceitaram um trade (com slot e game_id) |
+| `trade_slots` | Slots de agendamento in-game criados pelo admin |
+| `reward_items` | Itens de recompensa (gift cards, merch, sorteios) gerenciados pelo admin |
 | `orders` | Pedidos dos usuários |
 | `profiles` | Perfis dos usuários (points, avatar, game_id, etc.) |
 | `coupons` | Cupons de desconto |
 | `loot_boxes` | Configuração das loot boxes |
 | `seller_inventory` | Inventário de vendedores parceiros |
+
+## Storage (Supabase)
+
+| Bucket | Acesso | Usado em |
+|---|---|---|
+| `avatars` | Público · upload restrito ao próprio usuário | Upload de foto de perfil |
+| `reward-images` | Público · upload restrito a admins | Imagens dos itens de recompensa |
+
+## Infraestrutura Admin
+
+### Sistema de notificações (`AdminNotificationsProvider`)
+
+Todas as páginas admin têm acesso a toasts e modais de confirmação via contexto:
+
+```ts
+const toast         = useToast()      // toast.success / toast.error / toast.info
+const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
+```
+
+- **Toasts** — aparecem no canto inferior direito, auto-fecham em 4.5s, têm ícone por tipo (✓ erro ⚠ info)
+- **Confirm dialog** — substitui `window.confirm()` com modal estilizado; resolve `true` ou `false`
+- Todos os `patchItem` (toggles inline) mostram toast ao salvar e revertem visualmente em caso de erro
+
+## Documentação de APIs
+
+| Arquivo | Conteúdo |
+|---|---|
+| [apis/trades.md](apis/trades.md) | Todos os endpoints do sistema de trades (público + admin) |
 
 ## Fontes de Dados Locais
 

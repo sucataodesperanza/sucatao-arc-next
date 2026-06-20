@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react"
 import { Plus } from "lucide-react"
+import { useToast } from "@/components/admin-notifications"
 import { getItemTypeLabel, getRarityLabel } from "@/lib/catalog"
 import "../../../styles/admin-estoque.css"
 
@@ -42,6 +43,7 @@ export default function AdminEstoquePage() {
   const [page, setPage] = useState(1)
   const [q, setQ] = useState("")
   const [loading, setLoading] = useState(false)
+  const toast = useToast()
 
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [availableQuery, setAvailableQuery] = useState("")
@@ -93,11 +95,18 @@ export default function AdminEstoquePage() {
 
   async function patchItem(id: string, patch: Record<string, unknown>) {
     setItems(prev => prev.map(it => it.catalog_item_id === id ? { ...it, ...patch } as StockItem : it))
-    await fetch(`/api/admin/stock/${id}`, {
+    const res = await fetch(`/api/admin/stock/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     })
+    if (res.ok) {
+      if ("featured" in patch) toast.success(patch.featured ? "Marcado como destaque!" : "Removido do destaque.")
+      else toast.success("Salvo!")
+    } else {
+      toast.error("Erro ao salvar.")
+      await load()
+    }
   }
 
   async function removeItem(id: string) {

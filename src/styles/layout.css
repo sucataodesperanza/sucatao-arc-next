@@ -92,8 +92,8 @@ body.modal-open {
 
 .sidebar-link.active {
   color: var(--paper);
-  border-left-color: var(--red);
-  background: linear-gradient(90deg, rgba(255, 97, 113, 0.22), transparent 75%);
+  border-left-color: #F5090D;
+  background: linear-gradient(90deg, rgba(245, 9, 13, 0.22), transparent 75%);
 }
 
 .sidebar-link::after {
