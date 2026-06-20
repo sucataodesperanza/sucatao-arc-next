@@ -58,12 +58,19 @@ Tabelas principais usadas no site:
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
 | `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
-| `trade_acceptances` | Registro de usuários que aceitaram um trade |
+| `trade_acceptances` | Registro de usuários que aceitaram um trade (com slot e game_id) |
+| `trade_slots` | Slots de agendamento in-game criados pelo admin |
 | `orders` | Pedidos dos usuários |
 | `profiles` | Perfis dos usuários (points, avatar, game_id, etc.) |
 | `coupons` | Cupons de desconto |
 | `loot_boxes` | Configuração das loot boxes |
 | `seller_inventory` | Inventário de vendedores parceiros |
+
+## Documentação de APIs
+
+| Arquivo | Conteúdo |
+|---|---|
+| [apis/trades.md](apis/trades.md) | Todos os endpoints do sistema de trades (público + admin) |
 
 ## Fontes de Dados Locais
 

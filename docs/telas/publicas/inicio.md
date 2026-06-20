@@ -1,45 +1,54 @@
 # Início
 
 **Rota:** `/`  
-**Requer autenticação:** Sim (middleware global — redireciona para `/login` se não autenticado)
+**Requer autenticação:** Sim (middleware global)
 
 ## Descrição
 
-Tela inicial do site. Exibe notícias, um banner promocional, cards de acesso rápido às seções e um painel lateral com os trades ativos do Sucatão e o histórico de trades do usuário logado.
+Tela inicial do site. Exibe notícias, banner, cards de categoria e painel lateral de trades com duas abas funcionais: trades ativos do Sucatão e histórico pessoal do usuário com agendamento in-game.
 
 ## Conteúdo Visível
 
-- **Notas de atualização** — 2 cards de notícias com imagem, título, texto e data (hardcoded)
-- **Banner hero** ("Novidades") — imagem de fundo, tag, título, descrição e botão "Ver catálogo" (hardcoded)
-- **Cards de categoria** — 4 cards: Itens, Trades, Crafting, Mapas (hardcoded)
-- **Painel lateral — Header do usuário** — avatar, nome, reputação, badge Mercador
-- **Painel lateral — Trades**
-  - **Aba "Todos"** — lista dos últimos 5 trades ativos criados pelo Sucatão; cada card mostra pontos oferecidos × item procurado (imagem, raridade, quantidade). Botão "Aceitar" aparece para usuários logados.
-  - **Aba "Meus Trades"** — histórico de trades que o usuário aceitou, com status (Aguardando / Concluído / Cancelado)
+- **Notas de atualização** — 2 cards hardcoded com imagem, título, texto e data
+- **Banner hero** — hardcoded
+- **Cards de categoria** — 4 cards hardcoded (Itens, Trades, Crafting, Mapas)
+- **Painel lateral — Aba "Todos"** — até 5 trades ativos do Sucatão; cada card mostra logo do Sucatão, badge "Oficial", pontos oferecidos, imagem + nome + raridade do item procurado, botão "Aceitar trade"
+- **Painel lateral — Aba "Meus Trades"** — lista de trades aceitos pelo usuário com acordeão expansível por card
+
+### Acordeão "Meus Trades"
+
+Clicar em qualquer parte do card expande o acordeão. Conteúdo varia por status:
+
+| Status | Conteúdo do acordeão |
+|---|---|
+| `pending` | Grade de slots disponíveis + campo Game ID + botão "Confirmar horário" |
+| `scheduled` | Slot confirmado (label) + instrução de aguardar no jogo |
+| `completed` | "Entrega concluída! X pts creditados na sua carteira" |
 
 ## Fontes de Dados
 
 | Conteúdo | Tabela / Fonte | Campo(s) | Endpoint / Query |
 |---|---|---|---|
 | Notícias | **Hardcoded** | — | — |
-| Banner hero | **Hardcoded** | — | — |
-| Cards de categoria | **Hardcoded** | — | — |
-| Trades ativos (aba Todos) | `trades` | `id`, `offer_points`, `want_item_name`, `want_item_qty`, `want_item_icon`, `want_item_rarity`, `created_at` | `GET /api/trades` (status = active, limit 5) |
+| Banner e categorias | **Hardcoded** | — | — |
+| Trades ativos (aba Todos) | `trades` | `id`, `offer_points`, `want_item_name`, `want_item_qty`, `want_item_icon`, `want_item_rarity`, `created_at` | `GET /api/trades` |
 | Aceitar trade | `trade_acceptances` | `trade_id`, `user_id`, `status` | `POST /api/trades/:id/accept` |
-| Histórico do usuário (aba Meus Trades) | `trade_acceptances` + `trades` | `status`, `created_at`, trade completo | `GET /api/trades/my` |
-| Nome do usuário | `auth` | `user.user_metadata.name` | `supabase.auth.getUser()` |
-| Avatar e pontos | `profiles` | `avatar_url`, `points` | `supabase.from("profiles").select(...)` |
+| Histórico do usuário (aba Meus Trades) | `trade_acceptances` + `trades` + `trade_slots` | todos os campos | `GET /api/trades/my` |
+| Slots disponíveis (agendamento) | `trade_slots` | `id`, `label`, `scheduled_for`, `capacity` | `GET /api/trades/slots` (filtra lotados e passados) |
+| Confirmar horário | `trade_acceptances` | `slot_id`, `game_id`, `status` | `PATCH /api/trades/my/:id/schedule` |
+| Avatar e pontos do usuário | `profiles` + `auth` | `avatar_url`, `points`, `user_metadata.name` | `supabase.auth.getUser()` + `profiles` |
 
 ## Regras de Negócio
 
-- Apenas o **Sucatão de Speranza** (admin) cria trades — usuários não criam
-- Um usuário pode aceitar cada trade no máximo **uma vez** (unique constraint em `trade_acceptances`)
-- Trades com `status ≠ active` não aparecem na lista pública
-- O botão "Aceitar" só aparece para usuários logados; após aceitar, mostra "✓"
-- Aba "Meus Trades" só carrega quando o usuário clica nela (lazy) e está logado
+- Apenas o **Sucatão de Speranza** (admin) cria trades
+- Usuário aceita cada trade no máximo **uma vez** (`UNIQUE (trade_id, user_id)`)
+- Trades com `status ≠ active` não aparecem na listagem pública
+- O agendamento verifica a capacidade do slot em tempo real — slot lotado retorna erro 409
+- A aba ativa ("Todos" / "Meus Trades") é persistida em `localStorage` (chave `trades-active-tab`)
+- `myTrades` é carregado automaticamente quando o `userId` fica disponível (não depende da aba ativa)
 
 ## Estados Especiais
 
-- **Sem login**: aba "Todos" mostra trades mas sem botão "Aceitar"; aba "Meus Trades" mostra mensagem de login
-- **Sem trades ativos**: mensagem "Nenhum trade ativo no momento."
+- **Sem login**: botão "Aceitar" não aparece; aba "Meus Trades" mostra "Faça login"
+- **Trade já aceito**: botão vira "✓ Trade aceito" (desabilitado)
 - **Painel fechado**: estado salvo em `localStorage` (chave `trades-panel-open`)
