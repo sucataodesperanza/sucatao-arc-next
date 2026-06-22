@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
-import { BarChart2, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Trophy, Truck, Wallet, XCircle, Zap } from "lucide-react"
+import { BarChart2, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Skull, Star, Target, Trophy, Truck, Users, Wallet, XCircle, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
+import "../../../styles/contratos-venda.css"
 
 type ContractType = "Principal" | "Secundário" | "Diário" | "Facção"
 
@@ -20,81 +21,168 @@ type ContractReward =
   | { kind: "xp"; amount: number }
   | { kind: "item"; name: string; image: string; qty: number }
 
+type ContractTierActive = "Básico" | "Avançado" | "Épico" | "Lendário"
+type ContractVariantActive = "dourada" | "holografica" | "corrompida"
+
+type ContractObjectiveActive = { text: string; desc: string; done?: boolean; progress?: number; total?: number }
+type ContractEnemyActive = { name: string; type: string; dots: number; color: string; image: string }
+
 type Contract = {
   id: string
   type: ContractType
+  tier: ContractTierActive
   title: string
   description: string
   image: string
   progress: number
   total: number
+  objective: string
   rewards: ContractReward[]
+  sucatas: number
+  xp: number
+  rep?: number
+  players: number
+  successRate: number
   expiresIn: string
+  variant?: ContractVariantActive
+  location: string
+  story: string
+  estimatedTime: string
+  bestTimeOfDay: string
+  climate: string
+  environmentalRisk: string
+  objectives: ContractObjectiveActive[]
+  bonus: { condition: string; reward: string }
+  enemies: ContractEnemyActive[]
+  playersCompleted: number
+  bestRecord: { time: string; player: string }
+}
+
+const tierColorsActive: Record<ContractTierActive, { color: string; border: string }> = {
+  Básico:   { color: "#5fa8ff", border: "rgba(91,166,255,0.4)"  },
+  Avançado: { color: "#ffd400", border: "rgba(255,196,0,0.4)"   },
+  Épico:    { color: "#b477ff", border: "rgba(180,119,255,0.4)" },
+  Lendário: { color: "#ff8c42", border: "rgba(255,140,66,0.4)"  },
+}
+
+const typeColorsActive: Record<ContractType, string> = {
+  Principal: "#F5090D",
+  Secundário: "#ffd400",
+  Diário: "#F5090D",
+  Facção: "#b477ff",
+}
+
+const riskColorsActive: Record<string, string> = {
+  Baixo: "#3df28b", Médio: "#ffd400", Alto: "#ff8c42", Extremo: "#F5090D",
 }
 
 const contracts: Contract[] = [
   {
-    id: "1",
-    type: "Principal",
+    id: "1", type: "Principal", tier: "Épico",
     title: "Ameaça Mecânica",
     description: "Elimine 5 unidades ARC Sentinel na região de Speranza para reduzir a presença hostil.",
     image: "/assets/bots/arc_bastion.png",
-    progress: 3,
-    total: 5,
+    progress: 3, total: 5, objective: "Elimine 5 ARC Sentinel",
     rewards: [
       { kind: "currency", amount: 250 },
       { kind: "xp", amount: 500 },
       { kind: "item", name: "Componentes Mecânicos Avançados", image: "/assets/items/advanced_mechanical_components.png", qty: 3 },
     ],
-    expiresIn: "2d 14h",
+    sucatas: 250, xp: 500, rep: 80, players: 847, successRate: 61, expiresIn: "2d 14h",
+    location: "Cidade Alta", story: "Relatórios indicam alta concentração de ARC Sentinel patrulhando as ruínas da Cidade Alta. Neutralize as unidades antes que estabeleçam base permanente.",
+    estimatedTime: "20 - 35 min", bestTimeOfDay: "Noite", climate: "Nublado", environmentalRisk: "Alto",
+    objectives: [
+      { text: "Infiltre-se na área", desc: "Entre na zona de patrulha sem acionar alarmes.", done: true },
+      { text: "Elimine 5 ARC Sentinel", desc: "Neutralize todas as unidades patrulheiras.", progress: 3, total: 5 },
+      { text: "Extraia com segurança", desc: "Saia da área antes do reforço chegar.", progress: 0, total: 1 },
+    ],
+    bonus: { condition: "Elimine todos sem morrer", reward: "+80 REP extra" },
+    enemies: [
+      { name: "ARC Sentinel", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_sentinel.png" },
+      { name: "ARC Bastion",  type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_bastion.png" },
+      { name: "ARC Scout",    type: "Máquina Leve",   dots: 2, color: "#b477ff", image: "/assets/bots/arc_snitch.png"   },
+    ],
+    playersCompleted: 847, bestRecord: { time: "14m 12s", player: "Hayashii" },
   },
   {
-    id: "2",
-    type: "Secundário",
+    id: "2", type: "Secundário", tier: "Avançado",
     title: "Coleta de Recursos",
     description: "Colete 20 unidades de Peças de Metal espalhadas pelo mapa para reforçar o suprimento da base.",
     image: "/assets/bots/arc_spotter.png",
-    progress: 12,
-    total: 20,
+    progress: 12, total: 20, objective: "Colete 20 Peças de Metal",
     rewards: [
       { kind: "currency", amount: 120 },
       { kind: "xp", amount: 200 },
       { kind: "item", name: "Módulos Exodus", image: "/assets/items/exodus_modules.png", qty: 2 },
     ],
-    expiresIn: "1d 6h",
+    sucatas: 120, xp: 200, players: 2340, successRate: 88, expiresIn: "1d 6h",
+    location: "Estação de Trem", story: "Grandes depósitos de metal foram identificados na Estação de Trem. Colete o máximo de materiais antes que outras equipes ou patrulhas ARC cheguem.",
+    estimatedTime: "15 - 25 min", bestTimeOfDay: "Manhã", climate: "Claro", environmentalRisk: "Baixo",
+    objectives: [
+      { text: "Localize os depósitos", desc: "Encontre os pontos de coleta no mapa.", done: true },
+      { text: "Colete 20 Peças de Metal", desc: "Extraia todos os materiais disponíveis.", progress: 12, total: 20 },
+      { text: "Extraia com os recursos", desc: "Saia da zona com tudo coletado.", progress: 0, total: 1 },
+    ],
+    bonus: { condition: "Colete tudo sem ser visto", reward: "+20% Sucatas" },
+    enemies: [
+      { name: "ARC Spotter", type: "Máquina Leve",   dots: 2, color: "#b477ff", image: "/assets/bots/arc_spotter.png" },
+      { name: "ARC Leaper",  type: "Máquina Leve",   dots: 3, color: "#b477ff", image: "/assets/bots/arc_leaper.png"  },
+    ],
+    playersCompleted: 2340, bestRecord: { time: "9m 44s", player: "Myst" },
   },
   {
-    id: "3",
-    type: "Diário",
+    id: "3", type: "Diário", tier: "Básico",
     title: "Ajuda aos Raiders",
     description: "Conclua 3 trades ou ajude outros Raiders a sobreviver durante uma extração.",
     image: "/assets/bots/arc_hornet.png",
-    progress: 1,
-    total: 3,
+    progress: 1, total: 3, objective: "Complete 3 trades ou resgates",
     rewards: [
       { kind: "currency", amount: 80 },
       { kind: "xp", amount: 150 },
     ],
-    expiresIn: "8h 22m",
+    sucatas: 80, xp: 150, players: 4210, successRate: 92, expiresIn: "8h 22m",
+    location: "Barragem", story: "A comunidade de Raiders precisa de ajuda. Complete trades ou auxilie outros jogadores em situações de perigo durante extrações.",
+    estimatedTime: "5 - 15 min", bestTimeOfDay: "Qualquer", climate: "Variado", environmentalRisk: "Baixo",
+    objectives: [
+      { text: "Ajude 1 Raider", desc: "Complete um trade ou resgate.", done: true },
+      { text: "Complete 3 trades/resgates", desc: "Ajude outros Raiders ao total.", progress: 1, total: 3 },
+    ],
+    bonus: { condition: "Complete tudo no mesmo dia", reward: "+10% XP bônus" },
+    enemies: [
+      { name: "Outros Raiders", type: "Jogadores", dots: 2, color: "#5fa8ff", image: "/assets/bots/arc_spotter.png" },
+    ],
+    playersCompleted: 4210, bestRecord: { time: "4m 30s", player: "Yoda" },
   },
   {
-    id: "4",
-    type: "Facção",
+    id: "4", type: "Facção", tier: "Lendário", variant: "dourada" as ContractVariantActive,
     title: "Honra aos Vigilantes",
     description: "Complete uma missão de reconhecimento em nome dos Vigilantes e reporte os dados coletados.",
     image: "/assets/bots/arc_surveyor.png",
-    progress: 0,
-    total: 1,
+    progress: 0, total: 1, objective: "Complete a missão de reconhecimento",
     rewards: [
       { kind: "currency", amount: 400 },
       { kind: "xp", amount: 600 },
       { kind: "item", name: "Componentes Elétricos Avançados", image: "/assets/items/advanced_electrical_components.png", qty: 1 },
     ],
-    expiresIn: "4d 2h",
+    sucatas: 400, xp: 600, rep: 150, players: 312, successRate: 45, expiresIn: "4d 2h",
+    location: "Complexo ARC", story: "Os Vigilantes precisam de dados críticos do Complexo ARC. Esta missão especial é exclusiva para membros de alto escalão da facção. Apenas os mais habilidosos devem aceitar.",
+    estimatedTime: "30 - 45 min", bestTimeOfDay: "Madrugada", climate: "Neblina densa", environmentalRisk: "Extremo",
+    objectives: [
+      { text: "Infiltre-se no Complexo ARC", desc: "Entre sem ser detectado pelos sistemas de segurança.", progress: 0, total: 1 },
+      { text: "Colete dados de reconhecimento", desc: "Acesse os terminais de dados dos Vigilantes.", progress: 0, total: 3 },
+      { text: "Reporte e extraia", desc: "Transmita os dados e saia com vida.", progress: 0, total: 1 },
+    ],
+    bonus: { condition: "Complete sem acionar alarmes", reward: "+150 REP Facção" },
+    enemies: [
+      { name: "ARC Guardian", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_sentinel.png"  },
+      { name: "ARC Matriarch", type: "Máquina Lendária", dots: 4, color: "#F5090D", image: "/assets/bots/arc_matriarch.png" },
+      { name: "ARC Scout",    type: "Máquina Leve",   dots: 3, color: "#b477ff", image: "/assets/bots/arc_snitch.png"   },
+    ],
+    playersCompleted: 312, bestRecord: { time: "28m 55s", player: "Bruninzor" },
   },
 ]
 
-const tabs = ["Contratos Ativos", "Contratos Diários", "Contratos Semanais", "Histórico"]
+const tabs = ["Contratos Ativos", "Histórico"]
 
 type DailyContract = {
   title: string
@@ -418,6 +506,7 @@ const PANEL_KEY = "contratos-panel-open"
 export default function ContratosPage() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [activeTab, setActiveTab] = useState(tabs[0])
+  const [selectedActiveContract, setSelectedActiveContract] = useState<Contract | null>(null)
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
   const [secondsLeft, setSecondsLeft] = useState(0)
@@ -565,42 +654,182 @@ export default function ContratosPage() {
                 </label>
               </div>
 
-              <div className="contratos-grid">
-                {contracts.map(contract => (
-                  <article key={contract.id} className="contratos-card">
-                    <div className="contratos-card-banner" style={{ backgroundImage: `url(${contract.image})` }}>
-                      <span className={`contratos-card-type contratos-card-type-${contractTypeStyles[contract.type]}`}>
-                        {contract.type}
-                      </span>
-                    </div>
-                    <div className="contratos-card-body">
-                      <h3>{contract.title}</h3>
-                      <p>{contract.description}</p>
-                      <div className="contratos-progress">
-                        <div className="contratos-progress-label">
-                          <span>Progresso</span>
-                          <span>{contract.progress}/{contract.total}</span>
+              <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
+                {contracts.map(contract => {
+                  const tier = tierColorsActive[contract.tier]
+                  const typeColor = typeColorsActive[contract.type]
+                  const pct = Math.round((contract.progress / contract.total) * 100)
+                  return (
+                    <div key={contract.id} className={`cv-card${contract.variant ? ` cv-card--${contract.variant}` : ""}`}>
+                      {contract.variant && <div className="cv-card-frame" />}
+                      <div className="cv-card-bg">
+                        <div className="cv-card-bg-img" style={{ backgroundImage: `url(${contract.image})` }} />
+                        {contract.variant && <div className="cv-skull-badge"><Skull size={14} /></div>}
+                      </div>
+                      <div className="cv-card-badges">
+                        <span className="cv-card-type" style={{ color: typeColor }}>{contract.type}</span>
+                        <span className="cv-card-tier" style={{ color: tier.color, borderColor: tier.border }}>{contract.tier}</span>
+                      </div>
+                      <div className="cv-card-body">
+                        <strong className="cv-card-name">{contract.title}</strong>
+                        <p className="cv-card-desc">{contract.description}</p>
+                        <div className="cv-card-section-label">Objetivo</div>
+                        <div className="cv-card-objective">
+                          <Target size={11} />{contract.objective}
                         </div>
-                        <div className="store-reputation-bar">
-                          <span style={{ width: `${(contract.progress / contract.total) * 100}%` }} />
+                        <div className="cv-card-section-label">Recompensas</div>
+                        <div className="cv-card-rewards">
+                          <span style={{ color: "#ffd400" }}><Coins size={11} />{contract.sucatas}</span>
+                          <span style={{ color: "#5fa8ff" }}><Zap size={11} />{contract.xp}</span>
+                          {contract.rep && <span style={{ color: "#b477ff" }}><Star size={11} />{contract.rep}</span>}
+                        </div>
+                        <div className="cv-card-section-label">Progresso</div>
+                        <div className="ca-progress-wrap">
+                          <div className="ca-progress-bar">
+                            <span style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="ca-progress-label">{contract.progress}/{contract.total}</span>
+                        </div>
+                        <div className="cv-card-footer-meta">
+                          <span className="cv-card-players"><Clock size={11} />{contract.expiresIn}</span>
+                          <span className="cv-card-success" style={{ color: contract.successRate >= 70 ? "#3df28b" : contract.successRate >= 50 ? "#ffd400" : "#F5090D" }}>
+                            {contract.successRate}%
+                          </span>
+                        </div>
+                        <div className="cv-card-actions">
+                          <button type="button" className="cv-card-details" onClick={() => setSelectedActiveContract(contract)}>
+                            Ver Detalhes
+                          </button>
                         </div>
                       </div>
-                      <div className="contratos-rewards">
-                        <span className="contratos-rewards-label">Recompensas</span>
-                        <div className="contratos-rewards-list">
-                          {contract.rewards.map((reward, i) => (
-                            <RewardThumb key={i} reward={reward} />
+                      {contract.variant && (
+                        <div className="cv-card-variant-footer">
+                          ‹ {contract.variant === "dourada" ? "Versão Dourada" : contract.variant === "holografica" ? "Versão Holográfica" : "Versão Corrompida"} ›
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Contract detail modal */}
+              {selectedActiveContract && (
+                <div className="cdm-overlay" onClick={() => setSelectedActiveContract(null)}>
+                  <div className={`cdm-modal${selectedActiveContract.variant ? ` cdm-modal--${selectedActiveContract.variant}` : ""}`} onClick={e => e.stopPropagation()}>
+                    <button className="cdm-close" type="button" onClick={() => setSelectedActiveContract(null)}>✕</button>
+                    <div className="cdm-left">
+                      <div className="cdm-hero" style={{ backgroundImage: `url(${selectedActiveContract.image})` }}>
+                        <div className="cdm-hero-overlay" />
+                        <div className="cdm-hero-content">
+                          <span className="cdm-op-badge">{selectedActiveContract.type}</span>
+                          <h2 className="cdm-title">{selectedActiveContract.title}</h2>
+                          <span className="cdm-location"><span>📍</span>{selectedActiveContract.location}</span>
+                        </div>
+                      </div>
+                      <p className="cdm-description">{selectedActiveContract.story}</p>
+                      <div className="cdm-meta-row">
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Dificuldade</span>
+                          <span className="cdm-meta-val" style={{ color: riskColorsActive[selectedActiveContract.environmentalRisk] }}>
+                            <Skull size={12} /> {selectedActiveContract.environmentalRisk}
+                          </span>
+                        </div>
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Tier</span>
+                          <span className="cdm-meta-val" style={{ color: tierColorsActive[selectedActiveContract.tier].color }}>
+                            {selectedActiveContract.tier}
+                          </span>
+                        </div>
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Jogadores</span>
+                          <span className="cdm-meta-val"><Users size={12} />{selectedActiveContract.players}</span>
+                        </div>
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Expira em</span>
+                          <span className="cdm-meta-val" style={{ color: "#ffd400" }}><Clock size={12} />{selectedActiveContract.expiresIn}</span>
+                        </div>
+                      </div>
+                      <div className="cdm-about">
+                        <span className="cdm-section-label">Sobre a Operação</span>
+                        <p>{selectedActiveContract.story}</p>
+                      </div>
+                      <div className="cdm-conditions">
+                        <div className="cdm-condition-chip"><span className="cdm-chip-label">⏱ Tempo Estimado</span><span>{selectedActiveContract.estimatedTime}</span></div>
+                        <div className="cdm-condition-chip"><span className="cdm-chip-label">🌙 Melhor Horário</span><span>{selectedActiveContract.bestTimeOfDay}</span></div>
+                        <div className="cdm-condition-chip"><span className="cdm-chip-label">🌤 Clima</span><span>{selectedActiveContract.climate}</span></div>
+                        <div className="cdm-condition-chip cdm-chip-warn"><span className="cdm-chip-label">⚠ Risco Ambiental</span><span style={{ color: riskColorsActive[selectedActiveContract.environmentalRisk] }}>{selectedActiveContract.environmentalRisk}</span></div>
+                      </div>
+                      <div className="cdm-mini-map">
+                        <span className="cdm-section-label">Local da Operação</span>
+                        <div className="cdm-mini-map-body" style={{ backgroundImage: "url(/assets/maps/buried_city.png)" }} />
+                        <div className="cdm-mini-map-info">
+                          <strong>{selectedActiveContract.location}</strong>
+                          <span>Setor Leste</span>
+                          <button type="button" className="cdm-map-btn">▷ Ver no Mapa</button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="cdm-right">
+                      <div className="cdm-section">
+                        <span className="cdm-section-label">Objetivos</span>
+                        <div className="cdm-objectives">
+                          {selectedActiveContract.objectives.map((obj, i) => (
+                            <div key={i} className={`cdm-objective${obj.done ? " cdm-objective--done" : ""}`}>
+                              <div className="cdm-obj-num">{obj.done ? "✓" : `0${i + 1}`}</div>
+                              <div className="cdm-obj-body"><strong>{obj.text}</strong><span>{obj.desc}</span></div>
+                              <div className="cdm-obj-progress">{!obj.done && obj.total ? `${obj.progress ?? 0} / ${obj.total}` : ""}</div>
+                            </div>
                           ))}
                         </div>
                       </div>
-                      <div className={`contratos-card-footer contratos-card-footer-${contractTypeStyles[contract.type]}`}>
-                        <Clock size={12} />
-                        Expira em: {contract.expiresIn}
+                      <div className="cdm-section">
+                        <span className="cdm-section-label">Recompensas Estimadas</span>
+                        <div className="cdm-rewards-grid">
+                          <div className="cdm-reward-item" style={{ color: "#ffd400" }}><Coins size={16} /><strong>{selectedActiveContract.sucatas}</strong><span>Sucatas</span></div>
+                          <div className="cdm-reward-item" style={{ color: "#5fa8ff" }}><Zap size={16} /><strong>{selectedActiveContract.xp}</strong><span>XP</span></div>
+                          {selectedActiveContract.rep && <div className="cdm-reward-item" style={{ color: "#b477ff" }}><Star size={16} /><strong>{selectedActiveContract.rep}</strong><span>REP</span></div>}
+                          <div className="cdm-reward-bonus">
+                            <span className="cdm-bonus-label">Bônus de Sucesso</span>
+                            <span className="cdm-bonus-condition">{selectedActiveContract.bonus.condition}</span>
+                            <span className="cdm-bonus-reward" style={{ color: "#3df28b" }}>{selectedActiveContract.bonus.reward}</span>
+                          </div>
+                        </div>
                       </div>
+                      <div className="cdm-section">
+                        <span className="cdm-section-label">Inimigos Principais</span>
+                        <div className="cdm-enemies">
+                          {selectedActiveContract.enemies.map((enemy, i) => (
+                            <div key={i} className="cdm-enemy">
+                              <div className="cdm-enemy-avatar"><div className="cdm-enemy-bg" style={{ backgroundImage: `url(${enemy.image})` }} /></div>
+                              <strong>{enemy.name}</strong><span>{enemy.type}</span>
+                              <div className="cdm-enemy-dots">
+                                {Array.from({ length: 4 }).map((_, d) => (
+                                  <span key={d} className={`cdm-dot${d < enemy.dots ? " on" : ""}`} style={d < enemy.dots ? { background: enemy.color } : {}} />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="cdm-stats-row">
+                        <div className="cdm-stat"><span>Jogadores que completaram</span><strong>{selectedActiveContract.playersCompleted.toLocaleString("pt-BR")}</strong></div>
+                        <div className="cdm-stat"><span>Taxa de sucesso</span><strong style={{ color: selectedActiveContract.successRate >= 70 ? "#3df28b" : selectedActiveContract.successRate >= 50 ? "#ffd400" : "#F5090D" }}>{selectedActiveContract.successRate}%</strong></div>
+                        <div className="cdm-stat"><span>Melhor tempo registrado</span><strong>{selectedActiveContract.bestRecord.time}</strong><span style={{ fontSize: 10, color: "var(--gray-500)" }}>por {selectedActiveContract.bestRecord.player}</span></div>
+                      </div>
+                      <div className="cdm-buy-row">
+                        <div className="cdm-cost">
+                          <span>Progresso Atual</span>
+                          <strong style={{ color: "#3df28b", fontSize: 18 }}>{selectedActiveContract.progress} / {selectedActiveContract.total}</strong>
+                        </div>
+                        <button type="button" className="cdm-buy-btn" style={{ background: "#3df28b", color: "#021a0a" }} onClick={() => setSelectedActiveContract(null)}>
+                          Acompanhar Contrato
+                        </button>
+                      </div>
+                      <p className="cdm-disclaimer">Contrato ativo — progresso salvo automaticamente.</p>
                     </div>
-                  </article>
-                ))}
-              </div>
+                  </div>
+                </div>
+              )}
 
               <div className="contratos-tip">
                 <div className="contratos-tip-image" style={{ backgroundImage: "url(/assets/bots/arc_wasp.png)" }} />
@@ -831,88 +1060,51 @@ export default function ContratosPage() {
                 </div>
               </div>
 
-              <table className="historico-table">
-                <colgroup>
-                  <col className="historico-col-contrato" />
-                  <col className="historico-col-tipo" />
-                  <col className="historico-col-objetivo" />
-                  <col className="historico-col-resultado" />
-                  <col className="historico-col-recompensas" />
-                  <col className="historico-col-data" />
-                </colgroup>
-                <thead>
-                  <tr className="historico-table-head">
-                    <th>Contrato</th>
-                    <th>Tipo</th>
-                    <th>Objetivo</th>
-                    <th>Resultado</th>
-                    <th>Recompensas</th>
-                    <th>Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {historyEntries.map(entry => (
-                    <tr key={entry.id} className="historico-row">
-                      <td>
-                        <div className="historico-title-cell">
-                          <div className="historico-thumb" style={{ backgroundImage: `url(${entry.image})` }} />
-                          <div className="historico-title-info">
-                            <strong>{entry.title}</strong>
-                            <span>{entry.description}</span>
+              <div className="hist-cards-grid">
+                {historyEntries.map(entry => {
+                  const stampColor = entry.result === "CONCLUÍDO" ? "#3df28b" : entry.result === "FALHOU" ? "#F5090D" : "#8b99aa"
+                  const pct = Math.min(100, Math.round((entry.objective.current / entry.objective.total) * 100))
+                  const typeColor = entry.type === "Diário" ? "#F5090D" : "#ffd400"
+                  const sucatas = entry.rewards.find(r => r.kind === "currency")
+                  const xp      = entry.rewards.find(r => r.kind === "xp")
+                  return (
+                    <div key={entry.id} className="hist-card">
+                      <div className="hist-card-bg">
+                        <div className="hist-card-bg-img" style={{ backgroundImage: `url(${entry.image})` }} />
+                        {/* Diagonal stamp */}
+                        <div className="hist-stamp" style={{ color: stampColor, borderColor: stampColor }}>
+                          <span className="hist-stamp-text">{entry.result}</span>
+                        </div>
+                      </div>
+                      <div className="cv-card-badges">
+                        <span className="cv-card-type" style={{ color: typeColor }}>{entry.type}</span>
+                        <span className="hist-card-date">{entry.date}</span>
+                      </div>
+                      <div className="cv-card-body">
+                        <strong className="cv-card-name">{entry.title}</strong>
+                        <p className="cv-card-desc">{entry.description}</p>
+                        <div className="cv-card-section-label">Objetivo</div>
+                        <div className="ca-progress-wrap">
+                          <div className="ca-progress-bar">
+                            <span style={{ width: `${pct}%`, background: entry.result === "CONCLUÍDO" ? "#3df28b" : entry.result === "FALHOU" ? "#F5090D" : "#8b99aa" }} />
                           </div>
+                          <span className="ca-progress-label">{entry.objective.current}/{entry.objective.total}</span>
                         </div>
-                      </td>
-                      <td>
-                        <span className={`historico-type-badge historico-type-${entry.type === "Diário" ? "diario" : "semanal"}`}>
-                          {entry.type}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="historico-objective-cell">
-                          <span className="historico-objective-label">{entry.objective.current} / {entry.objective.total}</span>
-                          <div className="historico-mini-bar">
-                            <span style={{ width: `${Math.min(100, (entry.objective.current / entry.objective.total) * 100)}%`, background: entry.result === "CONCLUÍDO" ? "var(--green)" : entry.result === "FALHOU" ? "var(--red)" : "var(--gray-500)" }} />
-                          </div>
-                        </div>
-                      </td>
-                      <td>
-                        {entry.result === "CONCLUÍDO" && (
-                          <span className="historico-result historico-result-concluido">
-                            <CheckCircle size={13} />
-                            Concluído
-                          </span>
+                        {entry.rewards.length > 0 && (
+                          <>
+                            <div className="cv-card-section-label">Recompensas</div>
+                            <div className="cv-card-rewards">
+                              {sucatas && <span style={{ color: "#ffd400" }}><Coins size={11} />{(sucatas as { kind: "currency"; amount: number }).amount}</span>}
+                              {xp      && <span style={{ color: "#5fa8ff" }}><Zap size={11} />{(xp as { kind: "xp"; amount: number }).amount}</span>}
+                            </div>
+                          </>
                         )}
-                        {entry.result === "FALHOU" && (
-                          <span className="historico-result historico-result-falhou">
-                            <XCircle size={13} />
-                            Falhou
-                          </span>
-                        )}
-                        {entry.result === "EXPIRADO" && (
-                          <span className="historico-result historico-result-expirado">
-                            <Clock size={13} />
-                            Expirado
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <div className="historico-rewards-col">
-                          {entry.rewards.length === 0 ? (
-                            <span className="historico-no-reward">—</span>
-                          ) : (
-                            entry.rewards.map((reward, i) => <RewardThumb key={i} reward={reward} />)
-                          )}
-                        </div>
-                      </td>
-                      <td>
-                        <div className="historico-date-cell">
-                          {entry.date.split(" ").map((line, i) => <span key={i}>{line}</span>)}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
 
               <div className="historico-pagination">
                 <button type="button" className="historico-page-btn"><ChevronLeft size={14} /></button>

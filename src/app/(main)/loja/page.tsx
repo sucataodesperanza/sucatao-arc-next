@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
-import { ArrowRight, Banknote, ChevronLeft, ChevronRight, CircleDollarSign, Clock, Coins, Gavel, Package, Plus, ScrollText, Shirt, ShoppingCart, Sparkles, Star, Target, Zap } from "lucide-react"
+import { ArrowRight, Banknote, ChevronDown, ChevronLeft, CircleDollarSign, Clock, Coins, Gavel, Package, Plus, Shirt, ShoppingCart, Skull, Sparkles, Star, SlidersHorizontal, Target, Users, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getItemTypeLabel, type CatalogItem } from "@/lib/catalog"
@@ -13,6 +13,7 @@ import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { useItemsCatalog } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/loja.css"
+import "../../../styles/contratos-venda.css"
 
 function resolveImage(image?: string) {
   if (!image) return undefined
@@ -58,8 +59,31 @@ const categories: { key: string; tag: string; tone: string; image: string; title
   { key: "giftcards", tag: "GIFT CARDS", tone: "yellow", image: "/assets/bots/arc_snitch.png", title: "Gift Cards", text: "Cartões de presente para usar dentro da loja." },
 ]
 
-type ContractTier = "Básico" | "Avançado" | "Épico"
+type ContractTier = "Básico" | "Avançado" | "Épico" | "Lendário"
 type ContractSaleType = "Diário" | "Semanal"
+type RiskLevel = "Baixo" | "Médio" | "Alto" | "Extremo"
+
+type ContractVariant = "dourada" | "holografica" | "corrompida"
+type ContractObjective = { text: string; desc: string; done?: boolean; progress?: number; total?: number }
+type ContractEnemy = { name: string; type: string; dots: number; color: string; image: string }
+
+const featuredContract = {
+  name: "Titan Caído",
+  description: "Um ARC Titan foi abatido na Cidade Alta. Recupere tecnologias críticas antes que outros Raiders cheguem.",
+  risk: "Extremo" as RiskLevel,
+  players: 87,
+  expiresIn: "04h 12m",
+  rewards: { sucatas: 5000, xp: 2500, rep: 200 },
+  image: "/assets/bots/arc_the_queen.png",
+}
+
+const mapLocations = [
+  { id: "barragem",      name: "Barragem",        contracts: 2, color: "#b477ff", top: "15%", left: "58%" },
+  { id: "complexo-arc",  name: "Complexo ARC",    contracts: 3, color: "#5fa8ff", top: "12%", left: "78%" },
+  { id: "cidade-alta",   name: "Cidade Alta",     contracts: 4, color: "#F5090D", top: "38%", left: "40%", active: true },
+  { id: "estacao-trem",  name: "Estação de Trem", contracts: 1, color: "#ffd400", top: "58%", left: "30%" },
+  { id: "zona-vermelha", name: "Zona Vermelha",   contracts: 2, color: "#ff8c42", top: "42%", left: "72%" },
+]
 
 const contractsForSale: {
   id: string
@@ -67,110 +91,179 @@ const contractsForSale: {
   description: string
   type: ContractSaleType
   tier: ContractTier
+  risk: RiskLevel
   price: number
   objective: string
-  rewards: { icon: typeof Coins; label: string; color: string }[]
+  sucatas: number
+  xp: number
+  rep?: number
+  players: number
+  successRate: number
   image: string
+  variant?: ContractVariant
+  realPrice?: number
+  location: string
+  story: string
+  estimatedTime: string
+  bestTimeOfDay: string
+  climate: string
+  environmentalRisk: string
+  objectives: ContractObjective[]
+  bonus: { condition: string; reward: string }
+  enemies: ContractEnemy[]
+  playersCompleted: number
+  bestRecord: { time: string; player: string }
 }[] = [
   {
-    id: "c1",
-    name: "Coleta Rápida",
-    description: "Colete recursos espalhados pelo mapa antes que outros Raiders cheguem.",
-    type: "Diário",
-    tier: "Básico",
-    price: 500,
-    objective: "Colete 10 recursos",
-    rewards: [
-      { icon: Coins, label: "+300 Sucatas", color: "#ffd400" },
-      { icon: Zap, label: "+150 XP", color: "#5fa8ff" },
+    id: "c1", name: "Coleta Rápida", description: "Colete recursos espalhados pelo mapa antes que outros Raiders cheguem.",
+    type: "Diário", tier: "Básico", risk: "Baixo", price: 500, objective: "Colete 10 recursos",
+    sucatas: 300, xp: 150, players: 642, successRate: 85, image: "/assets/bots/arc_leaper.png",
+    location: "Estação de Trem", story: "Relatórios indicam grande concentração de materiais abandonados próximo à Estação de Trem. Colete o máximo antes que outros Raiders ou patrulhas ARC cheguem à área.",
+    estimatedTime: "10 - 15 min", bestTimeOfDay: "Manhã", climate: "Claro", environmentalRisk: "Baixo",
+    objectives: [
+      { text: "Localize os pontos de coleta", desc: "Encontre as marcações no mapa.", done: true },
+      { text: "Colete 10 recursos", desc: "Extraia materiais dos contêineres.", progress: 0, total: 10 },
+      { text: "Extraia da zona", desc: "Saia da área com os recursos.", progress: 0, total: 1 },
     ],
-    image: "/assets/bots/arc_leaper.png",
+    bonus: { condition: "Colete tudo em menos de 8 min", reward: "+20% Sucatas" },
+    enemies: [
+      { name: "ARC Scout", type: "Máquina Leve", dots: 2, color: "#b477ff", image: "/assets/bots/arc_snitch.png" },
+      { name: "ARC Leaper", type: "Máquina Leve", dots: 3, color: "#b477ff", image: "/assets/bots/arc_leaper.png" },
+      { name: "Outros Raiders", type: "Jogadores", dots: 2, color: "#5fa8ff", image: "/assets/bots/arc_spotter.png" },
+    ],
+    playersCompleted: 3840, bestRecord: { time: "6m 14s", player: "Patife" },
   },
   {
-    id: "c2",
-    name: "Caçada Noturna",
-    description: "Elimine unidades ARC patrulhando a zona de exclusão.",
-    type: "Diário",
-    tier: "Avançado",
-    price: 900,
-    objective: "Elimine 8 ARC",
-    rewards: [
-      { icon: Coins, label: "+600 Sucatas", color: "#ffd400" },
-      { icon: Zap, label: "+300 XP", color: "#5fa8ff" },
+    id: "c2", name: "Caçada Noturna", description: "Elimine unidades ARC patrulhando a zona de exclusão.",
+    type: "Diário", tier: "Avançado", risk: "Alto", price: 900, objective: "Elimine 8 ARC",
+    sucatas: 600, xp: 300, players: 521, successRate: 67, image: "/assets/bots/arc_shredder.png",
+    location: "Zona Vermelha", story: "Patrulhas ARC intensificaram presença na Zona Vermelha durante a noite. Elimine as unidades antes que elas fortifiquem a área permanentemente.",
+    estimatedTime: "15 - 25 min", bestTimeOfDay: "Noite", climate: "Nublado", environmentalRisk: "Médio",
+    objectives: [
+      { text: "Entre na zona de patrulha", desc: "Infiltre-se sem ser detectado.", done: true },
+      { text: "Elimine 8 ARC", desc: "Neutralize as unidades de patrulha.", progress: 0, total: 8 },
+      { text: "Extraia com segurança", desc: "Saia antes do reforço chegar.", progress: 0, total: 1 },
     ],
-    image: "/assets/bots/arc_shredder.png",
+    bonus: { condition: "Elimine sem ser detectado", reward: "+30% XP" },
+    enemies: [
+      { name: "ARC Shredder", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_shredder.png" },
+      { name: "ARC Guardian", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_sentinel.png" },
+      { name: "ARC Scout", type: "Máquina Leve", dots: 3, color: "#b477ff", image: "/assets/bots/arc_snitch.png" },
+    ],
+    playersCompleted: 2100, bestRecord: { time: "11m 48s", player: "Hayashii" },
   },
   {
-    id: "c3",
-    name: "Operação Resgate",
-    description: "Recupere equipamentos perdidos em zonas de alta periculosidade.",
-    type: "Semanal",
-    tier: "Avançado",
-    price: 2000,
-    objective: "Recupere 5 equipamentos",
-    rewards: [
-      { icon: Coins, label: "+2.000 Sucatas", color: "#ffd400" },
-      { icon: Zap, label: "+800 XP", color: "#5fa8ff" },
-      { icon: Star, label: "+50 REP", color: "#b477ff" },
+    id: "c3", name: "Operação Resgate", description: "Recupere equipamentos perdidos em zonas de alta periculosidade.",
+    type: "Semanal", tier: "Avançado", risk: "Alto", price: 2000, objective: "Recupere 5 equipamentos",
+    sucatas: 2000, xp: 800, rep: 50, players: 1247, successRate: 68, image: "/assets/bots/arc_spotter.png",
+    location: "Complexo ARC", story: "Equipamentos de alto valor foram perdidos durante uma extração mal-sucedida no Complexo ARC. Recupere os itens antes que a tecnologia caia em mãos erradas.",
+    estimatedTime: "20 - 30 min", bestTimeOfDay: "Tarde", climate: "Parcialmente nublado", environmentalRisk: "Alto",
+    objectives: [
+      { text: "Localize os equipamentos", desc: "Use o scanner para detectar os sinais.", done: true },
+      { text: "Recupere 5 equipamentos", desc: "Colete todos os itens marcados.", progress: 0, total: 5 },
+      { text: "Extraia pelo ponto seguro", desc: "Leve tudo até a extração.", progress: 0, total: 1 },
     ],
-    image: "/assets/bots/arc_spotter.png",
+    bonus: { condition: "Recupere todos sem perder nenhum", reward: "+50 REP extra" },
+    enemies: [
+      { name: "ARC Spotter", type: "Máquina Pesada", dots: 3, color: "#ffd400", image: "/assets/bots/arc_spotter.png" },
+      { name: "ARC Guardian", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_sentinel.png" },
+      { name: "Outros Raiders", type: "Jogadores", dots: 3, color: "#5fa8ff", image: "/assets/bots/arc_leaper.png" },
+    ],
+    playersCompleted: 1247, bestRecord: { time: "18m 22s", player: "Yoda" },
   },
   {
-    id: "c4",
-    name: "Titan Caído",
-    description: "Confronte e elimine um ARC Titan nas ruínas da Cidade Alta.",
-    type: "Semanal",
-    tier: "Épico",
-    price: 5000,
-    objective: "Elimine 1 ARC Titan",
-    rewards: [
-      { icon: Coins, label: "+5.000 Sucatas", color: "#ffd400" },
-      { icon: Zap, label: "+2.500 XP", color: "#5fa8ff" },
-      { icon: Star, label: "+200 REP", color: "#b477ff" },
+    id: "c4", variant: "dourada" as ContractVariant, realPrice: 9.99, name: "Entrega Expressa", description: "Transporte suprimentos críticos para os postos aliados sem ser detectado.",
+    type: "Semanal", tier: "Básico", risk: "Médio", price: 400, objective: "Entregue 3 suprimentos",
+    sucatas: 250, xp: 100, players: 312, successRate: 90, image: "/assets/bots/arc_snitch.png",
+    location: "Barragem", story: "Os postos aliados na Barragem precisam urgentemente de suprimentos médicos. Transporte os pacotes cruzando território ARC sem ser detectado.",
+    estimatedTime: "10 - 20 min", bestTimeOfDay: "Amanhecer", climate: "Neblina", environmentalRisk: "Baixo",
+    objectives: [
+      { text: "Pegue os suprimentos", desc: "Colete os pacotes no depósito.", done: true },
+      { text: "Entregue 3 suprimentos", desc: "Leve os pacotes aos postos.", progress: 0, total: 3 },
+      { text: "Não seja detectado", desc: "Complete sem acionar alarmes.", progress: 0, total: 1 },
     ],
-    image: "/assets/bots/arc_the_queen.png",
+    bonus: { condition: "Entregue todos intactos", reward: "+15% Sucatas" },
+    enemies: [
+      { name: "ARC Scout", type: "Máquina Leve", dots: 2, color: "#b477ff", image: "/assets/bots/arc_snitch.png" },
+      { name: "Outros Raiders", type: "Jogadores", dots: 2, color: "#5fa8ff", image: "/assets/bots/arc_spotter.png" },
+    ],
+    playersCompleted: 2808, bestRecord: { time: "8m 05s", player: "Myst" },
   },
   {
-    id: "c5",
-    name: "Entrega Expressa",
-    description: "Transporte suprimentos críticos para os postos aliados sem ser detectado.",
-    type: "Diário",
-    tier: "Básico",
-    price: 400,
-    objective: "Entregue 3 suprimentos",
-    rewards: [
-      { icon: Coins, label: "+250 Sucatas", color: "#ffd400" },
-      { icon: Zap, label: "+100 XP", color: "#5fa8ff" },
+    id: "c5", variant: "holografica" as ContractVariant, realPrice: 14.99, name: "Domínio Total", description: "Controle todos os pontos estratégicos do mapa durante uma sessão completa.",
+    type: "Semanal", tier: "Épico", risk: "Extremo", price: 4500, objective: "Domine 5 pontos",
+    sucatas: 4000, xp: 2000, rep: 150, players: 284, successRate: 55, image: "/assets/bots/arc_matriarch.png",
+    location: "Cidade Alta", story: "Tome controle de todos os pontos estratégicos da Cidade Alta por tempo suficiente para estabelecer dominância. Resistência máxima garantida.",
+    estimatedTime: "35 - 50 min", bestTimeOfDay: "Noite", climate: "Tempestade", environmentalRisk: "Extremo",
+    objectives: [
+      { text: "Capture o primeiro ponto", desc: "Tome controle do ponto Norte.", done: true },
+      { text: "Domine 5 pontos estratégicos", desc: "Controle todos os pontos simultaneamente.", progress: 0, total: 5 },
+      { text: "Mantenha o domínio por 5 minutos", desc: "Resista aos contra-ataques.", progress: 0, total: 1 },
     ],
-    image: "/assets/bots/arc_snitch.png",
+    bonus: { condition: "Domine sem perder nenhum ponto", reward: "+200 REP extra" },
+    enemies: [
+      { name: "ARC Matriarch", type: "Máquina Lendária", dots: 4, color: "#F5090D", image: "/assets/bots/arc_matriarch.png" },
+      { name: "ARC Shredder", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_shredder.png" },
+      { name: "ARC Guardian", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_sentinel.png" },
+      { name: "Outros Raiders", type: "Jogadores", dots: 4, color: "#5fa8ff", image: "/assets/bots/arc_leaper.png" },
+    ],
+    playersCompleted: 284, bestRecord: { time: "32m 18s", player: "Bruninzor" },
   },
   {
-    id: "c6",
-    name: "Domínio Total",
-    description: "Controle todos os pontos estratégicos do mapa durante uma sessão completa.",
-    type: "Semanal",
-    tier: "Épico",
-    price: 4500,
-    objective: "Domine 5 pontos",
-    rewards: [
-      { icon: Coins, label: "+4.000 Sucatas", color: "#ffd400" },
-      { icon: Zap, label: "+2.000 XP", color: "#5fa8ff" },
-      { icon: Star, label: "+150 REP", color: "#b477ff" },
+    id: "c6", variant: "corrompida" as ContractVariant, realPrice: 19.99, name: "Suprimentos Proibidos", description: "Recupere suprimentos valiosos da Black Market escondidos na Zona Vermelha.",
+    type: "Diário", tier: "Lendário", risk: "Extremo", price: 7000, objective: "Extraia com o pacote",
+    sucatas: 6000, xp: 3000, rep: 250, players: 93, successRate: 34, image: "/assets/bots/arc_bastion.png",
+    location: "Zona Vermelha", story: "A Black Market escondeu suprimentos de alto valor profundamente na Zona Vermelha. Somente os Raiders mais experientes se aventuram nessa área — e poucos retornam.",
+    estimatedTime: "40 - 60 min", bestTimeOfDay: "Noite", climate: "Tempestade Radioativa", environmentalRisk: "Extremo",
+    objectives: [
+      { text: "Penetre na Zona Vermelha", desc: "Entre na área sem ativar as defesas perimetrais.", done: true },
+      { text: "Localize o esconderijo", desc: "Use pistas deixadas pela Black Market.", progress: 0, total: 1 },
+      { text: "Extraia com o pacote completo", desc: "Leve todos os suprimentos até a extração.", progress: 0, total: 1 },
     ],
-    image: "/assets/bots/arc_matriarch.png",
+    bonus: { condition: "Extraia sem morrer", reward: "+25% Sucatas" },
+    enemies: [
+      { name: "ARC Bastion", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_bastion.png" },
+      { name: "ARC Matriarch", type: "Máquina Lendária", dots: 4, color: "#F5090D", image: "/assets/bots/arc_matriarch.png" },
+      { name: "ARC Guardian", type: "Máquina Pesada", dots: 4, color: "#F5090D", image: "/assets/bots/arc_sentinel.png" },
+      { name: "Outros Raiders", type: "Jogadores", dots: 4, color: "#5fa8ff", image: "/assets/bots/arc_spotter.png" },
+    ],
+    playersCompleted: 93, bestRecord: { time: "44m 10s", player: "Marginal" },
   },
 ]
 
-const tierColors: Record<ContractTier, { bg: string; color: string; border: string }> = {
-  Básico:   { bg: "rgba(91,166,255,0.12)",  color: "#5fa8ff", border: "rgba(91,166,255,0.3)"  },
-  Avançado: { bg: "rgba(255,196,0,0.12)",   color: "#ffd400", border: "rgba(255,196,0,0.3)"   },
-  Épico:    { bg: "rgba(180,119,255,0.14)", color: "#b477ff", border: "rgba(180,119,255,0.32)" },
+const tierColors: Record<ContractTier, { color: string; border: string }> = {
+  Básico:   { color: "#5fa8ff", border: "rgba(91,166,255,0.4)"   },
+  Avançado: { color: "#ffd400", border: "rgba(255,196,0,0.4)"    },
+  Épico:    { color: "#b477ff", border: "rgba(180,119,255,0.4)"  },
+  Lendário: { color: "#ff8c42", border: "rgba(255,140,66,0.4)"   },
 }
 
-const typeColors: Record<ContractSaleType, { bg: string; color: string }> = {
-  Diário:  { bg: "rgba(255,65,65,0.15)",  color: "#ff4141" },
-  Semanal: { bg: "rgba(255,196,0,0.12)",  color: "#ffc400" },
+const typeColors: Record<ContractSaleType, { color: string }> = {
+  Diário:  { color: "#F5090D" },
+  Semanal: { color: "#ffc400" },
 }
+
+const riskColors: Record<RiskLevel, string> = {
+  Baixo: "#3df28b", Médio: "#ffd400", Alto: "#ff8c42", Extremo: "#F5090D",
+}
+
+const chainSteps = [
+  { label: "Investigação", desc: "Colete informações na área."  },
+  { label: "Recuperação",  desc: "Recupere os dados perdidos."  },
+  { label: "Extração",     desc: "Extraia o núcleo ARC."        },
+]
+
+const factionBonuses = [
+  { name: "Exodus",       bonus: "+50% XP em contratos",    color: "#3df28b", symbol: "✦" },
+  { name: "Black Market", bonus: "+25% Sucatas em contratos", color: "#ffd400", symbol: "◆" },
+  { name: "Arc Corp",     bonus: "Componentes Raros",        color: "#5fa8ff", symbol: "◈" },
+]
+
+const operatorRanking = [
+  { rank: 1, name: "Myst",          contracts: 124, avgTime: "14m 32s" },
+  { rank: 2, name: "Draakaarryss",  contracts: 98,  avgTime: "16m 48s" },
+  { rank: 3, name: "GhostRecon",    contracts: 87,  avgTime: "18m 21s" },
+]
 
 const auctionItems: {
   id: string
@@ -201,6 +294,9 @@ const auctionRarityColors: Record<string, { color: string; bg: string; border: s
 export default function LojaPage() {
   const catalog = useItemsCatalog()
   const [activeTab, setActiveTab] = useState("destaques")
+  const [selectedContract, setSelectedContract] = useState<typeof contractsForSale[0] | null>(null)
+  const [confirmContract, setConfirmContract] = useState<typeof contractsForSale[0] | null>(null)
+  const [payMode, setPayMode] = useState<"real" | "pontos">("real")
   const [panelOpen, setPanelOpen] = useState(true)
 
   useEffect(() => {
@@ -440,72 +536,550 @@ export default function LojaPage() {
             </>
           ) : activeTab === "passes" ? (
             <>
-              <section aria-label="Contratos à Venda">
-                <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/maps/the_spaceport.png)" }}>
-                  <div className="hero-banner-content">
-                    <span className="hero-banner-tag">
-                      <ScrollText size={12} />
-                      Contratos à Venda
-                    </span>
-                    <h2>Compre contratos e maximize suas recompensas</h2>
-                    <p>Escolha entre contratos diários e semanais de diferentes níveis de dificuldade. Cada contrato oferece recompensas exclusivas em Sucatas, XP e Reputação.</p>
+              {/* Stats bar */}
+              <div className="cv-stats-bar">
+                <div className="cv-license">
+                  <span className="cv-stats-label">Sua Licença de Operações</span>
+                  <span className="cv-license-level">
+                    <Zap size={13} style={{ color: "#ffd400" }} />
+                    Nível 3 — Veterano
+                  </span>
+                  <div className="cv-license-bar">
+                    <span style={{ width: "49%" }} />
+                  </div>
+                  <span className="cv-license-xp">2.450 / 5.000 XP</span>
+                </div>
+                <div className="cv-stat">
+                  <span className="cv-stats-label">Contratos Concluídos</span>
+                  <strong>48</strong>
+                </div>
+                <div className="cv-stat">
+                  <span className="cv-stats-label">Taxa de Sucesso</span>
+                  <strong style={{ color: "#3df28b" }}>72%</strong>
+                </div>
+                <div className="cv-stat">
+                  <span className="cv-stats-label">Renovação Diária</span>
+                  <strong style={{ color: "#ffd400" }}>
+                    <Clock size={13} />
+                    12h 34m 22s
+                  </strong>
+                </div>
+              </div>
+
+              {/* Featured + Map */}
+              <div className="cv-top-grid">
+                {/* Featured contract */}
+                <div className="cv-featured" style={{ backgroundImage: `url(${featuredContract.image})` }}>
+                  <div className="cv-featured-overlay" />
+                  <div className="cv-featured-content">
+                    <span className="cv-featured-badge">Operação Destaque</span>
+                    <h2 className="cv-featured-title">{featuredContract.name}</h2>
+                    <p className="cv-featured-desc">{featuredContract.description}</p>
+                    <div className="cv-featured-meta">
+                      <span className="cv-meta-item" style={{ color: riskColors[featuredContract.risk] }}>
+                        <Skull size={12} />
+                        Risco: {featuredContract.risk}
+                      </span>
+                      <span className="cv-meta-item">
+                        <Users size={12} />
+                        <span style={{ color: "var(--gray-500)" }}>Jogadores interessados</span>
+                        <strong>{featuredContract.players}</strong>
+                      </span>
+                      <span className="cv-meta-item">
+                        <Clock size={12} />
+                        <span style={{ color: "var(--gray-500)" }}>Expira em</span>
+                        <strong style={{ color: "#ffd400" }}>{featuredContract.expiresIn}</strong>
+                      </span>
+                    </div>
+                    <div className="cv-featured-rewards">
+                      <span className="cv-rewards-label">Recompensa Estimada</span>
+                      <div className="cv-rewards-row">
+                        <span className="cv-reward-item" style={{ color: "#ffd400" }}>
+                          <Coins size={14} />
+                          {featuredContract.rewards.sucatas.toLocaleString("pt-BR")}
+                          <span style={{ color: "var(--gray-500)", fontSize: 10 }}>SUCATAS</span>
+                        </span>
+                        <span className="cv-reward-item" style={{ color: "#5fa8ff" }}>
+                          <Zap size={14} />
+                          {featuredContract.rewards.xp.toLocaleString("pt-BR")}
+                          <span style={{ color: "var(--gray-500)", fontSize: 10 }}>XP</span>
+                        </span>
+                        <span className="cv-reward-item" style={{ color: "#b477ff" }}>
+                          <Star size={14} />
+                          {featuredContract.rewards.rep}
+                          <span style={{ color: "var(--gray-500)", fontSize: 10 }}>REP</span>
+                        </span>
+                      </div>
+                    </div>
+                    <button type="button" className="cv-featured-btn" onClick={() => setSelectedContract(contractsForSale[4])}>Ver Detalhes</button>
                   </div>
                 </div>
-              </section>
 
-              <section aria-label="Lista de contratos">
-                <div className="store-section-head">
-                  <h2>Contratos Disponíveis</h2>
-                  <span>{contractsForSale.length} contratos</span>
+                {/* Operations map */}
+                <div className="cv-map">
+                  <div className="cv-map-header">
+                    <span className="cv-map-title">Mapa de Operações</span>
+                    <button type="button" className="cv-map-legend">Ver Legenda</button>
+                  </div>
+                  <div className="cv-map-body" style={{ backgroundImage: "url(/assets/maps/buried_city.png)" }}>
+                    {mapLocations.map(loc => (
+                      <div
+                        key={loc.id}
+                        className={`cv-map-pin${loc.active ? " cv-map-pin--active" : ""}`}
+                        style={{ top: loc.top, left: loc.left, "--pin-color": loc.color } as React.CSSProperties}
+                      >
+                        <span className="cv-map-pin-dot" />
+                        <div className="cv-map-pin-label">
+                          <strong>{loc.name}</strong>
+                          <span>{loc.contracts} {loc.contracts === 1 ? "contrato" : "contratos"}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="store-contracts-grid">
-                  {contractsForSale.map(contract => {
-                    const tier = tierColors[contract.tier]
-                    const type = typeColors[contract.type]
-                    return (
-                      <div key={contract.id} className="store-contract-card">
-                        <div className="store-contract-banner" style={{ backgroundImage: `url(${contract.image})` }}>
-                          <span className="store-contract-type-badge" style={{ background: type.bg, color: type.color }}>
-                            {contract.type}
-                          </span>
-                          <span className="store-contract-tier-badge" style={{ background: tier.bg, color: tier.color, borderColor: tier.border }}>
-                            {contract.tier}
+              </div>
+
+              {/* Filters */}
+              <div className="cv-filters">
+                <span className="cv-filters-label">
+                  <SlidersHorizontal size={13} />
+                  Filtros
+                </span>
+                {["Todos os Tipos", "Todas Facções", "Todas Dificuldades"].map(f => (
+                  <button key={f} type="button" className="cv-filter-select">
+                    {f}
+                    <ChevronDown size={12} />
+                  </button>
+                ))}
+                <label className="cv-filter-check">
+                  <input type="checkbox" />
+                  Mostrar Apenas Disponíveis
+                </label>
+                <div className="cv-filter-sort">
+                  <span>Ordenar por:</span>
+                  <button type="button" className="cv-filter-select">
+                    Mais Recentes
+                    <ChevronDown size={12} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Contract cards */}
+              <div className="cv-cards-scroll">
+                {contractsForSale.map(c => {
+                  const tier = tierColors[c.tier]
+                  const type = typeColors[c.type]
+                  const variantLabel = c.variant === "dourada" ? "Versão Dourada" : c.variant === "holografica" ? "Versão Holográfica" : c.variant === "corrompida" ? "Versão Corrompida" : null
+                  return (
+                    <div key={c.id} className={`cv-card${c.variant ? ` cv-card--${c.variant}` : ""}`}>
+                      {c.variant && <div className="cv-card-frame" />}
+                      <div className="cv-card-bg">
+                        <div className="cv-card-bg-img" style={{ backgroundImage: `url(${c.image})` }} />
+                        {c.variant && <div className="cv-skull-badge"><Skull size={14} /></div>}
+                      </div>
+                      <div className="cv-card-badges">
+                        <span className="cv-card-type" style={{ color: type.color }}>{c.type}</span>
+                        <span className="cv-card-tier" style={{ color: tier.color, borderColor: tier.border }}>{c.tier}</span>
+                      </div>
+                      <div className="cv-card-body">
+                        <strong className="cv-card-name">{c.name}</strong>
+                        <p className="cv-card-desc">{c.description}</p>
+                        <div className="cv-card-section-label">Objetivo</div>
+                        <div className="cv-card-objective">
+                          <Target size={11} />
+                          {c.objective}
+                        </div>
+                        <div className="cv-card-section-label">Recompensas</div>
+                        <div className="cv-card-rewards">
+                          <span style={{ color: "#ffd400" }}><Coins size={11} />{c.sucatas.toLocaleString("pt-BR")}</span>
+                          <span style={{ color: "#5fa8ff" }}><Zap size={11} />{c.xp}</span>
+                          {c.rep && <span style={{ color: "#b477ff" }}><Star size={11} />{c.rep}</span>}
+                        </div>
+                        <div className="cv-card-footer-meta">
+                          <span className="cv-card-players"><Users size={11} />{c.players.toLocaleString("pt-BR")}</span>
+                          <span className="cv-card-success" style={{ color: c.successRate >= 70 ? "#3df28b" : c.successRate >= 50 ? "#ffd400" : "#F5090D" }}>
+                            {c.successRate}%
                           </span>
                         </div>
-                        <div className="store-contract-body">
-                          <strong className="store-contract-name">{contract.name}</strong>
-                          <p className="store-contract-desc">{contract.description}</p>
-                          <div className="store-contract-objective">
-                            <Target size={12} />
-                            {contract.objective}
+                        <div className="cv-card-actions">
+                          <button type="button" className="cv-card-details" onClick={() => setSelectedContract(c)}>
+                            Ver Detalhes
+                          </button>
+                          <button type="button" className="cv-card-buy" onClick={() => setConfirmContract(c)}>
+                            <Coins size={13} />
+                            {c.realPrice ? `R$ ${c.realPrice.toFixed(2).replace(".", ",")}` : c.price.toLocaleString("pt-BR")}
+                          </button>
+                        </div>
+                      </div>
+                      {variantLabel && (
+                        <div className="cv-card-variant-footer">
+                          ‹ {variantLabel} ›
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+
+              {/* Bottom 3-col */}
+              <div className="cv-bottom-grid">
+                {/* Chain */}
+                <div className="cv-chain-card">
+                  <h3 className="cv-bottom-title">Cadeia de Operação</h3>
+                  <div className="cv-chain-steps">
+                    {chainSteps.map((step, i) => (
+                      <div key={i} className="cv-chain-step">
+                        <div className="cv-chain-icon">{i + 1}</div>
+                        {i < chainSteps.length - 1 && <div className="cv-chain-arrow"><ArrowRight size={14} /></div>}
+                        <div className="cv-chain-info">
+                          <strong>{step.label}</strong>
+                          <span>{step.desc}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="cv-chain-step">
+                      <div className="cv-chain-icon cv-chain-icon--reward">★</div>
+                      <div className="cv-chain-info">
+                        <strong style={{ color: "#ffd400" }}>Recompensa Final</strong>
+                        <span>Caixa Lendária Garantida</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Factions */}
+                <div className="cv-factions-card">
+                  <h3 className="cv-bottom-title">Facções</h3>
+                  <div className="cv-factions-list">
+                    {factionBonuses.map(f => (
+                      <div key={f.name} className="cv-faction-item" style={{ "--faction-color": f.color } as React.CSSProperties}>
+                        <div className="cv-faction-icon" style={{ color: f.color }}>{f.symbol}</div>
+                        <div className="cv-faction-info">
+                          <strong>{f.name}</strong>
+                          <span>{f.bonus}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ranking */}
+                <div className="cv-ranking-card">
+                  <div className="cv-ranking-head">
+                    <h3 className="cv-bottom-title">Ranking de Operadores</h3>
+                    <button type="button" className="cv-ranking-link">Ver Ranking Completo</button>
+                  </div>
+                  <div className="cv-ranking-list">
+                    {operatorRanking.map(op => (
+                      <div key={op.rank} className="cv-ranking-row">
+                        <div className={`cv-rank-badge cv-rank-${op.rank}`}>
+                          <span>{op.rank}</span>
+                        </div>
+                        <div className="cv-ranking-avatar">{op.name[0]}</div>
+                        <div className="cv-ranking-info">
+                          <strong>{op.name}</strong>
+                          <span>Contratos: {op.contracts}</span>
+                        </div>
+                        <span className="cv-ranking-time">Tempo Médio: {op.avgTime}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* Contract detail modal */}
+              {selectedContract && (
+                <div className="cdm-overlay" onClick={() => setSelectedContract(null)}>
+                  <div className={`cdm-modal${selectedContract.variant ? ` cdm-modal--${selectedContract.variant}` : ""}`} onClick={e => e.stopPropagation()}>
+                    <button className="cdm-close" type="button" onClick={() => setSelectedContract(null)} aria-label="Fechar">✕</button>
+
+                    {/* Left column */}
+                    <div className="cdm-left">
+                      <div className="cdm-hero" style={{ backgroundImage: `url(${selectedContract.image})` }}>
+                        <div className="cdm-hero-overlay" />
+                        <div className="cdm-hero-content">
+                          <span className="cdm-op-badge">Operação {selectedContract.type}</span>
+                          <h2 className="cdm-title">{selectedContract.name}</h2>
+                          <span className="cdm-location">
+                            <span style={{ fontSize: 12 }}>📍</span>
+                            {selectedContract.location}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="cdm-description">{selectedContract.story}</p>
+
+                      <div className="cdm-meta-row">
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Dificuldade</span>
+                          <span className="cdm-meta-val" style={{ color: riskColors[selectedContract.risk] }}>
+                            <Skull size={12} /> {selectedContract.risk}
+                          </span>
+                        </div>
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Tipo</span>
+                          <span className="cdm-meta-val" style={{ color: typeColors[selectedContract.type].color }}>
+                            {selectedContract.type === "Diário" ? "⚡" : "📅"} {selectedContract.type === "Diário" ? "Extração" : "Operação"}
+                          </span>
+                        </div>
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Jogadores Interessados</span>
+                          <span className="cdm-meta-val"><Users size={12} /> {selectedContract.players}</span>
+                        </div>
+                        <div className="cdm-meta-item">
+                          <span className="cdm-meta-label">Expira em</span>
+                          <span className="cdm-meta-val" style={{ color: "#ffd400" }}><Clock size={12} /> 04h 12m</span>
+                        </div>
+                      </div>
+
+                      <div className="cdm-about">
+                        <span className="cdm-section-label">Sobre a Operação</span>
+                        <p>{selectedContract.story}</p>
+                      </div>
+
+                      <div className="cdm-conditions">
+                        <div className="cdm-condition-chip">
+                          <span className="cdm-chip-label">⏱ Tempo Estimado</span>
+                          <span>{selectedContract.estimatedTime}</span>
+                        </div>
+                        <div className="cdm-condition-chip">
+                          <span className="cdm-chip-label">🌙 Melhor Horário</span>
+                          <span>{selectedContract.bestTimeOfDay}</span>
+                        </div>
+                        <div className="cdm-condition-chip">
+                          <span className="cdm-chip-label">🌤 Clima</span>
+                          <span>{selectedContract.climate}</span>
+                        </div>
+                        <div className="cdm-condition-chip cdm-chip-warn">
+                          <span className="cdm-chip-label">⚠ Risco Ambiental</span>
+                          <span style={{ color: riskColors[selectedContract.risk] }}>{selectedContract.environmentalRisk}</span>
+                        </div>
+                      </div>
+
+                      <div className="cdm-mini-map">
+                        <span className="cdm-section-label">Local da Operação</span>
+                        <div className="cdm-mini-map-body" style={{ backgroundImage: "url(/assets/maps/buried_city.png)" }} />
+                        <div className="cdm-mini-map-info">
+                          <strong>{selectedContract.location}</strong>
+                          <span>Setor Leste</span>
+                          <button type="button" className="cdm-map-btn">▷ Ver no Mapa</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right column */}
+                    <div className="cdm-right">
+                      <div className="cdm-section">
+                        <span className="cdm-section-label">Objetivos</span>
+                        <div className="cdm-objectives">
+                          {selectedContract.objectives.map((obj, i) => (
+                            <div key={i} className={`cdm-objective${obj.done ? " cdm-objective--done" : ""}`}>
+                              <div className="cdm-obj-num">
+                                {obj.done ? "✓" : `0${i + 1}`}
+                              </div>
+                              <div className="cdm-obj-body">
+                                <strong>{obj.text}</strong>
+                                <span>{obj.desc}</span>
+                              </div>
+                              <div className="cdm-obj-progress">
+                                {obj.done ? "" : obj.total ? `${obj.progress ?? 0} / ${obj.total}` : ""}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="cdm-section">
+                        <span className="cdm-section-label">Recompensas Estimadas</span>
+                        <div className="cdm-rewards-grid">
+                          <div className="cdm-reward-item" style={{ color: "#ffd400" }}>
+                            <Coins size={16} />
+                            <strong>{selectedContract.sucatas.toLocaleString("pt-BR")}</strong>
+                            <span>Sucatas</span>
                           </div>
-                          <div className="store-contract-rewards">
-                            {contract.rewards.map((r, i) => {
-                              const Icon = r.icon
-                              return (
-                                <span key={i} className="store-contract-reward" style={{ color: r.color }}>
-                                  <Icon size={11} />
-                                  {r.label}
-                                </span>
-                              )
-                            })}
+                          <div className="cdm-reward-item" style={{ color: "#5fa8ff" }}>
+                            <Zap size={16} />
+                            <strong>{selectedContract.xp.toLocaleString("pt-BR")}</strong>
+                            <span>XP</span>
                           </div>
-                          <div className="store-contract-footer">
-                            <span className="store-contract-price">
-                              <Coins size={13} />
-                              {contract.price.toLocaleString("pt-BR")}
-                            </span>
-                            <button type="button" className="store-contract-buy">
-                              <ShoppingCart size={13} />
-                              Comprar
-                            </button>
+                          {selectedContract.rep && (
+                            <div className="cdm-reward-item" style={{ color: "#b477ff" }}>
+                              <Star size={16} />
+                              <strong>{selectedContract.rep}</strong>
+                              <span>REP</span>
+                            </div>
+                          )}
+                          <div className="cdm-reward-bonus">
+                            <span className="cdm-bonus-label">Bônus de Sucesso</span>
+                            <span className="cdm-bonus-condition">{selectedContract.bonus.condition}</span>
+                            <span className="cdm-bonus-reward" style={{ color: "#3df28b" }}>{selectedContract.bonus.reward}</span>
                           </div>
                         </div>
                       </div>
-                    )
-                  })}
+
+                      <div className="cdm-section">
+                        <span className="cdm-section-label">Inimigos Principais</span>
+                        <div className="cdm-enemies">
+                          {selectedContract.enemies.map((enemy, i) => (
+                            <div key={i} className="cdm-enemy">
+                              <div className="cdm-enemy-avatar">
+                                <div className="cdm-enemy-bg" style={{ backgroundImage: `url(${enemy.image})` }} />
+                              </div>
+                              <strong>{enemy.name}</strong>
+                              <span>{enemy.type}</span>
+                              <div className="cdm-enemy-dots">
+                                {Array.from({ length: 4 }).map((_, d) => (
+                                  <span key={d} className={`cdm-dot${d < enemy.dots ? " on" : ""}`} style={d < enemy.dots ? { background: enemy.color } : {}} />
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="cdm-stats-row">
+                        <div className="cdm-stat">
+                          <span>Jogadores que completaram</span>
+                          <strong>{selectedContract.playersCompleted.toLocaleString("pt-BR")}</strong>
+                        </div>
+                        <div className="cdm-stat">
+                          <span>Taxa de sucesso</span>
+                          <strong style={{ color: selectedContract.successRate >= 70 ? "#3df28b" : selectedContract.successRate >= 50 ? "#ffd400" : "#F5090D" }}>
+                            {selectedContract.successRate}%
+                          </strong>
+                        </div>
+                        <div className="cdm-stat">
+                          <span>Melhor tempo registrado</span>
+                          <strong>{selectedContract.bestRecord.time}</strong>
+                          <span style={{ fontSize: 10, color: "var(--gray-500)" }}>por {selectedContract.bestRecord.player}</span>
+                        </div>
+                      </div>
+
+                      <div className="cdm-buy-row">
+                        <button type="button" className="cdm-video-btn">▷ Assistir ao Vídeo</button>
+                        <div className="cdm-cost">
+                          <span>Custo do Contrato</span>
+                          <strong><Coins size={15} />{selectedContract.price.toLocaleString("pt-BR")}</strong>
+                        </div>
+                        <button type="button" className="cdm-buy-btn" onClick={() => { setSelectedContract(null); setConfirmContract(selectedContract) }}>Comprar Contrato</button>
+                      </div>
+                      <p className="cdm-disclaimer">Ao aceitar, o contrato será ativado imediatamente.</p>
+                    </div>
+                  </div>
                 </div>
-              </section>
+              )}
+
+              {/* Purchase confirmation popup */}
+              {confirmContract && (
+                <div className="cpop-overlay" onClick={() => { setConfirmContract(null); setPayMode("real") }}>
+                  <div className={`cpop-modal${confirmContract.variant ? ` cpop-modal--${confirmContract.variant}` : ""}`} onClick={e => e.stopPropagation()}>
+                    <button type="button" className="cpop-close" onClick={() => { setConfirmContract(null); setPayMode("real") }}>✕</button>
+
+                    <div className="cpop-header">
+                      <div className="cpop-img" style={{ backgroundImage: `url(${confirmContract.image})` }} />
+                      <div className="cpop-info">
+                        <div className="cpop-badges">
+                          <span className="cpop-type" style={{ color: typeColors[confirmContract.type].color }}>{confirmContract.type}</span>
+                          <span className="cpop-tier" style={{ color: tierColors[confirmContract.tier].color }}>{confirmContract.tier}</span>
+                          {confirmContract.variant && (
+                            <span className="cpop-variant-badge">
+                              {confirmContract.variant === "dourada" ? "✦ Dourada" : confirmContract.variant === "holografica" ? "◈ Holográfica" : "◆ Corrompida"}
+                            </span>
+                          )}
+                        </div>
+                        <strong className="cpop-name">{confirmContract.name}</strong>
+                        <p className="cpop-desc">{confirmContract.description}</p>
+                      </div>
+                    </div>
+
+                    <div className="cpop-divider" />
+
+                    {confirmContract.realPrice ? (
+                      <>
+                        {/* Payment mode toggle */}
+                        <div className="cpop-mode-toggle">
+                          <button
+                            type="button"
+                            className={`cpop-mode-btn${payMode === "real" ? " active" : ""}`}
+                            onClick={() => setPayMode("real")}
+                          >
+                            💳 Dinheiro Real
+                          </button>
+                          <button
+                            type="button"
+                            className={`cpop-mode-btn${payMode === "pontos" ? " active" : ""}`}
+                            onClick={() => setPayMode("pontos")}
+                          >
+                            <Coins size={13} /> Pontos
+                          </button>
+                        </div>
+
+                        {payMode === "real" ? (
+                          <>
+                            <div className="cpop-price-block cpop-price-real">
+                              <span className="cpop-price-label">Valor</span>
+                              <strong className="cpop-price-val">R$ {confirmContract.realPrice.toFixed(2).replace(".", ",")}</strong>
+                            </div>
+                            <div className="cpop-payment-methods">
+                              <span className="cpop-payment-label">Formas de pagamento</span>
+                              <div className="cpop-methods-row">
+                                <button type="button" className="cpop-method active">
+                                  <span className="cpop-method-icon">⚡</span>Pix
+                                </button>
+                                <button type="button" className="cpop-method">
+                                  <span className="cpop-method-icon">💳</span>Cartão de Crédito
+                                </button>
+                                <button type="button" className="cpop-method">
+                                  <span className="cpop-method-icon">🎫</span>Gift Card
+                                </button>
+                              </div>
+                            </div>
+                            <p className="cpop-note">Pagamento processado com segurança. Contrato ativado imediatamente após confirmação.</p>
+                            <div className="cpop-actions">
+                              <button type="button" className="cpop-cancel" onClick={() => { setConfirmContract(null); setPayMode("real") }}>Cancelar</button>
+                              <button type="button" className={`cpop-confirm cpop-confirm--${confirmContract.variant ?? "real"}`}>
+                                Comprar por R$ {confirmContract.realPrice.toFixed(2).replace(".", ",")}
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="cpop-price-block">
+                              <span className="cpop-price-label">Custo em Pontos</span>
+                              <strong className="cpop-price-val cpop-price-sucatas">
+                                <Coins size={18} />
+                                {confirmContract.price.toLocaleString("pt-BR")} Sucatas
+                              </strong>
+                            </div>
+                            <p className="cpop-note">As Sucatas serão descontadas do seu saldo. Você também adquire a versão especial do contrato.</p>
+                            <div className="cpop-actions">
+                              <button type="button" className="cpop-cancel" onClick={() => { setConfirmContract(null); setPayMode("real") }}>Cancelar</button>
+                              <button type="button" className="cpop-confirm" onClick={() => { setConfirmContract(null); setPayMode("real") }}>
+                                Confirmar Compra
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="cpop-price-block">
+                          <span className="cpop-price-label">Custo</span>
+                          <strong className="cpop-price-val cpop-price-sucatas">
+                            <Coins size={18} />
+                            {confirmContract.price.toLocaleString("pt-BR")} Sucatas
+                          </strong>
+                        </div>
+                        <p className="cpop-note">As Sucatas serão descontadas do seu saldo. O contrato será ativado imediatamente.</p>
+                        <div className="cpop-actions">
+                          <button type="button" className="cpop-cancel" onClick={() => { setConfirmContract(null); setPayMode("real") }}>Cancelar</button>
+                          <button type="button" className="cpop-confirm" onClick={() => { setConfirmContract(null); setPayMode("real") }}>
+                            Confirmar Compra
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
             </>
           ) : activeTab === "servicos" ? (
             <>
