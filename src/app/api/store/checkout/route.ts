@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createMercadoPagoPixPayment } from "@/lib/mercadopago"
 import { isValidCpf } from "@/lib/cpf"
+import { addItemsToInventory } from "@/lib/inventory"
 
 type CheckoutItem = {
   itemId: string
@@ -130,6 +131,9 @@ export async function POST(request: NextRequest) {
 
     result.points = newPoints
     result.pointsOrderId = order.id
+
+    // Adiciona itens ao inventário do usuário (compra com pontos é imediata)
+    await addItemsToInventory(user.id, pointsItems)
   }
 
   if (cashItems.length > 0) {

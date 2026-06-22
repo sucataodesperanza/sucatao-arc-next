@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { fetchMercadoPagoPayment, searchMercadoPagoPaymentByExternalReference } from "@/lib/mercadopago"
+import { addItemsToInventory } from "@/lib/inventory"
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id, user_id, status, payment_status, payment_reference")
+    .select("id, user_id, status, payment_status, payment_reference, items")
     .eq("id", orderId)
     .single()
 
@@ -63,6 +64,14 @@ export async function POST(request: NextRequest) {
 
   if (updates) {
     await supabase.from("orders").update(updates).eq("id", orderId)
+
+    // Adiciona itens ao inventário quando o PIX é aprovado
+    if (updates.payment_status === "paid" && Array.isArray(order.items)) {
+      const inventoryItems = (order.items as Array<{ itemId?: string; quantity?: number }>)
+        .filter(i => i.itemId)
+        .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
+      await addItemsToInventory(user.id, inventoryItems)
+    }
   }
 
   return NextResponse.json({
