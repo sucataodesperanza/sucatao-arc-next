@@ -33,6 +33,9 @@ export default function PerfilPage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError, setAvatarError] = useState("")
   const [cropImage, setCropImage] = useState<{ src: string; type: string } | null>(null)
+  const [gameId, setGameId] = useState("")
+  const [gameIdSaving, setGameIdSaving] = useState(false)
+  const [gameIdMsg, setGameIdMsg] = useState("")
 
   useEffect(() => {
     const supabase = createClient()
@@ -40,14 +43,26 @@ export default function PerfilPage() {
       setUser(user)
       setLoading(false)
       if (!user) return
-      supabase.from("profiles").select("points, avatar_url").eq("id", user.id).single().then(({ data }) => {
+      supabase.from("profiles").select("points, avatar_url, game_id").eq("id", user.id).single().then(({ data }) => {
         if (data) {
           setPoints(data.points ?? 0)
           setAvatarUrl(data.avatar_url ?? null)
+          setGameId(data.game_id ?? "")
         }
       })
     })
   }, [])
+
+  async function saveGameId() {
+    if (!user) return
+    setGameIdSaving(true)
+    setGameIdMsg("")
+    const supabase = createClient()
+    const { error } = await supabase.from("profiles").update({ game_id: gameId.trim() || null }).eq("id", user.id)
+    setGameIdSaving(false)
+    setGameIdMsg(error ? "Erro ao salvar." : "Salvo!")
+    setTimeout(() => setGameIdMsg(""), 3000)
+  }
 
   async function handleLogout() {
     const supabase = createClient()
@@ -188,6 +203,37 @@ export default function PerfilPage() {
               </span>
             </h2>
             <p>{user?.email ?? "Entre para salvar seu progresso na conta."}</p>
+
+            {user && (
+              <div className="profile-game-id">
+                <label htmlFor="game-id-input" className="profile-game-id-label">
+                  Nick no ARC Raiders
+                </label>
+                <div className="profile-game-id-row">
+                  <input
+                    id="game-id-input"
+                    type="text"
+                    className="profile-game-id-input"
+                    placeholder="Ex: AndreGamer ou MeuNick#1234"
+                    value={gameId}
+                    onChange={e => setGameId(e.target.value)}
+                    onBlur={saveGameId}
+                    onKeyDown={e => e.key === "Enter" && saveGameId()}
+                    maxLength={60}
+                  />
+                  {gameIdSaving && <span className="profile-game-id-status saving">Salvando...</span>}
+                  {gameIdMsg && !gameIdSaving && (
+                    <span className={`profile-game-id-status${gameIdMsg.includes("Erro") ? " error" : " ok"}`}>
+                      {gameIdMsg}
+                    </span>
+                  )}
+                </div>
+                <p className="profile-game-id-hint">
+                  Necessário para receber itens comprados na loja.
+                </p>
+              </div>
+            )}
+
             {user && avatarUrl && (
               <button type="button" className="profile-remove-avatar" onClick={handleRemoveAvatar} disabled={avatarUploading}>
                 Remover foto
