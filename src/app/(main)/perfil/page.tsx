@@ -55,13 +55,20 @@ export default function PerfilPage() {
 
   async function saveGameId() {
     if (!user) return
+    const original = gameId
     setGameIdSaving(true)
     setGameIdMsg("")
     const supabase = createClient()
     const { error } = await supabase.from("profiles").update({ game_id: gameId.trim() || null }).eq("id", user.id)
     setGameIdSaving(false)
-    setGameIdMsg(error ? "Erro ao salvar." : "Salvo!")
-    setTimeout(() => setGameIdMsg(""), 3000)
+    if (!error) {
+      setGameIdMsg("ok")
+      setTimeout(() => setGameIdMsg(""), 3500)
+    } else {
+      setGameIdMsg("error")
+      setTimeout(() => setGameIdMsg(""), 3500)
+      setGameId(original) // reverte se falhou
+    }
   }
 
   async function handleLogout() {
@@ -163,6 +170,7 @@ export default function PerfilPage() {
   const redeemableCount = data.items.filter(i => (i.value ?? 0) * 24 <= points).length
 
   return (
+    <>
     <div className="profile-page-bg">
     <div className="profile-page">
       <h1 className="page-title">Perfil</h1>
@@ -213,20 +221,16 @@ export default function PerfilPage() {
                   <input
                     id="game-id-input"
                     type="text"
-                    className="profile-game-id-input"
+                    className={`profile-game-id-input${gameIdSaving ? " saving" : ""}`}
                     placeholder="Ex: AndreGamer ou MeuNick#1234"
                     value={gameId}
                     onChange={e => setGameId(e.target.value)}
                     onBlur={saveGameId}
-                    onKeyDown={e => e.key === "Enter" && saveGameId()}
+                    onKeyDown={e => e.key === "Enter" && (e.currentTarget.blur())}
                     maxLength={60}
+                    disabled={gameIdSaving}
                   />
                   {gameIdSaving && <span className="profile-game-id-status saving">Salvando...</span>}
-                  {gameIdMsg && !gameIdSaving && (
-                    <span className={`profile-game-id-status${gameIdMsg.includes("Erro") ? " error" : " ok"}`}>
-                      {gameIdMsg}
-                    </span>
-                  )}
                 </div>
                 <p className="profile-game-id-hint">
                   Necessário para receber itens comprados na loja.
@@ -297,6 +301,21 @@ export default function PerfilPage() {
       </section>
     </div>
     </div>
+
+    {/* Toast de confirmação do Game ID */}
+    {gameIdMsg && (
+      <div
+        className="app-toast"
+        data-tone={gameIdMsg === "ok" ? "success" : "error"}
+        role="status"
+        aria-live="polite"
+      >
+        {gameIdMsg === "ok"
+          ? "✓ Nick salvo com sucesso!"
+          : "✗ Erro ao salvar o nick. Tente novamente."}
+      </div>
+    )}
+    </>
   )
 }
 
