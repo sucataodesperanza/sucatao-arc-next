@@ -483,9 +483,10 @@ const ACCEPTANCE_STATUS: Record<string, string> = {
 
 function AcceptancesSection() {
   const toast = useToast()
-  const [items, setItems]     = useState<Acceptance[]>([])
-  const [loading, setLoading] = useState(false)
+  const [items, setItems]           = useState<Acceptance[]>([])
+  const [loading, setLoading]       = useState(false)
   const [completing, setCompleting] = useState<string | null>(null)
+  const [confirmModal, setConfirmModal] = useState<Acceptance | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -499,11 +500,12 @@ function AcceptancesSection() {
 
   async function completeTrade(id: string) {
     setCompleting(id)
+    setConfirmModal(null)
     const res = await fetch(`/api/admin/trades/acceptances/${id}/complete`, { method: "POST" })
     setCompleting(null)
     if (res.ok) {
       const body = await res.json()
-      toast.success(`Trade concluído! ${body.points_credited} pts creditados.`)
+      toast.success(`✓ Trade concluído! ${body.points_credited} pts creditados.`)
       await load()
     } else {
       toast.error("Erro ao concluir trade.")
@@ -554,7 +556,7 @@ function AcceptancesSection() {
                   </td>
                   <td style={{ padding: "8px" }}>
                     {a.status === "scheduled" && (
-                      <button type="button" onClick={() => completeTrade(a.id)} disabled={completing === a.id}
+                      <button type="button" onClick={() => setConfirmModal(a)} disabled={completing === a.id}
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "6px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: completing === a.id ? 0.6 : 1 }}>
                         <CheckCircle size={12} /> {completing === a.id ? "..." : "Concluir"}
                       </button>
@@ -567,6 +569,52 @@ function AcceptancesSection() {
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Modal de confirmação de conclusão ── */}
+      {confirmModal && (
+        <div className="modal-backdrop" onClick={() => setConfirmModal(null)}>
+          <div
+            style={{ background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 14, padding: 28, width: "min(480px,100%)", display: "flex", flexDirection: "column", gap: 20 }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 10, background: "rgba(61,242,139,0.12)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                <CheckCircle size={20} style={{ color: "var(--green)" }} />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontWeight: 950, fontSize: 14, color: "var(--paper)" }}>Confirmar Conclusão de Trade</p>
+                <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>Confirme que o item foi entregue antes de creditar os pontos.</p>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gap: 8, padding: 14, border: "1px solid var(--stroke)", borderRadius: 8, background: "rgba(255,255,255,0.02)", fontSize: 12 }}>
+              {([
+                { label: "Usuário",           value: confirmModal.profiles?.name ?? confirmModal.user_id.slice(0,8), mono: false, accent: undefined },
+                { label: "Game ID",           value: confirmModal.game_id ?? "—", mono: true, accent: "var(--cyan)" },
+                { label: "Item a receber",    value: `${confirmModal.trades?.want_item_qty}× ${confirmModal.trades?.want_item_name}`, mono: false, accent: undefined },
+                { label: "Pontos a creditar", value: `${(confirmModal.trades?.offer_points ?? 0).toLocaleString("pt-BR")} pts`, mono: false, accent: "var(--yellow)" },
+                { label: "Slot agendado",     value: confirmModal.trade_slots?.label ?? "—", mono: false, accent: undefined },
+              ] as const).map(({ label, value, mono, accent }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <span style={{ color: "var(--gray-500)", fontWeight: 800 }}>{label}</span>
+                  <span style={{ color: accent ?? "var(--paper)", fontWeight: 950, fontFamily: mono ? "monospace" : undefined }}>{value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+              <button type="button" onClick={() => setConfirmModal(null)}
+                style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper-dim)", padding: "9px 16px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit" }}>
+                Cancelar
+              </button>
+              <button type="button" onClick={() => completeTrade(confirmModal.id)} disabled={completing === confirmModal.id}
+                style={{ border: "1px solid rgba(61,242,139,0.5)", background: "rgba(61,242,139,0.12)", color: "var(--green)", padding: "9px 16px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit", opacity: completing === confirmModal.id ? 0.6 : 1 }}>
+                {completing === confirmModal.id ? "Concluindo..." : "✓ Confirmar e Creditar"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

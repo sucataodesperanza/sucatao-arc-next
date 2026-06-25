@@ -58,8 +58,8 @@ export default function TradesPage() {
   const [loadingTrades, setLoadingTrades]     = useState(true)
   const [loadingMyTrades, setLoadingMyTrades] = useState(false)
 
-  // Agendamento (Meus Trades)
-  const [expandedMyTrade, setExpandedMyTrade] = useState<string | null>(null)
+  // Modal de agendamento (Meus Trades)
+  const [scheduleModal, setScheduleModal] = useState<MyTrade | null>(null)
   const [slots, setSlots]             = useState<TradeSlot[]>([])
   const [selectedSlot, setSelectedSlot] = useState("")
   const [gameId, setGameId]           = useState("")
@@ -124,13 +124,11 @@ export default function TradesPage() {
       .finally(() => setLoadingMyTrades(false))
   }, [activeTab, userId])
 
-  // Slots ao expandir trade pendente
+  // Slots ao abrir modal de agendamento
   useEffect(() => {
-    if (!expandedMyTrade) return
-    const mt = myTrades.find(m => m.id === expandedMyTrade)
-    if (mt?.status !== "pending") return
+    if (!scheduleModal || scheduleModal.status !== "pending") return
     fetch("/api/trades/slots").then(r => r.json()).then(d => setSlots(d.slots ?? [])).catch(() => {})
-  }, [expandedMyTrade, myTrades])
+  }, [scheduleModal])
 
   function setPanel(val: boolean) {
     setPanelOpen(val)
@@ -148,7 +146,10 @@ export default function TradesPage() {
     const res = await fetch(`/api/trades/${id}/accept`, { method: "POST" })
     setAccepting(null)
     if (res.ok || res.status === 409) {
+      // Remove da lista Todos e troca para Meus Trades
       setAcceptedIds(prev => new Set([...prev, id]))
+      switchTab("Meus Trades")
+      fetch("/api/trades/my").then(r => r.json()).then(d => setMyTrades(d.trades ?? [])).catch(() => {})
     }
   }
 
@@ -165,8 +166,11 @@ export default function TradesPage() {
     if (res.ok) {
       setScheduleMsg("Horário confirmado!")
       setSelectedSlot("")
-      setExpandedMyTrade(null)
-      fetch("/api/trades/my").then(r => r.json()).then(d => setMyTrades(d.trades ?? [])).catch(() => {})
+      setTimeout(() => {
+        setScheduleModal(null)
+        setScheduleMsg("")
+        fetch("/api/trades/my").then(r => r.json()).then(d => setMyTrades(d.trades ?? [])).catch(() => {})
+      }, 1500)
     } else {
       const body = await res.json().catch(() => ({}))
       setScheduleMsg(body.error ?? "Erro ao agendar.")
@@ -184,6 +188,7 @@ export default function TradesPage() {
   const [mySortOrder, setMySortOrder]     = useState("recent")
 
   const filteredTrades = trades
+    .filter(t => !acceptedIds.has(t.id)) // remove trades aceitos imediatamente
     .filter(t => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
@@ -453,24 +458,22 @@ export default function TradesPage() {
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, marginTop: 8 }}>
                   {filteredMyTrades.map(mt => {
-                    const t        = mt.trades
-                    const color    = rarityColor(t?.want_item_rarity)
-                    const expanded = expandedMyTrade === mt.id
-
+                    const t     = mt.trades
+                    const color = rarityColor(t?.want_item_rarity)
                     const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-                      pending:   { label: "Em progresso",  color: "var(--yellow)" },
-                      scheduled: { label: "Agendado",      color: "var(--blue)" },
-                      completed: { label: "Concluído",     color: "var(--green)" },
-                      cancelled: { label: "Cancelado",     color: "var(--red)" },
+                      pending:   { label: "Em progresso", color: "var(--yellow)" },
+                      scheduled: { label: "Agendado",     color: "var(--blue)"   },
+                      completed: { label: "Concluído",    color: "var(--green)"  },
+                      cancelled: { label: "Cancelado",    color: "var(--red)"    },
                     }
                     const st = STATUS_LABEL[mt.status] ?? { label: mt.status, color: "var(--gray-500)" }
-
+                    const isClickable = mt.status === "pending" || mt.status === "scheduled"
                     return (
                       <div
                         key={mt.id}
                         className="trade-card"
-                        style={{ "--rarity-color": color, cursor: "pointer" } as React.CSSProperties}
-                        onClick={() => { setExpandedMyTrade(expanded ? null : mt.id); setSelectedSlot(""); setScheduleMsg("") }}
+                        style={{ "--rarity-color": color, cursor: isClickable ? "pointer" : "default" } as React.CSSProperties}
+                        onClick={() => { if (isClickable) { setScheduleModal(mt); setSelectedSlot(""); setScheduleMsg("") } }}
                       >
                         <div className="trade-card-head">
                           <div className="trade-brand-avatar"><BrandMark /></div>
@@ -480,9 +483,8 @@ export default function TradesPage() {
                               {st.label}
                             </span>
                           </div>
-                          <span style={{ color: "var(--gray-500)", fontSize: 14, marginLeft: "auto", flexShrink: 0, transform: expanded ? "rotate(180deg)" : undefined, transition: "transform 0.2s" }}>▾</span>
+                          {isClickable && <span style={{ color: "var(--gray-500)", fontSize: 12, marginLeft: "auto", flexShrink: 0 }}>Ver detalhes →</span>}
                         </div>
-
                         <div className="trade-exchange">
                           <div className="trade-side">
                             <span className="trade-side-label">Recebo</span>
@@ -493,64 +495,23 @@ export default function TradesPage() {
                           <div className="trade-side">
                             <span className="trade-side-label">Entrego</span>
                             <div className="trade-thumb" style={{ "--rarity-color": color } as React.CSSProperties}>
-                              {t?.want_item_icon
-                                ? <img src={t.want_item_icon} alt={t.want_item_name} loading="lazy" />
-                                : <div className="placeholder">{t?.want_item_name[0]?.toUpperCase()}</div>}
+                              {t?.want_item_icon ? <img src={t.want_item_icon} alt={t.want_item_name} loading="lazy" /> : <div className="placeholder">{t?.want_item_name[0]?.toUpperCase()}</div>}
                               <span className="trade-thumb-qty">x{t?.want_item_qty}</span>
                             </div>
                             <span className="trade-item-name">{t?.want_item_name}</span>
                           </div>
                         </div>
-
-                        {/* Acordeão */}
-                        {expanded && (
-                          <div className="my-trade-accordion" onClick={e => e.stopPropagation()}>
-                            {mt.status === "pending" && (
-                              <>
-                                <p className="my-trade-accordion-title">Escolha um horário in-game:</p>
-                                {slots.length === 0 ? (
-                                  <p style={{ color: "var(--gray-500)", fontSize: 11, margin: 0 }}>Nenhum horário disponível no momento.</p>
-                                ) : (
-                                  <div className="my-trade-slots">
-                                    {slots.map(s => (
-                                      <button key={s.id} type="button"
-                                        className={`my-trade-slot${selectedSlot === s.id ? " selected" : ""}`}
-                                        onClick={() => setSelectedSlot(s.id)}>
-                                        {s.label}
-                                      </button>
-                                    ))}
-                                  </div>
-                                )}
-                                <label style={{ display: "grid", gap: 4, marginTop: 10 }}>
-                                  <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Seu Game ID</span>
-                                  <input type="text" placeholder="Ex: SucataoFan#1234" value={gameId} onChange={e => setGameId(e.target.value)}
-                                    style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "8px 10px", fontSize: 12, borderRadius: 6, font: "inherit", outline: "none" }} />
-                                </label>
-                                {scheduleMsg && <p style={{ margin: "8px 0 0", fontSize: 11, color: scheduleMsg.includes("!") ? "var(--green)" : "var(--red)", fontWeight: 800 }}>{scheduleMsg}</p>}
-                                <button type="button" className="my-trade-confirm-btn"
-                                  disabled={!selectedSlot || scheduling === mt.id}
-                                  onClick={() => scheduleMyTrade(mt.id)}>
-                                  {scheduling === mt.id ? "Confirmando..." : "✓ Confirmar horário"}
-                                </button>
-                              </>
-                            )}
-                            {mt.status === "scheduled" && mt.trade_slots && (
-                              <div className="my-trade-scheduled">
-                                <p className="my-trade-scheduled-label">Horário confirmado</p>
-                                <p className="my-trade-scheduled-time">{mt.trade_slots.label}</p>
-                                <p className="my-trade-scheduled-hint">Aguarde o Sucatão no jogo no horário acima.</p>
-                                {mt.game_id && <p style={{ margin: "6px 0 0", fontSize: 10, color: "var(--gray-500)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{mt.game_id}</strong></p>}
-                              </div>
-                            )}
-                            {mt.status === "completed" && (
-                              <div className="my-trade-completed">
-                                <CheckCircle size={16} style={{ color: "var(--green)" }} />
-                                <span>Entrega concluída!<br /><strong style={{ color: "var(--yellow)" }}>{(t?.offer_points ?? 0).toLocaleString("pt-BR")} pts</strong> creditados na sua carteira.</span>
-                              </div>
-                            )}
-                            {mt.status === "cancelled" && (
-                              <p style={{ margin: 0, fontSize: 12, color: "var(--red)", fontWeight: 800 }}>Este trade foi cancelado.</p>
-                            )}
+                        {mt.status === "completed" && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: "rgba(61,242,139,0.06)", borderTop: "1px solid rgba(61,242,139,0.15)" }}>
+                            <CheckCircle size={14} style={{ color: "var(--green)", flexShrink: 0 }} />
+                            <span style={{ fontSize: 12, color: "var(--paper-dim)" }}>
+                              Concluído · <strong style={{ color: "var(--yellow)" }}>{(t?.offer_points ?? 0).toLocaleString("pt-BR")} pts</strong> creditados
+                            </span>
+                          </div>
+                        )}
+                        {mt.status === "cancelled" && (
+                          <div style={{ padding: "8px 14px", borderTop: "1px solid rgba(255,97,113,0.15)" }}>
+                            <span style={{ fontSize: 11, color: "var(--red)", fontWeight: 800 }}>Trade cancelado</span>
                           </div>
                         )}
                       </div>
@@ -589,6 +550,92 @@ export default function TradesPage() {
       <button type="button" className="store-panel-reopen" onClick={() => setPanel(true)} aria-label="Abrir painel">
         <ChevronLeft size={16} /><span>Painel</span>
       </button>
+
+      {/* ── Modal de agendamento ── */}
+      {scheduleModal && (
+        <div className="modal-backdrop" onClick={() => { setScheduleModal(null); setScheduleMsg(""); setSelectedSlot("") }}>
+          <div className="catalog-modal" style={{ width: "min(560px, 100%)", maxHeight: "min(680px, calc(100vh - 48px))" }} onClick={e => e.stopPropagation()}>
+            <button type="button" className="catalog-modal-close" onClick={() => { setScheduleModal(null); setScheduleMsg(""); setSelectedSlot("") }} aria-label="Fechar">×</button>
+
+            {/* Imagem / ícone */}
+            <div className="catalog-modal-media" style={{ "--rarity-color": rarityColor(scheduleModal.trades?.want_item_rarity) } as React.CSSProperties}>
+              {scheduleModal.trades?.want_item_icon
+                ? <img src={scheduleModal.trades.want_item_icon} alt={scheduleModal.trades.want_item_name} />
+                : <div className="placeholder">{scheduleModal.trades?.want_item_name?.[0]?.toUpperCase()}</div>}
+            </div>
+
+            {/* Conteúdo */}
+            <div className="catalog-modal-content" style={{ overflowY: "auto" }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 8px", border: "1px solid rgba(255,212,0,0.3)", borderRadius: 4, color: "var(--yellow)", background: "rgba(255,212,0,0.08)" }}>
+                  {scheduleModal.status === "pending" ? "Agendar entrega" : "Agendado"}
+                </span>
+                <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 8px", border: `1px solid color-mix(in srgb, ${rarityColor(scheduleModal.trades?.want_item_rarity)} 30%, transparent)`, borderRadius: 4, color: rarityColor(scheduleModal.trades?.want_item_rarity), background: `color-mix(in srgb, ${rarityColor(scheduleModal.trades?.want_item_rarity)} 8%, transparent)` }}>
+                  {rarityKey(scheduleModal.trades?.want_item_rarity)}
+                </span>
+              </div>
+
+              <h2 style={{ margin: "0 0 4px", fontSize: 20, fontWeight: 950, textTransform: "uppercase", color: "var(--paper)" }}>
+                {scheduleModal.trades?.want_item_name}
+              </h2>
+              <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--paper-dim)" }}>
+                Você entrega <strong>{scheduleModal.trades?.want_item_qty}×</strong> deste item e recebe{" "}
+                <strong style={{ color: "var(--yellow)" }}>{(scheduleModal.trades?.offer_points ?? 0).toLocaleString("pt-BR")} pts</strong>
+              </p>
+
+              {scheduleModal.status === "pending" ? (
+                <>
+                  <div className="arcpedia-modal-section">
+                    <p className="arcpedia-modal-label">Escolha um horário in-game</p>
+                    {slots.length === 0 ? (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum horário disponível no momento.</p>
+                    ) : (
+                      <div className="my-trade-slots" style={{ flexWrap: "wrap" }}>
+                        {slots.map(s => (
+                          <button key={s.id} type="button"
+                            className={`my-trade-slot${selectedSlot === s.id ? " selected" : ""}`}
+                            onClick={() => setSelectedSlot(s.id)}>
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="arcpedia-modal-section">
+                    <p className="arcpedia-modal-label">Seu Game ID (para o Sucatão te encontrar)</p>
+                    <input type="text" placeholder="Ex: SucataoFan#1234" value={gameId} onChange={e => setGameId(e.target.value)}
+                      style={{ width: "100%", background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 13, borderRadius: 8, font: "inherit", outline: "none", boxSizing: "border-box" }} />
+                  </div>
+
+                  {scheduleMsg && (
+                    <p style={{ margin: "8px 0 0", fontSize: 12, fontWeight: 800, color: scheduleMsg.includes("!") ? "var(--green)" : "var(--red)" }}>
+                      {scheduleMsg}
+                    </p>
+                  )}
+
+                  <button type="button" className="material-detail-filter-btn" style={{ marginTop: 16 }}
+                    disabled={!selectedSlot || scheduling === scheduleModal.id}
+                    onClick={() => scheduleMyTrade(scheduleModal.id)}>
+                    {scheduling === scheduleModal.id ? "Confirmando..." : "✓ Confirmar horário de entrega"}
+                  </button>
+                </>
+              ) : scheduleModal.status === "scheduled" && scheduleModal.trade_slots ? (
+                <div className="my-trade-scheduled" style={{ marginTop: 8 }}>
+                  <p className="my-trade-scheduled-label">Horário confirmado</p>
+                  <p className="my-trade-scheduled-time">{scheduleModal.trade_slots.label}</p>
+                  <p className="my-trade-scheduled-hint">Aguarde o Sucatão no jogo no horário acima para fazer a entrega.</p>
+                  {scheduleModal.game_id && (
+                    <p style={{ margin: "8px 0 0", fontSize: 11, color: "var(--gray-500)" }}>
+                      Game ID registrado: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{scheduleModal.game_id}</strong>
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
