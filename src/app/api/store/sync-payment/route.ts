@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       const inventoryItems = (order.items as Array<{ itemId?: string; quantity?: number }>)
         .filter(i => i.itemId)
         .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
-      await addItemsToInventory(order.user_id as string, inventoryItems)
+      await addItemsToInventory(order.user_id as string, inventoryItems, "pix")
     }
   }
 

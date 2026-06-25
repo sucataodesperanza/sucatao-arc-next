@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
     result.pointsOrderId = order.id
 
     // Adiciona itens ao inventário do usuário (compra com pontos é imediata)
-    await addItemsToInventory(user.id, pointsItems)
+    await addItemsToInventory(user.id, pointsItems, "points")
   }
 
   if (cashItems.length > 0) {

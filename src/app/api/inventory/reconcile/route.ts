@@ -30,7 +30,7 @@ export async function POST() {
       .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
 
     if (inventoryItems.length > 0) {
-      await addItemsToInventory(user.id, inventoryItems)
+      await addItemsToInventory(user.id, inventoryItems, "reconcile")
       totalAdded += inventoryItems.length
     }
   }

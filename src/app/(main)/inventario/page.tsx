@@ -8,6 +8,7 @@ import { getItemTypeLabel } from "@/lib/catalog"
 import { rarityColors, rarityMetaLabels } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import type { InventoryEntry } from "@/app/api/inventory/route"
+import type { HistoryEntry } from "@/app/api/inventory/history/route"
 import { nextPackPointsPrice, nextPackBrlPrice } from "@/lib/inventory-pricing"
 import "../../../styles/inventario.css"
 
@@ -91,7 +92,9 @@ function DonutChart({ entries }: { entries: InventoryEntry[] }) {
 
 export default function InventarioPage() {
   const [points, setPoints]   = useState<number | null>(null)
-  const [entries, setEntries]   = useState<InventoryEntry[]>([])
+  const [entries, setEntries]       = useState<InventoryEntry[]>([])
+  const [history, setHistory]       = useState<HistoryEntry[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
   const [capacity, setCapacity] = useState(100)
   const [loading, setLoading]   = useState(true)
   const [expanding, setExpanding] = useState(false)
@@ -142,6 +145,16 @@ export default function InventarioPage() {
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== "historico") return
+    setLoadingHistory(true)
+    fetch("/api/inventory/history")
+      .then(r => r.json())
+      .then(d => setHistory(d.history ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingHistory(false))
+  }, [activeTab])
 
   async function reconcileInventory() {
     setReconciling(true)
@@ -394,6 +407,62 @@ export default function InventarioPage() {
                   ) : null
                 })()}
               </>
+            )
+          ) : activeTab === "historico" ? (
+            /* ── Aba Histórico ── */
+            loadingHistory ? (
+              <p className="catalog-empty" style={{ marginTop: 48 }}>Carregando histórico...</p>
+            ) : history.length === 0 ? (
+              <p className="catalog-empty" style={{ marginTop: 48 }}>Nenhuma aquisição registrada ainda.</p>
+            ) : (
+              <div className="inventario-history">
+                {history.map((entry, idx) => {
+                  const item  = entry.catalog_items
+                  const color = RARITY_COLORS[item?.rarity ?? ""] ?? "#566171"
+                  const date  = new Date(entry.acquired_at)
+                  const isNewDay = idx === 0 || new Date(history[idx - 1].acquired_at).toDateString() !== date.toDateString()
+
+                  const SOURCE_LABELS: Record<string, { label: string; color: string }> = {
+                    points:    { label: "Compra com pontos", color: "var(--yellow)" },
+                    pix:       { label: "Compra via PIX",    color: "var(--green)" },
+                    trade:     { label: "Trade",             color: "var(--blue)" },
+                    reconcile: { label: "Sincronização",     color: "var(--gray-500)" },
+                    admin:     { label: "Admin",             color: "var(--red)" },
+                    unknown:   { label: "Desconhecido",      color: "var(--gray-500)" },
+                  }
+                  const src = SOURCE_LABELS[entry.source] ?? SOURCE_LABELS.unknown
+
+                  return (
+                    <div key={entry.id}>
+                      {isNewDay && (
+                        <p className="inventario-history-day">
+                          {date.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" })}
+                        </p>
+                      )}
+                      <div className="inventario-history-row">
+                        <div className="inventario-history-icon" style={{ background: `color-mix(in srgb, ${color} 12%, rgba(255,255,255,0.03))`, borderColor: `color-mix(in srgb, ${color} 25%, transparent)` }}>
+                          {item?.icon_url
+                            ? <img src={item.icon_url} alt={item?.name} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+                            : <span style={{ color, fontSize: 16, fontWeight: 950 }}>{item?.name?.[0]}</span>}
+                        </div>
+                        <div className="inventario-history-info">
+                          <strong>{item?.name}</strong>
+                          <span>{getItemTypeLabel(item?.item_type)}</span>
+                        </div>
+                        <div className="inventario-history-meta">
+                          <span className="inventario-history-source" style={{ color: src.color, borderColor: `color-mix(in srgb, ${src.color} 30%, transparent)`, background: `color-mix(in srgb, ${src.color} 8%, transparent)` }}>
+                            {src.label}
+                          </span>
+                          <span className="inventario-history-qty" style={{ color }}>+{entry.quantity}</span>
+                          <span className="inventario-history-time">
+                            {date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )
           ) : activeTab !== "geral" ? (
             <p className="catalog-empty" style={{ marginTop: 48 }}>Em breve.</p>
