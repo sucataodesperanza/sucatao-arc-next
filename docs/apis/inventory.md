@@ -12,30 +12,30 @@ Retorna o inventário completo do usuário logado.
 **Response:**
 ```json
 {
-  "items": [
-    {
-      "id": "uuid",
-      "quantity": 2,
-      "acquired_at": "2026-06-24T...",
-      "catalog_items": {
-        "id": "item-id",
-        "name": "Bigorna I",
-        "item_type": "Hand Cannon",
-        "rarity": "Uncommon",
-        "icon_url": "https://...",
-        "value": 5000,
-        "weight_kg": 5,
-        "stack_size": 1
-      }
-    }
-  ],
+  "items": [{ "id", "quantity", "acquired_at", "catalog_items": { "id", "name", "item_type", "rarity", "icon_url", "value", "weight_kg", "stack_size" } }],
   "capacity": 100,
   "used": 2
 }
 ```
 
-- `capacity`: slots totais do usuário (`profiles.inventory_capacity`, padrão 100)
-- `used`: soma de todas as `quantity` — quando `used >= capacity`, inventário cheio
+- `capacity` → `profiles.inventory_capacity` (padrão 100)
+- `used` → soma de todas as `quantity`; quando `used >= capacity`, inventário está cheio
+
+---
+
+## `GET /api/inventory/history`
+
+Retorna as 100 aquisições mais recentes do usuário.
+
+**Auth:** Sim  
+**Response:**
+```json
+{
+  "history": [{ "id", "quantity", "source", "acquired_at", "catalog_items": { "id", "name", "item_type", "rarity", "icon_url", "value" } }]
+}
+```
+
+**Valores de `source`:** `points` | `pix` | `trade` | `reconcile` | `admin` | `unknown`
 
 ---
 
@@ -46,72 +46,64 @@ Compra um pacote de +25 slots de inventário.
 **Auth:** Sim  
 **Body:** `{ "mode": "points" | "cash" }`
 
-### Modo pontos
-- Preço escalonado: pacote_nº × 10.000 pontos (1º=10k, 2º=20k, ...)
-- Debita pontos e adiciona +25 a `profiles.inventory_capacity`
+### Modo pontos (funcional)
+- Preço: `pacote_nº × 10.000` pts (1º=10k, 2º=20k, 3º=30k...)
+- Debita pontos e incrementa `profiles.inventory_capacity` em +25
 
-**Response (sucesso):**
+**Response:**
 ```json
-{
-  "ok": true,
-  "new_capacity": 125,
-  "points_spent": 10000,
-  "points_left": 40000
-}
+{ "ok": true, "new_capacity": 125, "points_spent": 10000, "points_left": 40000 }
 ```
 
-**Erros:** `401` sem auth · `404` perfil não encontrado · `409` pontos insuficientes
-
-### Modo cash
-- Placeholder (501) — PIX para slots de inventário em desenvolvimento
+### Modo cash (placeholder — 501)
 - Preço: `(floor(extra_slots/100) + 1) × R$5`
+- Retorna 501 com mensagem de em breve
+
+**Erros:** `401` sem auth · `409` pontos insuficientes
 
 ---
 
 ## `POST /api/inventory/reconcile`
 
-Reconcilia o inventário com todas as compras pagas. Garante que nenhum item fique faltando mesmo que a adição automática tenha falhado.
+Reconcilia o inventário com todas as compras pagas. Garante que nenhum item fique faltando.
 
 **Auth:** Sim  
 **Body:** nenhum
 
 **Response:**
 ```json
-{
-  "ok": true,
-  "orders_processed": 3,
-  "items_synced": 5
-}
+{ "ok": true, "orders_processed": 3, "items_synced": 5 }
 ```
 
-- Percorre todos os pedidos com `payment_status = "paid"` do usuário
-- Para cada item encontrado, chama `addItemsToInventory` (idempotente — não duplica)
-- Chamado automaticamente pela tela de inventário quando `items.length === 0`
+- Percorre todos os pedidos com `payment_status = "paid"`
+- Chama `addItemsToInventory` (idempotente) para cada item
+- **Chamado automaticamente** pela tela `/pedido-confirmado` ao montar (safety net após qualquer confirmação de compra)
+- Disponível via botão "↻ Sincronizar com compras" no painel do inventário
 
 ---
 
-## Fluxo de adição automática ao inventário
+## Fluxo completo
 
 ```
-Compra com pontos
-  → POST /api/store/checkout
-    → addItemsToInventory() ← imediato
+Compra com pontos → POST /api/store/checkout
+  → addItemsToInventory(userId, items, "points") — imediato
 
-Compra com PIX
-  → POST /api/store/sync-payment (quando payment_status: "pending" → "paid")
-    → addItemsToInventory() ← apenas na primeira confirmação
-    
-Recuperação retroativa
+Compra com PIX → POST /api/store/sync-payment (quando pending→paid)
+  → addItemsToInventory(userId, items, "pix") — na primeira confirmação
+
+Qualquer confirmação → GET /pedido-confirmado monta
+  → POST /api/inventory/reconcile — background, safety net
+
+Manual → botão "↻ Sincronizar"
   → POST /api/inventory/reconcile
-    → addItemsToInventory() para cada pedido pago ← idempotente
 ```
 
 ---
 
-## Utilitários compartilhados
+## Utilitários
 
 ### `src/lib/inventory.ts`
-- `addItemsToInventory(userId, items)` — upsert: insere ou incrementa `quantity`
+- `addItemsToInventory(userId, items, source)` — upsert em `user_inventory` + insert em `inventory_history`
 
 ### `src/lib/inventory-pricing.ts`
 - `nextPackPointsPrice(extraSlots)` — preço em pontos do próximo pacote
