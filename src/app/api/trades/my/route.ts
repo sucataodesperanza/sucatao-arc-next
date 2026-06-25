@@ -6,8 +6,7 @@ export type MyTrade = {
   status: string
   game_id: string | null
   created_at: string
-  slot_id: string | null
-  trade_slots: { label: string; scheduled_for: string } | null
+  scheduled_at: string | null  // novo campo de agendamento livre
   trades: {
     id: string
     offer_points: number
@@ -26,7 +25,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("trade_acceptances")
-    .select("id, status, game_id, created_at, slot_id, trade_slots(label, scheduled_for), trades(id, offer_points, want_item_name, want_item_qty, want_item_icon, want_item_rarity)")
+    .select("id, status, game_id, created_at, scheduled_at, trades(id, offer_points, want_item_name, want_item_qty, want_item_icon, want_item_rarity)")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .returns<MyTrade[]>()

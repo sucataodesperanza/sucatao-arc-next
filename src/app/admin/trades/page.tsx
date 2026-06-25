@@ -333,8 +333,8 @@ export default function AdminTradesPage() {
         )}
       </div>
 
-      {/* ── Slots de agendamento ── */}
-      <SlotsSection />
+      {/* ── Horário de funcionamento ── */}
+      <OperatingHoursSection />
 
       {/* ── Aceitações pendentes ── */}
       <AcceptancesSection />
@@ -346,122 +346,55 @@ export default function AdminTradesPage() {
 
 type Slot = { id: string; label: string; scheduled_for: string; capacity: number; active: boolean }
 
-function SlotsSection() {
+function OperatingHoursSection() {
   const toast = useToast()
-  const { confirm } = useConfirm()
-  const [slots, setSlots]     = useState<Slot[]>([])
-  const [loading, setLoading] = useState(false)
-  const [label, setLabel]     = useState("")
-  const [datetime, setDatetime] = useState("")
-  const [capacity, setCapacity] = useState(1)
-  const [saving, setSaving]   = useState(false)
+  const [startTime, setStartTime] = useState("09:00")
+  const [endTime, setEndTime]     = useState("00:00")
+  const [saving, setSaving]       = useState(false)
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const res = await fetch("/api/admin/trades/slots")
-    const body = await res.json().catch(() => ({}))
-    if (res.ok) setSlots(body.slots ?? [])
-    setLoading(false)
+  useEffect(() => {
+    fetch("/api/admin/trades/settings")
+      .then(r => r.json())
+      .then(d => { setStartTime(d.operating_hours_start ?? "09:00"); setEndTime(d.operating_hours_end ?? "00:00") })
+      .catch(() => {})
   }, [])
 
-  useEffect(() => { load() }, [load])
-
-  async function createSlot() {
-    if (!label || !datetime) return
+  async function save() {
     setSaving(true)
-    const res = await fetch("/api/admin/trades/slots", {
-      method: "POST",
+    const res = await fetch("/api/admin/trades/settings", {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ label, scheduled_for: datetime, capacity }),
+      body: JSON.stringify({ operating_hours_start: startTime, operating_hours_end: endTime }),
     })
     setSaving(false)
-    if (res.ok) { setLabel(""); setDatetime(""); setCapacity(1); toast.success("Slot criado!"); await load() }
-    else toast.error("Erro ao criar slot.")
+    if (res.ok) toast.success("Horário de funcionamento salvo!")
+    else toast.error("Erro ao salvar horário.")
   }
 
-  async function toggleActive(id: string, active: boolean) {
-    await fetch(`/api/admin/trades/slots/${id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ active }),
-    })
-    await load()
-  }
-
-  async function deleteSlot(id: string) {
-    const ok = await confirm("Remover slot?")
-    if (!ok) return
-    await fetch(`/api/admin/trades/slots/${id}`, { method: "DELETE" })
-    await load()
-  }
+  const inp = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 10px", fontSize: 13, borderRadius: 4, font: "inherit" } as React.CSSProperties
 
   return (
     <div className="utility-panel" style={{ marginTop: 16 }}>
       <div className="utility-panel-head">
-        <strong>Slots de Agendamento In-Game</strong>
-        <small>Admin cria os horários disponíveis para entrega</small>
+        <strong>Horário de Funcionamento dos Trades</strong>
+        <small>Intervalo em que os usuários podem agendar entregas in-game (todos os dias)</small>
       </div>
-
-      {/* Formulário */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto auto", gap: 10, marginBottom: 14, alignItems: "end" }}>
+      <div style={{ display: "flex", alignItems: "end", gap: 16, flexWrap: "wrap" }}>
         <label style={{ display: "grid", gap: 4 }}>
-          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Label do slot</span>
-          <input value={label} onChange={e => setLabel(e.target.value)} placeholder="Sex 20/06 · 15:00 in-game"
-            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 10px", fontSize: 13, borderRadius: 4, font: "inherit" }} />
+          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Início</span>
+          <input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} style={inp} />
         </label>
+        <span style={{ fontSize: 18, color: "var(--muted)", paddingBottom: 8 }}>às</span>
         <label style={{ display: "grid", gap: 4 }}>
-          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Data e hora</span>
-          <input type="datetime-local" value={datetime} onChange={e => setDatetime(e.target.value)}
-            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 10px", fontSize: 13, borderRadius: 4, font: "inherit" }} />
+          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Fim</span>
+          <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={inp} />
         </label>
-        <label style={{ display: "grid", gap: 4 }}>
-          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Vagas</span>
-          <input type="number" min={1} value={capacity} onChange={e => setCapacity(Number(e.target.value))}
-            style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)", padding: "8px 10px", fontSize: 13, borderRadius: 4, font: "inherit", width: 70 }} />
-        </label>
-        <button type="button" onClick={createSlot} disabled={saving || !label || !datetime}
-          style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, alignSelf: "end", font: "inherit" }}>
-          <Plus size={12} /> {saving ? "..." : "Criar"}
+        <span style={{ fontSize: 11, color: "var(--muted)", paddingBottom: 10 }}>todos os dias · slots de 5 em 5 min · 1 trade por vez</span>
+        <button type="button" onClick={save} disabled={saving}
+          style={{ border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: saving ? 0.6 : 1, alignSelf: "end" }}>
+          {saving ? "Salvando..." : "Salvar"}
         </button>
       </div>
-      {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-          <thead>
-            <tr style={{ textAlign: "left", borderBottom: "1px solid var(--line)" }}>
-              <th style={{ padding: "8px" }}>Label</th>
-              <th style={{ padding: "8px" }}>Data/hora</th>
-              <th style={{ padding: "8px" }}>Vagas</th>
-              <th style={{ padding: "8px" }}>Status</th>
-              <th style={{ padding: "8px" }}></th>
-            </tr>
-          </thead>
-          <tbody>
-            {slots.map(s => (
-              <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                <td style={{ padding: "8px", fontWeight: 800 }}>{s.label}</td>
-                <td style={{ padding: "8px", color: "var(--muted)" }}>
-                  {new Date(s.scheduled_for).toLocaleString("pt-BR")}
-                </td>
-                <td style={{ padding: "8px", color: "var(--muted)" }}>{s.capacity}</td>
-                <td style={{ padding: "8px" }}>
-                  <input type="checkbox" checked={s.active} onChange={e => toggleActive(s.id, e.target.checked)} />
-                  <span style={{ marginLeft: 6, color: s.active ? "var(--green)" : "var(--muted)", fontSize: 11, fontWeight: 800 }}>
-                    {s.active ? "Ativo" : "Inativo"}
-                  </span>
-                </td>
-                <td style={{ padding: "8px" }}>
-                  <button type="button" onClick={() => deleteSlot(s.id)}
-                    style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 4, display: "flex" }}>
-                    <Trash2 size={14} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {slots.length === 0 && (
-              <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum slot criado.</td></tr>
-            )}
-          </tbody>
-        </table>
-      )}
     </div>
   )
 }
@@ -470,8 +403,7 @@ function SlotsSection() {
 
 type Acceptance = {
   id: string; status: string; game_id: string | null; created_at: string
-  slot_id: string | null
-  trade_slots: { label: string; scheduled_for: string } | null
+  scheduled_at: string | null
   trades: { id: string; offer_points: number; want_item_name: string; want_item_qty: number } | null
   user_id: string
   profiles: { name: string | null } | null
@@ -545,8 +477,8 @@ function AcceptancesSection() {
                     </span>}
                   </td>
                   <td style={{ padding: "8px" }}>
-                    {a.trade_slots
-                      ? <span style={{ color: "var(--green)", fontWeight: 800 }}>{a.trade_slots.label}</span>
+                    {a.scheduled_at
+                      ? <span style={{ color: "var(--green)", fontWeight: 800 }}>{new Date(a.scheduled_at).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })} in-game</span>
                       : <em style={{ opacity: 0.4, color: "var(--muted)" }}>Aguardando agendamento</em>}
                   </td>
                   <td style={{ padding: "8px" }}>
@@ -595,7 +527,7 @@ function AcceptancesSection() {
                 { label: "Game ID",           value: confirmModal.game_id ?? "—", mono: true, accent: "var(--cyan)" },
                 { label: "Item a receber",    value: `${confirmModal.trades?.want_item_qty}× ${confirmModal.trades?.want_item_name}`, mono: false, accent: undefined },
                 { label: "Pontos a creditar", value: `${(confirmModal.trades?.offer_points ?? 0).toLocaleString("pt-BR")} pts`, mono: false, accent: "var(--yellow)" },
-                { label: "Slot agendado",     value: confirmModal.trade_slots?.label ?? "—", mono: false, accent: undefined },
+                { label: "Agendado para",     value: confirmModal.scheduled_at ? new Date(confirmModal.scheduled_at).toLocaleString("pt-BR") + " in-game" : "—", mono: false, accent: undefined },
               ] as const).map(({ label, value, mono, accent }) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                   <span style={{ color: "var(--gray-500)", fontWeight: 800 }}>{label}</span>
