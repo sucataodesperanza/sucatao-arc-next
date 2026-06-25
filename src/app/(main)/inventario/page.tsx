@@ -8,7 +8,7 @@ import { getItemTypeLabel } from "@/lib/catalog"
 import { rarityColors, rarityMetaLabels } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import type { InventoryEntry } from "@/app/api/inventory/route"
-import { nextPackPointsPrice, nextPackBrlPrice } from "@/app/api/inventory/expand/route"
+import { nextPackPointsPrice, nextPackBrlPrice } from "@/lib/inventory-pricing"
 import "../../../styles/inventario.css"
 
 const PANEL_KEY   = "inventario-panel-open"

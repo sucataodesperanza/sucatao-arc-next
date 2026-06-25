@@ -1,23 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { INITIAL_CAPACITY, PACK_SIZE, nextPackPointsPrice, nextPackBrlPrice } from "@/lib/inventory-pricing"
 
-const INITIAL_CAPACITY = 100
-const PACK_SIZE        = 25
-const POINTS_PER_PACK  = 10000 // 10k × número do pacote (1º=10k, 2º=20k...)
-const BRL_BASE         = 5     // R$5 por pack nos primeiros 100 extras
-const BRL_STEP_EVERY   = 100   // a cada 100 extras comprados, sobe R$5
-
-/** Preço em pontos do próximo pacote: 1º=10k, 2º=20k, 3º=30k... */
-export function nextPackPointsPrice(extraSlots: number): number {
-  const packNumber = Math.floor(extraSlots / PACK_SIZE) + 1
-  return packNumber * POINTS_PER_PACK
-}
-
-/** Preço em BRL do próximo pacote: +25 custa R$5 → R$5 → R$10 → R$10 → ... */
-export function nextPackBrlPrice(extraSlots: number): number {
-  const tier = Math.floor(extraSlots / BRL_STEP_EVERY)
-  return (tier + 1) * BRL_BASE
-}
+export { nextPackPointsPrice, nextPackBrlPrice } // re-exporta para compatibilidade
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
