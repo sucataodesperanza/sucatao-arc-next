@@ -113,16 +113,16 @@ export default function TradesPage() {
       .finally(() => setLoadingTrades(false))
   }, [])
 
-  // Meus trades (lazy)
+  // Meus trades — carrega assim que userId está disponível
   useEffect(() => {
-    if (activeTab !== "Meus Trades" || !userId) return
+    if (!userId) return
     setLoadingMyTrades(true)
     fetch("/api/trades/my")
       .then(r => r.json())
       .then(d => setMyTrades(d.trades ?? []))
       .catch(() => {})
       .finally(() => setLoadingMyTrades(false))
-  }, [activeTab, userId])
+  }, [userId])
 
   // Slots ao abrir modal de agendamento
   useEffect(() => {
@@ -146,10 +146,15 @@ export default function TradesPage() {
     const res = await fetch(`/api/trades/${id}/accept`, { method: "POST" })
     setAccepting(null)
     if (res.ok || res.status === 409) {
-      // Remove da lista Todos e troca para Meus Trades
       setAcceptedIds(prev => new Set([...prev, id]))
-      switchTab("Meus Trades")
-      fetch("/api/trades/my").then(r => r.json()).then(d => setMyTrades(d.trades ?? [])).catch(() => {})
+      // Carrega myTrades ANTES de trocar de aba — garante que o card aparece imediatamente
+      fetch("/api/trades/my")
+        .then(r => r.json())
+        .then(d => {
+          setMyTrades(d.trades ?? [])
+          switchTab("Meus Trades")
+        })
+        .catch(() => switchTab("Meus Trades"))
     }
   }
 
