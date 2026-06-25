@@ -1,249 +1,214 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState, useEffect } from "react"
-import { ArrowLeftRight, ArrowRight, ChevronLeft, ChevronRight, Handshake, History, Plus, RefreshCw, Search, ShieldCheck, SlidersHorizontal, X } from "lucide-react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { ArrowLeftRight, CheckCircle, ChevronLeft, Coins, Handshake, History, Search, Sparkles } from "lucide-react"
 import "../../../styles/trades.css"
+import "../../globals.css"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
+import { BrandMark } from "@/components/brand-mark"
+import type { Trade } from "@/app/api/trades/route"
+import type { MyTrade } from "@/app/api/trades/my/route"
+import type { TradeSlot } from "@/app/api/trades/slots/route"
 
-type Rarity = "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary"
+const PANEL_KEY = "trades-panel-open"
 
-const rarityColors: Record<Rarity, string> = {
-  Common: "#8b99aa",
-  Uncommon: "#3df28b",
-  Rare: "#5fa8ff",
-  Epic: "#b477ff",
-  Legendary: "#ffd400",
+const rarityColors: Record<string, string> = {
+  Common: "#8b99aa", Uncommon: "#3df28b", Rare: "#5fa8ff",
+  Epic: "#b477ff", Legendary: "#ffd400", Unknown: "#566171",
+}
+const rarityLabels: Record<string, string> = {
+  Common: "Comum", Uncommon: "Incomum", Rare: "Raro",
+  Epic: "Épico", Legendary: "Lendário", Unknown: "?",
 }
 
-const rarityLabels: Record<Rarity, string> = {
-  Common: "Comum",
-  Uncommon: "Incomum",
-  Rare: "Raro",
-  Epic: "Épico",
-  Legendary: "Lendário",
+function rarityColor(r?: string | null) { return rarityColors[r ?? "Unknown"] ?? "#566171" }
+function rarityLabel(r?: string | null) { return rarityLabels[r ?? "Unknown"] ?? r ?? "?" }
+
+function rarityKey(r?: string | null) {
+  if (r === "Common")    return "Comum"
+  if (r === "Uncommon")  return "Incomum"
+  if (r === "Rare")      return "Raro"
+  if (r === "Epic")      return "Épico"
+  if (r === "Legendary") return "Lendário"
+  return "?"
 }
 
-type TradeItem = { name: string; rarity: Rarity; qty?: number }
-
-type TradeOffer = {
-  id: string
-  offering: TradeItem[]
-  seeking: TradeItem[]
-}
-
-const initialTradeOffers: TradeOffer[] = [
-  {
-    id: "1",
-    offering: [
-      { name: "Rifle Ferrox", rarity: "Epic" },
-      { name: "Munição Explosiva", rarity: "Rare", qty: 120 },
-    ],
-    seeking: [{ name: "Núcleo ARC", rarity: "Epic", qty: 1 }],
-  },
-  {
-    id: "2",
-    offering: [
-      { name: "Bateria ARC", rarity: "Rare", qty: 2 },
-      { name: "Circuito Avançado", rarity: "Common", qty: 5 },
-    ],
-    seeking: [{ name: "Capacete Militar", rarity: "Rare", qty: 1 }],
-  },
-  {
-    id: "3",
-    offering: [{ name: "Drone ARC", rarity: "Epic" }],
-    seeking: [
-      { name: "Rifle Ferrox", rarity: "Epic" },
-      { name: "Mira Holográfica", rarity: "Rare", qty: 1 },
-    ],
-  },
-  {
-    id: "4",
-    offering: [{ name: "Capacete Avançado", rarity: "Rare", qty: 1 }],
-    seeking: [
-      { name: "Bateria ARC", rarity: "Rare", qty: 1 },
-      { name: "Kit Médico Militar", rarity: "Rare", qty: 3 },
-    ],
-  },
-  {
-    id: "5",
-    offering: [{ name: "Núcleo ARC", rarity: "Epic", qty: 1 }],
-    seeking: [
-      { name: "Drone ARC", rarity: "Epic", qty: 1 },
-      { name: "Circuito Avançado", rarity: "Common", qty: 10 },
-    ],
-  },
-]
-
-type TradeActivity = {
-  id: string
-  user: string
-  timeAgo: string
-  action: "completed" | "created" | "cancelled"
-  give: TradeItem
-  get?: TradeItem
-}
-
-const activityLabels: Record<TradeActivity["action"], string> = {
-  completed: "completou um trade",
-  created: "criou um novo trade",
-  cancelled: "cancelou um trade",
-}
-
-const tradeActivity: TradeActivity[] = [
-  { id: "1", user: "IronWolfBR", timeAgo: "3 min atrás", action: "completed", give: { name: "Mira Holográfica", rarity: "Rare", qty: 1 }, get: { name: "Capacete Militar", rarity: "Rare", qty: 1 } },
-  { id: "2", user: "Myst", timeAgo: "5 min atrás", action: "created", give: { name: "Rifle Ferrox", rarity: "Epic", qty: 1 }, get: { name: "Núcleo ARC", rarity: "Epic", qty: 2 } },
-  { id: "3", user: "NightCrawler", timeAgo: "8 min atrás", action: "cancelled", give: { name: "Circuito Avançado", rarity: "Common", qty: 5 } },
-  { id: "4", user: "Arthur", timeAgo: "12 min atrás", action: "completed", give: { name: "Capacete Avançado", rarity: "Rare", qty: 1 }, get: { name: "Núcleo ARC", rarity: "Epic", qty: 1 } },
-  { id: "5", user: "TacticalGod", timeAgo: "15 min atrás", action: "created", give: { name: "Drone ARC", rarity: "Epic", qty: 2 }, get: { name: "Rifle Ferrox", rarity: "Epic", qty: 1 } },
-]
-
-type CompletedTrade = {
-  id: string
-  gave: TradeItem
-  received: TradeItem
-  partner: string
-  completedAt: string
-}
-
-const myTrades: CompletedTrade[] = [
-  { id: "1", gave: { name: "Mira Holográfica", rarity: "Rare", qty: 1 }, received: { name: "Capacete Militar", rarity: "Rare", qty: 1 }, partner: "IronWolfBR", completedAt: "15/05/2026 14:32" },
-  { id: "2", gave: { name: "Circuito Avançado", rarity: "Common", qty: 10 }, received: { name: "Bateria ARC", rarity: "Rare", qty: 2 }, partner: "Myst", completedAt: "14/05/2026 09:18" },
-  { id: "3", gave: { name: "Rifle Ferrox", rarity: "Epic", qty: 1 }, received: { name: "Núcleo ARC", rarity: "Epic", qty: 1 }, partner: "NightCrawler", completedAt: "13/05/2026 18:42" },
-  { id: "4", gave: { name: "Kit Médico Militar", rarity: "Rare", qty: 3 }, received: { name: "Drone ARC", rarity: "Epic", qty: 1 }, partner: "Arthur", completedAt: "12/05/2026 11:05" },
-  { id: "5", gave: { name: "Capacete Avançado", rarity: "Rare", qty: 1 }, received: { name: "Munição Explosiva", rarity: "Rare", qty: 80 }, partner: "TacticalGod", completedAt: "10/05/2026 16:27" },
-]
-
-const tabs = ["Todos", "Meus Trades"]
-
-function ItemThumb({ item, className }: { item: TradeItem; className: string }) {
-  return (
-    <div className={className} style={{ "--rarity-color": rarityColors[item.rarity] } as React.CSSProperties}>
-      {item.name[0]}
-      {item.qty && item.qty > 1 && <span className={`${className}-qty`}>x{item.qty}</span>}
-    </div>
-  )
-}
+const TABS = ["Todos", "Meus Trades"]
 
 const heroSlides = [
-  {
-    image: "/assets/bots/arc_sentinel.png",
-    tag: "Faça Trocas Justas",
-    icon: Handshake,
-    title: "Comunidade de Trades ARC Raiders",
-    text: "Troque itens com outros Raiders de forma segura e construa relacionamentos de confiança.",
-  },
-  {
-    image: "/assets/bots/arc_shredder.png",
-    tag: "Itens Raros",
-    icon: ArrowLeftRight,
-    title: "Encontre os Itens que Você Precisa",
-    text: "Milhares de ofertas disponíveis. Busque por nome, raridade ou categoria e negocie agora.",
-  },
-  {
-    image: "/assets/bots/arc_spotter.png",
-    tag: "Segurança",
-    icon: ShieldCheck,
-    title: "Trades Seguros e Verificados",
-    text: "Todas as trocas passam por verificação da comunidade. Negocie com confiança e tranquilidade.",
-  },
-  {
-    image: "/assets/bots/arc_leaper.png",
-    tag: "Histórico",
-    icon: History,
-    title: "Acompanhe Suas Trocas",
-    text: "Visualize o histórico completo de todas as suas negociações e o status de cada oferta.",
-  },
+  { image: "/assets/bots/arc_sentinel.png", tag: "Trades do Sucatão", icon: Handshake, title: "Troque Itens por Pontos", text: "O Sucatão compra itens raros diretamente de você. Aceite um trade, agende a entrega in-game e receba pontos." },
+  { image: "/assets/bots/arc_leaper.png",   tag: "Como Funciona",    icon: ArrowLeftRight, title: "Processo Simples e Seguro", text: "Aceite um trade → escolha um horário de entrega → encontre o Sucatão no jogo → pontos creditados na hora." },
+  { image: "/assets/bots/arc_shredder.png", tag: "Recompensas",      icon: Sparkles, title: "Pontos Para Gastar na Loja", text: "Os pontos recebidos podem ser usados para comprar itens raros, gift cards e recompensas exclusivas da loja." },
 ]
 
 export default function TradesPage() {
   const [activeSlide, setActiveSlide] = useState(0)
-  const [activeTab, setActiveTab] = useState(tabs[0])
+  const [activeTab, setActiveTab]     = useState(TABS[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
+  const [panelOpen, setPanelOpen]     = useState(true)
+
+  // Dados reais
+  const [trades, setTrades]           = useState<Trade[]>([])
+  const [myTrades, setMyTrades]       = useState<MyTrade[]>([])
+  const [userId, setUserId]           = useState<string | null>(null)
+  const [points, setPoints]           = useState<number | null>(null)
+  const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
+  const [accepting, setAccepting]     = useState<string | null>(null)
+  const [loadingTrades, setLoadingTrades]     = useState(true)
+  const [loadingMyTrades, setLoadingMyTrades] = useState(false)
+
+  // Agendamento (Meus Trades)
+  const [expandedMyTrade, setExpandedMyTrade] = useState<string | null>(null)
+  const [slots, setSlots]             = useState<TradeSlot[]>([])
+  const [selectedSlot, setSelectedSlot] = useState("")
+  const [gameId, setGameId]           = useState("")
+  const [scheduling, setScheduling]   = useState<string | null>(null)
+  const [scheduleMsg, setScheduleMsg] = useState("")
+
+  // Abas com indicador
+  const navigatedRef = useRef(false)
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide(prev => (prev + 1) % heroSlides.length)
-    }, 10000)
+    const timer = setInterval(() => setActiveSlide(p => (p + 1) % heroSlides.length), 10000)
     return () => clearInterval(timer)
   }, [])
 
   useLayoutEffect(() => {
-    if (localStorage.getItem("trades-panel-open") === "false") setPanelOpen(false)
+    if (localStorage.getItem(PANEL_KEY) === "false") setPanelOpen(false)
+    const t = localStorage.getItem("trades-page-tab")
+    if (t === "Meus Trades") setActiveTab("Meus Trades")
   }, [])
-  const [confirmOffer, setConfirmOffer] = useState<TradeOffer | null>(null)
-  const [tradeOffers, setTradeOffers] = useState<TradeOffer[]>(initialTradeOffers)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [offerName, setOfferName] = useState("")
-  const [offerRarity, setOfferRarity] = useState<Rarity>("Common")
-  const [offerQty, setOfferQty] = useState(1)
-  const [wantName, setWantName] = useState("")
-  const [wantRarity, setWantRarity] = useState<Rarity>("Common")
-  const [wantQty, setWantQty] = useState(1)
+
+  useLayoutEffect(() => {
+    function update() {
+      const el = tabRefs.current[TABS.indexOf(activeTab)]
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth })
+    }
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [activeTab])
+
+  // Auth + trades ativos
+  useEffect(() => {
+    import("@/lib/supabase/client").then(({ createClient }) => {
+      const supabase = createClient()
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return
+        setUserId(user.id)
+        supabase.from("profiles").select("points, game_id").eq("id", user.id).single()
+          .then(({ data }) => {
+            if (data) {
+              setPoints(data.points ?? 0)
+              setGameId(data.game_id ?? "")
+            }
+          })
+      })
+    })
+    fetch("/api/trades")
+      .then(r => r.json())
+      .then(d => setTrades(d.trades ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingTrades(false))
+  }, [])
+
+  // Meus trades (lazy)
+  useEffect(() => {
+    if (activeTab !== "Meus Trades" || !userId) return
+    setLoadingMyTrades(true)
+    fetch("/api/trades/my")
+      .then(r => r.json())
+      .then(d => setMyTrades(d.trades ?? []))
+      .catch(() => {})
+      .finally(() => setLoadingMyTrades(false))
+  }, [activeTab, userId])
+
+  // Slots ao expandir trade pendente
+  useEffect(() => {
+    if (!expandedMyTrade) return
+    const mt = myTrades.find(m => m.id === expandedMyTrade)
+    if (mt?.status !== "pending") return
+    fetch("/api/trades/slots").then(r => r.json()).then(d => setSlots(d.slots ?? [])).catch(() => {})
+  }, [expandedMyTrade, myTrades])
 
   function setPanel(val: boolean) {
     setPanelOpen(val)
-    localStorage.setItem("trades-panel-open", String(val))
+    localStorage.setItem(PANEL_KEY, String(val))
   }
 
-  function handleCreateTrade() {
-    if (!offerName.trim() || !wantName.trim()) return
-    const newOffer: TradeOffer = {
-      id: `new-${Date.now()}`,
-      offering: [{ name: offerName.trim(), rarity: offerRarity, qty: offerQty > 1 ? offerQty : undefined }],
-      seeking: [{ name: wantName.trim(), rarity: wantRarity, qty: wantQty > 1 ? wantQty : undefined }],
-    }
-    setTradeOffers(prev => [newOffer, ...prev])
-    setOfferName("")
-    setOfferRarity("Common")
-    setOfferQty(1)
-    setWantName("")
-    setWantRarity("Common")
-    setWantQty(1)
-    setActiveTab("Todos")
-    setShowCreateModal(false)
+  function switchTab(tab: string) {
+    setActiveTab(tab)
+    localStorage.setItem("trades-page-tab", tab)
   }
 
-  useLayoutEffect(() => {
-    function updateIndicator() {
-      const el = tabRefs.current[tabs.indexOf(activeTab)]
-      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth })
+  async function acceptTrade(id: string) {
+    if (!userId || navigatedRef.current) return
+    setAccepting(id)
+    const res = await fetch(`/api/trades/${id}/accept`, { method: "POST" })
+    setAccepting(null)
+    if (res.ok || res.status === 409) {
+      setAcceptedIds(prev => new Set([...prev, id]))
     }
-    updateIndicator()
-    window.addEventListener("resize", updateIndicator)
-    return () => window.removeEventListener("resize", updateIndicator)
-  }, [activeTab])
+  }
+
+  async function scheduleMyTrade(acceptanceId: string) {
+    if (!selectedSlot) return
+    setScheduling(acceptanceId)
+    setScheduleMsg("")
+    const res = await fetch(`/api/trades/my/${acceptanceId}/schedule`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slot_id: selectedSlot, game_id: gameId }),
+    })
+    setScheduling(null)
+    if (res.ok) {
+      setScheduleMsg("Horário confirmado!")
+      setSelectedSlot("")
+      setExpandedMyTrade(null)
+      fetch("/api/trades/my").then(r => r.json()).then(d => setMyTrades(d.trades ?? [])).catch(() => {})
+    } else {
+      const body = await res.json().catch(() => ({}))
+      setScheduleMsg(body.error ?? "Erro ao agendar.")
+    }
+  }
+
+  const pendingCount   = myTrades.filter(m => m.status === "pending").length
+  const scheduledCount = myTrades.filter(m => m.status === "scheduled").length
 
   return (
     <div className={`trades-page${panelOpen ? "" : " trades-page--panel-closed"}`}>
       <div className={`trades-layout${panelOpen ? "" : " trades-layout--no-panel"}`}>
         <div className="trades-main">
+
+          {/* Topbar */}
           <div className="trades-topbar">
             <h1 className="page-title">Trades</h1>
-            <div className="trades-topbar-actions">
-              <button type="button" className="trades-btn-primary" onClick={() => setShowCreateModal(true)}>
-                <Plus size={16} />
-                Novo Trade
-              </button>
-              <button type="button" className="trades-btn-outline">
-                <SlidersHorizontal size={14} />
-                Filtros
-              </button>
-              <button type="button" className="trades-btn-icon" aria-label="Atualizar">
-                <RefreshCw size={16} />
-              </button>
-            </div>
+            {myTrades.length > 0 && (
+              <div style={{ display: "flex", gap: 8 }}>
+                {pendingCount > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 950, padding: "4px 10px", borderRadius: 20, background: "rgba(255,212,0,0.1)", color: "var(--yellow)", border: "1px solid rgba(255,212,0,0.3)" }}>
+                    {pendingCount} aguardando agendamento
+                  </span>
+                )}
+                {scheduledCount > 0 && (
+                  <span style={{ fontSize: 11, fontWeight: 950, padding: "4px 10px", borderRadius: 20, background: "rgba(95,168,255,0.1)", color: "var(--blue)", border: "1px solid rgba(95,168,255,0.3)" }}>
+                    {scheduledCount} agendado{scheduledCount > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
 
+          {/* Tabs */}
           <div className="store-tabs trades-tabs">
-            {tabs.map((tab, i) => (
+            {TABS.map((tab, i) => (
               <button
                 key={tab}
                 ref={el => { tabRefs.current[i] = el }}
                 type="button"
                 className={`store-tab${activeTab === tab ? " active" : ""}`}
-                onClick={() => setActiveTab(tab)}
+                onClick={() => switchTab(tab)}
               >
                 {tab}
               </button>
@@ -251,359 +216,250 @@ export default function TradesPage() {
             <span className="store-tab-indicator" style={{ left: indicator.left, width: indicator.width }} />
           </div>
 
+          {/* ── ABA: TODOS ── */}
           {activeTab === "Todos" && (
-          <>
-          <section aria-label="Comunidade de trades">
-            <div className="hero-banner">
-              {heroSlides.map((slide, i) => (
-                <div
-                  key={i}
-                  className="hero-banner-bg"
-                  style={{ backgroundImage: `url(${slide.image})`, opacity: i === activeSlide ? 1 : 0 }}
-                />
-              ))}
-              <div className="hero-banner-content" key={activeSlide}>
-                {(() => { const Icon = heroSlides[activeSlide].icon; return (
-                  <span className="hero-banner-tag hero-banner-tag-yellow">
-                    <Icon size={12} />
-                    {heroSlides[activeSlide].tag}
-                  </span>
-                )})()}
-                <h2>{heroSlides[activeSlide].title}</h2>
-                <p>{heroSlides[activeSlide].text}</p>
-              </div>
-              <div className="hero-banner-dots">
-                {heroSlides.map((_, i) => (
-                  <span
-                    key={i}
-                    className={i === activeSlide ? "active" : ""}
-                    onClick={() => setActiveSlide(i)}
-                    style={{ cursor: "pointer" }}
-                  />
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <div className="trades-filter-bar">
-            <label className="trades-search">
-              <Search size={16} />
-              <input type="search" placeholder="Buscar por item, jogador ou código..." autoComplete="off" />
-            </label>
-            <div className="trades-filter-group">
-              <span>Categoria</span>
-              <select defaultValue="Todas"><option>Todas</option></select>
-            </div>
-            <div className="trades-filter-group">
-              <span>Raridade</span>
-              <select defaultValue="Todas"><option>Todas</option></select>
-            </div>
-            <div className="trades-filter-group">
-              <span>Plataforma</span>
-              <select defaultValue="Todas"><option>Todas</option></select>
-            </div>
-            <div className="trades-filter-group">
-              <span>Ordenar por</span>
-              <select defaultValue="Mais recentes"><option>Mais recentes</option></select>
-            </div>
-            <button type="button" className="trades-filter-clear">Limpar Filtros</button>
-          </div>
-
-          <div className="trade-offer-list">
-            {tradeOffers.map(offer => (
-              <article key={offer.id} className="trade-offer-card">
-                <div className="trade-offer-body">
-                  <div className="trade-offer-side">
-                    <span className="trade-offer-label">Procura</span>
-                    <div className="trade-offer-items">
-                      {offer.seeking.map((item, i) => (
-                        <div key={i} className="trade-offer-item">
-                          <ItemThumb item={item} className="trade-offer-thumb" />
-                          <div className="trade-offer-item-info">
-                            <strong>{item.name}</strong>
-                            <span style={{ color: rarityColors[item.rarity] }}>{rarityLabels[item.rarity]}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+            <>
+              {/* Hero */}
+              <section aria-label="Sobre os trades">
+                <div className="hero-banner">
+                  {heroSlides.map((slide, i) => (
+                    <div key={i} className="hero-banner-bg" style={{ backgroundImage: `url(${slide.image})`, opacity: i === activeSlide ? 1 : 0 }} />
+                  ))}
+                  <div className="hero-banner-content" key={activeSlide}>
+                    {(() => { const Icon = heroSlides[activeSlide].icon; return (
+                      <span className="hero-banner-tag"><Icon size={12} />{heroSlides[activeSlide].tag}</span>
+                    )})()}
+                    <h2>{heroSlides[activeSlide].title}</h2>
+                    <p>{heroSlides[activeSlide].text}</p>
                   </div>
-                  <ArrowLeftRight size={18} className="trade-offer-swap" />
-                  <div className="trade-offer-side">
-                    <span className="trade-offer-label">Oferece</span>
-                    <div className="trade-offer-items">
-                      {offer.offering.map((item, i) => (
-                        <div key={i} className="trade-offer-item">
-                          <ItemThumb item={item} className="trade-offer-thumb" />
-                          <div className="trade-offer-item-info">
-                            <strong>{item.name}</strong>
-                            <span style={{ color: rarityColors[item.rarity] }}>{rarityLabels[item.rarity]}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="trade-offer-actions">
-                    <button type="button" className="trade-offer-view" onClick={() => setConfirmOffer(offer)}>Fazer Trade</button>
+                  <div className="hero-banner-dots">
+                    {heroSlides.map((_, i) => <span key={i} className={i === activeSlide ? "active" : ""} onClick={() => setActiveSlide(i)} style={{ cursor: "pointer" }} />)}
                   </div>
                 </div>
-              </article>
-            ))}
-          </div>
+              </section>
 
-          <div className="trades-pagination">
-            <span className="trades-pagination-info">Mostrando 1-10 de 420 trades</span>
-            <div className="trades-pagination-controls">
-              <button type="button" className="trades-page-btn" disabled aria-label="Página anterior">
-                <ChevronLeft size={14} />
-              </button>
-              {[1, 2, 3, 4, 5].map(n => (
-                <button key={n} type="button" className={`trades-page-btn${n === 1 ? " active" : ""}`}>{n}</button>
-              ))}
-              <span className="trades-page-ellipsis">...</span>
-              <button type="button" className="trades-page-btn">42</button>
-              <button type="button" className="trades-page-btn" aria-label="Próxima página">
-                <ChevronRight size={14} />
-              </button>
-            </div>
-          </div>
-          </>
+              {/* Lista de trades */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {loadingTrades ? (
+                  <p className="catalog-empty">Carregando trades...</p>
+                ) : trades.length === 0 ? (
+                  <p className="catalog-empty">Nenhum trade ativo no momento.</p>
+                ) : trades.map(trade => {
+                  const color    = rarityColor(trade.want_item_rarity)
+                  const accepted = acceptedIds.has(trade.id)
+                  return (
+                    <div key={trade.id} className="trade-card" style={{ "--rarity-color": color } as React.CSSProperties}>
+                      <div className="trade-card-head">
+                        <div className="trade-brand-avatar"><BrandMark /></div>
+                        <div className="trade-user-info">
+                          <strong>Sucatão</strong>
+                          <span className="trade-oficial-badge">Oficial</span>
+                        </div>
+                        <span className="trade-time">{new Date(trade.created_at).toLocaleDateString("pt-BR")}</span>
+                      </div>
+
+                      <div className="trade-exchange">
+                        <div className="trade-side">
+                          <span className="trade-side-label">Oferece</span>
+                          <div className="trade-thumb trade-thumb-points"><Coins size={22} /></div>
+                          <span className="trade-points-value">{trade.offer_points.toLocaleString("pt-BR")} pts</span>
+                        </div>
+                        <div className="trade-swap-divider"><ArrowLeftRight size={14} /></div>
+                        <div className="trade-side">
+                          <span className="trade-side-label">Procura</span>
+                          <div className="trade-thumb" style={{ "--rarity-color": color } as React.CSSProperties}>
+                            {trade.want_item_icon
+                              ? <img src={trade.want_item_icon} alt={trade.want_item_name} loading="lazy" />
+                              : <div className="placeholder">{trade.want_item_name[0]?.toUpperCase()}</div>}
+                            <span className="trade-thumb-qty">x{trade.want_item_qty}</span>
+                          </div>
+                          <span className="trade-item-name">{trade.want_item_name}</span>
+                          <span className="trade-item-rarity" style={{ color }}>
+                            {rarityLabel(trade.want_item_rarity)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {userId && (
+                        <button
+                          type="button"
+                          className={`trade-accept-full${accepted ? " accepted" : ""}`}
+                          disabled={accepted || accepting === trade.id}
+                          onClick={() => acceptTrade(trade.id)}
+                        >
+                          {accepted
+                            ? <><CheckCircle size={14} /> Trade aceito</>
+                            : accepting === trade.id
+                              ? "Aguarde..."
+                              : <><ArrowLeftRight size={14} /> Aceitar trade</>}
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </>
           )}
 
+          {/* ── ABA: MEUS TRADES ── */}
           {activeTab === "Meus Trades" && (
             <>
-            <section aria-label="Meus trades concluídos">
-              <div className="hero-banner hero-banner-sm" style={{ backgroundImage: "url(/assets/bots/arc_bastion.png)" }}>
-                <div className="hero-banner-content">
-                  <span className="hero-banner-tag hero-banner-tag-yellow">
-                    <History size={12} />
-                    Histórico de Trocas
-                  </span>
-                  <h2>Seus Trades Concluídos</h2>
-                  <p>Acompanhe todos os trades que você já concluiu e veja com quem fechou cada negociação.</p>
-                </div>
-                <div className="hero-banner-dots">
-                  <span className="active" />
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              </div>
-            </section>
-
-            <div className="trade-offer-list">
-              {myTrades.map(trade => (
-                <article key={trade.id} className="trade-offer-card">
-                  <div className="trade-offer-body">
-                    <div className="trade-offer-side">
-                      <span className="trade-offer-label">Você Deu</span>
-                      <div className="trade-offer-items">
-                        <div className="trade-offer-item">
-                          <ItemThumb item={trade.gave} className="trade-offer-thumb" />
-                          <div className="trade-offer-item-info">
-                            <strong>{trade.gave.name}</strong>
-                            <span style={{ color: rarityColors[trade.gave.rarity] }}>{rarityLabels[trade.gave.rarity]}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <ArrowLeftRight size={18} className="trade-offer-swap" />
-                    <div className="trade-offer-side">
-                      <span className="trade-offer-label">Você Recebeu</span>
-                      <div className="trade-offer-items">
-                        <div className="trade-offer-item">
-                          <ItemThumb item={trade.received} className="trade-offer-thumb" />
-                          <div className="trade-offer-item-info">
-                            <strong>{trade.received.name}</strong>
-                            <span style={{ color: rarityColors[trade.received.rarity] }}>{rarityLabels[trade.received.rarity]}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="trade-offer-actions my-trades-actions">
-                      <span className="my-trades-status">Concluído</span>
-                      <div className="my-trades-meta">
-                        <strong>{trade.partner}</strong>
-                        <span>{trade.completedAt}</span>
-                      </div>
-                    </div>
+              <section aria-label="Meus trades">
+                <div className="hero-banner hero-banner-sm" style={{ backgroundImage: "url(/assets/bots/arc_bastion.png)" }}>
+                  <div className="hero-banner-content">
+                    <span className="hero-banner-tag"><History size={12} />Histórico</span>
+                    <h2>Seus Trades com o Sucatão</h2>
+                    <p>Acompanhe os trades aceitos, agende entregas e veja o histórico de pontos recebidos.</p>
                   </div>
-                </article>
-              ))}
-            </div>
+                  <div className="hero-banner-dots"><span className="active" /><span /><span /></div>
+                </div>
+              </section>
+
+              {loadingMyTrades ? (
+                <p className="catalog-empty" style={{ marginTop: 24 }}>Carregando...</p>
+              ) : !userId ? (
+                <p className="catalog-empty" style={{ marginTop: 24 }}>Faça login para ver seus trades.</p>
+              ) : myTrades.length === 0 ? (
+                <p className="catalog-empty" style={{ marginTop: 24 }}>Você ainda não aceitou nenhum trade.</p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
+                  {myTrades.map(mt => {
+                    const t        = mt.trades
+                    const color    = rarityColor(t?.want_item_rarity)
+                    const expanded = expandedMyTrade === mt.id
+
+                    const STATUS_LABEL: Record<string, { label: string; color: string }> = {
+                      pending:   { label: "Em progresso",  color: "var(--yellow)" },
+                      scheduled: { label: "Agendado",      color: "var(--blue)" },
+                      completed: { label: "Concluído",     color: "var(--green)" },
+                      cancelled: { label: "Cancelado",     color: "var(--red)" },
+                    }
+                    const st = STATUS_LABEL[mt.status] ?? { label: mt.status, color: "var(--gray-500)" }
+
+                    return (
+                      <div
+                        key={mt.id}
+                        className="trade-card"
+                        style={{ "--rarity-color": color, cursor: "pointer" } as React.CSSProperties}
+                        onClick={() => { setExpandedMyTrade(expanded ? null : mt.id); setSelectedSlot(""); setScheduleMsg("") }}
+                      >
+                        <div className="trade-card-head">
+                          <div className="trade-brand-avatar"><BrandMark /></div>
+                          <div className="trade-user-info">
+                            <strong>Sucatão</strong>
+                            <span className="trade-oficial-badge" style={{ color: st.color, borderColor: `color-mix(in srgb, ${st.color} 30%, transparent)`, background: `color-mix(in srgb, ${st.color} 8%, transparent)` }}>
+                              {st.label}
+                            </span>
+                          </div>
+                          <span style={{ color: "var(--gray-500)", fontSize: 14, marginLeft: "auto", flexShrink: 0, transform: expanded ? "rotate(180deg)" : undefined, transition: "transform 0.2s" }}>▾</span>
+                        </div>
+
+                        <div className="trade-exchange">
+                          <div className="trade-side">
+                            <span className="trade-side-label">Recebo</span>
+                            <div className="trade-thumb trade-thumb-points"><Coins size={20} /></div>
+                            <span className="trade-points-value">{(t?.offer_points ?? 0).toLocaleString("pt-BR")} pts</span>
+                          </div>
+                          <div className="trade-swap-divider"><ArrowLeftRight size={14} /></div>
+                          <div className="trade-side">
+                            <span className="trade-side-label">Entrego</span>
+                            <div className="trade-thumb" style={{ "--rarity-color": color } as React.CSSProperties}>
+                              {t?.want_item_icon
+                                ? <img src={t.want_item_icon} alt={t.want_item_name} loading="lazy" />
+                                : <div className="placeholder">{t?.want_item_name[0]?.toUpperCase()}</div>}
+                              <span className="trade-thumb-qty">x{t?.want_item_qty}</span>
+                            </div>
+                            <span className="trade-item-name">{t?.want_item_name}</span>
+                          </div>
+                        </div>
+
+                        {/* Acordeão */}
+                        {expanded && (
+                          <div className="my-trade-accordion" onClick={e => e.stopPropagation()}>
+                            {mt.status === "pending" && (
+                              <>
+                                <p className="my-trade-accordion-title">Escolha um horário in-game:</p>
+                                {slots.length === 0 ? (
+                                  <p style={{ color: "var(--gray-500)", fontSize: 11, margin: 0 }}>Nenhum horário disponível no momento.</p>
+                                ) : (
+                                  <div className="my-trade-slots">
+                                    {slots.map(s => (
+                                      <button key={s.id} type="button"
+                                        className={`my-trade-slot${selectedSlot === s.id ? " selected" : ""}`}
+                                        onClick={() => setSelectedSlot(s.id)}>
+                                        {s.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                                <label style={{ display: "grid", gap: 4, marginTop: 10 }}>
+                                  <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Seu Game ID</span>
+                                  <input type="text" placeholder="Ex: SucataoFan#1234" value={gameId} onChange={e => setGameId(e.target.value)}
+                                    style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "8px 10px", fontSize: 12, borderRadius: 6, font: "inherit", outline: "none" }} />
+                                </label>
+                                {scheduleMsg && <p style={{ margin: "8px 0 0", fontSize: 11, color: scheduleMsg.includes("!") ? "var(--green)" : "var(--red)", fontWeight: 800 }}>{scheduleMsg}</p>}
+                                <button type="button" className="my-trade-confirm-btn"
+                                  disabled={!selectedSlot || scheduling === mt.id}
+                                  onClick={() => scheduleMyTrade(mt.id)}>
+                                  {scheduling === mt.id ? "Confirmando..." : "✓ Confirmar horário"}
+                                </button>
+                              </>
+                            )}
+                            {mt.status === "scheduled" && mt.trade_slots && (
+                              <div className="my-trade-scheduled">
+                                <p className="my-trade-scheduled-label">Horário confirmado</p>
+                                <p className="my-trade-scheduled-time">{mt.trade_slots.label}</p>
+                                <p className="my-trade-scheduled-hint">Aguarde o Sucatão no jogo no horário acima.</p>
+                                {mt.game_id && <p style={{ margin: "6px 0 0", fontSize: 10, color: "var(--gray-500)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{mt.game_id}</strong></p>}
+                              </div>
+                            )}
+                            {mt.status === "completed" && (
+                              <div className="my-trade-completed">
+                                <CheckCircle size={16} style={{ color: "var(--green)" }} />
+                                <span>Entrega concluída!<br /><strong style={{ color: "var(--yellow)" }}>{(t?.offer_points ?? 0).toLocaleString("pt-BR")} pts</strong> creditados na sua carteira.</span>
+                              </div>
+                            )}
+                            {mt.status === "cancelled" && (
+                              <p style={{ margin: 0, fontSize: 12, color: "var(--red)", fontWeight: 800 }}>Este trade foi cancelado.</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>
 
+        {/* Painel lateral */}
         <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de trades">
           <SidePanelUserHeader onClose={() => setPanel(false)} />
 
-          <div className="store-side-card trades-activity-card">
-            <div className="trades-activity-head">
-              <h2>Atividade de Trades</h2>
-              <div className="trades-activity-tabs">
-                <button type="button" className="trades-activity-tab active">Recentes</button>
-              </div>
-              <select className="trades-activity-filter" defaultValue="Todas">
-                <option>Todas</option>
-              </select>
-            </div>
-            <div className="trades-activity-list">
-              {tradeActivity.map(activity => (
-                <div key={activity.id} className="trade-activity-item">
-                  <div className="trade-activity-avatar">{activity.user[0]?.toUpperCase()}</div>
-                  <div className="trade-activity-body">
-                    <div className="trade-activity-head-row">
-                      <strong>{activity.user}</strong>
-                      <span>{activity.timeAgo}</span>
-                    </div>
-                    <p className={`trade-activity-action${activity.action === "cancelled" ? " cancelled" : ""}`}>
-                      {activityLabels[activity.action]}
-                    </p>
-                    <div className="trade-activity-exchange">
-                      <ItemThumb item={activity.give} className="trade-activity-thumb" />
-                      {activity.get ? (
-                        <>
-                          <ArrowLeftRight size={14} className="trade-offer-swap" />
-                          <ItemThumb item={activity.get} className="trade-activity-thumb" />
-                        </>
-                      ) : (
-                        <>
-                          <ArrowLeftRight size={14} className="trade-offer-swap" />
-                          <X size={14} className="trade-activity-cancel-icon" />
-                        </>
-                      )}
-                    </div>
-                  </div>
+          {/* Stats */}
+          <div className="store-side-card" style={{ marginTop: 16 }}>
+            <div className="store-side-head"><h2>Resumo</h2></div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {[
+                { label: "Trades ativos",     value: trades.length,     color: "var(--paper)" },
+                { label: "Aguardando agenda", value: pendingCount,      color: pendingCount   > 0 ? "var(--yellow)" : "var(--gray-500)" },
+                { label: "Agendados",         value: scheduledCount,    color: scheduledCount > 0 ? "var(--blue)"   : "var(--gray-500)" },
+                { label: "Concluídos",        value: myTrades.filter(m => m.status === "completed").length, color: "var(--green)" },
+              ].map(({ label, value, color }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: "var(--gray-500)" }}>{label}</span>
+                  <strong style={{ fontSize: 14, fontWeight: 950, color }}>{value}</strong>
                 </div>
               ))}
             </div>
-            <button type="button" className="trades-footer-btn">
-              Ver Toda Atividade
-              <ArrowRight size={16} />
-            </button>
           </div>
         </aside>
       </div>
 
-      {confirmOffer && (
-        <div className="trade-confirm-overlay" onClick={() => setConfirmOffer(null)}>
-          <div className="trade-confirm-modal" onClick={e => e.stopPropagation()}>
-            <button type="button" className="trade-confirm-close" aria-label="Fechar" onClick={() => setConfirmOffer(null)}>
-              <X size={16} strokeWidth={4} />
-            </button>
-            <div className="trade-confirm-icon">
-              <Handshake size={24} />
-            </div>
-            <h2>Confirmar Trade</h2>
-            <p>Revise os itens antes de continuar. Esta ação enviará uma solicitação de troca para o anunciante.</p>
-            <div className="trade-confirm-body">
-              <div className="trade-offer-side">
-                <span className="trade-offer-label">Procura</span>
-                <div className="trade-offer-items">
-                  {confirmOffer.seeking.map((item, i) => (
-                    <div key={i} className="trade-offer-item">
-                      <ItemThumb item={item} className="trade-offer-thumb" />
-                      <div className="trade-offer-item-info">
-                        <strong>{item.name}</strong>
-                        <span style={{ color: rarityColors[item.rarity] }}>{rarityLabels[item.rarity]}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <ArrowLeftRight size={18} className="trade-offer-swap" />
-              <div className="trade-offer-side">
-                <span className="trade-offer-label">Oferece</span>
-                <div className="trade-offer-items">
-                  {confirmOffer.offering.map((item, i) => (
-                    <div key={i} className="trade-offer-item">
-                      <ItemThumb item={item} className="trade-offer-thumb" />
-                      <div className="trade-offer-item-info">
-                        <strong>{item.name}</strong>
-                        <span style={{ color: rarityColors[item.rarity] }}>{rarityLabels[item.rarity]}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="trade-confirm-actions">
-              <button type="button" className="trade-confirm-cancel" onClick={() => setConfirmOffer(null)}>Cancelar</button>
-              <button type="button" className="trade-confirm-accept" onClick={() => setConfirmOffer(null)}>Confirmar Troca</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <button
-        type="button"
-        className="store-panel-reopen"
-        onClick={() => setPanel(true)}
-        aria-label="Abrir painel"
-      >
-        <ChevronLeft size={16} />
-        <span>Painel</span>
+      <button type="button" className="store-panel-reopen" onClick={() => setPanel(true)} aria-label="Abrir painel">
+        <ChevronLeft size={16} /><span>Painel</span>
       </button>
-
-      {showCreateModal && (
-        <div className="trade-confirm-overlay" onClick={() => setShowCreateModal(false)}>
-          <div className="trade-confirm-modal trade-create-modal" onClick={e => e.stopPropagation()}>
-            <button type="button" className="trade-confirm-close" aria-label="Fechar" onClick={() => setShowCreateModal(false)}>
-              <X size={16} strokeWidth={4} />
-            </button>
-            <div className="trade-confirm-icon">
-              <Plus size={24} />
-            </div>
-            <h2>Criar Novo Trade</h2>
-            <p>Informe o item que você oferece e o item que você procura para publicar uma nova oferta de troca.</p>
-            <div className="trade-create-body">
-              <div className="trade-create-side">
-                <span className="trade-offer-label">Você Oferece</span>
-                <label className="trade-create-field">
-                  <span>Nome do item</span>
-                  <input type="text" placeholder="Ex: Rifle Ferrox" autoComplete="off" value={offerName} onChange={e => setOfferName(e.target.value)} />
-                </label>
-                <label className="trade-create-field">
-                  <span>Raridade</span>
-                  <select value={offerRarity} onChange={e => setOfferRarity(e.target.value as Rarity)}>
-                    {(Object.keys(rarityLabels) as Rarity[]).map(r => (
-                      <option key={r} value={r}>{rarityLabels[r]}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="trade-create-field">
-                  <span>Quantidade</span>
-                  <input type="number" min={1} value={offerQty} onChange={e => setOfferQty(Math.max(1, Number(e.target.value) || 1))} />
-                </label>
-              </div>
-              <ArrowLeftRight size={18} className="trade-offer-swap trade-create-swap" />
-              <div className="trade-create-side">
-                <span className="trade-offer-label">Você Procura</span>
-                <label className="trade-create-field">
-                  <span>Nome do item</span>
-                  <input type="text" placeholder="Ex: Núcleo ARC" autoComplete="off" value={wantName} onChange={e => setWantName(e.target.value)} />
-                </label>
-                <label className="trade-create-field">
-                  <span>Raridade</span>
-                  <select value={wantRarity} onChange={e => setWantRarity(e.target.value as Rarity)}>
-                    {(Object.keys(rarityLabels) as Rarity[]).map(r => (
-                      <option key={r} value={r}>{rarityLabels[r]}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className="trade-create-field">
-                  <span>Quantidade</span>
-                  <input type="number" min={1} value={wantQty} onChange={e => setWantQty(Math.max(1, Number(e.target.value) || 1))} />
-                </label>
-              </div>
-            </div>
-            <div className="trade-confirm-actions">
-              <button type="button" className="trade-confirm-cancel" onClick={() => setShowCreateModal(false)}>Cancelar</button>
-              <button type="button" className="trade-confirm-accept" onClick={handleCreateTrade} disabled={!offerName.trim() || !wantName.trim()}>Criar Trade</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
