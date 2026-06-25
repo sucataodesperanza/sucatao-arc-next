@@ -173,10 +173,15 @@ export default function TradesPage() {
     }
   }
 
-  // Filtros
+  // Filtros — aba Todos
   const [searchQuery, setSearchQuery]   = useState("")
   const [rarityFilter, setRarityFilter] = useState("all")
   const [sortOrder, setSortOrder]       = useState("recent")
+
+  // Filtros — aba Meus Trades
+  const [mySearchQuery, setMySearchQuery] = useState("")
+  const [myStatusFilter, setMyStatusFilter] = useState("all")
+  const [mySortOrder, setMySortOrder]     = useState("recent")
 
   const filteredTrades = trades
     .filter(t => {
@@ -190,6 +195,21 @@ export default function TradesPage() {
     .sort((a, b) => {
       if (sortOrder === "pts-desc") return b.offer_points - a.offer_points
       if (sortOrder === "pts-asc")  return a.offer_points - b.offer_points
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
+  const filteredMyTrades = myTrades
+    .filter(mt => {
+      if (myStatusFilter !== "all" && mt.status !== myStatusFilter) return false
+      if (mySearchQuery.trim()) {
+        const q = mySearchQuery.toLowerCase()
+        if (!mt.trades?.want_item_name?.toLowerCase().includes(q)) return false
+      }
+      return true
+    })
+    .sort((a, b) => {
+      if (mySortOrder === "pts-desc") return (b.trades?.offer_points ?? 0) - (a.trades?.offer_points ?? 0)
+      if (mySortOrder === "pts-asc")  return (a.trades?.offer_points ?? 0) - (b.trades?.offer_points ?? 0)
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     })
 
@@ -383,15 +403,56 @@ export default function TradesPage() {
                 </div>
               </section>
 
+              {/* Filtros — Meus Trades */}
+              <div className="trades-filter-bar">
+                <label className="trades-search">
+                  <Search size={16} />
+                  <input
+                    type="search"
+                    placeholder="Buscar por item..."
+                    autoComplete="off"
+                    value={mySearchQuery}
+                    onChange={e => setMySearchQuery(e.target.value)}
+                  />
+                </label>
+                <div className="trades-filter-group">
+                  <span>Status</span>
+                  <select value={myStatusFilter} onChange={e => setMyStatusFilter(e.target.value)}>
+                    <option value="all">Todos</option>
+                    <option value="pending">Em progresso</option>
+                    <option value="scheduled">Agendado</option>
+                    <option value="completed">Concluído</option>
+                    <option value="cancelled">Cancelado</option>
+                  </select>
+                </div>
+                <div className="trades-filter-group">
+                  <span>Ordenar por</span>
+                  <select value={mySortOrder} onChange={e => setMySortOrder(e.target.value)}>
+                    <option value="recent">Mais recentes</option>
+                    <option value="pts-desc">Maior recompensa</option>
+                    <option value="pts-asc">Menor recompensa</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="trades-filter-clear"
+                  onClick={() => { setMySearchQuery(""); setMyStatusFilter("all"); setMySortOrder("recent") }}
+                >
+                  Limpar Filtros
+                </button>
+              </div>
+
               {loadingMyTrades ? (
                 <p className="catalog-empty" style={{ marginTop: 24 }}>Carregando...</p>
               ) : !userId ? (
                 <p className="catalog-empty" style={{ marginTop: 24 }}>Faça login para ver seus trades.</p>
               ) : myTrades.length === 0 ? (
                 <p className="catalog-empty" style={{ marginTop: 24 }}>Você ainda não aceitou nenhum trade.</p>
+              ) : filteredMyTrades.length === 0 ? (
+                <p className="catalog-empty" style={{ marginTop: 24 }}>Nenhum trade encontrado com os filtros ativos.</p>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 16 }}>
-                  {myTrades.map(mt => {
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, marginTop: 8 }}>
+                  {filteredMyTrades.map(mt => {
                     const t        = mt.trades
                     const color    = rarityColor(t?.want_item_rarity)
                     const expanded = expandedMyTrade === mt.id
