@@ -307,7 +307,7 @@ export default function TradesPage() {
               </div>
 
               {/* Lista de trades */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12 }}>
                 {loadingTrades ? (
                   <p className="catalog-empty">Carregando trades...</p>
                 ) : filteredTrades.length === 0 ? (
