@@ -142,7 +142,8 @@ function PedidoConfirmadoContent() {
     if (ids.length === 0) { setLoading(false); return }
     fetchOrders().then(loadedOrders => {
       setLoading(false)
-      // Só sincroniza ordens PENDENTES e que ainda não foram sincronizadas nesta sessão
+
+      // Sincroniza ordens PIX ainda pendentes
       loadedOrders
         .filter(o =>
           o.payment_method !== "pontos" &&
@@ -150,6 +151,11 @@ function PedidoConfirmadoContent() {
           !syncedRef.current.has(o.id)
         )
         .forEach(o => syncOrder(o.id))
+
+      // Reconcilia inventário automaticamente — garante que todos os itens
+      // pagos desta sessão entrem no inventário, mesmo que addItemsToInventory
+      // tenha falhado silenciosamente em alguma etapa anterior.
+      fetch("/api/inventory/reconcile", { method: "POST" }).catch(() => {})
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
