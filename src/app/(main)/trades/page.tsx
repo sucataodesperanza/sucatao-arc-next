@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { ArrowLeftRight, CheckCircle, ChevronLeft, Coins, Handshake, History, Search, Sparkles } from "lucide-react"
 import "../../../styles/trades.css"
-import "../../globals.css"
+import "../../../styles/home.css"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import { BrandMark } from "@/components/brand-mark"
 import type { Trade } from "@/app/api/trades/route"
