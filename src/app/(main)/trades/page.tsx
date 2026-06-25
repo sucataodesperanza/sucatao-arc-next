@@ -147,14 +147,41 @@ export default function TradesPage() {
     setAccepting(null)
     if (res.ok || res.status === 409) {
       setAcceptedIds(prev => new Set([...prev, id]))
-      // Carrega myTrades ANTES de trocar de aba — garante que o card aparece imediatamente
+
+      if (res.ok) {
+        // Atualização otimista: adiciona o trade à lista imediatamente com dados locais
+        const tradeData = trades.find(t => t.id === id)
+        if (tradeData) {
+          const optimistic: MyTrade = {
+            id:          `optimistic-${id}`,
+            status:      "pending",
+            game_id:     null,
+            created_at:  new Date().toISOString(),
+            slot_id:     null,
+            trade_slots: null,
+            trades: {
+              id:              tradeData.id,
+              offer_points:    tradeData.offer_points,
+              want_item_name:  tradeData.want_item_name,
+              want_item_qty:   tradeData.want_item_qty,
+              want_item_icon:  tradeData.want_item_icon,
+              want_item_rarity: tradeData.want_item_rarity,
+            },
+          }
+          setMyTrades(prev => {
+            const without = prev.filter(m => m.trades?.id !== id)
+            return [optimistic, ...without]
+          })
+        }
+      }
+
+      switchTab("Meus Trades")
+
+      // Background: atualiza com dados reais do banco
       fetch("/api/trades/my")
         .then(r => r.json())
-        .then(d => {
-          setMyTrades(d.trades ?? [])
-          switchTab("Meus Trades")
-        })
-        .catch(() => switchTab("Meus Trades"))
+        .then(d => setMyTrades(d.trades ?? []))
+        .catch(() => {})
     }
   }
 
