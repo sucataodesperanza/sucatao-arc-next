@@ -53,10 +53,10 @@ export default function TradesPage() {
   const [myTrades, setMyTrades]       = useState<MyTrade[]>([])
   const [userId, setUserId]           = useState<string | null>(null)
   const [points, setPoints]           = useState<number | null>(null)
-  const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
   const [accepting, setAccepting]     = useState<string | null>(null)
   const [loadingTrades, setLoadingTrades]     = useState(true)
   const [loadingMyTrades, setLoadingMyTrades] = useState(false)
+  const myTradesLoadedRef = useRef(false)
 
   // Modal de agendamento (Meus Trades)
   const [scheduleModal, setScheduleModal] = useState<MyTrade | null>(null)
@@ -113,9 +113,10 @@ export default function TradesPage() {
       .finally(() => setLoadingTrades(false))
   }, [])
 
-  // Meus trades — carrega assim que userId está disponível
+  // Meus trades — carrega uma única vez quando userId está disponível
   useEffect(() => {
-    if (!userId) return
+    if (!userId || myTradesLoadedRef.current) return
+    myTradesLoadedRef.current = true
     setLoadingMyTrades(true)
     fetch("/api/trades/my")
       .then(r => r.json())
@@ -146,42 +147,38 @@ export default function TradesPage() {
     const res = await fetch(`/api/trades/${id}/accept`, { method: "POST" })
     setAccepting(null)
     if (res.ok || res.status === 409) {
-      setAcceptedIds(prev => new Set([...prev, id]))
+      const tradeData = trades.find(t => t.id === id)
 
-      if (res.ok) {
-        // Atualização otimista: adiciona o trade à lista imediatamente com dados locais
-        const tradeData = trades.find(t => t.id === id)
-        if (tradeData) {
-          const optimistic: MyTrade = {
-            id:          `optimistic-${id}`,
-            status:      "pending",
-            game_id:     null,
-            created_at:  new Date().toISOString(),
-            slot_id:     null,
-            trade_slots: null,
-            trades: {
-              id:              tradeData.id,
-              offer_points:    tradeData.offer_points,
-              want_item_name:  tradeData.want_item_name,
-              want_item_qty:   tradeData.want_item_qty,
-              want_item_icon:  tradeData.want_item_icon,
-              want_item_rarity: tradeData.want_item_rarity,
-            },
-          }
-          setMyTrades(prev => {
-            const without = prev.filter(m => m.trades?.id !== id)
-            return [optimistic, ...without]
-          })
+      // Atualização otimista: add imediatamente com dados locais
+      if (tradeData) {
+        const optimistic: MyTrade = {
+          id:          `optimistic-${id}`,
+          status:      "pending",
+          game_id:     null,
+          created_at:  new Date().toISOString(),
+          slot_id:     null,
+          trade_slots: null,
+          trades: {
+            id:               tradeData.id,
+            offer_points:     tradeData.offer_points,
+            want_item_name:   tradeData.want_item_name,
+            want_item_qty:    tradeData.want_item_qty,
+            want_item_icon:   tradeData.want_item_icon,
+            want_item_rarity: tradeData.want_item_rarity,
+          },
         }
+        setMyTrades(prev => [optimistic, ...prev.filter(m => m.trades?.id !== id)])
       }
 
       switchTab("Meus Trades")
 
-      // Background: atualiza com dados reais do banco
-      fetch("/api/trades/my")
-        .then(r => r.json())
-        .then(d => setMyTrades(d.trades ?? []))
-        .catch(() => {})
+      // Background: substitui o otimista pelos dados reais após delay
+      setTimeout(() => {
+        fetch("/api/trades/my")
+          .then(r => r.json())
+          .then(d => { if (d.trades?.length > 0) setMyTrades(d.trades) })
+          .catch(() => {})
+      }, 800)
     }
   }
 
@@ -219,8 +216,11 @@ export default function TradesPage() {
   const [myStatusFilter, setMyStatusFilter] = useState("all")
   const [mySortOrder, setMySortOrder]     = useState("recent")
 
+  // Trades que o usuário já aceitou (baseado em myTrades para persistir após F5)
+  const acceptedTradeIds = new Set(myTrades.map(m => m.trades?.id).filter(Boolean) as string[])
+
   const filteredTrades = trades
-    .filter(t => !acceptedIds.has(t.id)) // remove trades aceitos imediatamente
+    .filter(t => !acceptedTradeIds.has(t.id))
     .filter(t => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
@@ -371,7 +371,7 @@ export default function TradesPage() {
                   <p className="catalog-empty">Nenhum trade encontrado com os filtros ativos.</p>
                 ) : filteredTrades.map(trade => {
                   const color    = rarityColor(trade.want_item_rarity)
-                  const accepted = acceptedIds.has(trade.id)
+                  const accepted = acceptedTradeIds.has(trade.id)
                   return (
                     <div key={trade.id} className="trade-card" style={{ "--rarity-color": color } as React.CSSProperties}>
                       <div className="trade-card-head">
