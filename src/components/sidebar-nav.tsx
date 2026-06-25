@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, Bot, Flag, Hammer, Home, LogIn, Map, MoreHorizontal, Package, Recycle, Repeat2, ScrollText, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
+import { BarChart2, Bot, Flag, Hammer, Home, LogIn, Map, MoreHorizontal, Package, Radio, Recycle, Repeat2, ScrollText, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { BrandMark } from "./brand-mark"
 import { LogoutButton } from "./logout-button"
@@ -20,6 +20,7 @@ const navLinks = [
   { href: "/faccoes",    label: "Facções",    icon: Flag       },
   { href: "/contratos",  label: "Contratos",  icon: ScrollText },
   { href: "/rankings",   label: "Rankings",   icon: BarChart2  },
+  { href: "/streamers",  label: "Streamers",  icon: Radio      },
 ]
 
 const VISIBLE_COUNT = 6
