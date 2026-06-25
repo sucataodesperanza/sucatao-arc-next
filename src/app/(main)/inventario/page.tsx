@@ -158,9 +158,14 @@ export default function InventarioPage() {
 
   async function reconcileInventory() {
     setReconciling(true)
-    await fetch("/api/inventory/reconcile", { method: "POST" })
+    const res = await fetch("/api/inventory/reconcile", { method: "POST" })
+    const body = await res.json().catch(() => ({}))
     await loadInventory()
     setReconciling(false)
+    if (res.ok && body.items_synced > 0) {
+      setExpandMsg(`✓ ${body.items_synced} item(ns) recuperado(s) das suas compras!`)
+      setTimeout(() => setExpandMsg(""), 5000)
+    }
   }
 
   function setPanel(val: boolean) {
@@ -764,6 +769,24 @@ export default function InventarioPage() {
               </button>
             </div>
           </div>
+
+          {/* Botão de sincronização sempre visível */}
+          <button
+            type="button"
+            onClick={reconcileInventory}
+            disabled={reconciling}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+              width: "100%", marginTop: 10, padding: "10px 14px",
+              border: "1px solid rgba(95,168,255,0.3)", borderRadius: 8,
+              background: "rgba(95,168,255,0.06)", color: "var(--blue)",
+              cursor: "pointer", font: "inherit", fontSize: 11, fontWeight: 950,
+              textTransform: "uppercase", letterSpacing: "0.05em",
+              opacity: reconciling ? 0.6 : 1, transition: "opacity 0.15s",
+            }}
+          >
+            {reconciling ? "Sincronizando..." : "↻ Sincronizar com compras"}
+          </button>
 
           <div className="inventario-help">
             <div className="inventario-help-icon"><HelpCircle size={18} /></div>
