@@ -51,7 +51,9 @@ function PagarContent() {
 
   const goToConfirmation = useCallback(() => {
     const ids = [pointsOrderId, id].filter(Boolean)
-    router.push(`/pedido-confirmado?ids=${ids.join(",")}`)
+    // replace() remove /pagar/[id] do histórico — evita loop quando usuário
+    // pressiona voltar a partir da tela de confirmação
+    router.replace(`/pedido-confirmado?ids=${ids.join(",")}`)
   }, [id, pointsOrderId, router])
 
   const fetchOrder = useCallback(async () => {
