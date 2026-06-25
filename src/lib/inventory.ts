@@ -29,19 +29,22 @@ export async function addItemsToInventory(
       .single()
 
     if (existing) {
-      await supabase
+      const { error: updErr } = await supabase
         .from("user_inventory")
         .update({ quantity: existing.quantity + qty })
         .eq("id", existing.id)
+      if (updErr) console.error("[inventory] update error:", updErr.message, { userId, itemId: item.itemId })
     } else {
-      await supabase
+      const { error: insErr } = await supabase
         .from("user_inventory")
         .insert({ user_id: userId, item_id: item.itemId, quantity: qty })
+      if (insErr) console.error("[inventory] insert error:", insErr.message, { userId, itemId: item.itemId })
     }
 
     // Append no histórico (sempre registra o evento)
-    await supabase
+    const { error: histErr } = await supabase
       .from("inventory_history")
       .insert({ user_id: userId, item_id: item.itemId, quantity: qty, source })
+    if (histErr) console.error("[inventory_history] insert error:", histErr.message, { userId, itemId: item.itemId, source })
   }
 }

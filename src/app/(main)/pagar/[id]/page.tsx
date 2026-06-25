@@ -84,12 +84,22 @@ function PagarContent() {
 
   const startPolling = useCallback(() => {
     pollRef.current = setInterval(async () => {
+      // Para imediatamente se já navegou ou o ref foi limpo
+      if (navigatedRef.current || !pollRef.current) return
+
       try {
-        await fetch("/api/store/sync-payment", {
+        const syncRes = await fetch("/api/store/sync-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ orderId: id }),
         })
+
+        // 401 = sessão expirada ou usuário saiu — para o polling
+        if (syncRes.status === 401 || syncRes.status === 403) {
+          stopTimers()
+          return
+        }
+
         const updated = await fetchOrder()
         if (updated?.payment_status === "paid") {
           setOrder(updated)
