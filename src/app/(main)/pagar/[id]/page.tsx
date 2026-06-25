@@ -41,18 +41,22 @@ function PagarContent() {
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [copied, setCopied] = useState(false)
 
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef        = useRef<ReturnType<typeof setInterval> | null>(null)
+  const countdownRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const navigatedRef   = useRef(false) // evita navegar mais de uma vez
 
   const stopTimers = useCallback(() => {
-    if (pollRef.current) clearInterval(pollRef.current)
-    if (countdownRef.current) clearInterval(countdownRef.current)
+    if (pollRef.current)     { clearInterval(pollRef.current);     pollRef.current = null }
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
   }, [])
 
   const goToConfirmation = useCallback(() => {
+    if (navigatedRef.current) return // já navegou — ignora chamadas extras
+    navigatedRef.current = true
+    stopTimers()
     const ids = [pointsOrderId, id].filter(Boolean)
-    router.push(`/pedido-confirmado?ids=${ids.join(",")}`)
-  }, [id, pointsOrderId, router])
+    router.replace(`/pedido-confirmado?ids=${ids.join(",")}`)
+  }, [id, pointsOrderId, router, stopTimers])
 
   const fetchOrder = useCallback(async () => {
     const supabase = createClient()
@@ -80,12 +84,22 @@ function PagarContent() {
 
   const startPolling = useCallback(() => {
     pollRef.current = setInterval(async () => {
+      // Para imediatamente se já navegou ou o ref foi limpo
+      if (navigatedRef.current || !pollRef.current) return
+
       try {
-        await fetch("/api/store/sync-payment", {
+        const syncRes = await fetch("/api/store/sync-payment", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ orderId: id }),
         })
+
+        // 401 = sessão expirada ou usuário saiu — para o polling
+        if (syncRes.status === 401 || syncRes.status === 403) {
+          stopTimers()
+          return
+        }
+
         const updated = await fetchOrder()
         if (updated?.payment_status === "paid") {
           setOrder(updated)
@@ -159,7 +173,7 @@ function PagarContent() {
         <h2>Pagamento PIX</h2>
         <div className="cart-empty">
           <p>Não foi possível carregar este pedido.</p>
-          <Link href="/itens">Voltar ao catálogo</Link>
+          <Link href="/loja">Voltar ao catálogo</Link>
         </div>
       </section>
     )

@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
@@ -38,9 +38,9 @@ const paymentStatusLabels: Record<string, string> = {
 }
 
 const paymentBannerLabels: Record<string, string> = {
-  success: "Pagamento aprovado! Seu pedido já está sendo processado.",
+  success: "Pagamento aprovado! Seu pedido jÃ¡ estÃ¡ sendo processado.",
   pending: "Pagamento via PIX pendente. Assim que o Mercado Pago confirmar, atualizaremos seu pedido automaticamente.",
-  failure: "O pagamento não foi concluído. Você pode tentar novamente pelo carrinho.",
+  failure: "O pagamento nÃ£o foi concluÃ­do. VocÃª pode tentar novamente pelo carrinho.",
 }
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
@@ -72,7 +72,7 @@ function OrderCard({ order, onSync, syncing }: { order: Order; onSync: (orderId:
             </div>
             <div className="cart-item-info">
               <strong>{item.name}</strong>
-              <span>{item.type ?? "Item"} · Quantidade: {item.quantity}</span>
+              <span>{item.type ?? "Item"} Â· Quantidade: {item.quantity}</span>
             </div>
             <div className="cart-item-value">
               <strong>{formatNumber(item.mode === "points" ? item.pointsCost : item.lineTotal)}</strong>
@@ -91,7 +91,7 @@ function OrderCard({ order, onSync, syncing }: { order: Order; onSync: (orderId:
       </div>
       {isPixPending && (
         <>
-          <p className="modal-purchase-status">Aguardando confirmação do pagamento PIX no Mercado Pago.</p>
+          <p className="modal-purchase-status">Aguardando confirmaÃ§Ã£o do pagamento PIX no Mercado Pago.</p>
           <button type="button" className="cart-checkout-button cash" onClick={() => onSync(order.id)} disabled={syncing}>
             {syncing ? "Verificando..." : "Verificar pagamento"}
           </button>
@@ -108,6 +108,7 @@ function PedidoConfirmadoContent() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set())
+  const syncedRef = useRef(new Set<string>()) // evita sincronizar o mesmo pedido múltiplas vezes
 
   async function fetchOrders() {
     const supabase = createClient()
@@ -117,6 +118,9 @@ function PedidoConfirmadoContent() {
   }
 
   async function syncOrder(orderId: string) {
+    if (syncedRef.current.has(orderId)) return // já sincronizado — ignora
+    syncedRef.current.add(orderId)
+
     setSyncingIds(prev => new Set(prev).add(orderId))
     try {
       await fetch("/api/store/sync-payment", {
@@ -138,10 +142,22 @@ function PedidoConfirmadoContent() {
     if (ids.length === 0) { setLoading(false); return }
     fetchOrders().then(loadedOrders => {
       setLoading(false)
+
+      // Sincroniza ordens PIX ainda pendentes
       loadedOrders
-        .filter(o => o.payment_method !== "pontos" && (o.payment_status === "pending" || o.payment_status === "processing"))
+        .filter(o =>
+          o.payment_method !== "pontos" &&
+          (o.payment_status === "pending" || o.payment_status === "processing") &&
+          !syncedRef.current.has(o.id)
+        )
         .forEach(o => syncOrder(o.id))
+
+      // Reconcilia inventário automaticamente — garante que todos os itens
+      // pagos desta sessão entrem no inventário, mesmo que addItemsToInventory
+      // tenha falhado silenciosamente em alguma etapa anterior.
+      fetch("/api/inventory/reconcile", { method: "POST" }).catch(() => {})
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) {
@@ -151,8 +167,8 @@ function PedidoConfirmadoContent() {
   if (orders.length === 0) {
     return (
       <div className="cart-empty">
-        <p>Não encontramos esse pedido.</p>
-        <Link href="/itens">Voltar ao catálogo</Link>
+        <p>NÃ£o encontramos esse pedido.</p>
+        <Link href="/loja">Voltar ao catÃ¡logo</Link>
       </div>
     )
   }
@@ -166,7 +182,7 @@ function PedidoConfirmadoContent() {
         <OrderCard key={order.id} order={order} onSync={syncOrder} syncing={syncingIds.has(order.id)} />
       ))}
       <div className="cart-confirm-actions">
-        <Link href="/itens" className="cart-checkout-button">Continuar comprando</Link>
+        <Link href="/loja" className="cart-checkout-button">Continuar comprando</Link>
         <Link href="/perfil" className="cart-checkout-button cash">Ver no perfil</Link>
       </div>
     </div>

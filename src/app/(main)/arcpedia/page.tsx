@@ -147,7 +147,7 @@ export default function ArcpediaPage() {
 
           <div className="store-side-card">
             <div className="store-side-head">
-              <h2>Ameaças Detectadas</h2>
+              <h2>AmeaÃ§as Detectadas</h2>
             </div>
             <div className="store-side-list">
               {ARC_THREAT_ORDER.filter(t => threatCounts[t]).map(t => (
@@ -191,7 +191,7 @@ export default function ArcpediaPage() {
                 {selected.drops.length > 0 && (
                   <div className="catalog-modal-flags" style={{ marginTop: 4 }}>
                     {selected.drops.map(dropId => (
-                      <Link key={dropId} href="/itens">{itemNameForId(dropId)}</Link>
+                      <Link key={dropId} href="/loja">{itemNameForId(dropId)}</Link>
                     ))}
                   </div>
                 )}
@@ -209,7 +209,7 @@ export default function ArcpediaPage() {
       {selected && (
         <div className="modal-backdrop" onClick={() => setSelected(null)}>
           <article className="catalog-modal" role="dialog" aria-modal onClick={e => e.stopPropagation()}>
-            <button className="catalog-modal-close" type="button" aria-label="Fechar detalhe" onClick={() => setSelected(null)}>×</button>
+            <button className="catalog-modal-close" type="button" aria-label="Fechar detalhe" onClick={() => setSelected(null)}>Ã—</button>
             <div className="catalog-modal-media">
               {selected.image
                 ? <img src={resolveImage(selected.image)} alt={selected.name} />
@@ -217,7 +217,7 @@ export default function ArcpediaPage() {
             </div>
             <div className="catalog-modal-content">
               <p className="catalog-modal-kicker" style={{ color: getArcThreatColor(getArcThreat(selected.threat)) }}>
-                Ameaça {getArcThreatLabel(selected.threat)} // {selected.type ?? "ARC unit"}
+                AmeaÃ§a {getArcThreatLabel(selected.threat)} // {selected.type ?? "ARC unit"}
               </p>
               <h2>{selected.name}</h2>
               {selected.description && <p className="catalog-modal-description">{selected.description}</p>}
@@ -232,7 +232,7 @@ export default function ArcpediaPage() {
                   <p className="arcpedia-modal-label">Drops</p>
                   <div className="catalog-modal-flags" style={{ marginTop: 8 }}>
                     {selected.drops.map(dropId => (
-                      <Link key={dropId} href="/itens">{itemNameForId(dropId)}</Link>
+                      <Link key={dropId} href="/loja">{itemNameForId(dropId)}</Link>
                     ))}
                   </div>
                 </div>
