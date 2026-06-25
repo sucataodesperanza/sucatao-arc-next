@@ -41,20 +41,22 @@ function PagarContent() {
   const [secondsLeft, setSecondsLeft] = useState(0)
   const [copied, setCopied] = useState(false)
 
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef        = useRef<ReturnType<typeof setInterval> | null>(null)
+  const countdownRef   = useRef<ReturnType<typeof setInterval> | null>(null)
+  const navigatedRef   = useRef(false) // evita navegar mais de uma vez
 
   const stopTimers = useCallback(() => {
-    if (pollRef.current) clearInterval(pollRef.current)
-    if (countdownRef.current) clearInterval(countdownRef.current)
+    if (pollRef.current)     { clearInterval(pollRef.current);     pollRef.current = null }
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null }
   }, [])
 
   const goToConfirmation = useCallback(() => {
+    if (navigatedRef.current) return // já navegou — ignora chamadas extras
+    navigatedRef.current = true
+    stopTimers()
     const ids = [pointsOrderId, id].filter(Boolean)
-    // replace() remove /pagar/[id] do histórico — evita loop quando usuário
-    // pressiona voltar a partir da tela de confirmação
     router.replace(`/pedido-confirmado?ids=${ids.join(",")}`)
-  }, [id, pointsOrderId, router])
+  }, [id, pointsOrderId, router, stopTimers])
 
   const fetchOrder = useCallback(async () => {
     const supabase = createClient()

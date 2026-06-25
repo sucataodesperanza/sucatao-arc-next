@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
@@ -108,6 +108,7 @@ function PedidoConfirmadoContent() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set())
+  const syncedRef = useRef(new Set<string>()) // evita sincronizar o mesmo pedido múltiplas vezes
 
   async function fetchOrders() {
     const supabase = createClient()
@@ -117,6 +118,9 @@ function PedidoConfirmadoContent() {
   }
 
   async function syncOrder(orderId: string) {
+    if (syncedRef.current.has(orderId)) return // já sincronizado — ignora
+    syncedRef.current.add(orderId)
+
     setSyncingIds(prev => new Set(prev).add(orderId))
     try {
       await fetch("/api/store/sync-payment", {
@@ -138,10 +142,16 @@ function PedidoConfirmadoContent() {
     if (ids.length === 0) { setLoading(false); return }
     fetchOrders().then(loadedOrders => {
       setLoading(false)
+      // Só sincroniza ordens PENDENTES e que ainda não foram sincronizadas nesta sessão
       loadedOrders
-        .filter(o => o.payment_method !== "pontos" && (o.payment_status === "pending" || o.payment_status === "processing"))
+        .filter(o =>
+          o.payment_method !== "pontos" &&
+          (o.payment_status === "pending" || o.payment_status === "processing") &&
+          !syncedRef.current.has(o.id)
+        )
         .forEach(o => syncOrder(o.id))
     })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   if (loading) {
