@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { getCroppedImageBlob } from "@/lib/crop-image"
 import { AvatarCropModal } from "@/components/avatar-crop-modal"
 import arcData from "@/data/arc-data"
+import { isValidCpf } from "@/lib/cpf"
 import "../../../styles/perfil.css"
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
@@ -33,9 +34,12 @@ export default function PerfilPage() {
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [avatarError, setAvatarError] = useState("")
   const [cropImage, setCropImage] = useState<{ src: string; type: string } | null>(null)
-  const [gameId, setGameId] = useState("")
+  const [gameId, setGameId]         = useState("")
   const [gameIdSaving, setGameIdSaving] = useState(false)
-  const [gameIdMsg, setGameIdMsg] = useState("")
+  const [gameIdMsg, setGameIdMsg]   = useState("")
+  const [cpf, setCpf]               = useState("")
+  const [cpfSaving, setCpfSaving]   = useState(false)
+  const [cpfMsg, setCpfMsg]         = useState("")
 
   useEffect(() => {
     const supabase = createClient()
@@ -43,15 +47,40 @@ export default function PerfilPage() {
       setUser(user)
       setLoading(false)
       if (!user) return
-      supabase.from("profiles").select("points, avatar_url, game_id").eq("id", user.id).single().then(({ data }) => {
+      supabase.from("profiles").select("points, avatar_url, game_id, cpf").eq("id", user.id).single().then(({ data }) => {
         if (data) {
           setPoints(data.points ?? 0)
           setAvatarUrl(data.avatar_url ?? null)
           setGameId(data.game_id ?? "")
+          setCpf(data.cpf ?? "")
         }
       })
     })
   }, [])
+
+  function formatCpf(value: string) {
+    return value.replace(/\D/g, "").slice(0, 11)
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d)/, "$1.$2")
+      .replace(/(\d{3})(\d{1,2})$/, "$1-$2")
+  }
+
+  async function saveCpf() {
+    if (!user) return
+    const raw = cpf.replace(/\D/g, "")
+    if (raw && !isValidCpf(raw)) {
+      setCpfMsg("CPF inválido.")
+      setTimeout(() => setCpfMsg(""), 3500)
+      return
+    }
+    setCpfSaving(true)
+    setCpfMsg("")
+    const supabase = createClient()
+    const { error } = await supabase.from("profiles").update({ cpf: raw || null }).eq("id", user.id)
+    setCpfSaving(false)
+    setCpfMsg(error ? "error" : "ok")
+    setTimeout(() => setCpfMsg(""), 3500)
+  }
 
   async function saveGameId() {
     if (!user) return
@@ -213,6 +242,7 @@ export default function PerfilPage() {
             <p>{user?.email ?? "Entre para salvar seu progresso na conta."}</p>
 
             {user && (
+              <>
               <div className="profile-game-id">
                 <label htmlFor="game-id-input" className="profile-game-id-label">
                   Nick no ARC Raiders
@@ -236,6 +266,32 @@ export default function PerfilPage() {
                   Necessário para receber itens comprados na loja.
                 </p>
               </div>
+
+              {/* CPF */}
+              <div className="profile-game-id" style={{ marginTop: 12 }}>
+                <label htmlFor="cpf-input" className="profile-game-id-label">
+                  CPF <span style={{ color: "var(--gray-500)", fontWeight: 800, textTransform: "none", letterSpacing: 0 }}>(para pagamentos via PIX)</span>
+                </label>
+                <div className="profile-game-id-row">
+                  <input
+                    id="cpf-input"
+                    type="text"
+                    inputMode="numeric"
+                    className={`profile-game-id-input${cpfSaving ? " saving" : ""}`}
+                    placeholder="000.000.000-00"
+                    value={cpf}
+                    onChange={e => setCpf(formatCpf(e.target.value))}
+                    onBlur={saveCpf}
+                    onKeyDown={e => e.key === "Enter" && e.currentTarget.blur()}
+                    maxLength={14}
+                    disabled={cpfSaving}
+                  />
+                  {cpfSaving && <span className="profile-game-id-status saving">Salvando...</span>}
+                  {cpfMsg === "invalid" && <span className="profile-game-id-status error">CPF inválido.</span>}
+                </div>
+                <p className="profile-game-id-hint">Armazenado com segurança. Não compartilhamos seus dados.</p>
+              </div>
+              </>
             )}
 
             {user && avatarUrl && (
@@ -302,17 +358,15 @@ export default function PerfilPage() {
     </div>
     </div>
 
-    {/* Toast de confirmação do Game ID */}
+    {/* Toasts */}
     {gameIdMsg && (
-      <div
-        className="app-toast"
-        data-tone={gameIdMsg === "ok" ? "success" : "error"}
-        role="status"
-        aria-live="polite"
-      >
-        {gameIdMsg === "ok"
-          ? "✓ Nick salvo com sucesso!"
-          : "✗ Erro ao salvar o nick. Tente novamente."}
+      <div className="app-toast" data-tone={gameIdMsg === "ok" ? "success" : "error"} role="status" aria-live="polite">
+        {gameIdMsg === "ok" ? "✓ Nick salvo com sucesso!" : "✗ Erro ao salvar o nick."}
+      </div>
+    )}
+    {(cpfMsg === "ok" || cpfMsg === "error") && (
+      <div className="app-toast" data-tone={cpfMsg === "ok" ? "success" : "error"} role="status" aria-live="polite">
+        {cpfMsg === "ok" ? "✓ CPF salvo com sucesso!" : "✗ Erro ao salvar o CPF."}
       </div>
     )}
     </>
