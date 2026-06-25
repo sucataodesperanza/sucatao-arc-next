@@ -9,12 +9,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
 
   const body = await request.json().catch(() => ({}))
-  const slot_id: string = body.slot_id
+  const scheduled_at: string = body.scheduled_at  // ISO datetime: "2026-06-25T15:00:00"
   const game_id: string = body.game_id?.trim() ?? ""
 
-  if (!slot_id) return NextResponse.json({ error: "slot_id é obrigatório." }, { status: 400 })
+  if (!scheduled_at) return NextResponse.json({ error: "scheduled_at é obrigatório." }, { status: 400 })
 
-  // Verifica que a aceitação pertence ao usuário e está pending
+  // Verifica que a aceitação pertence ao usuário e está pendente
   const { data: acceptance } = await supabase
     .from("trade_acceptances")
     .select("id, status")
@@ -25,34 +25,23 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (!acceptance) return NextResponse.json({ error: "Aceitação não encontrada." }, { status: 404 })
   if (acceptance.status === "completed") return NextResponse.json({ error: "Trade já concluído." }, { status: 409 })
 
-  // Verifica capacidade do slot
-  const { count } = await supabase
+  // Verifica conflito de horário (só 1 por vez)
+  const { data: conflict } = await supabase
     .from("trade_acceptances")
-    .select("id", { count: "exact" })
-    .eq("slot_id", slot_id)
+    .select("id")
+    .eq("scheduled_at", scheduled_at)
     .neq("status", "cancelled")
-
-  const { data: slot } = await supabase
-    .from("trade_slots")
-    .select("capacity")
-    .eq("id", slot_id)
-    .eq("active", true)
+    .neq("id", id)
     .single()
 
-  if (!slot) return NextResponse.json({ error: "Slot inválido ou inativo." }, { status: 400 })
-  if ((count ?? 0) >= slot.capacity) return NextResponse.json({ error: "Slot lotado. Escolha outro horário." }, { status: 409 })
+  if (conflict) return NextResponse.json({ error: "Este horário já está ocupado. Escolha outro." }, { status: 409 })
 
-  const { data: updated, error } = await supabase
+  const { error } = await supabase
     .from("trade_acceptances")
-    .update({ slot_id, game_id: game_id || null, status: "scheduled" })
+    .update({ scheduled_at, game_id: game_id || null, status: "scheduled" })
     .eq("id", id)
     .eq("user_id", user.id)
-    .select("id")
 
   if (error) return NextResponse.json({ error: "Erro ao agendar." }, { status: 500 })
-  if (!updated || updated.length === 0) {
-    return NextResponse.json({ error: "Não foi possível salvar o agendamento. Verifique as permissões." }, { status: 403 })
-  }
-
   return NextResponse.json({ ok: true })
 }

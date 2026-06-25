@@ -46,7 +46,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | [Dashboard](telas/admin/dashboard.md) | `/admin` | Redireciona para /admin/catalogo |
 | [Catálogo](telas/admin/catalogo.md) | `/admin/catalogo` | catalog_items |
 | [Estoque](telas/admin/estoque.md) | `/admin/estoque` | stock_items, catalog_items |
-| [Trades](telas/admin/trades.md) | `/admin/trades` | trades, trade_slots, trade_acceptances |
+| [Trades](telas/admin/trades.md) | `/admin/trades` | trades, trade_acceptances, trade_settings |
 | [Crafting](telas/admin/crafting.md) | `/admin/crafting` | catalog_items |
 | [Arcpedia](telas/admin/arcpedia.md) | `/admin/arcpedia` | arcs |
 | [Cupons](telas/admin/cupons.md) | `/admin/cupons` | coupons |
@@ -62,8 +62,8 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
 | `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
-| `trade_acceptances` | Registro de aceitações de trade (slot, game_id, status) |
-| `trade_slots` | Slots de agendamento in-game |
+| `trade_acceptances` | Registro de aceitações de trade (scheduled_at, game_id, status) — 1 ativa por trade |
+| `trade_settings` | Singleton com horário de funcionamento dos trades (operating_hours_start/end) |
 | `reward_items` | Itens de recompensa (gift cards, merch, sorteios) |
 | `user_inventory` | Inventário do jogador (`user_id + item_id FK → catalog_items + quantity`) |
 | `inventory_history` | Log append-only de cada evento de aquisição de item |

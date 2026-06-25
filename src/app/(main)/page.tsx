@@ -456,10 +456,10 @@ export default function HomePage() {
                         </>
                       )}
 
-                      {mt.status === "scheduled" && mt.trade_slots && (
+                      {mt.status === "scheduled" && mt.scheduled_at && (
                         <div className="my-trade-scheduled">
                           <p className="my-trade-scheduled-label">Horário confirmado</p>
-                          <p className="my-trade-scheduled-time">{mt.trade_slots.label}</p>
+                          <p className="my-trade-scheduled-time">{new Date(mt.scheduled_at).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })} in-game</p>
                           <p className="my-trade-scheduled-hint">Aguarde o Sucatão no jogo no horário acima.</p>
                           {mt.game_id && (
                             <p style={{ margin: "6px 0 0", fontSize: 10, color: "var(--gray-500)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{mt.game_id}</strong></p>

@@ -18,6 +18,21 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   if (!trade) return NextResponse.json({ error: "Trade não encontrado ou inativo." }, { status: 404 })
 
+  // Garante que apenas UMA pessoa pode aceitar este trade
+  const { data: existingAcceptance } = await supabase
+    .from("trade_acceptances")
+    .select("id, user_id")
+    .eq("trade_id", id)
+    .neq("status", "cancelled")
+    .single()
+
+  if (existingAcceptance) {
+    if (existingAcceptance.user_id === user.id) {
+      return NextResponse.json({ error: "Você já aceitou este trade.", code: "already_accepted" }, { status: 409 })
+    }
+    return NextResponse.json({ error: "Este trade já foi aceito por outro usuário.", code: "taken" }, { status: 409 })
+  }
+
   const { error } = await supabase
     .from("trade_acceptances")
     .insert({ trade_id: id, user_id: user.id, status: "pending" })

@@ -1,110 +1,258 @@
 # APIs — Trades
 
-Documentação de todos os endpoints do sistema de trades.
+## Endpoints Públicos (usuário logado)
 
 ---
 
-## Públicas (usuário autenticado)
-
 ### `GET /api/trades`
-Lista os trades com `status = active`.
 
-**Response:**
+Lista os trades ativos do Sucatão que ainda **não foram aceitos** por ninguém.
+
+**Lógica de filtro:**
+1. Busca todos os `trade_id` com aceitação ativa (status ≠ `cancelled`)
+2. Exclui esses IDs da query de `trades`
+
+**Resposta:**
 ```json
-{ "trades": [{ "id", "offer_points", "want_item_name", "want_item_qty", "want_item_icon", "want_item_rarity", "status", "expires_at", "created_at" }] }
+{
+  "trades": [
+    {
+      "id": "uuid",
+      "offer_points": 100,
+      "want_item_name": "Injeção de Adrenalina",
+      "want_item_qty": 1,
+      "want_item_icon": "https://...",
+      "want_item_rarity": "comum",
+      "status": "active",
+      "expires_at": "2026-07-01T00:00:00",
+      "created_at": "2026-06-25T12:00:00"
+    }
+  ]
+}
 ```
 
 ---
 
 ### `POST /api/trades/:id/accept`
-Usuário aceita um trade. Cria entrada em `trade_acceptances` com `status = pending`.
 
-**Erros:** `401` sem auth · `404` trade não encontrado/inativo · `409` já aceitou
+Aceita um trade. Garante exclusividade — apenas **uma aceitação ativa** por trade.
+
+**Autenticação:** Obrigatória
+
+**Verificações em ordem:**
+1. Trade existe e está `active`
+2. Não existe nenhuma aceitação com status ≠ `cancelled` para este trade
+3. Se existir e for do mesmo usuário → 409 `already_accepted`
+4. Se existir e for de outro usuário → 409 `taken`
+
+**Resposta de sucesso:** `200 { ok: true }`
+
+**Erros:**
+| Status | Code | Causa |
+|---|---|---|
+| 401 | — | Não autenticado |
+| 404 | — | Trade não encontrado ou inativo |
+| 409 | `already_accepted` | Usuário já aceitou este trade |
+| 409 | `taken` | Outro usuário já aceitou este trade |
+| 500 | — | Erro de banco |
 
 ---
 
 ### `GET /api/trades/my`
-Retorna as aceitações do usuário logado com trade e slot associados.
 
-**Response:**
+Retorna todos os trades aceitos pelo usuário logado, com dados do trade embutidos.
+
+**Resposta:**
 ```json
-{ "trades": [{ "id", "status", "game_id", "created_at", "slot_id", "trade_slots": { "label", "scheduled_for" }, "trades": { ... } }] }
+{
+  "trades": [
+    {
+      "id": "uuid-acceptance",
+      "status": "pending",
+      "game_id": null,
+      "created_at": "2026-06-25T12:00:00",
+      "scheduled_at": null,
+      "trades": {
+        "id": "uuid-trade",
+        "offer_points": 100,
+        "want_item_name": "Injeção de Adrenalina",
+        "want_item_qty": 1,
+        "want_item_icon": "https://...",
+        "want_item_rarity": "comum"
+      }
+    }
+  ]
+}
 ```
 
 ---
 
 ### `PATCH /api/trades/my/:id/schedule`
-Usuário agenda um horário in-game para entregar o item.
 
-**Body:** `{ slot_id: uuid, game_id: string }`
+Agenda um horário de entrega in-game para uma aceitação.
 
-**Efeito:** `trade_acceptances.status` → `scheduled`, salva `slot_id` e `game_id`
+**Autenticação:** Obrigatória
 
-**Erros:** `400` sem slot_id · `404` aceitação não encontrada · `409` slot lotado ou trade já concluído · `403` update bloqueado por RLS
+**Body:**
+```json
+{
+  "scheduled_at": "2026-06-25T15:00:00",
+  "game_id": "SucataoFan#1234"
+}
+```
+
+**Verificações:**
+1. Aceitação pertence ao usuário logado
+2. Status ≠ `completed`
+3. Não existe outro agendamento com o mesmo `scheduled_at` (exceto a própria)
+
+**Efeito:** `status = "scheduled"`, `scheduled_at` e `game_id` salvos
+
+**Resposta de sucesso:** `200 { ok: true }`
+
+**Erros:**
+| Status | Causa |
+|---|---|
+| 400 | `scheduled_at` ausente |
+| 401 | Não autenticado |
+| 404 | Aceitação não encontrada |
+| 409 | Trade já concluído ou horário já ocupado |
+| 500 | Erro de banco |
 
 ---
 
-### `GET /api/trades/slots`
-Lista slots ativos com data futura e vagas disponíveis (filtra lotados automaticamente).
+### `GET /api/trades/available-times?date=YYYY-MM-DD`
 
-**Response:**
+Retorna os horários disponíveis para agendamento em uma data específica.
+
+**Lógica:**
+1. Lê `trade_settings` para obter `operating_hours_start`, `operating_hours_end`, `slot_duration_minutes`
+2. Gera todos os slots de 5 em 5 minutos dentro do intervalo
+3. Exclui slots passados (antes de `now()`)
+4. Exclui slots já agendados (`trade_acceptances.scheduled_at` com status ≠ `cancelled` na mesma data)
+
+**Resposta:**
 ```json
-{ "slots": [{ "id", "label", "scheduled_for", "capacity", "booked" }] }
+{
+  "times": ["09:00", "09:05", "09:10", "..."],
+  "date": "2026-06-25"
+}
 ```
 
 ---
 
-## Admin
-
-### `GET /api/admin/trades`
-Lista todos os trades (qualquer status).
-
-### `POST /api/admin/trades`
-Cria um trade.
-**Body obrigatório:** `offer_points` (number), `want_item_name` (string)
-**Opcionais:** `want_item_qty`, `want_item_icon`, `want_item_rarity`, `status`, `expires_at`
-
-### `PATCH /api/admin/trades/:id`
-Edita campos de um trade. Aceita qualquer subconjunto dos campos.
-
-### `DELETE /api/admin/trades/:id`
-Remove um trade (cascata apaga `trade_acceptances` relacionadas).
+## Endpoints Admin
 
 ---
 
-### `GET /api/admin/trades/slots`
-Lista todos os slots (incluindo inativos e passados).
+### `GET /api/admin/trades/settings`
 
-### `POST /api/admin/trades/slots`
-Cria um slot.
-**Body:** `{ label, scheduled_for, capacity? }`
+Retorna a configuração de horário de funcionamento.
 
-### `PATCH /api/admin/trades/slots/:id`
-Edita slot (label, scheduled_for, capacity, active).
+**Resposta:**
+```json
+{
+  "operating_hours_start": "09:00",
+  "operating_hours_end": "00:00",
+  "slot_duration_minutes": 5
+}
+```
 
-### `DELETE /api/admin/trades/slots/:id`
-Remove slot. Aceitações com esse slot ficam com `slot_id = null`.
+---
+
+### `PATCH /api/admin/trades/settings`
+
+Atualiza o horário de funcionamento dos trades.
+
+**Body (parcial):**
+```json
+{
+  "operating_hours_start": "10:00",
+  "operating_hours_end": "23:00"
+}
+```
+
+**Resposta:** `200 { ok: true }`
 
 ---
 
 ### `GET /api/admin/trades/acceptances`
-Lista aceitações não canceladas com join de trades, trade_slots e profiles.
 
-### `POST /api/admin/trades/acceptances/:id/complete`
-Conclui um trade:
-1. `trade_acceptances.status` → `completed`
-2. `profiles.points += trades.offer_points` para o usuário
+Lista todas as aceitações (status ≠ `cancelled`) com dados do trade e perfil do usuário.
 
-**Erro:** `409` se já concluído.
+**Resposta:**
+```json
+{
+  "acceptances": [
+    {
+      "id": "uuid",
+      "status": "scheduled",
+      "game_id": "SucataoFan#1234",
+      "created_at": "...",
+      "scheduled_at": "2026-06-25T15:00:00",
+      "user_id": "uuid",
+      "profiles": { "name": "André Tavares" },
+      "trades": {
+        "id": "uuid",
+        "offer_points": 100,
+        "want_item_name": "Injeção de Adrenalina",
+        "want_item_qty": 1
+      }
+    }
+  ]
+}
+```
 
 ---
 
-## Fluxo de Estados
+### `POST /api/admin/trades/acceptances/:id/complete`
 
-```
-aceito (pending)
-    ↓  PATCH /api/trades/my/:id/schedule
-agendado (scheduled)
-    ↓  POST /api/admin/trades/acceptances/:id/complete
-concluído (completed)  →  pontos creditados
-```
+Conclui um trade: credita os pontos ao usuário e marca como `completed`.
+
+**Efeito:**
+1. `trade_acceptances.status = "completed"`
+2. `profiles.points += trades.offer_points`
+
+**Resposta:** `200 { ok: true, points_credited: 100 }`
+
+---
+
+## Banco de Dados
+
+### Tabela `trades`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | uuid PK | — |
+| `offer_points` | integer | Pontos que o Sucatão paga |
+| `want_item_name` | text | Item que quer receber |
+| `want_item_qty` | integer | Quantidade |
+| `want_item_icon` | text | URL da imagem |
+| `want_item_rarity` | text | Raridade do item |
+| `status` | text | `active` / `inactive` |
+| `expires_at` | timestamptz | Data de expiração |
+| `created_at` | timestamptz | — |
+
+### Tabela `trade_acceptances`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | uuid PK | — |
+| `trade_id` | uuid FK → trades | Trade aceito |
+| `user_id` | uuid FK → auth.users | Quem aceitou |
+| `status` | text | `pending` / `scheduled` / `completed` / `cancelled` |
+| `game_id` | text | ID do jogador in-game |
+| `scheduled_at` | timestamptz | Horário agendado (livre, verificado contra conflitos) |
+| `created_at` | timestamptz | — |
+
+> **Restrição de negócio:** Apenas UMA aceitação ativa (status ≠ `cancelled`) por `trade_id`. Verificada na API, não por constraint SQL.
+
+### Tabela `trade_settings` (singleton)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | integer PK | Sempre 1 — única linha |
+| `operating_hours_start` | text | Início do funcionamento (ex: `"09:00"`) |
+| `operating_hours_end` | text | Fim (ex: `"00:00"`, pode passar da meia-noite) |
+| `slot_duration_minutes` | integer | Intervalo entre slots (padrão: 5) |
+| `updated_at` | timestamptz | — |
