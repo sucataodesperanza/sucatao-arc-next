@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { Archive, ChevronLeft, ChevronRight, Coins, HelpCircle, Package, Plus, Search, ShoppingBag, Star, Truck, X } from "lucide-react"
+import { Archive, ChevronLeft, ChevronRight, Coins, HelpCircle, Package, Plus, Search, ShoppingBag, Star, Truck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getItemTypeLabel } from "@/lib/catalog"
 import { rarityColors, rarityMetaLabels } from "@/lib/use-items-catalog"
@@ -102,9 +102,6 @@ export default function InventarioPage() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [activeTab, setActiveTab]   = useState("geral")
   const [activeCat, setActiveCat]   = useState("Todos")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [rarityFilter, setRarityFilter] = useState("all")
-  const [sortOrder, setSortOrder]   = useState("recent")
   const [page, setPage]             = useState(1)
 
   useEffect(() => {
@@ -226,40 +223,9 @@ export default function InventarioPage() {
     { label: "Outros",   color: "#566171", count: entries.filter(e => !["Common","Rare","Epic","Legendary"].includes(e.catalog_items?.rarity ?? "")).reduce((s, e) => s + e.quantity, 0) },
   ], [entries, rarosQty, epicosQty, lendariosQty])
 
-  function normalizeStr(s: string) {
-    return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
-  }
-
-  const filteredEntries = useMemo(() => {
-    let result = entries
-
-    // Filtro de categoria
-    if (activeCat !== "Todos") result = result.filter(e => itemCategory(e.catalog_items?.item_type) === activeCat)
-
-    // Filtro de busca (aba Itens)
-    if (searchQuery.trim()) {
-      const q = normalizeStr(searchQuery)
-      result = result.filter(e => normalizeStr(e.catalog_items?.name ?? "").includes(q))
-    }
-
-    // Filtro de raridade (aba Itens)
-    if (rarityFilter !== "all") result = result.filter(e => e.catalog_items?.rarity === rarityFilter)
-
-    // Ordenação (aba Itens)
-    result = [...result].sort((a, b) => {
-      if (sortOrder === "value-desc") return (b.catalog_items?.value ?? 0) - (a.catalog_items?.value ?? 0)
-      if (sortOrder === "value-asc")  return (a.catalog_items?.value ?? 0) - (b.catalog_items?.value ?? 0)
-      if (sortOrder === "name")       return (a.catalog_items?.name ?? "").localeCompare(b.catalog_items?.name ?? "")
-      if (sortOrder === "rarity") {
-        const order = ["Legendary","Epic","Rare","Uncommon","Common"]
-        return order.indexOf(a.catalog_items?.rarity ?? "") - order.indexOf(b.catalog_items?.rarity ?? "")
-      }
-      // "recent" → ordem padrão (acquired_at desc, já vem da API)
-      return 0
-    })
-
-    return result
-  }, [entries, activeCat, searchQuery, rarityFilter, sortOrder])
+  const filteredEntries = useMemo(() =>
+    activeCat === "Todos" ? entries : entries.filter(e => itemCategory(e.catalog_items?.item_type) === activeCat)
+  , [entries, activeCat])
 
   const totalPages = Math.max(1, Math.ceil(filteredEntries.length / ITEMS_PER_PAGE))
   const pageEntries = filteredEntries.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
@@ -288,7 +254,6 @@ export default function InventarioPage() {
           <div className="inventario-tabs">
             {[
               { key: "geral",     label: "Visão Geral" },
-              { key: "itens",     label: "Itens" },
               { key: "historico", label: "Histórico" },
               { key: "colecoes",  label: "Coleções" },
             ].map(tab => (
@@ -299,121 +264,7 @@ export default function InventarioPage() {
             ))}
           </div>
 
-          {activeTab === "itens" ? (
-            /* ── Aba Itens ── */
-            loading ? (
-              <p className="catalog-empty" style={{ marginTop: 48 }}>Carregando inventário...</p>
-            ) : (
-              <>
-                {/* Filtros funcionais */}
-                <div className="catalog-filters">
-                  <label className="catalog-search">
-                    <Search size={14} />
-                    <input
-                      type="search"
-                      placeholder="Buscar item..."
-                      autoComplete="off"
-                      value={searchQuery}
-                      onChange={e => { setSearchQuery(e.target.value); setPage(1) }}
-                    />
-                    {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(""); setPage(1) }}
-                        style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", display: "flex", padding: 0 }}>
-                        <X size={14} />
-                      </button>
-                    )}
-                  </label>
-                  <select className="catalog-select" value={rarityFilter}
-                    onChange={e => { setRarityFilter(e.target.value); setPage(1) }}>
-                    <option value="all">Todas as raridades</option>
-                    <option value="Legendary">Lendário</option>
-                    <option value="Epic">Épico</option>
-                    <option value="Rare">Raro</option>
-                    <option value="Uncommon">Incomum</option>
-                    <option value="Common">Comum</option>
-                  </select>
-                  <select className="catalog-select" value={sortOrder}
-                    onChange={e => { setSortOrder(e.target.value); setPage(1) }}>
-                    <option value="recent">Mais recentes</option>
-                    <option value="value-desc">Maior valor</option>
-                    <option value="value-asc">Menor valor</option>
-                    <option value="rarity">Raridade</option>
-                    <option value="name">Nome A–Z</option>
-                  </select>
-                </div>
-
-                {/* Category pills */}
-                <div className="inventario-cats">
-                  {CATEGORIES.map(cat => (
-                    <button key={cat} type="button"
-                      className={`inventario-cat${activeCat === cat ? " active" : ""}`}
-                      onClick={() => { setActiveCat(cat); setPage(1) }}>
-                      {cat} ({catCounts[cat] ?? 0})
-                    </button>
-                  ))}
-                </div>
-
-                {/* Resultado */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, color: "var(--gray-500)", fontWeight: 800 }}>
-                    {filteredEntries.length} {filteredEntries.length === 1 ? "item" : "itens"}
-                    {filteredEntries.length !== entries.length && ` de ${entries.length}`}
-                  </span>
-                  {(searchQuery || rarityFilter !== "all") && (
-                    <button type="button" onClick={() => { setSearchQuery(""); setRarityFilter("all"); setActiveCat("Todos"); setPage(1) }}
-                      style={{ fontSize: 11, fontWeight: 950, color: "var(--red)", background: "none", border: "none", cursor: "pointer", textTransform: "uppercase" }}>
-                      <X size={11} style={{ verticalAlign: "middle" }} /> Limpar filtros
-                    </button>
-                  )}
-                </div>
-
-                {filteredEntries.length === 0 ? (
-                  <p className="catalog-empty">Nenhum item encontrado.</p>
-                ) : (
-                  <div className="inventario-grid">
-                    {filteredEntries.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE).map(entry => {
-                      const item  = entry.catalog_items
-                      const rk    = rarityKey(item?.rarity)
-                      const color = RARITY_COLORS[item?.rarity ?? ""] ?? "#566171"
-                      return (
-                        <div key={entry.id} className="inventario-item-card" style={{ "--item-color": color } as React.CSSProperties}>
-                          <span className="inventario-item-rarity-badge">{rk}</span>
-                          <span className="inventario-item-qty">x{entry.quantity}</span>
-                          <div className="inventario-item-media">
-                            {item?.icon_url ? <img src={item.icon_url} alt={item.name} loading="lazy" /> : item?.name[0]}
-                          </div>
-                          <div className="inventario-item-body">
-                            <p className="inventario-item-name">{item?.name}</p>
-                            <p className="inventario-item-cat">{getItemTypeLabel(item?.item_type)}</p>
-                            <div className="inventario-item-value"><Coins size={12} />{(item?.value ?? 0).toLocaleString("pt-BR")}</div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {/* Paginação */}
-                {(() => {
-                  const tp = Math.max(1, Math.ceil(filteredEntries.length / ITEMS_PER_PAGE))
-                  return tp > 1 ? (
-                    <div className="inventario-pagination">
-                      <span className="inventario-pagination-info">
-                        {(page - 1) * ITEMS_PER_PAGE + 1}–{Math.min(page * ITEMS_PER_PAGE, filteredEntries.length)} de {filteredEntries.length}
-                      </span>
-                      <div className="inventario-pages">
-                        <button type="button" className="inventario-page-btn" disabled={page <= 1} onClick={() => setPage(p => p - 1)}><ChevronLeft size={14} /></button>
-                        {Array.from({ length: Math.min(tp, 5) }, (_, i) => i + 1).map(n => (
-                          <button key={n} type="button" className={`inventario-page-btn${page === n ? " active" : ""}`} onClick={() => setPage(n)}>{n}</button>
-                        ))}
-                        <button type="button" className="inventario-page-btn" disabled={page >= tp} onClick={() => setPage(p => p + 1)}><ChevronRight size={14} /></button>
-                      </div>
-                    </div>
-                  ) : null
-                })()}
-              </>
-            )
-          ) : activeTab === "historico" ? (
+          {activeTab === "historico" ? (
             /* ── Aba Histórico ── */
             loadingHistory ? (
               <p className="catalog-empty" style={{ marginTop: 48 }}>Carregando histórico...</p>
