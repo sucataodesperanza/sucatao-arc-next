@@ -64,8 +64,9 @@ Tabelas principais usadas no site:
 | `trade_acceptances` | Registro de usuários que aceitaram um trade (com slot e game_id) |
 | `trade_slots` | Slots de agendamento in-game criados pelo admin |
 | `reward_items` | Itens de recompensa (gift cards, merch, sorteios) gerenciados pelo admin |
+| `user_inventory` | Inventário do jogador (`user_id + item_id FK → catalog_items + quantity`) |
 | `orders` | Pedidos dos usuários |
-| `profiles` | Perfis dos usuários (points, avatar, game_id, etc.) |
+| `profiles` | Perfis dos usuários (points, avatar, game_id, cpf, inventory_capacity) |
 | `coupons` | Cupons de desconto |
 | `loot_boxes` | Configuração das loot boxes |
 | `seller_inventory` | Inventário de vendedores parceiros |
@@ -97,6 +98,7 @@ const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
 | Arquivo | Conteúdo |
 |---|---|
 | [apis/trades.md](apis/trades.md) | Todos os endpoints do sistema de trades (público + admin) |
+| [apis/inventory.md](apis/inventory.md) | Endpoints do inventário (listar, expandir, reconciliar) |
 
 ## Fontes de Dados Locais
 
