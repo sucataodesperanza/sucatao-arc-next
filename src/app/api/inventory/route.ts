@@ -21,19 +21,26 @@ export async function GET() {
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ items: [] })
+  if (!user) return NextResponse.json({ items: [], capacity: 100, used: 0 })
 
-  const { data, error } = await supabase
-    .from("user_inventory")
-    .select("id, quantity, acquired_at, catalog_items(id, name, item_type, rarity, icon_url, value, weight_kg, stack_size)")
-    .eq("user_id", user.id)
-    .order("acquired_at", { ascending: false })
-    .returns<InventoryEntry[]>()
+  const [profileRes, { data, error }] = await Promise.all([
+    supabase.from("profiles").select("inventory_capacity").eq("id", user.id).single(),
+    supabase
+      .from("user_inventory")
+      .select("id, quantity, acquired_at, catalog_items(id, name, item_type, rarity, icon_url, value, weight_kg, stack_size)")
+      .eq("user_id", user.id)
+      .order("acquired_at", { ascending: false })
+      .returns<InventoryEntry[]>(),
+  ])
 
   if (error) {
     console.error("api/inventory error:", error)
-    return NextResponse.json({ items: [] })
+    return NextResponse.json({ items: [], capacity: 100, used: 0 })
   }
 
-  return NextResponse.json({ items: data ?? [] })
+  const items    = data ?? []
+  const capacity = (profileRes.data as { inventory_capacity: number } | null)?.inventory_capacity ?? 100
+  const used     = items.reduce((s, e) => s + e.quantity, 0)
+
+  return NextResponse.json({ items, capacity, used })
 }

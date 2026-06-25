@@ -8,6 +8,7 @@ import { getItemTypeLabel } from "@/lib/catalog"
 import { rarityColors, rarityMetaLabels } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import type { InventoryEntry } from "@/app/api/inventory/route"
+import { nextPackPointsPrice, nextPackBrlPrice } from "@/app/api/inventory/expand/route"
 import "../../../styles/inventario.css"
 
 const PANEL_KEY   = "inventario-panel-open"
@@ -90,8 +91,11 @@ function DonutChart({ entries }: { entries: InventoryEntry[] }) {
 
 export default function InventarioPage() {
   const [points, setPoints]   = useState<number | null>(null)
-  const [entries, setEntries] = useState<InventoryEntry[]>([])
-  const [loading, setLoading] = useState(true)
+  const [entries, setEntries]   = useState<InventoryEntry[]>([])
+  const [capacity, setCapacity] = useState(100)
+  const [loading, setLoading]   = useState(true)
+  const [expanding, setExpanding] = useState(false)
+  const [expandMsg, setExpandMsg] = useState("")
   const [panelOpen, setPanelOpen] = useState(true)
   const [activeTab, setActiveTab] = useState("geral")
   const [activeCat, setActiveCat] = useState("Todos")
@@ -114,7 +118,7 @@ export default function InventarioPage() {
   useEffect(() => {
     fetch("/api/inventory")
       .then(r => r.json())
-      .then(d => setEntries(d.items ?? []))
+      .then(d => { setEntries(d.items ?? []); setCapacity(d.capacity ?? 100) })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -122,6 +126,31 @@ export default function InventarioPage() {
   function setPanel(val: boolean) {
     setPanelOpen(val)
     localStorage.setItem(PANEL_KEY, String(val))
+  }
+
+  async function expandInventory(mode: "points" | "cash") {
+    setExpanding(true)
+    setExpandMsg("")
+    const res = await fetch("/api/inventory/expand", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    })
+    const body = await res.json().catch(() => ({}))
+    setExpanding(false)
+    if (res.ok) {
+      if (mode === "points") {
+        setCapacity(body.new_capacity)
+        setPoints(body.points_left)
+        setExpandMsg(`✓ +25 slots adicionados! Capacidade: ${body.new_capacity}`)
+      } else {
+        setExpandMsg("PIX gerado — em breve disponível nesta tela.")
+      }
+      setTimeout(() => setExpandMsg(""), 5000)
+    } else {
+      setExpandMsg(body.error ?? "Erro ao expandir.")
+      setTimeout(() => setExpandMsg(""), 5000)
+    }
   }
 
   // Derivados
@@ -378,6 +407,93 @@ export default function InventarioPage() {
               )
             })}
           </div>
+
+          {/* Capacidade do inventário */}
+          {(() => {
+            const extraSlots  = capacity - 100
+            const ptsPrice    = nextPackPointsPrice(extraSlots)
+            const brlPrice    = nextPackBrlPrice(extraSlots)
+            const usedSlots   = entries.reduce((s, e) => s + e.quantity, 0)
+            const pct         = Math.min(100, Math.round((usedSlots / capacity) * 100))
+            const isFull      = usedSlots >= capacity
+            return (
+              <div className="inventario-panel-card" style={{ marginTop: 12, padding: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--gray-500)" }}>
+                    Capacidade do Inventário
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 950, color: isFull ? "var(--red)" : "var(--paper-dim)" }}>
+                    {usedSlots}/{capacity}
+                  </span>
+                </div>
+
+                {/* Barra de uso */}
+                <div style={{ height: 6, borderRadius: 3, background: "rgba(255,255,255,0.08)", overflow: "hidden", marginBottom: 12 }}>
+                  <div style={{
+                    height: "100%", borderRadius: 3,
+                    width: `${pct}%`,
+                    background: pct >= 90 ? "var(--red)" : pct >= 70 ? "var(--yellow)" : "var(--green)",
+                    transition: "width 0.4s ease",
+                  }} />
+                </div>
+
+                {isFull && (
+                  <p style={{ margin: "0 0 10px", fontSize: 11, color: "var(--red)", fontWeight: 800 }}>
+                    Inventário cheio! Expanda para adicionar mais itens.
+                  </p>
+                )}
+
+                {expandMsg && (
+                  <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 800, color: expandMsg.startsWith("✓") ? "var(--green)" : "var(--red)" }}>
+                    {expandMsg}
+                  </p>
+                )}
+
+                {/* Botões de compra */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <button
+                    type="button"
+                    disabled={expanding || (points ?? 0) < ptsPrice}
+                    onClick={() => expandInventory("points")}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "10px 12px", border: "1px solid rgba(255,212,0,0.3)",
+                      borderRadius: 8, background: "rgba(255,212,0,0.06)", cursor: "pointer",
+                      font: "inherit", opacity: expanding || (points ?? 0) < ptsPrice ? 0.5 : 1,
+                      transition: "opacity 0.15s",
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 850, color: "var(--paper)" }}>
+                      +25 slots
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 950, color: "var(--yellow)", display: "flex", alignItems: "center", gap: 4 }}>
+                      <Coins size={12} />
+                      {ptsPrice.toLocaleString("pt-BR")} pts
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={expanding}
+                    onClick={() => expandInventory("cash")}
+                    style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "10px 12px", border: "1px solid rgba(61,242,139,0.25)",
+                      borderRadius: 8, background: "rgba(61,242,139,0.05)", cursor: "pointer",
+                      font: "inherit", opacity: expanding ? 0.5 : 1,
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: 850, color: "var(--paper)" }}>
+                      +25 slots
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 950, color: "var(--green)" }}>
+                      R$ {brlPrice},00 via PIX
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )
+          })()}
 
           <div className="inventario-acoes">
             <div className="inventario-panel-head"><h3>Ações rápidas</h3></div>
