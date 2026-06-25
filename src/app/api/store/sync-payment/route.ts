@@ -65,12 +65,13 @@ export async function POST(request: NextRequest) {
   if (updates) {
     await supabase.from("orders").update(updates).eq("id", orderId)
 
-    // Adiciona itens ao inventário quando o PIX é aprovado
-    if (updates.payment_status === "paid" && Array.isArray(order.items)) {
+    // Adiciona ao inventário APENAS quando o status muda para "paid" pela primeira vez
+    // (order.payment_status é o valor ANTES do update)
+    if (updates.payment_status === "paid" && order.payment_status !== "paid" && Array.isArray(order.items)) {
       const inventoryItems = (order.items as Array<{ itemId?: string; quantity?: number }>)
         .filter(i => i.itemId)
         .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
-      await addItemsToInventory(user.id, inventoryItems)
+      await addItemsToInventory(order.user_id as string, inventoryItems)
     }
   }
 

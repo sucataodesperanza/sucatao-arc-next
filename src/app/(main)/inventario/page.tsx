@@ -115,13 +115,37 @@ export default function InventarioPage() {
     })
   }, [])
 
+  const [reconciling, setReconciling] = useState(false)
+
+  async function loadInventory() {
+    const res = await fetch("/api/inventory")
+    const d   = await res.json().catch(() => ({}))
+    setEntries(d.items ?? [])
+    setCapacity(d.capacity ?? 100)
+    return d.items ?? []
+  }
+
   useEffect(() => {
-    fetch("/api/inventory")
-      .then(r => r.json())
-      .then(d => { setEntries(d.items ?? []); setCapacity(d.capacity ?? 100) })
+    setLoading(true)
+    loadInventory()
+      .then(async items => {
+        // Se inventário vazio, tenta reconciliar automaticamente com compras pagas
+        if (items.length === 0) {
+          await fetch("/api/inventory/reconcile", { method: "POST" })
+          await loadInventory()
+        }
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  async function reconcileInventory() {
+    setReconciling(true)
+    await fetch("/api/inventory/reconcile", { method: "POST" })
+    await loadInventory()
+    setReconciling(false)
+  }
 
   function setPanel(val: boolean) {
     setPanelOpen(val)
@@ -229,9 +253,17 @@ export default function InventarioPage() {
           ) : loading ? (
             <p className="catalog-empty" style={{ marginTop: 48 }}>Carregando inventário...</p>
           ) : entries.length === 0 ? (
-            <div style={{ marginTop: 48, textAlign: "center" }}>
+            <div style={{ marginTop: 48, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
               <p className="catalog-empty">Seu inventário está vazio.</p>
-              <Link href="/loja" style={{ display: "inline-flex", alignItems: "center", gap: 8, marginTop: 12, color: "var(--yellow)", fontWeight: 950, fontSize: 13, textTransform: "uppercase" }}>
+              <button
+                type="button"
+                onClick={reconcileInventory}
+                disabled={reconciling}
+                style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", border: "1px solid rgba(95,168,255,0.35)", borderRadius: 8, background: "rgba(95,168,255,0.08)", color: "var(--blue)", cursor: "pointer", font: "inherit", fontSize: 12, fontWeight: 950, textTransform: "uppercase", opacity: reconciling ? 0.6 : 1 }}
+              >
+                {reconciling ? "Sincronizando..." : "↻ Sincronizar com compras"}
+              </button>
+              <Link href="/loja" style={{ color: "var(--yellow)", fontWeight: 950, fontSize: 13, textTransform: "uppercase" }}>
                 Ir para a loja
               </Link>
             </div>
