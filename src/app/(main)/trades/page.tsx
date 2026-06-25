@@ -56,7 +56,6 @@ export default function TradesPage() {
   const [accepting, setAccepting]     = useState<string | null>(null)
   const [loadingTrades, setLoadingTrades]     = useState(true)
   const [loadingMyTrades, setLoadingMyTrades] = useState(false)
-  const myTradesLoadedRef = useRef(false)
 
   // Modal de agendamento (Meus Trades)
   const [scheduleModal, setScheduleModal] = useState<MyTrade | null>(null)
@@ -113,10 +112,9 @@ export default function TradesPage() {
       .finally(() => setLoadingTrades(false))
   }, [])
 
-  // Meus trades — carrega uma única vez quando userId está disponível
+  // Meus trades — carrega quando userId fica disponível
   useEffect(() => {
-    if (!userId || myTradesLoadedRef.current) return
-    myTradesLoadedRef.current = true
+    if (!userId) return
     setLoadingMyTrades(true)
     fetch("/api/trades/my")
       .then(r => r.json())
@@ -147,12 +145,14 @@ export default function TradesPage() {
     const res = await fetch(`/api/trades/${id}/accept`, { method: "POST" })
     setAccepting(null)
     if (res.ok || res.status === 409) {
-      const tradeData = trades.find(t => t.id === id)
-
-      // Atualização otimista: add imediatamente com dados locais
-      if (tradeData) {
-        const optimistic: MyTrade = {
-          id:          `optimistic-${id}`,
+      // Marca o trade como aceito localmente (para o botão virar "Aceito")
+      setMyTrades(prev => {
+        // Se já existe em myTrades, não duplica
+        if (prev.some(m => m.trades?.id === id)) return prev
+        const tradeData = trades.find(t => t.id === id)
+        if (!tradeData) return prev
+        return [{
+          id:          `local-${id}`,
           status:      "pending",
           game_id:     null,
           created_at:  new Date().toISOString(),
@@ -166,19 +166,17 @@ export default function TradesPage() {
             want_item_icon:   tradeData.want_item_icon,
             want_item_rarity: tradeData.want_item_rarity,
           },
-        }
-        setMyTrades(prev => [optimistic, ...prev.filter(m => m.trades?.id !== id)])
-      }
+        }, ...prev]
+      })
 
+      // Muda para Meus Trades e atualiza do banco após delay
       switchTab("Meus Trades")
-
-      // Background: substitui o otimista pelos dados reais após delay
       setTimeout(() => {
         fetch("/api/trades/my")
           .then(r => r.json())
-          .then(d => { if (d.trades?.length > 0) setMyTrades(d.trades) })
+          .then(d => { if ((d.trades ?? []).length > 0) setMyTrades(d.trades) })
           .catch(() => {})
-      }, 800)
+      }, 1000)
     }
   }
 
@@ -216,11 +214,10 @@ export default function TradesPage() {
   const [myStatusFilter, setMyStatusFilter] = useState("all")
   const [mySortOrder, setMySortOrder]     = useState("recent")
 
-  // Trades que o usuário já aceitou (baseado em myTrades para persistir após F5)
+  // IDs de trades que o usuário já aceitou (para desabilitar o botão)
   const acceptedTradeIds = new Set(myTrades.map(m => m.trades?.id).filter(Boolean) as string[])
 
   const filteredTrades = trades
-    .filter(t => !acceptedTradeIds.has(t.id))
     .filter(t => {
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
@@ -371,7 +368,7 @@ export default function TradesPage() {
                   <p className="catalog-empty">Nenhum trade encontrado com os filtros ativos.</p>
                 ) : filteredTrades.map(trade => {
                   const color    = rarityColor(trade.want_item_rarity)
-                  const accepted = acceptedTradeIds.has(trade.id)
+                  const accepted = acceptedTradeIds.has(trade.id) || myTrades.some(m => m.trades?.id === trade.id)
                   return (
                     <div key={trade.id} className="trade-card" style={{ "--rarity-color": color } as React.CSSProperties}>
                       <div className="trade-card-head">
