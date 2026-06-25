@@ -173,6 +173,26 @@ export default function TradesPage() {
     }
   }
 
+  // Filtros
+  const [searchQuery, setSearchQuery]   = useState("")
+  const [rarityFilter, setRarityFilter] = useState("all")
+  const [sortOrder, setSortOrder]       = useState("recent")
+
+  const filteredTrades = trades
+    .filter(t => {
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        if (!t.want_item_name.toLowerCase().includes(q)) return false
+      }
+      if (rarityFilter !== "all" && t.want_item_rarity !== rarityFilter) return false
+      return true
+    })
+    .sort((a, b) => {
+      if (sortOrder === "pts-desc") return b.offer_points - a.offer_points
+      if (sortOrder === "pts-asc")  return a.offer_points - b.offer_points
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    })
+
   const pendingCount   = myTrades.filter(m => m.status === "pending").length
   const scheduledCount = myTrades.filter(m => m.status === "scheduled").length
 
@@ -238,13 +258,61 @@ export default function TradesPage() {
                 </div>
               </section>
 
+              {/* Filtros */}
+              <div className="trades-filter-bar">
+                <label className="trades-search">
+                  <Search size={16} />
+                  <input
+                    type="search"
+                    placeholder="Buscar por item, jogador ou código..."
+                    autoComplete="off"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                  />
+                </label>
+                <div className="trades-filter-group">
+                  <span>Categoria</span>
+                  <select defaultValue="Todas"><option>Todas</option></select>
+                </div>
+                <div className="trades-filter-group">
+                  <span>Raridade</span>
+                  <select value={rarityFilter} onChange={e => setRarityFilter(e.target.value)}>
+                    <option value="all">Todas</option>
+                    <option value="Legendary">Lendário</option>
+                    <option value="Epic">Épico</option>
+                    <option value="Rare">Raro</option>
+                    <option value="Uncommon">Incomum</option>
+                    <option value="Common">Comum</option>
+                  </select>
+                </div>
+                <div className="trades-filter-group">
+                  <span>Plataforma</span>
+                  <select defaultValue="Todas"><option>Todas</option></select>
+                </div>
+                <div className="trades-filter-group">
+                  <span>Ordenar por</span>
+                  <select value={sortOrder} onChange={e => setSortOrder(e.target.value)}>
+                    <option value="recent">Mais recentes</option>
+                    <option value="pts-desc">Maior recompensa</option>
+                    <option value="pts-asc">Menor recompensa</option>
+                  </select>
+                </div>
+                <button
+                  type="button"
+                  className="trades-filter-clear"
+                  onClick={() => { setSearchQuery(""); setRarityFilter("all"); setSortOrder("recent") }}
+                >
+                  Limpar Filtros
+                </button>
+              </div>
+
               {/* Lista de trades */}
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {loadingTrades ? (
                   <p className="catalog-empty">Carregando trades...</p>
-                ) : trades.length === 0 ? (
-                  <p className="catalog-empty">Nenhum trade ativo no momento.</p>
-                ) : trades.map(trade => {
+                ) : filteredTrades.length === 0 ? (
+                  <p className="catalog-empty">Nenhum trade encontrado com os filtros ativos.</p>
+                ) : filteredTrades.map(trade => {
                   const color    = rarityColor(trade.want_item_rarity)
                   const accepted = acceptedIds.has(trade.id)
                   return (
