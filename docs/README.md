@@ -26,7 +26,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 2 | [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, reward_items, profiles |
 | 3 | [Inventário](telas/publicas/inventario.md) | `/inventario` | user_inventory, inventory_history, profiles |
 | 4 | [Trades](telas/publicas/trades.md) | `/trades` | trades, trade_acceptances, trade_settings |
-| 5 | [Facções](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity |
+| 5 | [Facções](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity, Storage `faction-icons` |
 | 6 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | 7 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
 | 8 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |

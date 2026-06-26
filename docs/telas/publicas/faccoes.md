@@ -64,9 +64,10 @@ Tabela com 5 atributos × 5 facções. Valores (1–3 dots) **hardcoded no front
 
 ## Fontes de Dados
 
-| Conteúdo | Tabela | Endpoint |
+| Conteúdo | Tabela / Fonte | Endpoint / Campo |
 |---|---|---|
 | Lista de facções | `factions` | `GET /api/faccoes` |
+| Ícones das facções | `public/assets/faccoes/` (estático) ou Storage `faction-icons` | `factions.icon_url` |
 | Facção do usuário | `user_factions` + `factions` | `GET /api/faccoes/my` |
 | Ingressar na facção | `user_factions` | `POST /api/faccoes/:id/join` |
 | Feed de atividades | `faction_activity` + `factions` | `GET /api/faccoes/activity` |
