@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AlertTriangle, ArrowRight, Check, ChevronLeft, ChevronRight, Gem, Hexagon, ImageOff, Star, X } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/faccoes.css"
@@ -30,6 +31,7 @@ function timeAgo(iso: string) {
 const PANEL_KEY = "faccoes-panel-open"
 
 export default function FaccoesPage() {
+  const router = useRouter()
   const [factions, setFactions]         = useState<Faction[]>([])
   const [userFaction, setUserFaction]   = useState<UserFaction | null | undefined>(undefined)
   const [activity, setActivity]         = useState<FactionActivity[]>([])
@@ -56,9 +58,12 @@ export default function FaccoesPage() {
       fetch("/api/faccoes/activity").then(r => r.json()).catch(() => ({ activity: [] })),
     ]).then(([fd, ud, ad]) => {
       setFactions(fd.factions ?? [])
-      setUserFaction(ud.faction ?? null)
+      const uf = ud.faction ?? null
+      setUserFaction(uf)
       setActivity(ad.activity ?? [])
       setLoading(false)
+      // Se já tem facção, vai direto para visão geral
+      if (uf) router.replace("/faccoes/visao-geral")
     })
   }, [])
 
@@ -69,8 +74,7 @@ export default function FaccoesPage() {
     const res = await fetch(`/api/faccoes/${confirmFaction.id}/join`, { method: "POST" })
     setJoining(false)
     if (res.ok) {
-      setUserFaction({ id: "", joined_at: new Date().toISOString(), factions: { id: confirmFaction.id, slug: confirmFaction.slug, name: confirmFaction.name, color: confirmFaction.color, icon_url: confirmFaction.icon_url } })
-      setConfirmFaction(null)
+      router.push("/faccoes/visao-geral")
     } else {
       const body = await res.json().catch(() => ({}))
       setJoinError(body.error ?? "Erro ao ingressar na facção.")

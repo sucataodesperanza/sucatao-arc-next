@@ -1,134 +1,83 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState } from "react"
-import { Award, ChevronRight, Coins, ExternalLink, Eye, Gem, HelpCircle, Package, Recycle, Scale, Shield, Skull, Swords, Trophy, UserPlus, Users, Zap } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
+import {
+  Award, ChevronRight, Coins, ExternalLink, Gem,
+  HelpCircle, ImageOff, Package, Shield, Swords,
+  Trophy, UserPlus, Users, Zap,
+} from "lucide-react"
 import "../../../../styles/faccoes-hub.css"
+import type { DashboardData } from "@/app/api/faccoes/dashboard/route"
 
-type FactionHub = {
-  id: string
-  name: string
-  tagline: string
-  description: string
-  color: string
-  icon: LucideIcon
-  bonuses: string[]
-  members: string
-  image: string
-  war: { points: string; percent: number }
+/* ── helpers ── */
+function timeAgo(iso: string) {
+  const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
+  if (m < 1)  return "Agora"
+  if (m < 60) return `Há ${m} min`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `Há ${h}h`
+  return `Há ${Math.floor(h / 24)}d`
 }
 
-const factions: FactionHub[] = [
-  {
-    id: "catadores",
-    name: "Catadores",
-    tagline: "Recuperamos tudo. Nada se perde.",
-    description: "Especialistas em coleta e reciclagem. Transformamos sucata em oportunidades para todos.",
-    color: "#3df28b",
-    icon: Recycle,
-    bonuses: [
-      "+15% de valor em itens de recursos",
-      "+10% de reputação em entregas de recursos",
-      "+5% de Sucatas em contratos",
-    ],
-    members: "12.458",
-    image: "/assets/bots/arc_leaper.png",
-    war: { points: "12.750.340", percent: 23 },
-  },
-  {
-    id: "mercadores",
-    name: "Mercadores",
-    tagline: "Comércio é poder. Conexão é tudo.",
-    description: "Mestres das negociações e do mercado. Conseguimos o que ninguém mais consegue.",
-    color: "#ffd400",
-    icon: Scale,
-    bonuses: [
-      "+15% de Sucatas em todas as entregas",
-      "+10% de reputação em contratos",
-      "+5% de desconto na Loja do Sucatão",
-    ],
-    members: "14.782",
-    image: "/assets/bots/arc_spotter.png",
-    war: { points: "15.980.420", percent: 29 },
-  },
-  {
-    id: "cacadores",
-    name: "Caçadores",
-    tagline: "Caçamos máquinas. Caçamos lendas.",
-    description: "Guerreiros implacáveis. Caçamos ARC e garantimos segurança para todos.",
-    color: "#ff6171",
-    icon: Skull,
-    bonuses: [
-      "+15% de valor em itens de armas",
-      "+10% de reputação em itens de combate",
-      "+5% de XP no Contrato do Sucatão",
-    ],
-    members: "11.903",
-    image: "/assets/bots/arc_shredder.png",
-    war: { points: "11.320.180", percent: 21 },
-  },
-  {
-    id: "vigilantes",
-    name: "Vigilantes",
-    tagline: "Conhecimento é arma. Informação é poder.",
-    description: "Especialistas em tecnologia e inteligência. Sabemos o que os outros não sabem.",
-    color: "#5fa8ff",
-    icon: Eye,
-    bonuses: [
-      "+15% de XP em contratos",
-      "+10% de reputação em operações especiais",
-      "+5% de chance em itens raros",
-    ],
-    members: "9.641",
-    image: "/assets/bots/arc_snitch.png",
-    war: { points: "8.450.920", percent: 15 },
-  },
-  {
-    id: "sobreviventes",
-    name: "Sobreviventes",
-    tagline: "Unidos sobrevivemos. Divididos caímos.",
-    description: "Focados em comunidade e cooperação. A força está na união dos Raiders.",
-    color: "#b477ff",
-    icon: Users,
-    bonuses: [
-      "+15% de vida e resistência",
-      "+10% de reputação em atividades de grupo",
-      "+5% de Sucatas em eventos",
-    ],
-    members: "7.290",
-    image: "/assets/bots/arc_the_queen.png",
-    war: { points: "6.180.340", percent: 11 },
-  },
+function memberCount(counts: DashboardData["member_counts"], id: string) {
+  return counts.find(c => c.faction_id === id)?.count ?? 0
+}
+
+/* ── dados decorativos ── */
+const REWARDS = [
+  { level: 3, tier: "VETERANO", rep: "3.200 / 5.000 REP", name: "Caixa Veterana",        bonus: "+5% de Sucatas em entregas", img: "/assets/items/painted_box.png",    current: true },
+  { level: 4, tier: "ELITE",    rep: "5.000 REP",         name: "Visual Exclusivo",       bonus: "Rifle - Sombra Urbana",      img: "/assets/items/painted_box.png",    current: false },
+  { level: 5, tier: "LENDÁRIO", rep: "10.000 REP",        name: "Emblema Lendário",       bonus: "Ícone de Facção",            img: "/assets/items/painted_box.png",    current: false },
+  { level: 6, tier: "ÉPICO",    rep: "10.000 REP",        name: "Caixa Épica",            bonus: "Itens de alto valor",        img: "/assets/items/painted_box.png",    current: false },
+  { level: 7, tier: "LENDÁRIO", rep: "15.000 REP",        name: "Drone de Reconhecimento",bonus: "Edição de guerra",           img: "/assets/items/painted_box.png",    current: false },
 ]
 
-const rewardItems = [
-  { label: "Título exclusivo", icon: Award, className: "" },
-  { label: "Badge da facção", icon: Shield, className: "" },
-  { label: "Moldura exclusiva", icon: Gem, className: "" },
-  { label: "2.000 Sucatas para todos", icon: Coins, className: "gold" },
-  { label: "+10% REP por 7 dias", icon: Zap, className: "blue" },
+const WAR_REWARD_ITEMS = [
+  { label: "Caixa Lendária de Guerra", icon: Award  },
+  { label: "Visual Exclusivo",         icon: Shield },
+  { label: "+10% REP por 7 dias",      icon: Zap    },
 ]
 
-const howSteps = [
-  { icon: UserPlus, title: "Escolha sua facção", desc: "Pick a side and join the fight." },
-  { icon: Package, title: "Contribua", desc: "Entregue itens, complete contratos e ganhe pontos para sua facção." },
-  { icon: Trophy, title: "Ganhe recompensas", desc: "Ajude sua facção a vencer e receba recompensas exclusivas." },
-  { icon: Swords, title: "Guerra de Facções", desc: "A cada mês uma nova guerra começa. Vença todas elas!" },
+const HOW_STEPS = [
+  { icon: UserPlus, title: "Escolha sua facção",  desc: "Pick a side and join the fight."                                            },
+  { icon: Package,  title: "Contribua",           desc: "Entregue itens, complete contratos e ganhe pontos para sua facção."         },
+  { icon: Trophy,   title: "Ganhe recompensas",   desc: "Ajude sua facção a vencer e receba recompensas exclusivas."                 },
+  { icon: Swords,   title: "Guerra de Facções",   desc: "A cada mês uma nova guerra começa. Vença todas elas!"                      },
 ]
 
-const recentActivities = [
-  { image: "/assets/bots/arc_leaper.png", text: "Você entregou 5 Baterias ARC", points: "+350 pontos", timeAgo: "Há 10 min" },
-  { image: "/assets/bots/arc_spotter.png", text: "Você completou o contrato \"Coleta de Sucata\"", points: "+250 pontos", timeAgo: "Há 35 min" },
-  { image: "/assets/bots/arc_shredder.png", text: "Você entregou 3 Drones ARC", points: "+420 pontos", timeAgo: "Há 1 h" },
-  { image: "/assets/bots/arc_snitch.png", text: "Você entregou 10 Itens Comuns", points: "+120 pontos", timeAgo: "Há 2 h" },
+const OBJECTIVES = [
+  { name: "Entregas de Suprimentos", desc: "Entregue suprimentos em zonas de risco.", curr: 1260000, total: 2000000, xp: 250000 },
+  { name: "Contratos de Combate",    desc: "Conclua contratos de eliminação.",        curr: 850000,  total: 1500000, xp: 200000 },
+  { name: "Coleta de Recursos",      desc: "Colete recursos pelo Sucatão.",           curr: 3750000, total: 5000000, xp: 300000 },
+]
+
+const EVENTS = [
+  { label: "Evento de Double XP",       time: "Começa em 08h 34m" },
+  { label: "Comboio de Suprimentos",    time: "Começa em 12h 10m" },
+  { label: "Extração Especial",         time: "Começa em 1d 02h"  },
 ]
 
 const tabs = ["Visão Geral", "Guerra de Facções", "Ranking de Facções", "Recompensas", "Minha Facção"]
 
 export default function FaccoesHubPage() {
-  const [activeTab, setActiveTab] = useState(tabs[0])
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+  const router                        = useRouter()
+  const [data, setData]               = useState<DashboardData | null>(null)
+  const [loading, setLoading]         = useState(true)
+  const [activeTab, setActiveTab]     = useState(tabs[0])
+  const tabRefs                       = useRef<(HTMLButtonElement | null)[]>([])
+  const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
+
+  useEffect(() => {
+    fetch("/api/faccoes/dashboard")
+      .then(r => r.json())
+      .then((d: DashboardData) => {
+        if (!d.faction) { router.replace("/faccoes"); return }
+        setData(d)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [router])
 
   useLayoutEffect(() => {
     function update() {
@@ -140,44 +89,44 @@ export default function FaccoesHubPage() {
     return () => window.removeEventListener("resize", update)
   }, [activeTab])
 
+  if (loading) return <div style={{ padding: 64, textAlign: "center", color: "var(--gray-500)" }}>Carregando...</div>
+  if (!data?.faction) return null
+
+  const { faction, joined_at, member_counts, faction_feed, my_activity, user_profile } = data
+  const totalMembers = memberCount(member_counts, faction.id)
+  const userName     = user_profile?.name ?? "Raider"
+  const avatarUrl    = user_profile?.avatar_url
+
+  /* bonuses como "vantagens ativas" */
+  const vantagens = (faction.bonuses ?? []).filter(b => b.startsWith("+"))
+
   return (
     <div className="faccoes-hub-page">
       <div className="faccoes-hub-layout">
         <div className="faccoes-hub-main">
 
-          {/* Topbar */}
+          {/* ── Topbar ── */}
           <div className="faccoes-hub-topbar">
             <div>
               <div className="faccoes-hub-title-row">
-                <h1>Facções</h1>
+                <h1>FACÇÕES</h1>
                 <HelpCircle size={18} className="faccoes-hub-help" />
               </div>
-              <p className="faccoes-hub-subtitle">Escolha seu lado. Complete objetivos, contribua com sua facção e conquiste recompensas exclusivas.</p>
+              <p className="faccoes-hub-subtitle">As facções moldam o Sucatão. Suas ações impactam o equilíbrio de poder e desbloqueiam recompensas exclusivas.</p>
             </div>
             <div className="faccoes-hub-war-widget">
-              <div className="faccoes-hub-war-widget-meta">
-                <Swords size={14} />
-                Guerra de Facções
-              </div>
-              <span className="faccoes-hub-war-timer">
-                Termina em: <strong>26d 08h 34m</strong>
-              </span>
-              <button type="button" className="faccoes-hub-war-refresh" aria-label="Atualizar">
-                <ChevronRight size={14} />
-              </button>
+              <div className="faccoes-hub-war-widget-meta"><Swords size={14} />Guerra de Facções</div>
+              <span className="faccoes-hub-war-timer">Termina em: <strong>26d 08h 34m</strong></span>
+              <button type="button" className="faccoes-hub-war-refresh" aria-label="Detalhes"><ChevronRight size={14} /></button>
             </div>
           </div>
 
-          {/* Tabs */}
+          {/* ── Tabs ── */}
           <div className="faccoes-hub-tabs">
             {tabs.map((tab, i) => (
-              <button
-                key={tab}
-                ref={el => { tabRefs.current[i] = el }}
-                type="button"
+              <button key={tab} ref={el => { tabRefs.current[i] = el }} type="button"
                 className={`faccoes-hub-tab${activeTab === tab ? " active" : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
+                onClick={() => setActiveTab(tab)}>
                 {tab}
               </button>
             ))}
@@ -186,109 +135,119 @@ export default function FaccoesHubPage() {
 
           {activeTab === "Visão Geral" && (
             <>
-              {/* Faction cards grid */}
-              <div className="faccoes-hub-grid">
-                {factions.map(faction => (
-                  <article
-                    key={faction.id}
-                    className="faction-hub-card"
-                    style={{ "--faction-color": faction.color } as React.CSSProperties}
-                  >
-                    <div className="faction-hub-banner" style={{ backgroundImage: `url(${faction.image})` }}>
-                      <span className="faction-hub-badge">
-                        <faction.icon size={42} />
-                      </span>
-                    </div>
-                    <div className="faction-hub-body">
-                      <h3 className="faction-hub-name">{faction.name}</h3>
-                      <p className="faction-hub-tagline">{faction.tagline}</p>
-                      <p className="faction-hub-description">{faction.description}</p>
-                      <div className="faction-hub-bonuses">
-                        <span className="faction-hub-bonuses-label">Bônus da Facção</span>
-                        <ul>
-                          {faction.bonuses.map((bonus, i) => (
-                            <li key={i}>
-                              <Gem size={10} />
-                              {bonus}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="faction-hub-footer">
-                        <span className="faction-hub-members">
-                          <Users size={13} />
-                          {faction.members} membros
-                        </span>
-                        <button type="button" className="faction-hub-btn" disabled>
-                          Escolher Facção
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-
-              {/* War section */}
-              <div className="faccoes-hub-war-section">
-                <div className="faccoes-hub-war-left">
-                  <h2 className="faccoes-hub-war-heading">
-                    Guerra de Facções
-                    <HelpCircle size={16} className="faccoes-hub-war-heading-help" />
-                  </h2>
-                  <p className="faccoes-hub-war-desc">As facções competem entre si durante a temporada. Contribua e leve sua facção à vitória!</p>
-                  <div className="faccoes-hub-war-bars">
-                    {factions.map(faction => (
-                      <div
-                        key={faction.id}
-                        className="faction-hub-war-item"
-                        style={{ "--faction-color": faction.color } as React.CSSProperties}
-                      >
-                        <span className="faction-hub-war-badge">
-                          <faction.icon size={22} />
-                        </span>
-                        <div className="faction-hub-war-info">
-                          <div className="faction-hub-war-name-row">
-                            <span className="faction-hub-war-name">{faction.name}</span>
-                            <span className="faction-hub-war-pts">{faction.war.points}</span>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div className="faction-hub-war-bar" style={{ flex: "1 1 auto" }}>
-                              <span style={{ width: `${faction.war.percent}%` }} />
+              {/* ── Panorama ── */}
+              <div className="faccoes-hub-panorama">
+                <div className="faccoes-hub-panorama-header">
+                  <div>
+                    <h2>PANORAMA DO SUCATÃO</h2>
+                    <p>Entenda como está o equilíbrio de poder entre as facções.</p>
+                  </div>
+                  <button type="button" className="faction-hub-btn" style={{ fontSize: 11 }}>VER DETALHES DA GUERRA</button>
+                </div>
+                <div className="faccoes-hub-panorama-body">
+                  {/* Barras laterais decorativas */}
+                  <div className="faccoes-hub-war-bars" style={{ flex: 1 }}>
+                    {member_counts.slice(0, 3).map((c, i) => {
+                      const colors = [faction.color, "#ffd400", "#ff6171"]
+                      const pcts   = [32, 40, 28]
+                      const names  = ["—", "—", "—"]
+                      return (
+                        <div key={i} className="faction-hub-war-item" style={{ "--faction-color": colors[i] } as React.CSSProperties}>
+                          <div className="faction-hub-war-info">
+                            <div className="faction-hub-war-name-row">
+                              <span className="faction-hub-war-name">{names[i]}</span>
+                              <span className="faction-hub-war-pts">{(c.count * 1000).toLocaleString("pt-BR")} pts</span>
                             </div>
-                            <span className="faction-hub-war-pct">{faction.war.percent}%</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <div className="faction-hub-war-bar" style={{ flex: "1 1 auto" }}>
+                                <span style={{ width: `${pcts[i]}%` }} />
+                              </div>
+                              <span className="faction-hub-war-pct">{pcts[i]}%</span>
+                            </div>
                           </div>
                         </div>
+                      )
+                    })}
+                  </div>
+                  {/* Donut decorativo */}
+                  <div className="faccoes-hub-donut">
+                    <span className="faccoes-hub-donut-label">PODER TOTAL</span>
+                    <span className="faccoes-hub-donut-value">{member_counts.reduce((s, c) => s + c.count * 1000, 0).toLocaleString("pt-BR")}</span>
+                    <span className="faccoes-hub-donut-pts">PTS</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Recompensas em Destaque (decorativo) ── */}
+              <div className="faccoes-hub-rewards-section">
+                <h2>RECOMPENSAS EM DESTAQUE</h2>
+                <p className="faccoes-hub-subtitle">Conquiste marcos e suba de nível dentro da sua facção para liberar recompensas.</p>
+                <div className="faccoes-hub-rewards-track">
+                  {REWARDS.map((r, i) => (
+                    <div key={i} className={`faccoes-hub-reward-card${r.current ? " current" : ""}`}>
+                      <div className="faccoes-hub-reward-level">
+                        {r.current && <span className="faccoes-hub-reward-atual">ATUAL</span>}
+                        <span>NÍVEL {r.level}</span>
+                        <span className="faccoes-hub-reward-tier">{r.tier}</span>
+                      </div>
+                      <img src={r.img} alt={r.name} className="faccoes-hub-reward-img" />
+                      <strong>{r.name}</strong>
+                      <span>{r.bonus}</span>
+                      <span className="faccoes-hub-reward-rep">{r.current ? <><span style={{ color: "var(--yellow)" }}>{r.rep}</span></> : <><Shield size={11} /> {r.rep}</>}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Atividade da Facção + Vantagens ── */}
+              <div className="faccoes-hub-bottom-grid">
+                {/* Feed da facção */}
+                <div className="faccoes-hub-feed-card">
+                  <h2>ATIVIDADE DA FACÇÃO</h2>
+                  <p className="faccoes-hub-subtitle">Acompanhe as ações recentes dos membros da sua facção.</p>
+                  <div className="faction-hub-activity-list" style={{ marginTop: 12 }}>
+                    {faction_feed.length === 0 ? (
+                      <p style={{ color: "var(--gray-500)", fontSize: 12, margin: 0 }}>Nenhuma atividade ainda.</p>
+                    ) : faction_feed.map(a => (
+                      <div key={a.id} className="faction-hub-activity-item">
+                        <div className="faction-hub-activity-img" style={{ background: `color-mix(in srgb, ${faction.color} 15%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${faction.color} 30%, transparent)`, display: "grid", placeItems: "center", borderRadius: "50%" }}>
+                          {faction.icon_url ? <img src={faction.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} /> : <Users size={14} style={{ color: faction.color }} />}
+                        </div>
+                        <div className="faction-hub-activity-body">
+                          <p><strong>{a.display_name}</strong> {a.text}</p>
+                          {a.points && <span className="faction-hub-activity-pts">+{a.points.toLocaleString("pt-BR")} pontos para a facção</span>}
+                        </div>
+                        <span className="faction-hub-activity-time">{timeAgo(a.created_at)}</span>
                       </div>
                     ))}
                   </div>
+                  <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODAS AS ATIVIDADES <ChevronRight size={12} /></button>
                 </div>
 
-                <div className="faccoes-hub-reward-card">
-                  <h3 className="faccoes-hub-reward-title">Recompensa da Facção Vencedora</h3>
-                  <div className="faccoes-hub-reward-body">
-                    <img
-                      src="/assets/items/painted_box.png"
-                      alt="Recompensa"
-                      className="faccoes-hub-reward-img"
-                    />
-                    <ul className="faccoes-hub-reward-list">
-                      {rewardItems.map((item, i) => (
-                        <li key={i} className={item.className}>
-                          <item.icon size={18} />
-                          {item.label}
-                        </li>
-                      ))}
-                    </ul>
+                {/* Vantagens ativas */}
+                <div className="faccoes-hub-feed-card">
+                  <h2>VANTAGENS ATIVAS</h2>
+                  <p className="faccoes-hub-subtitle">Benefícios que sua facção desbloqueou para todos os membros.</p>
+                  <div className="faccoes-hub-vantagens">
+                    {vantagens.map((b, i) => {
+                      const match = b.match(/^(\+[\d%]+)\s+(.+)$/)
+                      return (
+                        <div key={i} className="faccoes-hub-vantagem" style={{ "--faction-color": faction.color } as React.CSSProperties}>
+                          <span className="faccoes-hub-vantagem-pct">{match?.[1] ?? b.slice(0, 4)}</span>
+                          <span className="faccoes-hub-vantagem-label">{match?.[2] ?? b}</span>
+                        </div>
+                      )
+                    })}
                   </div>
-                  <p className="faccoes-hub-reward-note">A recompensa será enviada ao final da guerra.</p>
+                  <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODAS AS VANTAGENS <ChevronRight size={12} /></button>
                 </div>
               </div>
 
-              {/* How it works */}
+              {/* ── Como funciona ── */}
               <div className="faccoes-hub-how">
                 <h2 className="faccoes-hub-how-heading">Como Funciona</h2>
                 <div className="faccoes-hub-how-steps">
-                  {howSteps.map((step, i) => (
+                  {HOW_STEPS.map((step, i) => (
                     <div key={i} className="faccoes-hub-how-step">
                       <span className="faccoes-hub-how-num">{i + 1}</span>
                       <step.icon size={22} />
@@ -301,107 +260,148 @@ export default function FaccoesHubPage() {
             </>
           )}
 
+          {/* ── Coluna direita (Contribuição + Objetivos) ── */}
+          {activeTab === "Visão Geral" && (
+            <div className="faccoes-hub-right-col">
+              {/* Contribuição (decorativo) */}
+              <div className="faccoes-hub-contribution">
+                <h2>SUA CONTRIBUIÇÃO</h2>
+                <p className="faccoes-hub-subtitle">Veja o impacto das suas ações na guerra.</p>
+                <div className="faccoes-hub-rank-box">
+                  <span className="faccoes-hub-rank-label">POSIÇÃO NA FACÇÃO</span>
+                  <span className="faccoes-hub-rank-num">#—</span>
+                  <span className="faccoes-hub-rank-sub">Entre os {totalMembers.toLocaleString("pt-BR")} membros</span>
+                </div>
+                <div className="faccoes-hub-stats-row">
+                  <div><span>PONTOS CONTRIBUÍDOS</span><strong>—</strong></div>
+                  <div><span>CONTRATOS CONCLUÍDOS</span><strong>—</strong></div>
+                </div>
+                <button type="button" className="faction-hub-btn" style={{ width: "100%", marginTop: 12, justifyContent: "center" }}>VER MINHA JORNADA</button>
+              </div>
+
+              {/* Objetivos (decorativo) */}
+              <div className="faccoes-hub-objectives">
+                <h2>OBJETIVOS DA FACÇÃO</h2>
+                <p className="faccoes-hub-subtitle">Objetivos globais que todos os membros podem contribuir.</p>
+                <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
+                  {OBJECTIVES.map((o, i) => (
+                    <div key={i} className="faccoes-hub-objective">
+                      <div className="faccoes-hub-objective-icon" style={{ background: `color-mix(in srgb, ${faction.color} 15%, transparent)` }}>
+                        <Shield size={16} style={{ color: faction.color }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                          <strong style={{ fontSize: 12 }}>{o.name}</strong>
+                          <span style={{ fontSize: 10, color: "var(--yellow)" }}>XP {o.xp.toLocaleString("pt-BR")}</span>
+                        </div>
+                        <p style={{ margin: "0 0 6px", fontSize: 11, color: "var(--gray-500)" }}>{o.desc}</p>
+                        <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 4, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${(o.curr / o.total) * 100}%`, background: faction.color, borderRadius: 4 }} />
+                        </div>
+                        <span style={{ fontSize: 10, color: "var(--gray-500)", marginTop: 3, display: "block" }}>{o.curr.toLocaleString("pt-BR")} / {o.total.toLocaleString("pt-BR")}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODOS OS OBJETIVOS <ChevronRight size={12} /></button>
+              </div>
+            </div>
+          )}
+
           {activeTab !== "Visão Geral" && (
             <div className="faccoes-hub-placeholder">
               <h2>Em breve</h2>
               <p>Esta seção estará disponível em breve.</p>
             </div>
           )}
-
         </div>
 
-        {/* Sidebar */}
+        {/* ── Sidebar direita ── */}
         <aside className="store-side-panel" aria-label="Painel de facções">
+          {/* Perfil do usuário */}
           <div className="store-user-card">
-            <div className="store-user-avatar">
-              D
-              <span className="store-user-level">42</span>
+            <div className="store-user-avatar" style={{ background: `color-mix(in srgb, ${faction.color} 20%, #0a0e16)` }}>
+              {avatarUrl ? <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userName[0]?.toUpperCase()}
             </div>
             <div className="store-user-info">
-              <strong>Draakaarrysss</strong>
-              <span className="store-user-online">
-                <span className="store-user-online-dot" />
-                Online
-              </span>
+              <strong>{userName}</strong>
+              <span className="store-user-online"><span className="store-user-online-dot" />Online</span>
             </div>
           </div>
 
           <div className="faction-hub-rep">
             <div className="faction-hub-rep-row">
               <div>
-                <span>Reputação</span>
-                <strong>5.250</strong>
+                <span>Minha Facção</span>
+                <strong style={{ color: faction.color, fontSize: 14 }}>{faction.name}</strong>
+                {joined_at && <span style={{ fontSize: 10, color: "var(--gray-500)" }}>Desde {new Date(joined_at).toLocaleDateString("pt-BR")}</span>}
               </div>
-              <div className="faction-hub-rep-badge">
-                <span>Mercador</span>
-                <span>
-                  <Shield size={12} fill="currentColor" />
-                  Lendário
-                </span>
+              <div className="faction-hub-rep-badge" style={{ borderColor: `color-mix(in srgb, ${faction.color} 40%, transparent)` }}>
+                {faction.icon_url ? <img src={faction.icon_url} alt={faction.name} style={{ width: 28, height: 28, objectFit: "contain" }} /> : <ImageOff size={20} />}
+                <span style={{ color: faction.color }}>{totalMembers.toLocaleString("pt-BR")} membros</span>
               </div>
-            </div>
-            <div className="store-reputation-bar">
-              <span style={{ width: "52.5%" }} />
             </div>
           </div>
 
-          <div className="store-side-card">
-            <h2>Minha Facção</h2>
-            <div className="faction-hub-my-faction">
-              <div className="faction-hub-my-faction-header">
-                <span className="faction-hub-my-faction-badge">
-                  <Recycle size={54} />
-                </span>
-                <div className="faction-hub-my-faction-meta">
-                  <span className="faction-hub-my-faction-name">Catadores</span>
-                  <span className="faction-hub-my-faction-since">Membro desde: 10/05/2026</span>
-                  <span className="faction-hub-my-faction-role">Cargo: Recruta</span>
-                </div>
-              </div>
-              <div className="faction-hub-my-progress">
-                <div className="faction-hub-my-progress-label">
-                  <span>Progresso pessoal</span>
-                  <span>2.850 / 5.000</span>
-                </div>
-                <div className="store-reputation-bar">
-                  <span style={{ width: "57%" }} />
-                </div>
-              </div>
-              <button type="button" className="faction-hub-my-faction-btn">
-                <ChevronRight size={14} />
-                Ver Minha Facção
-              </button>
-            </div>
-          </div>
-
+          {/* Atividades recentes */}
           <div className="store-side-card">
             <div className="faction-hub-activities-head">
               <h2>Atividades Recentes</h2>
-              <button type="button" className="faction-hub-see-all">
-                Ver Todas
-                <ChevronRight size={12} />
-              </button>
+              <button type="button" className="faction-hub-see-all">Ver Todas <ChevronRight size={12} /></button>
             </div>
             <div className="faction-hub-activity-list">
-              {recentActivities.map((activity, i) => (
-                <div key={i} className="faction-hub-activity-item">
-                  <img src={activity.image} alt="" className="faction-hub-activity-img" />
-                  <div className="faction-hub-activity-body">
-                    <p>{activity.text}</p>
-                    <span className="faction-hub-activity-pts">{activity.points}</span>
+              {my_activity.length === 0 ? (
+                <p style={{ fontSize: 12, color: "var(--gray-500)", margin: 0 }}>Nenhuma atividade ainda.</p>
+              ) : my_activity.map(a => (
+                <div key={a.id} className="faction-hub-activity-item">
+                  <div className="faction-hub-activity-img" style={{ background: `color-mix(in srgb, ${faction.color} 15%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${faction.color} 30%, transparent)`, display: "grid", placeItems: "center", borderRadius: "50%" }}>
+                    {faction.icon_url ? <img src={faction.icon_url} alt="" style={{ width: 18, height: 18, objectFit: "contain" }} /> : <Users size={12} style={{ color: faction.color }} />}
                   </div>
-                  <span className="faction-hub-activity-time">{activity.timeAgo}</span>
+                  <div className="faction-hub-activity-body">
+                    <p>Você {a.text}</p>
+                    {a.points && <span className="faction-hub-activity-pts">+{a.points.toLocaleString("pt-BR")} pontos</span>}
+                  </div>
+                  <span className="faction-hub-activity-time">{timeAgo(a.created_at)}</span>
                 </div>
               ))}
             </div>
           </div>
 
+          {/* Próximos eventos (decorativo) */}
           <div className="store-side-card">
-            <h2>Sobre as Facções</h2>
-            <p className="faction-hub-about-text">Cada facção possui bônus únicos que ajudam no seu progresso dentro do Sucatão. Escolha com sabedoria!</p>
-            <button type="button" className="faction-hub-about-btn">
-              Saiba Mais
-              <ExternalLink size={12} />
+            <div className="faction-hub-activities-head">
+              <h2>Próximos Eventos</h2>
+              <button type="button" className="faction-hub-see-all">Ver Todos <ChevronRight size={12} /></button>
+            </div>
+            <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+              {EVENTS.map((e, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(255,212,0,0.1)", border: "1px solid rgba(255,212,0,0.2)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                    <Zap size={14} style={{ color: "var(--yellow)" }} />
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "var(--paper)" }}>{e.label}</p>
+                    <span style={{ fontSize: 11, color: "var(--yellow)" }}>{e.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recompensa da guerra (decorativo) */}
+          <div className="store-side-card">
+            <h2>Recompensa da Guerra</h2>
+            <p style={{ margin: "4px 0 10px", fontSize: 11, fontWeight: 950, color: "var(--yellow)", textTransform: "uppercase" }}>TOP 10% AO FINAL DA GUERRA</p>
+            <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+              {WAR_REWARD_ITEMS.map((r, i) => (
+                <div key={i} style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", borderRadius: 8, padding: "10px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <r.icon size={18} style={{ color: "var(--yellow)" }} />
+                  <span style={{ fontSize: 9, color: "var(--paper-dim)", textAlign: "center", lineHeight: 1.3 }}>{r.label}</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="faction-hub-about-btn" style={{ width: "100%", justifyContent: "center" }}>
+              VER RECOMPENSAS <ExternalLink size={11} />
             </button>
           </div>
         </aside>

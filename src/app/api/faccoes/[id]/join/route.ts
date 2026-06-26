@@ -30,12 +30,23 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   if (!faction) return NextResponse.json({ error: "Facção não encontrada." }, { status: 404 })
 
-  // INSERT via admin client — RLS só tem policy SELECT, admin bypassa
   const admin = createAdminClient()
+
   const { error } = await admin
     .from("user_factions")
     .insert({ user_id: user.id, faction_id: id })
 
   if (error) return NextResponse.json({ error: "Erro ao ingressar na facção." }, { status: 500 })
+
+  // Registra atividade de entrada na facção
+  const displayName = user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Novo membro"
+  await admin.from("user_faction_activity").insert({
+    user_id:      user.id,
+    faction_id:   id,
+    display_name: displayName,
+    text:         "se juntou à facção",
+    event_type:   "join",
+  }).then(() => {})
+
   return NextResponse.json({ ok: true })
 }
