@@ -52,19 +52,30 @@ export default function FaccoesPage() {
   }
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/faccoes").then(r => r.json()).catch(() => ({ factions: [] })),
-      fetch("/api/faccoes/my").then(r => r.json()).catch(() => ({ faction: null })),
-      fetch("/api/faccoes/activity").then(r => r.json()).catch(() => ({ activity: [] })),
-    ]).then(([fd, ud, ad]) => {
-      setFactions(fd.factions ?? [])
-      const uf = ud.faction ?? null
-      setUserFaction(uf)
-      setActivity(ad.activity ?? [])
-      setLoading(false)
-      // Se já tem facção, vai direto para visão geral
-      if (uf) router.replace("/faccoes/visao-geral")
-    })
+    // Verifica primeiro se tem facção — se sim, navega sem atualizar estado,
+    // mantendo userFaction === undefined (return null) até a navegação concluir.
+    fetch("/api/faccoes/my")
+      .then(r => r.json())
+      .then(ud => {
+        if (ud.faction) {
+          router.replace("/faccoes/visao-geral")
+          return
+        }
+        // Só carrega o resto quando confirmado que não tem facção
+        Promise.all([
+          fetch("/api/faccoes").then(r => r.json()).catch(() => ({ factions: [] })),
+          fetch("/api/faccoes/activity").then(r => r.json()).catch(() => ({ activity: [] })),
+        ]).then(([fd, ad]) => {
+          setFactions(fd.factions ?? [])
+          setUserFaction(null)
+          setActivity(ad.activity ?? [])
+          setLoading(false)
+        })
+      })
+      .catch(() => {
+        setUserFaction(null)
+        setLoading(false)
+      })
   }, [])
 
   async function handleConfirm() {
