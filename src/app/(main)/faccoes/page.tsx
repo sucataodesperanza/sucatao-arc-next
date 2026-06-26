@@ -81,6 +81,10 @@ export default function FaccoesPage() {
     }
   }
 
+  // Enquanto userFaction === undefined, ainda não sabemos se o usuário tem facção.
+  // Não renderiza nada para evitar o flash da tela de seleção.
+  if (userFaction === undefined) return null
+
   const myFactionId = userFaction?.factions?.id ?? null
   const hasJoined   = myFactionId !== null
 
