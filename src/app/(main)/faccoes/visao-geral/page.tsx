@@ -3,9 +3,9 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Award, ChevronRight, Coins, ExternalLink, Gem,
-  HelpCircle, ImageOff, Package, Shield, Swords,
-  Trophy, UserPlus, Users, Zap,
+  Award, ChevronRight, ExternalLink,
+  HelpCircle, ImageOff, Shield, Swords,
+  Users, Zap,
 } from "lucide-react"
 import "../../../../styles/faccoes-hub.css"
 import type { DashboardData } from "@/app/api/faccoes/dashboard/route"
@@ -25,32 +25,12 @@ function memberCount(counts: DashboardData["member_counts"], id: string) {
 }
 
 /* ── dados decorativos ── */
-const REWARDS = [
-  { level: 3, tier: "VETERANO", rep: "3.200 / 5.000 REP", name: "Caixa Veterana",        bonus: "+5% de Sucatas em entregas", img: "/assets/items/painted_box.png",    current: true },
-  { level: 4, tier: "ELITE",    rep: "5.000 REP",         name: "Visual Exclusivo",       bonus: "Rifle - Sombra Urbana",      img: "/assets/items/painted_box.png",    current: false },
-  { level: 5, tier: "LENDÁRIO", rep: "10.000 REP",        name: "Emblema Lendário",       bonus: "Ícone de Facção",            img: "/assets/items/painted_box.png",    current: false },
-  { level: 6, tier: "ÉPICO",    rep: "10.000 REP",        name: "Caixa Épica",            bonus: "Itens de alto valor",        img: "/assets/items/painted_box.png",    current: false },
-  { level: 7, tier: "LENDÁRIO", rep: "15.000 REP",        name: "Drone de Reconhecimento",bonus: "Edição de guerra",           img: "/assets/items/painted_box.png",    current: false },
-]
-
 const WAR_REWARD_ITEMS = [
   { label: "Caixa Lendária de Guerra", icon: Award  },
   { label: "Visual Exclusivo",         icon: Shield },
   { label: "+10% REP por 7 dias",      icon: Zap    },
 ]
 
-const HOW_STEPS = [
-  { icon: UserPlus, title: "Escolha sua facção",  desc: "Pick a side and join the fight."                                            },
-  { icon: Package,  title: "Contribua",           desc: "Entregue itens, complete contratos e ganhe pontos para sua facção."         },
-  { icon: Trophy,   title: "Ganhe recompensas",   desc: "Ajude sua facção a vencer e receba recompensas exclusivas."                 },
-  { icon: Swords,   title: "Guerra de Facções",   desc: "A cada mês uma nova guerra começa. Vença todas elas!"                      },
-]
-
-const OBJECTIVES = [
-  { name: "Entregas de Suprimentos", desc: "Entregue suprimentos em zonas de risco.", curr: 1260000, total: 2000000, xp: 250000 },
-  { name: "Contratos de Combate",    desc: "Conclua contratos de eliminação.",        curr: 850000,  total: 1500000, xp: 200000 },
-  { name: "Coleta de Recursos",      desc: "Colete recursos pelo Sucatão.",           curr: 3750000, total: 5000000, xp: 300000 },
-]
 
 const EVENTS = [
   { label: "Evento de Double XP",       time: "Começa em 08h 34m" },
@@ -135,68 +115,14 @@ export default function FaccoesHubPage() {
 
           {activeTab === "Visão Geral" && (
             <>
-              {/* ── Panorama ── */}
-              <div className="faccoes-hub-panorama">
-                <div className="faccoes-hub-panorama-header">
-                  <div>
-                    <h2>PANORAMA DO SUCATÃO</h2>
-                    <p>Entenda como está o equilíbrio de poder entre as facções.</p>
-                  </div>
-                  <button type="button" className="faction-hub-btn" style={{ fontSize: 11 }}>VER DETALHES DA GUERRA</button>
-                </div>
-                <div className="faccoes-hub-panorama-body">
-                  {/* Barras laterais decorativas */}
-                  <div className="faccoes-hub-war-bars" style={{ flex: 1 }}>
-                    {member_counts.slice(0, 3).map((c, i) => {
-                      const colors = [faction.color, "#ffd400", "#ff6171"]
-                      const pcts   = [32, 40, 28]
-                      const names  = ["—", "—", "—"]
-                      return (
-                        <div key={i} className="faction-hub-war-item" style={{ "--faction-color": colors[i] } as React.CSSProperties}>
-                          <div className="faction-hub-war-info">
-                            <div className="faction-hub-war-name-row">
-                              <span className="faction-hub-war-name">{names[i]}</span>
-                              <span className="faction-hub-war-pts">{(c.count * 1000).toLocaleString("pt-BR")} pts</span>
-                            </div>
-                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                              <div className="faction-hub-war-bar" style={{ flex: "1 1 auto" }}>
-                                <span style={{ width: `${pcts[i]}%` }} />
-                              </div>
-                              <span className="faction-hub-war-pct">{pcts[i]}%</span>
-                            </div>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                  {/* Donut decorativo */}
-                  <div className="faccoes-hub-donut">
-                    <span className="faccoes-hub-donut-label">PODER TOTAL</span>
-                    <span className="faccoes-hub-donut-value">{member_counts.reduce((s, c) => s + c.count * 1000, 0).toLocaleString("pt-BR")}</span>
-                    <span className="faccoes-hub-donut-pts">PTS</span>
-                  </div>
-                </div>
+              {/* ── Placeholder: Informações sobre a facção ── */}
+              <div className="faccoes-hub-placeholder-block">
+                <span>INFORMAÇÕES SOBRE A FACÇÃO</span>
               </div>
 
-              {/* ── Recompensas em Destaque (decorativo) ── */}
-              <div className="faccoes-hub-rewards-section">
-                <h2>RECOMPENSAS EM DESTAQUE</h2>
-                <p className="faccoes-hub-subtitle">Conquiste marcos e suba de nível dentro da sua facção para liberar recompensas.</p>
-                <div className="faccoes-hub-rewards-track">
-                  {REWARDS.map((r, i) => (
-                    <div key={i} className={`faccoes-hub-reward-card${r.current ? " current" : ""}`}>
-                      <div className="faccoes-hub-reward-level">
-                        {r.current && <span className="faccoes-hub-reward-atual">ATUAL</span>}
-                        <span>NÍVEL {r.level}</span>
-                        <span className="faccoes-hub-reward-tier">{r.tier}</span>
-                      </div>
-                      <img src={r.img} alt={r.name} className="faccoes-hub-reward-img" />
-                      <strong>{r.name}</strong>
-                      <span>{r.bonus}</span>
-                      <span className="faccoes-hub-reward-rep">{r.current ? <><span style={{ color: "var(--yellow)" }}>{r.rep}</span></> : <><Shield size={11} /> {r.rep}</>}</span>
-                    </div>
-                  ))}
-                </div>
+              {/* ── Placeholder: Contratos ativos de facção ── */}
+              <div className="faccoes-hub-placeholder-block">
+                <span>CONTRATOS ATIVOS DE FACÇÃO</span>
               </div>
 
               {/* ── Atividade da Facção + Vantagens ── */}
@@ -243,20 +169,6 @@ export default function FaccoesHubPage() {
                 </div>
               </div>
 
-              {/* ── Como funciona ── */}
-              <div className="faccoes-hub-how">
-                <h2 className="faccoes-hub-how-heading">Como Funciona</h2>
-                <div className="faccoes-hub-how-steps">
-                  {HOW_STEPS.map((step, i) => (
-                    <div key={i} className="faccoes-hub-how-step">
-                      <span className="faccoes-hub-how-num">{i + 1}</span>
-                      <step.icon size={22} />
-                      <strong>{step.title}</strong>
-                      <p>{step.desc}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>
           )}
 
@@ -279,31 +191,21 @@ export default function FaccoesHubPage() {
                 <button type="button" className="faction-hub-btn" style={{ width: "100%", marginTop: 12, justifyContent: "center" }}>VER MINHA JORNADA</button>
               </div>
 
-              {/* Objetivos (decorativo) */}
+              {/* Recompensa da Facção Vencedora (decorativo) */}
               <div className="faccoes-hub-objectives">
-                <h2>OBJETIVOS DA FACÇÃO</h2>
-                <p className="faccoes-hub-subtitle">Objetivos globais que todos os membros podem contribuir.</p>
-                <div style={{ display: "grid", gap: 10, marginTop: 12 }}>
-                  {OBJECTIVES.map((o, i) => (
-                    <div key={i} className="faccoes-hub-objective">
-                      <div className="faccoes-hub-objective-icon" style={{ background: `color-mix(in srgb, ${faction.color} 15%, transparent)` }}>
-                        <Shield size={16} style={{ color: faction.color }} />
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                          <strong style={{ fontSize: 12 }}>{o.name}</strong>
-                          <span style={{ fontSize: 10, color: "var(--yellow)" }}>XP {o.xp.toLocaleString("pt-BR")}</span>
-                        </div>
-                        <p style={{ margin: "0 0 6px", fontSize: 11, color: "var(--gray-500)" }}>{o.desc}</p>
-                        <div style={{ background: "rgba(255,255,255,0.08)", borderRadius: 4, height: 4, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${(o.curr / o.total) * 100}%`, background: faction.color, borderRadius: 4 }} />
-                        </div>
-                        <span style={{ fontSize: 10, color: "var(--gray-500)", marginTop: 3, display: "block" }}>{o.curr.toLocaleString("pt-BR")} / {o.total.toLocaleString("pt-BR")}</span>
-                      </div>
-                    </div>
-                  ))}
+                <h2>RECOMPENSA DA FACÇÃO VENCEDORA</h2>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 14 }}>
+                  <img src="/assets/items/painted_box.png" alt="Recompensa" style={{ width: 80, height: 80, objectFit: "contain" }} />
+                  <ul style={{ listStyle: "none", margin: 0, padding: 0, width: "100%", display: "grid", gap: 6 }}>
+                    {WAR_REWARD_ITEMS.map((r, i) => (
+                      <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--paper-dim)", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <r.icon size={14} style={{ color: "var(--yellow)", flexShrink: 0 }} />
+                        {r.label}
+                      </li>
+                    ))}
+                  </ul>
+                  <p style={{ margin: 0, fontSize: 10, color: "var(--gray-500)", textAlign: "center" }}>A recompensa será enviada ao final da guerra.</p>
                 </div>
-                <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODOS OS OBJETIVOS <ChevronRight size={12} /></button>
               </div>
             </div>
           )}

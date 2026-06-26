@@ -1107,3 +1107,21 @@
 .faccoes-hub-stats-row div strong { font-size: 18px; color: var(--paper); display: block; margin-top: 4px; }
 .faccoes-hub-objective { display: flex; gap: 12px; align-items: flex-start; }
 .faccoes-hub-objective-icon { width: 36px; height: 36px; border-radius: 8px; display: grid; placeItems: center; flex-shrink: 0; place-items: center; }
+
+/* ── Placeholder blocks ── */
+.faccoes-hub-placeholder-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  border-radius: 12px;
+  border: 2px dashed rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.02);
+}
+.faccoes-hub-placeholder-block span {
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.2);
+}
