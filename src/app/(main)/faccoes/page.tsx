@@ -8,13 +8,13 @@ import type { Faction } from "@/app/api/faccoes/route"
 import type { FactionActivity } from "@/app/api/faccoes/activity/route"
 import type { UserFaction } from "@/app/api/faccoes/my/route"
 
-// Comparativo por slug — hardcoded, mapeado para os slugs fixos do banco
-const COMPARISON: { label: string; bySlug: Record<string, number> }[] = [
-  { label: "Combate",       bySlug: { "guardia": 2, "mantikor": 3, "erma-cora": 1, "kozma-ventures": 2, "jiangsu-romagna": 1 } },
-  { label: "Recursos",      bySlug: { "guardia": 3, "mantikor": 1, "erma-cora": 2, "kozma-ventures": 1, "jiangsu-romagna": 2 } },
-  { label: "Comércio",      bySlug: { "guardia": 1, "mantikor": 1, "erma-cora": 3, "kozma-ventures": 2, "jiangsu-romagna": 1 } },
-  { label: "Tecnologia",    bySlug: { "guardia": 1, "mantikor": 1, "erma-cora": 1, "kozma-ventures": 3, "jiangsu-romagna": 2 } },
-  { label: "Sobrevivência", bySlug: { "guardia": 2, "mantikor": 2, "erma-cora": 1, "kozma-ventures": 1, "jiangsu-romagna": 3 } },
+// Labels dos atributos do comparativo (ordem fixa)
+const ATTRIBUTE_LABELS: { key: string; label: string }[] = [
+  { key: "combate",       label: "Combate"       },
+  { key: "recursos",      label: "Recursos"      },
+  { key: "comercio",      label: "Comércio"      },
+  { key: "tecnologia",    label: "Tecnologia"    },
+  { key: "sobrevivencia", label: "Sobrevivência" },
 ]
 
 function timeAgo(iso: string) {
@@ -205,11 +205,11 @@ export default function FaccoesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {COMPARISON.map(row => (
-                    <tr key={row.label}>
-                      <td>{row.label}</td>
+                  {ATTRIBUTE_LABELS.map(({ key, label }) => (
+                    <tr key={key}>
+                      <td>{label}</td>
                       {factions.map(f => {
-                        const value = row.bySlug[f.slug] ?? 1
+                        const value = (f.attributes as Record<string, number>)?.[key] ?? 1
                         return (
                           <td key={f.id}>
                             <span className="faccoes-dots">

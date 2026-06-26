@@ -48,7 +48,7 @@ Ficam em `public/assets/faccoes/` como arquivos estáticos (`guardia.png`, `mant
 
 ## Comparativo Rápido (painel lateral)
 
-Tabela com 5 atributos × 5 facções. Os **nomes e ícones** das facções vêm do banco (`factions`). Os **valores numéricos** (1–3 dots por atributo) são fixos no frontend em `COMPARISON`, indexados pelo `slug` da facção — não são editáveis pelo admin.
+Tabela com 5 atributos × 5 facções. Todos os dados vêm do banco — nomes, ícones e valores numéricos (1–3). Os valores ficam no campo `attributes` (JSONB) de cada facção e são editáveis pelo admin em `/admin/faccoes`.
 
 | Atributo | Guardia | Mantikor | Erma Cora | Kozma Ventures | Jiangsu Romagna |
 |---|---|---|---|---|---|
@@ -66,8 +66,9 @@ Tabela com 5 atributos × 5 facções. Os **nomes e ícones** das facções vêm
 
 | Conteúdo | Tabela / Fonte | Endpoint / Campo |
 |---|---|---|
-| Lista de facções | `factions` | `GET /api/faccoes` |
+| Lista de facções (nome, cor, bônus, atributos) | `factions` | `GET /api/faccoes` |
 | Ícones das facções | `public/assets/faccoes/` (estático) ou Storage `faction-icons` | `factions.icon_url` |
+| Valores do comparativo | `factions.attributes` (JSONB) | `GET /api/faccoes` → campo `attributes` |
 | Facção do usuário | `user_factions` + `factions` | `GET /api/faccoes/my` |
 | Ingressar na facção | `user_factions` | `POST /api/faccoes/:id/join` |
 | Feed de atividades | `faction_activity` + `factions` | `GET /api/faccoes/activity` |

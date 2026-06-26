@@ -21,6 +21,7 @@ Tabela com todas as facções (incluindo inativas). Cada linha é editável inli
 | Cor | Color picker | Input `type=color` com atualização imediata |
 | Ativo | Checkbox | Toggle imediato |
 | Bônus | Textarea (1 por linha) | Clique → editar → Salvar |
+| Atributos (1–3) | Botões 1/2/3 por atributo | Clique no valor desejado → salva imediatamente em `factions.attributes` (JSONB) |
 
 ### Fontes de Dados
 

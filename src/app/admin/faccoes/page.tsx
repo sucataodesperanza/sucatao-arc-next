@@ -84,6 +84,14 @@ function FacoesSection() {
     toast.success("Bônus salvo.")
   }
 
+  const ATTRS = [
+    { key: "combate",       label: "Combate"       },
+    { key: "recursos",      label: "Recursos"      },
+    { key: "comercio",      label: "Comércio"      },
+    { key: "tecnologia",    label: "Tecnologia"    },
+    { key: "sobrevivencia", label: "Sobrevivência" },
+  ]
+
   const th = { padding: "8px", textAlign: "left" as const, fontSize: 10, fontWeight: 950, textTransform: "uppercase" as const, color: "var(--gray-500)", whiteSpace: "nowrap" as const }
   const td = { padding: "8px", verticalAlign: "top" as const, fontSize: 12, borderBottom: "1px solid rgba(255,255,255,0.05)" }
 
@@ -105,6 +113,7 @@ function FacoesSection() {
                 <th style={th}>Cor</th>
                 <th style={th}>Ativo</th>
                 <th style={th}>Bônus (1 por linha)</th>
+                <th style={th}>Atributos (1–3)</th>
                 <th style={th}></th>
               </tr>
             </thead>
@@ -144,6 +153,26 @@ function FacoesSection() {
                   {/* Bônus */}
                   <td style={{ ...td, minWidth: 220 }}>
                     <BonusEditor bonuses={f.bonuses ?? []} onSave={raw => patchBonuses(f.id, raw)} />
+                  </td>
+                  {/* Atributos */}
+                  <td style={{ ...td, minWidth: 160 }}>
+                    <div style={{ display: "grid", gap: 4 }}>
+                      {ATTRS.map(({ key, label }) => {
+                        const val = (f.attributes as Record<string, number>)?.[key] ?? 1
+                        return (
+                          <div key={key} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span style={{ fontSize: 10, color: "var(--gray-500)", width: 80 }}>{label}</span>
+                            {[1, 2, 3].map(n => (
+                              <button key={n} type="button"
+                                onClick={() => patchFaction(f.id, { attributes: { ...(f.attributes as object), [key]: n } })}
+                                style={{ width: 20, height: 20, borderRadius: 4, border: `1px solid ${n <= val ? f.color : "var(--stroke)"}`, background: n <= val ? `color-mix(in srgb, ${f.color} 25%, transparent)` : "transparent", color: n <= val ? f.color : "var(--gray-500)", fontSize: 10, fontWeight: 950, cursor: "pointer", padding: 0, font: "inherit" }}>
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </td>
                   {/* Ações */}
                   <td style={td}>

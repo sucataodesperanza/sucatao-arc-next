@@ -7,7 +7,7 @@ export async function GET() {
   const supabase = await createClient()
   const { data } = await supabase
     .from("factions")
-    .select("id, slug, name, tagline, description, color, icon_url, bonuses, active, position")
+    .select("id, slug, name, tagline, description, color, icon_url, bonuses, attributes, active, position")
     .order("position", { ascending: true })
   return NextResponse.json({ factions: data ?? [] })
 }
