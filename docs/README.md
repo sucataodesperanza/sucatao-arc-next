@@ -26,7 +26,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 2 | [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, reward_items, profiles |
 | 3 | [Inventário](telas/publicas/inventario.md) | `/inventario` | user_inventory, inventory_history, profiles |
 | 4 | [Trades](telas/publicas/trades.md) | `/trades` | trades, trade_acceptances, trade_settings |
-| 5 | [Facções](telas/publicas/faccoes.md) | `/faccoes` | hardcoded |
+| 5 | [Facções](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity |
 | 6 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | 7 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
 | 8 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
@@ -48,6 +48,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | [Estoque](telas/admin/estoque.md) | `/admin/estoque` | stock_items, catalog_items |
 | [Trades](telas/admin/trades.md) | `/admin/trades` | trades, trade_acceptances, trade_settings |
 | [Crafting](telas/admin/crafting.md) | `/admin/crafting` | catalog_items |
+| [Facções](telas/admin/faccoes.md) | `/admin/faccoes` | factions, user_factions, faction_activity |
 | [Arcpedia](telas/admin/arcpedia.md) | `/admin/arcpedia` | arcs |
 | [Cupons](telas/admin/cupons.md) | `/admin/cupons` | coupons |
 | [Loot Boxes](telas/admin/loot-boxes.md) | `/admin/loot-boxes` | loot_boxes |
@@ -61,6 +62,9 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `catalog_items` | Catálogo de itens (sincronizado via MetaForge) |
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
+| `factions` | Facções disponíveis (nome, tagline, descrição, cor, icon_url, bônus, position) |
+| `user_factions` | Filiação do usuário a uma facção (UNIQUE user_id — escolha permanente) |
+| `faction_activity` | Feed de atividades das facções (gerenciado pelo admin) |
 | `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
 | `trade_acceptances` | Registro de aceitações de trade (scheduled_at, game_id, status) — 1 ativa por trade |
 | `trade_settings` | Singleton com horário de funcionamento dos trades (operating_hours_start/end) |
