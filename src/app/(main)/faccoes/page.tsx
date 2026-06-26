@@ -108,8 +108,8 @@ export default function FaccoesPage() {
                     )}
                     <div className="faction-banner">
                       {faction.icon_url
-                        ? <img src={faction.icon_url} alt={faction.name} style={{ width: 64, height: 64, objectFit: "contain" }} />
-                        : <ImageOff size={48} style={{ opacity: 0.3, color: faction.color }} />}
+                        ? <img src={faction.icon_url} alt={faction.name} style={{ width: 120, height: 120, objectFit: "contain", position: "relative", zIndex: 1, filter: `drop-shadow(0 0 24px ${faction.color})` }} />
+                        : <ImageOff size={72} style={{ opacity: 0.3, color: faction.color, position: "relative", zIndex: 1 }} />}
                     </div>
                     <div className="faction-body">
                       <h3>{faction.name}</h3>
