@@ -26,7 +26,8 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 2 | [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, reward_items, profiles |
 | 3 | [Inventário](telas/publicas/inventario.md) | `/inventario` | user_inventory, inventory_history, profiles |
 | 4 | [Trades](telas/publicas/trades.md) | `/trades` | trades, trade_acceptances, trade_settings |
-| 5 | [Facções](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity, Storage `faction-icons` |
+| 5 | [Facções — Seleção](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity, Storage `faction-icons` |
+| — | [Facções — Visão Geral](telas/publicas/faccoes-visao-geral.md) | `/faccoes/visao-geral` | factions, user_factions, user_faction_activity, profiles |
 | 6 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | 7 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
 | 8 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
@@ -62,9 +63,10 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `catalog_items` | Catálogo de itens (sincronizado via MetaForge) |
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
-| `factions` | Facções disponíveis (nome, tagline, descrição, cor, icon_url, bônus, position) |
+| `factions` | Facções disponíveis (nome, tagline, descrição, cor, icon_url, bonuses JSONB, attributes JSONB, position) |
 | `user_factions` | Filiação do usuário a uma facção (UNIQUE user_id — escolha permanente) |
-| `faction_activity` | Feed de atividades das facções (gerenciado pelo admin) |
+| `faction_activity` | Feed global de atividades das facções (gerenciado pelo admin via `/admin/faccoes`) |
+| `user_faction_activity` | Atividades por usuário dentro da facção (geradas pelo sistema: join, contratos, entregas) |
 | `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
 | `trade_acceptances` | Registro de aceitações de trade (scheduled_at, game_id, status) — 1 ativa por trade |
 | `trade_settings` | Singleton com horário de funcionamento dos trades (operating_hours_start/end) |
