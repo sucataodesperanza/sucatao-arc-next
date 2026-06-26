@@ -48,7 +48,7 @@ Ficam em `public/assets/faccoes/` como arquivos estáticos (`guardia.png`, `mant
 
 ## Comparativo Rápido (painel lateral)
 
-Tabela com 5 atributos × 5 facções. Valores (1–3 dots) **hardcoded no frontend** em `COMPARISON`, mapeados pelo `slug`. O cabeçalho usa `faction.icon_url`.
+Tabela com 5 atributos × 5 facções. Os **nomes e ícones** das facções vêm do banco (`factions`). Os **valores numéricos** (1–3 dots por atributo) são fixos no frontend em `COMPARISON`, indexados pelo `slug` da facção — não são editáveis pelo admin.
 
 | Atributo | Guardia | Mantikor | Erma Cora | Kozma Ventures | Jiangsu Romagna |
 |---|---|---|---|---|---|
