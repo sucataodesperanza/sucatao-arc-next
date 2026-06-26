@@ -8,7 +8,7 @@ Documentação técnica e funcional das telas do site ARC Raiders.
 docs/
 ├── telas/
 │   ├── publicas/    → 15 telas acessíveis pelos usuários
-│   └── admin/       → 9 telas do painel administrativo
+│   └── admin/       → 11 telas do painel administrativo
 └── apis/
     ├── trades.md    → endpoints do sistema de trades
     └── inventory.md → endpoints do inventário
@@ -83,6 +83,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 |---|---|---|
 | `avatars` | Público · upload restrito ao próprio usuário | Upload de foto de perfil |
 | `reward-images` | Público · upload restrito a admins | Imagens dos itens de recompensa |
+| `faction-icons` | Público · upload restrito a admins | Ícones das facções (override do `/assets/faccoes/` estático) |
 
 ## Infraestrutura Admin
 
