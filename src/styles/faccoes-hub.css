@@ -1125,3 +1125,14 @@
   letter-spacing: 0.1em;
   color: rgba(255,255,255,0.2);
 }
+
+/* ── Split row: placeholder (esq) + card (dir) ── */
+.faccoes-hub-split-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: stretch;
+}
+.faccoes-hub-split-row .faccoes-hub-placeholder-block {
+  min-height: 240px;
+}

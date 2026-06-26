@@ -115,19 +115,51 @@ export default function FaccoesHubPage() {
 
           {activeTab === "Visão Geral" && (
             <>
-              {/* ── Placeholder: Informações sobre a facção ── */}
-              <div className="faccoes-hub-placeholder-block">
-                <span>INFORMAÇÕES SOBRE A FACÇÃO</span>
+              {/* ── Linha 1: Informações sobre a facção + Sua Contribuição ── */}
+              <div className="faccoes-hub-split-row">
+                <div className="faccoes-hub-placeholder-block">
+                  <span>INFORMAÇÕES SOBRE A FACÇÃO</span>
+                </div>
+                <div className="faccoes-hub-contribution">
+                  <h2>SUA CONTRIBUIÇÃO</h2>
+                  <p className="faccoes-hub-subtitle">Veja o impacto das suas ações na guerra.</p>
+                  <div className="faccoes-hub-rank-box">
+                    <span className="faccoes-hub-rank-label">POSIÇÃO NA FACÇÃO</span>
+                    <span className="faccoes-hub-rank-num">#—</span>
+                    <span className="faccoes-hub-rank-sub">Entre os {totalMembers.toLocaleString("pt-BR")} membros</span>
+                  </div>
+                  <div className="faccoes-hub-stats-row">
+                    <div><span>PONTOS CONTRIBUÍDOS</span><strong>—</strong></div>
+                    <div><span>CONTRATOS CONCLUÍDOS</span><strong>—</strong></div>
+                  </div>
+                  <button type="button" className="faction-hub-btn" style={{ width: "100%", marginTop: 12, justifyContent: "center" }}>VER MINHA JORNADA</button>
+                </div>
               </div>
 
-              {/* ── Placeholder: Contratos ativos de facção ── */}
-              <div className="faccoes-hub-placeholder-block">
-                <span>CONTRATOS ATIVOS DE FACÇÃO</span>
+              {/* ── Linha 2: Contratos ativos de facção + Recompensa da Facção Vencedora ── */}
+              <div className="faccoes-hub-split-row">
+                <div className="faccoes-hub-placeholder-block">
+                  <span>CONTRATOS ATIVOS DE FACÇÃO</span>
+                </div>
+                <div className="faccoes-hub-objectives">
+                  <h2>RECOMPENSA DA FACÇÃO VENCEDORA</h2>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 14 }}>
+                    <img src="/assets/items/painted_box.png" alt="Recompensa" style={{ width: 80, height: 80, objectFit: "contain" }} />
+                    <ul style={{ listStyle: "none", margin: 0, padding: 0, width: "100%", display: "grid", gap: 6 }}>
+                      {WAR_REWARD_ITEMS.map((r, i) => (
+                        <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--paper-dim)", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                          <r.icon size={14} style={{ color: "var(--yellow)", flexShrink: 0 }} />
+                          {r.label}
+                        </li>
+                      ))}
+                    </ul>
+                    <p style={{ margin: 0, fontSize: 10, color: "var(--gray-500)", textAlign: "center" }}>A recompensa será enviada ao final da guerra.</p>
+                  </div>
+                </div>
               </div>
 
               {/* ── Atividade da Facção + Vantagens ── */}
               <div className="faccoes-hub-bottom-grid">
-                {/* Feed da facção */}
                 <div className="faccoes-hub-feed-card">
                   <h2>ATIVIDADE DA FACÇÃO</h2>
                   <p className="faccoes-hub-subtitle">Acompanhe as ações recentes dos membros da sua facção.</p>
@@ -150,7 +182,6 @@ export default function FaccoesHubPage() {
                   <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODAS AS ATIVIDADES <ChevronRight size={12} /></button>
                 </div>
 
-                {/* Vantagens ativas */}
                 <div className="faccoes-hub-feed-card">
                   <h2>VANTAGENS ATIVAS</h2>
                   <p className="faccoes-hub-subtitle">Benefícios que sua facção desbloqueou para todos os membros.</p>
@@ -168,46 +199,7 @@ export default function FaccoesHubPage() {
                   <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODAS AS VANTAGENS <ChevronRight size={12} /></button>
                 </div>
               </div>
-
             </>
-          )}
-
-          {/* ── Coluna direita (Contribuição + Objetivos) ── */}
-          {activeTab === "Visão Geral" && (
-            <div className="faccoes-hub-right-col">
-              {/* Contribuição (decorativo) */}
-              <div className="faccoes-hub-contribution">
-                <h2>SUA CONTRIBUIÇÃO</h2>
-                <p className="faccoes-hub-subtitle">Veja o impacto das suas ações na guerra.</p>
-                <div className="faccoes-hub-rank-box">
-                  <span className="faccoes-hub-rank-label">POSIÇÃO NA FACÇÃO</span>
-                  <span className="faccoes-hub-rank-num">#—</span>
-                  <span className="faccoes-hub-rank-sub">Entre os {totalMembers.toLocaleString("pt-BR")} membros</span>
-                </div>
-                <div className="faccoes-hub-stats-row">
-                  <div><span>PONTOS CONTRIBUÍDOS</span><strong>—</strong></div>
-                  <div><span>CONTRATOS CONCLUÍDOS</span><strong>—</strong></div>
-                </div>
-                <button type="button" className="faction-hub-btn" style={{ width: "100%", marginTop: 12, justifyContent: "center" }}>VER MINHA JORNADA</button>
-              </div>
-
-              {/* Recompensa da Facção Vencedora (decorativo) */}
-              <div className="faccoes-hub-objectives">
-                <h2>RECOMPENSA DA FACÇÃO VENCEDORA</h2>
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, marginTop: 14 }}>
-                  <img src="/assets/items/painted_box.png" alt="Recompensa" style={{ width: 80, height: 80, objectFit: "contain" }} />
-                  <ul style={{ listStyle: "none", margin: 0, padding: 0, width: "100%", display: "grid", gap: 6 }}>
-                    {WAR_REWARD_ITEMS.map((r, i) => (
-                      <li key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "var(--paper-dim)", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                        <r.icon size={14} style={{ color: "var(--yellow)", flexShrink: 0 }} />
-                        {r.label}
-                      </li>
-                    ))}
-                  </ul>
-                  <p style={{ margin: 0, fontSize: 10, color: "var(--gray-500)", textAlign: "center" }}>A recompensa será enviada ao final da guerra.</p>
-                </div>
-              </div>
-            </div>
           )}
 
           {activeTab !== "Visão Geral" && (
