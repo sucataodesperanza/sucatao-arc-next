@@ -40,22 +40,22 @@ create policy "factions_select_all"      on public.factions         for select u
 create policy "user_factions_select_own" on public.user_factions    for select using (auth.uid() = user_id);
 create policy "faction_activity_select"  on public.faction_activity for select using (true);
 
--- Seed: 5 facções fixas
-insert into public.factions (slug, name, tagline, description, color, bonuses, position) values
-  ('catadores',    'Catadores',    'Recuperamos tudo.',                            'Especialistas em coleta e reciclagem. Transformamos sucata em oportunidades.',           '#3df28b', '["+ 15% de valor em itens de recursos","-10% de reputação em entregas de recursos","+5% de Sucatas em contratos"]',           1),
-  ('mercadores',   'Mercadores',   'Comércio é poder.',                            'Mestres das negociações e do mercado. Conseguimos o que ninguém mais consegue.',          '#ffd400', '["+15% de Sucatas em todas as vendas","-10% de taxa no mercado","+5% de desconto na Loja do Sucatão"]',               2),
-  ('cacadores',    'Caçadores',    'Caçamos máquinas. Caçamos lendas.',            'Guerreiros implacáveis. Caçamos ARC e garantimos segurança para todos.',                  '#ff6171', '["+15% de dano contra ARC","-10% de reputação em itens de combate","+5% de XP no Contrato do Sucatão"]',             3),
-  ('vigilantes',   'Vigilantes',   'Conhecimento é arma. Informação é poder.',     'Especialistas em tecnologia e inteligência. Sabemos o que os outros não sabem.',          '#5fa8ff', '["+15% de XP em contratos","-10% de reputação em operações especiais","+5% de chance em itens raros"]',              4),
-  ('sobreviventes','Sobreviventes','Unidos sobrevivemos. Divididos caímos.',        'Focados em comunidade e cooperação. A força está na união dos Raiders.',                  '#b477ff', '["+15% de vida e resistência","-10% de reputação em atividades de grupo","+5% de Sucatas em eventos"]',            5)
+-- Seed: 5 facções
+insert into public.factions (slug, name, tagline, description, color, icon_url, bonuses, position) values
+  ('guardia',          'Guardia',          'Protegemos o que importa.',             'Guardiões do Sucatão. Especialistas em defesa e coleta de recursos estratégicos.',      '#3df28b', '/assets/faccoes/guardia.png',          '["+15% de valor em itens de recursos","-10% de reputação em entregas de recursos","+5% de Sucatas em contratos"]',      1),
+  ('mantikor',         'Mantikor',         'Força bruta. Resultados reais.',         'Caçadores implacáveis de ARC. Onde há perigo, Mantikor está na frente.',                '#ff6171', '/assets/faccoes/mantikor.png',         '["+15% de dano contra ARC","-10% de reputação em itens de combate","+5% de XP no Contrato do Sucatão"]',            2),
+  ('erma-cora',        'Erma Cora',        'Comércio é arte. Negócio é poder.',      'Mestres das negociações. Controlam o mercado e abrem portas que outros não conseguem.', '#ffd400', '/assets/faccoes/erma-cora.png',        '["+15% de Sucatas em todas as vendas","-10% de taxa no mercado","+5% de desconto na Loja do Sucatão"]',               3),
+  ('kozma-ventures',   'Kozma Ventures',   'Dados. Estratégia. Vantagem.',           'Especialistas em tecnologia e inteligência. Sabemos o que os outros nunca saberão.',    '#5fa8ff', '/assets/faccoes/kozma-ventures.png',   '["+15% de XP em contratos","-10% de reputação em operações especiais","+5% de chance em itens raros"]',              4),
+  ('jiangsu-romagna',  'Jiangsu Romagna',  'Unidos somos maiores que a máquina.',    'Focados em comunidade e cooperação. A força do Sucatão está na união dos Raiders.',     '#b477ff', '/assets/faccoes/jiangsu-romagna.png',  '["+15% de vida e resistência","-10% de reputação em atividades de grupo","+5% de Sucatas em eventos"]',            5)
 on conflict (slug) do nothing;
 
 -- Seed: atividades iniciais
 insert into public.faction_activity (faction_id, text) values
-  ((select id from public.factions where slug = 'catadores'),    'Os Catadores concluíram 1.250 entregas hoje'),
-  ((select id from public.factions where slug = 'mercadores'),   'Os Mercadores movimentaram 2.4M sucatas'),
-  ((select id from public.factions where slug = 'cacadores'),    'Os Caçadores destruíram 3 Titãs ARC'),
-  ((select id from public.factions where slug = 'vigilantes'),   'Os Vigilantes decifraram novos dados'),
-  ((select id from public.factions where slug = 'sobreviventes'),'Os Sobreviventes completaram 780 resgates')
+  ((select id from public.factions where slug = 'guardia'),         'Guardia concluiu 1.250 entregas hoje'),
+  ((select id from public.factions where slug = 'mantikor'),        'Mantikor destruiu 3 Titãs ARC'),
+  ((select id from public.factions where slug = 'erma-cora'),       'Erma Cora movimentou 2.4M sucatas'),
+  ((select id from public.factions where slug = 'kozma-ventures'),  'Kozma Ventures decifrou novos dados ARC'),
+  ((select id from public.factions where slug = 'jiangsu-romagna'), 'Jiangsu Romagna completou 780 resgates')
 on conflict do nothing;
 
 -- Storage bucket para ícones das facções

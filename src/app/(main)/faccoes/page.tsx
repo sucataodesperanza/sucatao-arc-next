@@ -10,11 +10,11 @@ import type { UserFaction } from "@/app/api/faccoes/my/route"
 
 // Comparativo por slug — hardcoded, mapeado para os slugs fixos do banco
 const COMPARISON: { label: string; bySlug: Record<string, number> }[] = [
-  { label: "Combate",       bySlug: { catadores: 1, mercadores: 1, cacadores: 3, vigilantes: 2, sobreviventes: 1 } },
-  { label: "Recursos",      bySlug: { catadores: 3, mercadores: 2, cacadores: 1, vigilantes: 1, sobreviventes: 2 } },
-  { label: "Comércio",      bySlug: { catadores: 1, mercadores: 3, cacadores: 1, vigilantes: 2, sobreviventes: 1 } },
-  { label: "Tecnologia",    bySlug: { catadores: 1, mercadores: 1, cacadores: 1, vigilantes: 3, sobreviventes: 2 } },
-  { label: "Sobrevivência", bySlug: { catadores: 2, mercadores: 1, cacadores: 2, vigilantes: 1, sobreviventes: 3 } },
+  { label: "Combate",       bySlug: { "guardia": 2, "mantikor": 3, "erma-cora": 1, "kozma-ventures": 2, "jiangsu-romagna": 1 } },
+  { label: "Recursos",      bySlug: { "guardia": 3, "mantikor": 1, "erma-cora": 2, "kozma-ventures": 1, "jiangsu-romagna": 2 } },
+  { label: "Comércio",      bySlug: { "guardia": 1, "mantikor": 1, "erma-cora": 3, "kozma-ventures": 2, "jiangsu-romagna": 1 } },
+  { label: "Tecnologia",    bySlug: { "guardia": 1, "mantikor": 1, "erma-cora": 1, "kozma-ventures": 3, "jiangsu-romagna": 2 } },
+  { label: "Sobrevivência", bySlug: { "guardia": 2, "mantikor": 2, "erma-cora": 1, "kozma-ventures": 1, "jiangsu-romagna": 3 } },
 ]
 
 function timeAgo(iso: string) {
