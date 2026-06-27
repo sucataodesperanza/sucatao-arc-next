@@ -11,9 +11,12 @@ export type ContractPass = {
   price_points: number
   price_real: number
   faction_id: string | null
+  image_url: string | null
   missions_count: number
+  total_points: number   // soma de points_reward de todas as missões
   // estado do usuário
   purchased: boolean
+  user_completed: number // missões concluídas pelo usuário
   purchase_id: string | null
 }
 
@@ -24,7 +27,7 @@ export async function GET() {
   // Passes gerais à venda: ainda não expirados (starts_at pode ser futuro — mostra na vitrine)
   const { data: groups } = await supabase
     .from("contract_groups")
-    .select("id, title, description, type, starts_at, expires_at, price_points, price_real, faction_id")
+    .select("id, title, description, type, starts_at, expires_at, price_points, price_real, faction_id, image_url")
     .is("faction_id", null)
     .eq("active", true)
     .gte("expires_at", new Date().toISOString())
@@ -32,16 +35,32 @@ export async function GET() {
 
   if (!groups?.length) return NextResponse.json({ passes: [] })
 
-  // Conta missões por grupo
   const groupIds = groups.map(g => g.id)
-  const { data: missionCounts } = await supabase
+
+  // Conta missões e soma pontos por grupo
+  const { data: missionData } = await supabase
     .from("contract_group_missions")
-    .select("group_id")
+    .select("group_id, points_reward")
     .in("group_id", groupIds)
 
   const countMap: Record<string, number> = {}
-  for (const m of missionCounts ?? []) {
+  const pointsMap: Record<string, number> = {}
+  for (const m of missionData ?? []) {
     countMap[m.group_id] = (countMap[m.group_id] ?? 0) + 1
+    pointsMap[m.group_id] = (pointsMap[m.group_id] ?? 0) + (m.points_reward ?? 0)
+  }
+
+  // Missões concluídas pelo usuário
+  let completedMap: Record<string, number> = {}
+  if (user) {
+    const { data: comps } = await supabase
+      .from("user_mission_completions")
+      .select("group_id")
+      .eq("user_id", user.id)
+      .in("group_id", groupIds)
+    for (const c of comps ?? []) {
+      completedMap[c.group_id] = (completedMap[c.group_id] ?? 0) + 1
+    }
   }
 
   // Compras do usuário
@@ -65,8 +84,11 @@ export async function GET() {
     price_points:   g.price_points,
     price_real:     g.price_real,
     faction_id:     g.faction_id,
+    image_url:      g.image_url ?? null,
     missions_count: countMap[g.id] ?? 0,
+    total_points:   pointsMap[g.id] ?? 0,
     purchased:      !!purchaseMap[g.id],
+    user_completed: completedMap[g.id] ?? 0,
     purchase_id:    purchaseMap[g.id] ?? null,
   }))
 

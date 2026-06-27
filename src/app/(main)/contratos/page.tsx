@@ -565,6 +565,7 @@ export default function ContratosPage() {
   const [passes, setPasses]       = useState<ContractPass[]>([])
   const [loadingPasses, setLoadingPasses] = useState(false)
   const [buyingId, setBuyingId]   = useState<string | null>(null)
+  const [passModal, setPassModal] = useState<ContractPass | null>(null)
 
   // Passes ativos do usuário (comprados)
   const [myPasses, setMyPasses]   = useState<Pass[]>([])
@@ -1239,88 +1240,72 @@ export default function ContratosPage() {
                   <p>Novos passes serão lançados em breve. Fique de olho!</p>
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
                   {passes.map(pass => {
-                    const TYPE_LABEL: Record<string, string> = { daily: "Diário · 1 missão", weekly: "Semanal · 7 missões", monthly: "Mensal · 30 missões" }
-                    const TYPE_COLOR: Record<string, string> = { daily: "var(--green)", weekly: "var(--yellow)", monthly: "var(--purple)" }
-                    const color = TYPE_COLOR[pass.type] ?? "var(--cyan)"
+                    const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                    const TYPE_COLOR: Record<string, string> = { daily: "#3df28b", weekly: "#ffd400", monthly: "#b477ff" }
+                    const typeColor = TYPE_COLOR[pass.type] ?? "#5fa8ff"
+                    const pct = pass.missions_count > 0 ? Math.round((pass.user_completed / pass.missions_count) * 100) : 0
                     const expiresIn = (() => {
                       const diff = new Date(pass.expires_at).getTime() - Date.now()
                       if (diff <= 0) return "Expirado"
                       const d = Math.floor(diff / 86400000)
                       const h = Math.floor((diff % 86400000) / 3600000)
-                      return d > 0 ? `${d}d ${h}h restantes` : `${h}h restantes`
+                      return `${d}d ${h}h`
                     })()
                     return (
-                      <div key={pass.id} style={{ background: "var(--surface-2)", border: `1px solid ${pass.purchased ? color : "var(--stroke)"}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                        {/* Header */}
-                        <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--stroke)", background: pass.purchased ? `color-mix(in srgb, ${color} 6%, transparent)` : "transparent" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-                            <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${color} 15%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)` }}>
-                              {TYPE_LABEL[pass.type] ?? pass.type}
-                            </span>
-                            {pass.purchased && (
-                              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--green)", marginLeft: "auto" }}>✓ ATIVO</span>
-                            )}
-                          </div>
-                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{pass.title}</h3>
-                          {pass.description && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{pass.description}</p>}
+                      <div key={pass.id} className="cv-card">
+                        <div className="cv-card-bg">
+                          <div className="cv-card-bg-img" style={{ backgroundImage: `url(${pass.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
                         </div>
-                        {/* Info */}
-                        <div style={{ padding: "12px 18px", display: "flex", gap: 16, fontSize: 12, color: "var(--gray-500)" }}>
-                          <span>{pass.missions_count} missão{pass.missions_count !== 1 ? "ões" : ""}</span>
-                          <span>{expiresIn}</span>
+                        <div className="cv-card-badges">
+                          <span className="cv-card-type" style={{ color: typeColor }}>{TYPE_LABEL[pass.type] ?? pass.type}</span>
+                          <span className="cv-card-tier" style={{ color: typeColor, borderColor: `color-mix(in srgb, ${typeColor} 40%, transparent)` }}>
+                            {pass.missions_count} MISSÃO{pass.missions_count !== 1 ? "ÕES" : ""}
+                          </span>
                         </div>
-                        {/* Preços + Botões */}
-                        {!pass.purchased && (
-                          <div style={{ padding: "0 18px 16px", display: "grid", gap: 8, marginTop: "auto" }}>
-                            {pass.price_points > 0 && (
-                              <button type="button"
-                                disabled={buyingId === pass.id}
-                                onClick={async () => {
-                                  setBuyingId(pass.id)
-                                  const res = await fetch(`/api/contratos/passes/${pass.id}/buy`, {
-                                    method: "POST", headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ mode: "points" }),
-                                  })
-                                  setBuyingId(null)
-                                  if (res.ok) { await loadPasses(); setActiveTab("Contratos Ativos"); await loadMyPasses() }
-                                  else { const b = await res.json().catch(() => ({})); alert(b.error ?? "Erro ao comprar.") }
-                                }}
-                                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid rgba(255,212,0,0.3)", background: "rgba(255,212,0,0.06)", color: "var(--paper)", padding: "10px 14px", fontSize: 12, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === pass.id ? 0.6 : 1 }}>
-                                <span>Comprar com Sucatas</span>
-                                <span style={{ color: "var(--yellow)", fontWeight: 950 }}>{pass.price_points.toLocaleString("pt-BR")} pts</span>
-                              </button>
-                            )}
-                            {pass.price_real > 0 && (
-                              <button type="button"
-                                disabled={buyingId === pass.id}
-                                onClick={async () => {
-                                  setBuyingId(pass.id)
-                                  const res = await fetch(`/api/contratos/passes/${pass.id}/buy`, {
-                                    method: "POST", headers: { "Content-Type": "application/json" },
-                                    body: JSON.stringify({ mode: "cash" }),
-                                  })
-                                  const body = await res.json().catch(() => ({}))
-                                  setBuyingId(null)
-                                  if (res.ok && body.orderId) window.location.href = `/pagar/${body.orderId}`
-                                  else alert(body.error ?? "Erro ao iniciar pagamento.")
-                                }}
-                                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid rgba(61,242,139,0.3)", background: "rgba(61,242,139,0.06)", color: "var(--paper)", padding: "10px 14px", fontSize: 12, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === pass.id ? 0.6 : 1 }}>
-                                <span>Pagar com PIX</span>
-                                <span style={{ color: "var(--green)", fontWeight: 950 }}>R$ {Number(pass.price_real).toFixed(2).replace(".", ",")}</span>
-                              </button>
-                            )}
+                        <div className="cv-card-body">
+                          <strong className="cv-card-name">{pass.title}</strong>
+                          <p className="cv-card-desc">{pass.description}</p>
+                          <div className="cv-card-section-label">Objetivo</div>
+                          <div className="cv-card-objective">
+                            <Target size={11} />Complete {pass.missions_count} missões sequenciais
                           </div>
-                        )}
-                        {pass.purchased && (
-                          <div style={{ padding: "0 18px 16px" }}>
-                            <button type="button" onClick={() => setActiveTab("Contratos Ativos")}
-                              style={{ width: "100%", border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, background: `color-mix(in srgb, ${color} 8%, transparent)`, color, padding: "10px 14px", fontSize: 12, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", textTransform: "uppercase" }}>
-                              Ver Meu Passe →
+                          <div className="cv-card-section-label">Recompensas</div>
+                          <div className="cv-card-rewards">
+                            {pass.total_points > 0 && <span style={{ color: "#ffd400" }}><Coins size={11} />{pass.total_points.toLocaleString("pt-BR")} pts</span>}
+                            {pass.price_points > 0 && <span style={{ color: typeColor }}><Zap size={11} />{pass.price_points.toLocaleString("pt-BR")} pts</span>}
+                            {pass.price_real > 0 && <span style={{ color: "#3df28b" }}>R$ {Number(pass.price_real).toFixed(2).replace(".", ",")}</span>}
+                          </div>
+                          <div className="cv-card-section-label">Progresso</div>
+                          <div className="ca-progress-wrap">
+                            <div className="ca-progress-bar">
+                              <span style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="ca-progress-label">{pass.user_completed}/{pass.missions_count}</span>
+                          </div>
+                          <div className="cv-card-footer-meta">
+                            <span className="cv-card-players"><Clock size={11} />{expiresIn}</span>
+                            <span style={{ color: pct === 100 ? "#3df28b" : typeColor }}>{pct}%</span>
+                          </div>
+                          <div className="cv-card-actions">
+                            <button type="button" className="cv-card-details" onClick={() => setPassModal(pass)}>
+                              Ver Detalhes
                             </button>
                           </div>
-                        )}
+                          {pass.purchased ? (
+                            <span style={{ display: "block", textAlign: "center", marginTop: 8, fontSize: 11, fontWeight: 950, color: "#3df28b", textTransform: "uppercase" }}>
+                              {pct === 100 ? "✓ Concluído" : "Em Progresso"}
+                            </span>
+                          ) : (
+                            <button type="button"
+                              disabled={buyingId === pass.id}
+                              onClick={() => setPassModal(pass)}
+                              style={{ marginTop: 8, width: "100%", background: `color-mix(in srgb, ${typeColor} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${typeColor} 40%, transparent)`, color: typeColor, padding: "10px 0", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", letterSpacing: "0.05em" }}>
+                              {buyingId === pass.id ? "..." : "ACEITAR"}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
@@ -1638,6 +1623,75 @@ export default function ContratosPage() {
           <span>Painel</span>
         </button>
       </div>
+
+      {/* ── Modal de compra de passe ── */}
+      {passModal && (
+        <div className="cdm-overlay" onClick={() => setPassModal(null)}>
+          <div className="cdm-modal" style={{ maxWidth: 480, gridTemplateColumns: "1fr" }} onClick={e => e.stopPropagation()}>
+            <button className="cdm-close" type="button" onClick={() => setPassModal(null)}>✕</button>
+            <div className="cdm-left" style={{ padding: 24 }}>
+              {passModal.image_url && (
+                <div className="cdm-hero" style={{ backgroundImage: `url(${passModal.image_url})`, borderRadius: 8, marginBottom: 16 }}>
+                  <div className="cdm-hero-overlay" />
+                  <div className="cdm-hero-content">
+                    <span className="cdm-op-badge">{({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string,string>)[passModal.type] ?? passModal.type}</span>
+                    <h2 className="cdm-title">{passModal.title}</h2>
+                  </div>
+                </div>
+              )}
+              {!passModal.image_url && <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 950 }}>{passModal.title}</h2>}
+              {passModal.description && <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--paper-dim)" }}>{passModal.description}</p>}
+
+              <div className="cdm-rewards-grid" style={{ marginBottom: 16 }}>
+                <div className="cdm-reward-item" style={{ color: "#ffd400" }}><Coins size={16} /><strong>{passModal.total_points.toLocaleString("pt-BR")}</strong><span>pts totais</span></div>
+                <div className="cdm-reward-item" style={{ color: "#5fa8ff" }}><Zap size={16} /><strong>{passModal.missions_count}</strong><span>missões</span></div>
+              </div>
+
+              {passModal.purchased ? (
+                <div style={{ textAlign: "center", padding: "16px 0" }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 950, color: "#3df28b" }}>✓ Você já possui este passe</p>
+                  <button type="button" onClick={() => { setPassModal(null); setActiveTab("Contratos Ativos") }}
+                    style={{ marginTop: 12, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "#3df28b", padding: "10px 24px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit" }}>
+                    Ver Meu Passe →
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 10 }}>
+                  {passModal.price_points > 0 && (
+                    <button type="button" disabled={buyingId === passModal.id}
+                      onClick={async () => {
+                        setBuyingId(passModal.id)
+                        const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "points" }) })
+                        setBuyingId(null)
+                        if (res.ok) { setPassModal(null); await loadPasses(); setActiveTab("Contratos Ativos"); await loadMyPasses() }
+                        else { const b = await res.json().catch(() => ({})); alert(b.error ?? "Erro ao comprar.") }
+                      }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(255,212,0,0.35)", background: "rgba(255,212,0,0.07)", color: "var(--paper)", padding: "12px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === passModal.id ? 0.6 : 1 }}>
+                      <span>Comprar com Sucatas</span>
+                      <span style={{ color: "#ffd400" }}>{passModal.price_points.toLocaleString("pt-BR")} pts</span>
+                    </button>
+                  )}
+                  {passModal.price_real > 0 && (
+                    <button type="button" disabled={buyingId === passModal.id}
+                      onClick={async () => {
+                        setBuyingId(passModal.id)
+                        const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "cash" }) })
+                        const body = await res.json().catch(() => ({}))
+                        setBuyingId(null)
+                        if (res.ok && body.orderId) window.location.href = `/pagar/${body.orderId}`
+                        else alert(body.error ?? "Erro ao iniciar pagamento.")
+                      }}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(61,242,139,0.35)", background: "rgba(61,242,139,0.08)", color: "var(--paper)", padding: "12px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === passModal.id ? 0.6 : 1 }}>
+                      <span>Pagar com PIX</span>
+                      <span style={{ color: "#3df28b" }}>R$ {Number(passModal.price_real).toFixed(2).replace(".", ",")}</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

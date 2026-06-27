@@ -10,7 +10,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const body = await request.json().catch(() => ({}))
   const admin = createAdminClient()
 
-  const allowed = ["title", "description", "type", "starts_at", "expires_at", "active"]
+  const allowed = ["title", "description", "type", "starts_at", "expires_at", "active", "image_url", "price_points", "price_real"]
   const update: Record<string, unknown> = {}
   for (const k of allowed) if (body[k] !== undefined) update[k] = body[k]
 
