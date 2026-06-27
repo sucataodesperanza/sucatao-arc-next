@@ -608,6 +608,15 @@
 /* store-side-panel, store-user-card, store-side-card etc.
    são definidos globalmente em globals.css — não redefinir aqui */
 
+/* Garante que conteúdo interno não expanda o painel além do width fixo */
+.faccoes-hub-page .store-side-panel {
+  overflow-x: hidden;
+}
+
+.faccoes-hub-page .store-side-panel * {
+  min-width: 0;
+}
+
 .store-side-card h2 {
   flex-shrink: 0;
   margin: 8px 0 8px;
