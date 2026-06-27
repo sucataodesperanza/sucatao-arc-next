@@ -5,79 +5,135 @@
 
 ## Descrição
 
-Gerenciamento completo dos contratos ativos exibidos em `/contratos`, incluindo criação, edição de status e controle de progresso dos usuários.
+Gerenciamento de dois sistemas de contratos: contratos individuais (tabela `contracts`) e contratos sequenciais por facção/gerais (tabela `contract_groups`).
 
 ---
 
-## Seção 1 — Contratos
+## Seção 1 — Contratos Individuais
 
-Tabela de todos os contratos (ativos e inativos). O GET usa `createAdminClient()` para bypassar a RLS e exibir contratos com `active = false`.
+Tabela de todos os contratos (ativos e inativos). GET usa `createAdminClient()` para bypassar RLS.
 
 ### Criar contrato
 
-Botão **Novo Contrato** expande um formulário com todos os campos:
+Botão **Novo Contrato** expande formulário com:
 
 | Campo | Descrição |
 |---|---|
 | Tipo | `Principal` \| `Secundário` \| `Diário` \| `Facção` |
 | Tier | `Básico` \| `Avançado` \| `Épico` \| `Lendário` |
-| Risco Ambiental | `Baixo` \| `Médio` \| `Alto` \| `Extremo` (visual na modal) |
+| Risco Ambiental | `Baixo` \| `Médio` \| `Alto` \| `Extremo` |
 | Variante | Nenhuma \| `dourada` \| `holográfica` \| `corrompida` |
-| Título | Exibido no card |
-| Objetivo principal | Resumo no card (ex: "Elimine 5 ARC Sentinel") |
-| Total | Denominador do progresso |
-| Sucatas / XP / REP | Recompensas (só sucatas são creditadas ao concluir) |
-| Localização / Tempo / Horário / Clima | Exibidos na modal de detalhes |
-| Bônus condição + recompensa | Exibidos na modal |
+| Título + Objetivo | Exibidos no card |
+| Total | Meta de progresso |
+| Sucatas / XP / REP | Só sucatas são creditadas ao concluir |
+| Localização / Tempo / Horário / Clima / Bônus | Modal de detalhes |
 | Taxa de sucesso % | Exibida no card |
-| Expira em | Data/hora de expiração (opcional) |
-| Imagem | File picker com preview + fallback de URL manual |
+| Expira em | Datetime picker opcional |
+| Imagem | File picker (Storage `contract-images`) + URL manual |
+| Facção | Dropdown — vincula o contrato a uma facção específica |
 
-### Upload de imagem
+### Tabela de contratos
 
-1. Admin cria o contrato → formulário permanece aberto
-2. Admin clica **Selecionar arquivo** → escolhe PNG/JPG/SVG
-3. `POST /api/admin/contratos/:id/image` → upload para Storage `contract-images/{id}.ext`
-4. `contracts.image_url` atualizado com a URL pública
-5. Fallback: campo de URL manual para usar imagens de `/assets/`
-
-### Editar / desativar
-
-- **Ativo**: checkbox inline — desmarcar oculta o contrato de `/contratos` mas admin continua vendo
-- **Remover**: botão lixeira com confirmação — remove o contrato e todas as aceitações
+- **Imagem**: preview 40×40 + botão Upload inline por linha
+- **Facção**: dropdown editável inline (salva imediatamente)
+- **Ativo**: checkbox inline
+- **Remover**: lixeira com confirmação
 
 ### Fontes de Dados
 
 | Ação | Endpoint |
 |---|---|
-| Listar (inclui inativos) | `GET /api/admin/contratos` (usa `createAdminClient`) |
+| Listar (inclui inativos) | `GET /api/admin/contratos` (createAdminClient) |
 | Criar | `POST /api/admin/contratos` |
-| Editar campo | `PATCH /api/admin/contratos/:id` |
-| Upload imagem | `POST /api/admin/contratos/:id/image` |
+| Editar campo | `PATCH /api/admin/contratos/:id` — inclui `faction_id` |
+| Upload imagem | `POST /api/admin/contratos/:id/image` → Storage `contract-images` |
 | Remover | `DELETE /api/admin/contratos/:id` |
 
 ---
 
-## Seção 2 — Aceitações de Contratos
+## Seção 2 — Aceitações de Contratos Individuais
 
-Lista todas as aceitações (`user_contracts`) com nome do usuário, contrato, progresso e status.
+Lista `user_contracts` com progresso e status de cada usuário.
 
-### Atualizar progresso
-
-- Campo numérico inline (0 → total do contrato)
-- Salva imediatamente ao mudar o valor (`PATCH /api/admin/contratos/acceptances/:id`)
-- Barra de progresso visual atualiza junto
-
-### Concluir
-
-- Botão **Concluir** disponível apenas para status `active`
-- Ao confirmar: `status = completed`, `completed_at = now()`, `profiles.points += contracts.sucatas`
-- Toast de confirmação com os pontos creditados
+- **Progresso**: input numérico inline, salva no change (`PATCH .../acceptances/:id`)
+- **Concluir**: botão disponível só para status `active` → credita `profiles.points += sucatas`
 
 ### Fontes de Dados
 
 | Ação | Endpoint |
 |---|---|
-| Listar aceitações | `GET /api/admin/contratos/acceptances` |
+| Listar | `GET /api/admin/contratos/acceptances` |
 | Atualizar progresso | `PATCH /api/admin/contratos/acceptances/:id` |
 | Concluir + creditar | `POST /api/admin/contratos/acceptances/:id/complete` |
+
+---
+
+## Seção 3 — Contratos Sequenciais de Facção
+
+Contratos com sequências de missões diárias/semanais/mensais. Antigo nome interno: "passes de batalha" — agora chamados de **Contratos Sequenciais**.
+
+### Criar contrato sequencial
+
+Botão **Novo Contrato** expande formulário com:
+
+| Campo | Descrição |
+|---|---|
+| Facção | Dropdown — vazio = contrato geral (aparece em `/contratos`); vinculado = exclusivo da facção |
+| Tipo | `daily` (1 missão) \| `weekly` (7 missões) \| `monthly` (30 missões) |
+| Título | — |
+| Início + Expira em | Datetime pickers — passes com início futuro aparecem na vitrine mas só são ativados no `starts_at` |
+| Preço em Sucatas | 0 = gratuito |
+| Preço em R$ | 0 = sem pagamento PIX |
+| Imagem | File picker + preview (Storage `contract-images` como `pass-{id}.ext`) + URL manual |
+
+### Expander por contrato
+
+Clique no contrato para expandir. Exibe:
+
+**Dados do Contrato** (editáveis inline via blur/onChange):
+- Título, Descrição, Preço em Sucatas, Preço em R$, Início, Expira em, Facção
+
+**Imagem do contrato**: preview + botão "Alterar imagem"
+
+**Missões** (lista + formulário de adição):
+
+Cada missão na lista exibe:
+- Número de posição (`Dia X`)
+- Título (não editável — remova e recrie se precisar alterar)
+- Total (meta)
+- **Input de pontos editável** — salva no blur via `PATCH .../missions/:id`
+- **Descrição editável** — clique no texto abaixo do título para editar inline (Enter salva, Escape cancela)
+- **Item reward**: botão `+ Item` abre autocomplete de `catalog_items`; ao selecionar, salva `item_reward: { item_name, item_image, item_rarity, item_qty }` e zera pontos; ✕ para remover
+- **Deletar**: lixeira com confirmação
+
+**Formulário de nova missão**:
+- `#` (posição auto-incremental), Título, Descrição (opcional), Total, Pontos → botão Add
+
+### Item reward em missões
+
+- Admin busca item no catálogo via autocomplete (usa `icon_url` do `catalog_items`)
+- `item_image` salvo = imagem do item aparece dentro do círculo na trilha do usuário
+- `item_rarity` salvo = borda do círculo na cor da raridade (azul/verde/amarelo/roxo/laranja)
+- Missões com item têm `points_reward = 0` automaticamente
+
+### Concluir missão de usuário
+
+`POST /api/admin/faccoes/passes/missions/:id/complete` com body `{ user_id }`:
+- Verifica limite diário (1 missão/dia para weekly e monthly)
+- Cria registro em `user_mission_completions`
+- Credita `points_reward` em `profiles.points`
+
+### Fontes de Dados
+
+| Ação | Endpoint |
+|---|---|
+| Listar grupos | `GET /api/admin/faccoes/passes` (createAdminClient — inclui inativos/futuros) |
+| Criar grupo | `POST /api/admin/faccoes/passes` |
+| Editar grupo | `PATCH /api/admin/faccoes/passes/:id` |
+| Upload imagem do grupo | `POST /api/admin/faccoes/passes/:id/image` |
+| Remover grupo | `DELETE /api/admin/faccoes/passes/:id` |
+| Listar missões | `GET /api/admin/faccoes/passes/:id/missions` (createAdminClient) |
+| Criar missão | `POST /api/admin/faccoes/passes/:id/missions` |
+| Editar missão | `PATCH /api/admin/faccoes/passes/missions/:id` |
+| Remover missão | `DELETE /api/admin/faccoes/passes/missions/:id` |
+| Completar missão de usuário | `POST /api/admin/faccoes/passes/missions/:id/complete` |

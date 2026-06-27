@@ -28,7 +28,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 4 | [Trades](telas/publicas/trades.md) | `/trades` | trades, trade_acceptances, trade_settings |
 | 5 | [Facções — Seleção](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity, Storage `faction-icons` |
 | — | [Facções — Visão Geral](telas/publicas/faccoes-visao-geral.md) | `/faccoes/visao-geral` | factions, user_factions, user_faction_activity, profiles |
-| 6 | [Contratos](telas/publicas/contratos.md) | `/contratos` | contracts, user_contracts, Storage `contract-images` |
+| 6 | [Contratos](telas/publicas/contratos.md) | `/contratos` | contracts, user_contracts, contract_groups, contract_group_missions, user_mission_completions, user_contract_group_purchases |
 | 7 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | 8 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
 | 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
@@ -72,8 +72,12 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `trade_acceptances` | Registro de aceitações de trade (scheduled_at, game_id, status) — 1 ativa por trade |
 | `trade_settings` | Singleton com horário de funcionamento dos trades (operating_hours_start/end) |
 | `reward_items` | Itens de recompensa (gift cards, merch, sorteios) |
-| `contracts` | Contratos ativos (tipo, tier, recompensas, sub-objetivos e inimigos como JSONB) |
-| `user_contracts` | Progresso e status do usuário por contrato (UNIQUE user_id+contract_id) |
+| `contracts` | Contratos individuais (tipo, tier, recompensas, sub-objetivos e inimigos como JSONB) |
+| `user_contracts` | Progresso e status do usuário por contrato individual (UNIQUE user_id+contract_id) |
+| `contract_groups` | Contratos sequenciais (diário/semanal/mensal) com preço em pts e R$ |
+| `contract_group_missions` | Missões de cada contrato sequencial (posição, pontos, item_reward JSONB) |
+| `user_mission_completions` | Missões concluídas por usuário (limite 1/dia para weekly e monthly) |
+| `user_contract_group_purchases` | Compras de contratos sequenciais (UNIQUE user_id+group_id) |
 | `user_inventory` | Inventário do jogador (`user_id + item_id FK → catalog_items + quantity`) |
 | `inventory_history` | Log append-only de cada evento de aquisição de item |
 | `orders` | Pedidos dos usuários |
@@ -89,7 +93,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `avatars` | Público · upload restrito ao próprio usuário | Upload de foto de perfil |
 | `reward-images` | Público · upload restrito a admins | Imagens dos itens de recompensa |
 | `faction-icons` | Público · upload restrito a admins | Ícones das facções (override do `/assets/faccoes/` estático) |
-| `contract-images` | Público · upload restrito a admins | Imagens dos contratos (override do `/assets/bots/` estático) |
+| `contract-images` | Público · upload restrito a admins | Imagens de contratos individuais e sequenciais |
 
 ## Infraestrutura Admin
 
