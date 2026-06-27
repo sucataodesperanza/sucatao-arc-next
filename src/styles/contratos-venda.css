@@ -1894,7 +1894,7 @@
 }
 
 /* Trilha */
-.ca-track-wrap { padding: 24px 24px 8px; }
+.ca-track-wrap { padding: 36px 24px 28px; }
 .ca-track { display: flex; align-items: flex-start; width: 100%; }
 .ca-track-node-wrap { display: flex; align-items: flex-start; flex: 1; min-width: 0; }
 .ca-track-node-col {
