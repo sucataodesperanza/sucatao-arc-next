@@ -4,7 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
-  const supabase = await createClient()
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+
+  // Admin bypassa RLS para ver contratos inativos também
+  const supabase = createAdminClient()
   const { data } = await supabase
     .from("contracts")
     .select("*")
