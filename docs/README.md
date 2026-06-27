@@ -124,5 +124,5 @@ const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
 
 | Arquivo | Conteúdo | Usado em |
 |---|---|---|
-| `src/data/arc-data.js` | 567 itens, 17 bots, 7 mapas | arcs, arcpedia, mapas, reciclagem, home |
+| `src/data/arc-data.js` | 567 itens, 17 bots | arcpedia, reciclagem, home |
 | `src/data/map-markers.js` | Marcadores de mapa por categoria | /mapas |
