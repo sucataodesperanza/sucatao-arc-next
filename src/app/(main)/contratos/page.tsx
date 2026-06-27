@@ -1366,8 +1366,8 @@ export default function ContratosPage() {
                         </div>
 
                         {/* ── Trilha de missões ── */}
-                        <div className="ca-track-wrap">
-                          <div className="ca-track">
+                        <div className="ca-track-wrap" style={{ overflowX: "visible" }}>
+                          <div className="ca-track" style={{ width: "100%" }}>
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
                               const nodeSize = isMilestone ? 52 : 40
@@ -1381,7 +1381,7 @@ export default function ContratosPage() {
                               const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
                               return (
                                 <div key={m.id} className="ca-track-node-wrap">
-                                  <div className="ca-track-node-col" style={{ width: isMilestone ? 90 : 72 }}>
+                                  <div className="ca-track-node-col" style={{ flex: 1, minWidth: 0 }}>
                                     {/* Recompensa acima */}
                                     <div className="ca-track-reward">
                                       {isMilestone && m.item_reward ? (
@@ -1414,7 +1414,7 @@ export default function ContratosPage() {
                                   {/* Conector */}
                                   {isNext && (
                                     <div className="ca-track-connector" style={{
-                                      width: 32,
+                                      flex: 1,
                                       background: nextDone
                                         ? `color-mix(in srgb, ${passColor} 55%, transparent)`
                                         : "rgba(255,255,255,0.07)",
