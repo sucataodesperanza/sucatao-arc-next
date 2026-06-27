@@ -459,9 +459,9 @@ function PassesSection() {
     if (res.ok) {
       const data = await res.json()
       setCreatedPassId(data.id)
-      toast.success("Passe criado! Adicione uma imagem se desejar.")
+      toast.success("Contrato criado! Adicione uma imagem se desejar.")
       await load()
-    } else toast.error("Erro ao criar passe.")
+    } else toast.error("Erro ao criar contrato.")
   }
 
   async function uploadPassImage(id: string, file: File) {
@@ -486,10 +486,10 @@ function PassesSection() {
   }
 
   async function deletePass(id: string) {
-    const ok = await confirm("Remover este passe e todas as missões/progresso?")
+    const ok = await confirm("Remover este contrato e todo o progresso dos usuários?")
     if (!ok) return
     await fetch(`/api/admin/faccoes/passes/${id}`, { method: "DELETE" })
-    toast.success("Passe removido.")
+    toast.success("Contrato removido.")
     await load()
   }
 
@@ -524,10 +524,10 @@ function PassesSection() {
   return (
     <div className="utility-panel" style={{ marginTop: 16 }}>
       <div className="utility-panel-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div><strong>Passes de Batalha de Facção</strong><small>Diários (1 missão), Semanais (7) e Mensais (30)</small></div>
+        <div><strong>Contratos Sequenciais de Facção</strong><small>Diários (1 missão), Semanais (7) e Mensais (30)</small></div>
         <button type="button" onClick={() => { setShowForm(s => !s); setCreatedPassId(null); setForm(f => ({ ...f, image_url: "" })) }}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
-          {showForm ? <ChevronUp size={12} /> : <Plus size={12} />} {showForm ? "Cancelar" : "Novo Passe"}
+          {showForm ? <ChevronUp size={12} /> : <Plus size={12} />} {showForm ? "Cancelar" : "Novo Contrato"}
         </button>
       </div>
 
@@ -554,9 +554,9 @@ function PassesSection() {
             <label><span style={lbl}>Início *</span><input type="datetime-local" value={form.starts_at} onChange={e => setForm(p => ({ ...p, starts_at: e.target.value }))} style={inp} /></label>
             <label><span style={lbl}>Expira em *</span><input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} style={inp} /></label>
           </div>
-          {/* Imagem do passe */}
+          {/* Imagem do contrato */}
           <div>
-            <span style={lbl}>Imagem do passe</span>
+            <span style={lbl}>Imagem do contrato</span>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <div style={{ width: 52, height: 52, borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
                 {form.image_url
@@ -572,7 +572,7 @@ function PassesSection() {
                       uploadPassImage(createdPassId, file)
                     } else {
                       setForm(p => ({ ...p, image_url: URL.createObjectURL(file) }))
-                      toast.info("Crie o passe primeiro — a imagem será enviada após salvar.")
+                      toast.info("Crie o contrato primeiro — a imagem será enviada após salvar.")
                     }
                   }} />
                 <button type="button" onClick={() => passFileRef.current?.click()} disabled={uploadingPassImg}
@@ -598,7 +598,7 @@ function PassesSection() {
           </div>
           <button type="button" onClick={createPass} disabled={savingPass}
             style={{ background: "rgba(61,242,139,0.12)", border: "1px solid rgba(61,242,139,0.4)", color: "var(--green)", padding: "9px 20px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", alignSelf: "flex-start" }}>
-            {savingPass ? "Criando..." : "✓ Criar Passe"}
+            {savingPass ? "Criando..." : "✓ Criar Contrato"}
           </button>
         </div>
       )}
@@ -631,7 +631,7 @@ function PassesSection() {
                   <div style={{ padding: "12px 14px", borderTop: "1px solid var(--stroke)" }}>
 
                     {/* ── Dados do passe (editáveis) ── */}
-                    <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Dados do Passe</p>
+                    <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Dados do Contrato</p>
                     <div style={{ display: "grid", gap: 10, marginBottom: 18, padding: 12, background: "rgba(0,0,0,0.15)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.05)" }}>
                       {/* Título e descrição */}
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -684,13 +684,13 @@ function PassesSection() {
                         <select defaultValue={p.faction_id ?? ""}
                           onChange={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ faction_id: e.target.value || null }) }); toast.success("Facção atualizada."); await load() }}
                           style={{ ...inp, color: factions.find(f => f.id === p.faction_id)?.color ?? "var(--gray-500)" }}>
-                          <option value="">— Sem facção (passe geral)</option>
+                          <option value="">— Sem facção (contrato geral)</option>
                           {factions.map(f => <option key={f.id} value={f.id} style={{ color: "var(--paper)" }}>{f.name}</option>)}
                         </select>
                       </label>
                     </div>
 
-                    {/* Imagem do passe */}
+                    {/* Imagem do contrato */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.05)" }}>
                       <div style={{ width: 56, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
                         {p.image_url
@@ -698,7 +698,7 @@ function PassesSection() {
                           : <Upload size={14} style={{ color: "var(--gray-500)" }} />}
                       </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                        <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Imagem do passe</span>
+                        <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Imagem do contrato</span>
                         <input
                           type="file" accept="image/*" style={{ display: "none" }}
                           ref={el => { passRowFileRefs.current[p.id] = el }}
@@ -745,7 +745,7 @@ function PassesSection() {
               </div>
             )
           })}
-          {passes.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhum passe criado.</p>}
+          {passes.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhum contrato sequencial criado.</p>}
         </div>
       )}
     </div>

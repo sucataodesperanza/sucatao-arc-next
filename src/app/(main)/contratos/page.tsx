@@ -1229,11 +1229,11 @@ export default function ContratosPage() {
           {activeTab === "Contratos à Venda" && (
             <div>
               {loadingPasses ? (
-                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando passes...</p>
+                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando contratos...</p>
               ) : passes.length === 0 ? (
                 <div className="contratos-placeholder">
-                  <h2>Nenhum passe disponível</h2>
-                  <p>Novos passes serão lançados em breve. Fique de olho!</p>
+                  <h2>Nenhum contrato disponível</h2>
+                  <p>Novos contratos serão lançados em breve. Fique de olho!</p>
                 </div>
               ) : (
                 <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
@@ -1314,11 +1314,11 @@ export default function ContratosPage() {
           {activeTab === "Contratos Ativos" && (
             <div>
               {loadingMyPasses ? (
-                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando seus passes...</p>
+                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando seus contratos...</p>
               ) : myPasses.length === 0 ? (
                 <div className="contratos-placeholder">
-                  <h2>Nenhum passe ativo</h2>
-                  <p>Vá para a aba <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para adquirir um passe.</p>
+                  <h2>Nenhum contrato ativo</h2>
+                  <p>Vá para a aba <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para adquirir um contrato.</p>
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 24 }}>
@@ -1629,7 +1629,7 @@ export default function ContratosPage() {
         </button>
       </div>
 
-      {/* ── Modal de compra de passe (2 etapas) ── */}
+      {/* ── Modal de contrato (2 etapas) ── */}
       {passModal && (
         <div className="cdm-overlay" onClick={() => { setPassModal(null); setPassConfirmStep(null) }}>
           <div className="cdm-modal" style={{ maxWidth: 480, gridTemplateColumns: "1fr" }} onClick={e => e.stopPropagation()}>
@@ -1663,10 +1663,10 @@ export default function ContratosPage() {
               {passModal.purchased ? (
                 /* Já comprado */
                 <div style={{ textAlign: "center", padding: "16px 0" }}>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 950, color: "#3df28b" }}>✓ Você já possui este passe</p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 950, color: "#3df28b" }}>✓ Você já possui este contrato</p>
                   <button type="button" onClick={() => { setPassModal(null); setPassConfirmStep(null); setActiveTab("Contratos Ativos") }}
                     style={{ marginTop: 12, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "#3df28b", padding: "10px 24px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit" }}>
-                    Ver Meu Passe →
+                    Ver Meu Contrato →
                   </button>
                 </div>
 
@@ -1700,7 +1700,7 @@ export default function ContratosPage() {
 
                     <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ color: "var(--paper-dim)" }}>Passe</span>
+                        <span style={{ color: "var(--paper-dim)" }}>Contrato</span>
                         <strong style={{ color: "var(--paper)" }}>{passModal.title}</strong>
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between" }}>
