@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { BarChart2, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Skull, Star, Target, Trophy, Truck, Users, Wallet, XCircle, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
 import "../../../styles/contratos-venda.css"
+import type { Contract as ApiContract } from "@/app/api/contratos/route"
 
 type ContractType = "Principal" | "Secundário" | "Diário" | "Facção"
 
@@ -76,7 +77,7 @@ const riskColorsActive: Record<string, string> = {
   Baixo: "#3df28b", Médio: "#ffd400", Alto: "#ff8c42", Extremo: "#F5090D",
 }
 
-const contracts: Contract[] = [
+const contracts_UNUSED: Contract[] = [
   {
     id: "1", type: "Principal", tier: "Épico",
     title: "Ameaça Mecânica",
@@ -503,6 +504,45 @@ function DailyRewardBadge({ reward }: { reward: ContractReward }) {
 
 const PANEL_KEY = "contratos-panel-open"
 
+// Adapta ApiContract → Contract local (para reuso do JSX existente)
+function adapt(c: ApiContract): Contract {
+  return {
+    id:               c.id,
+    type:             c.type as ContractType,
+    tier:             c.tier as ContractTierActive,
+    title:            c.title,
+    description:      c.description,
+    image:            c.image_url ?? "/assets/bots/arc_sentinel.png",
+    progress:         c.user_progress ?? 0,
+    total:            c.total,
+    objective:        c.objective,
+    rewards:          c.rewards as ContractReward[],
+    sucatas:          c.sucatas,
+    xp:               c.xp,
+    rep:              c.rep ?? undefined,
+    players:          c.players_completed,
+    successRate:      c.success_rate,
+    expiresIn:        c.expires_at ? (() => {
+      const diff = new Date(c.expires_at!).getTime() - Date.now()
+      const d = Math.floor(diff / 86400000)
+      const h = Math.floor((diff % 86400000) / 3600000)
+      return diff > 0 ? `${d}d ${h}h` : "Expirado"
+    })() : "—",
+    variant:          (c.variant as ContractVariantActive | undefined) ?? undefined,
+    location:         c.location,
+    story:            c.story,
+    estimatedTime:    c.estimated_time,
+    bestTimeOfDay:    c.best_time_of_day,
+    climate:          c.climate,
+    environmentalRisk: c.environmental_risk,
+    objectives:       (c.objectives as ContractObjectiveActive[]).map(o => ({ ...o, progress: undefined, done: false })),
+    bonus:            { condition: c.bonus_condition, reward: c.bonus_reward },
+    enemies:          c.enemies as ContractEnemyActive[],
+    playersCompleted: c.players_completed,
+    bestRecord:       { time: c.best_record_time, player: c.best_record_player },
+  }
+}
+
 export default function ContratosPage() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [activeTab, setActiveTab] = useState(tabs[0])
@@ -513,6 +553,21 @@ export default function ContratosPage() {
   const [weekSecondsLeft, setWeekSecondsLeft] = useState(0)
   const [acceptedContracts, setAcceptedContracts] = useState<Set<number>>(new Set())
   const [acceptedWeeklyContracts, setAcceptedWeeklyContracts] = useState<Set<number>>(new Set())
+
+  // Contratos ativos do banco
+  const [apiContracts, setApiContracts] = useState<ApiContract[]>([])
+  const [loadingContracts, setLoadingContracts] = useState(true)
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+
+  const loadContracts = useCallback(async () => {
+    setLoadingContracts(true)
+    const res = await fetch("/api/contratos")
+    const body = await res.json().catch(() => ({ contracts: [] }))
+    setApiContracts(body.contracts ?? [])
+    setLoadingContracts(false)
+  }, [])
+
+  useEffect(() => { loadContracts() }, [loadContracts])
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
@@ -533,6 +588,13 @@ export default function ContratosPage() {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  async function handleAcceptActive(contractId: string) {
+    setAcceptingId(contractId)
+    const res = await fetch(`/api/contratos/${contractId}/accept`, { method: "POST" })
+    setAcceptingId(null)
+    if (res.ok || res.status === 409) await loadContracts()
+  }
 
   function handleAccept(index: number) {
     setAcceptedContracts(prev => {
@@ -655,7 +717,12 @@ export default function ContratosPage() {
               </div>
 
               <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
-                {contracts.map(contract => {
+                {loadingContracts ? (
+                  <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Carregando contratos...</p>
+                ) : apiContracts.length === 0 ? (
+                  <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Nenhum contrato ativo no momento.</p>
+                ) : null}
+                {apiContracts.map(raw => { const contract = adapt(raw);
                   const tier = tierColorsActive[contract.tier]
                   const typeColor = typeColorsActive[contract.type]
                   const pct = Math.round((contract.progress / contract.total) * 100)
@@ -700,6 +767,18 @@ export default function ContratosPage() {
                           <button type="button" className="cv-card-details" onClick={() => setSelectedActiveContract(contract)}>
                             Ver Detalhes
                           </button>
+                          {raw.user_status === "active" ? (
+                            <span style={{ fontSize: 10, fontWeight: 950, color: "var(--yellow)", textTransform: "uppercase" }}>Em progresso</span>
+                          ) : raw.user_status === "completed" ? (
+                            <span style={{ fontSize: 10, fontWeight: 950, color: "var(--green)", textTransform: "uppercase" }}>Concluído</span>
+                          ) : (
+                            <button type="button"
+                              style={{ background: "rgba(61,242,139,0.1)", border: "1px solid rgba(61,242,139,0.3)", color: "var(--green)", fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", opacity: acceptingId === raw.id ? 0.6 : 1 }}
+                              disabled={acceptingId === raw.id}
+                              onClick={() => handleAcceptActive(raw.id)}>
+                              {acceptingId === raw.id ? "..." : "Aceitar"}
+                            </button>
+                          )}
                         </div>
                       </div>
                       {contract.variant && (
@@ -708,8 +787,7 @@ export default function ContratosPage() {
                         </div>
                       )}
                     </div>
-                  )
-                })}
+                  )})}
               </div>
 
               {/* Contract detail modal */}
