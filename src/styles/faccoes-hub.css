@@ -3,6 +3,11 @@
   background: var(--bg);
 }
 
+/* Remove padding horizontal e max-width do shell nesta página */
+.content:has(.faccoes-hub-page) {
+  padding-inline: 0;
+}
+
 .content > .faccoes-hub-page {
   max-width: none;
   margin: 0;
@@ -10,12 +15,13 @@
 
 .faccoes-hub-layout {
   display: flex;
+  margin-left: var(--side-panel-gap);
   margin-right: calc(var(--side-panel-width) + var(--side-panel-gap));
   transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .faccoes-hub-layout--no-panel {
-  margin-right: 0;
+  margin-right: var(--side-panel-gap);
 }
 
 .faccoes-hub-main {
