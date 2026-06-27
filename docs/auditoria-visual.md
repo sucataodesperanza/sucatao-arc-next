@@ -2,7 +2,8 @@
 
 Mapeamento do estado de cada tela em relação à nova identidade visual do site (design system com `store-layout`, `page-title`, `store-side-panel`, `SidePanelUserHeader`, etc.).
 
-**Última atualização:** 2026-06-27
+**Última atualização:** 2026-06-28  
+**Status:** ✅ Todas as telas na nova identidade visual
 
 ---
 
@@ -24,18 +25,18 @@ Mapeamento do estado de cada tela em relação à nova identidade visual do site
 | ✅ Atualizada | Perfil Público | `/perfil/[id]` |
 | ✅ Atualizada | Carrinho | `/carrinho` |
 | ✅ Atualizada | Pagamento PIX | `/pagar/[id]` |
-| ⚠️ Pendente | Pedido Confirmado | `/pedido-confirmado` |
+| ✅ Atualizada | Pedido Confirmado | `/pedido-confirmado` |
 
 ## Páginas de Autenticação
 
 | Status | Tela | Rota |
 |---|---|---|
-| ⚠️ Pendente | Login | `/login` |
-| ⚠️ Pendente | Registro | `/registro` |
-| ⚠️ Pendente | Recuperar Senha | `/recuperar-senha` |
-| ⚠️ Pendente | Completar Cadastro | `/completar-cadastro` |
-| ⚠️ Pendente | Atualizar Senha | `/atualizar-senha` |
-| ⚠️ Pendente | Confirmar Email | `/confirmar-email` |
+| ✅ Atualizada | Login | `/login` |
+| ✅ Atualizada | Registro | `/registro` |
+| ✅ Atualizada | Recuperar Senha | `/recuperar-senha` |
+| ✅ Atualizada | Completar Cadastro | `/completar-cadastro` |
+| ✅ Atualizada | Atualizar Senha | `/atualizar-senha` |
+| ✅ Atualizada | Confirmar Email | `/confirmar-email` |
 
 ---
 
