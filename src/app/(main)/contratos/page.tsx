@@ -1511,7 +1511,6 @@ export default function ContratosPage() {
                               <div>
                                 <p style={{ margin: 0, fontSize: 9, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}>Missão Atual</p>
                                 <p style={{ margin: "4px 0 0", fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{active.title}</p>
-                                {active.description && <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{active.description}</p>}
                               </div>
                               {/* Barra de progresso */}
                               <div>
@@ -1523,6 +1522,10 @@ export default function ContratosPage() {
                                   <div className="ca-mission-progress-fill" style={{ width: "0%", background: passColor }} />
                                 </div>
                               </div>
+                              {/* Descrição abaixo da barra */}
+                              {active.description && (
+                                <p style={{ margin: 0, fontSize: 12, color: "var(--paper-dim)", lineHeight: 1.5 }}>{active.description}</p>
+                              )}
                               {/* Recompensa */}
                               {active.points_reward > 0 && (
                                 <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
