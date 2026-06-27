@@ -919,6 +919,166 @@ export default function AdminContratosPage() {
       <ContratosSection />
       <AcceitancesSection />
       <PassesSection />
+      <RewardsSection />
+    </div>
+  )
+}
+
+/* ── Seção de recompensas por pontos ── */
+function RewardsSection() {
+  const toast = useToast()
+  const { confirm } = useConfirm()
+  const [rewards, setRewards]     = useState<any[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [query, setQuery]         = useState("")
+  const [results, setResults]     = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const [threshold, setThreshold] = useState(1000)
+  const [saving, setSaving]       = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const res = await fetch("/api/admin/contratos/rewards")
+    const body = await res.json().catch(() => ({}))
+    setRewards(body.rewards ?? [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function searchItems(q: string) {
+    if (!q.trim()) { setResults([]); return }
+    setSearching(true)
+    const res = await fetch(`/api/admin/catalog?q=${encodeURIComponent(q)}&limit=6`)
+    const body = await res.json().catch(() => ({}))
+    setResults(body.items ?? [])
+    setSearching(false)
+  }
+
+  async function addReward(item: any) {
+    setSaving(true)
+    const res = await fetch("/api/admin/contratos/rewards", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item_id: item.id, points_threshold: threshold }),
+    })
+    setSaving(false)
+    if (res.ok) {
+      toast.success(`Recompensa "${item.name}" adicionada!`)
+      setQuery(""); setResults([])
+      await load()
+    } else toast.error("Erro ao adicionar recompensa.")
+  }
+
+  async function deleteReward(id: string, name: string) {
+    const ok = await confirm(`Remover a recompensa "${name}"?`)
+    if (!ok) return
+    await fetch(`/api/admin/contratos/rewards/${id}`, { method: "DELETE" })
+    toast.success("Recompensa removida.")
+    await load()
+  }
+
+  const inp: React.CSSProperties = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)", padding: "7px 10px", fontSize: 12, borderRadius: 4, font: "inherit" }
+  const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", display: "block", marginBottom: 4 }
+
+  return (
+    <div className="utility-panel" style={{ marginTop: 16 }}>
+      <div className="utility-panel-head">
+        <strong>Próximas Recompensas (por Pontos)</strong>
+        <small>Itens desbloqueados ao atingir determinada quantidade de sucatas acumuladas</small>
+      </div>
+
+      {/* Formulário de adição */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 12, marginBottom: 16, padding: 12, background: "rgba(0,0,0,0.15)", borderRadius: 8, border: "1px solid var(--stroke)" }}>
+        <div style={{ display: "grid", gap: 8 }}>
+          <label>
+            <span style={lbl}>Buscar item no catálogo</span>
+            <div style={{ position: "relative" }}>
+              <input value={query} onChange={e => { setQuery(e.target.value); searchItems(e.target.value) }}
+                placeholder="Ex: Caixa de Componentes Épicos..." style={{ ...inp, width: "100%" }} />
+              {(results.length > 0 || searching) && (
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 6, overflow: "hidden", maxHeight: 200, overflowY: "auto" }}>
+                  {searching && <p style={{ margin: 0, padding: "8px 10px", fontSize: 11, color: "var(--muted)" }}>Buscando...</p>}
+                  {results.map((item: any) => (
+                    <button key={item.id} type="button" onClick={() => addReward(item)} disabled={saving}
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}>
+                      {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />}
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: 12, color: "var(--paper)", display: "block" }}>{item.name}</span>
+                        {item.rarity && <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </label>
+        </div>
+        <label style={{ display: "grid", gap: 4, alignSelf: "end" }}>
+          <span style={lbl}>Limiar de pontos</span>
+          <input type="number" min={1} value={threshold} onChange={e => setThreshold(Number(e.target.value))}
+            style={{ ...inp, width: 120 }} />
+        </label>
+      </div>
+
+      {/* Tabela */}
+      {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
+              {["Item", "Raridade", "Limiar de Pontos", "Ativo", ""].map(h => (
+                <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rewards.map((r: any) => {
+              const item = r.catalog_items
+              return (
+                <tr key={r.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <td style={{ padding: "8px", display: "flex", alignItems: "center", gap: 8 }}>
+                    {item?.icon_url && <img src={item.icon_url} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />}
+                    <span style={{ fontWeight: 800 }}>{item?.name ?? "—"}</span>
+                  </td>
+                  <td style={{ padding: "8px", color: "var(--muted)", fontSize: 11 }}>{item?.rarity ?? "—"}</td>
+                  <td style={{ padding: "8px" }}>
+                    <input type="number" min={1} defaultValue={r.points_threshold}
+                      onBlur={async e => {
+                        const val = Number(e.target.value)
+                        if (val === r.points_threshold) return
+                        await fetch(`/api/admin/contratos/rewards/${r.id}`, {
+                          method: "PATCH", headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ points_threshold: val }),
+                        })
+                        await load()
+                      }}
+                      style={{ ...inp, width: 100, color: "var(--yellow)", fontWeight: 950 }} />
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    <input type="checkbox" checked={r.active}
+                      onChange={async e => {
+                        await fetch(`/api/admin/contratos/rewards/${r.id}`, {
+                          method: "PATCH", headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ active: e.target.checked }),
+                        })
+                        await load()
+                      }} />
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    <button type="button" onClick={() => deleteReward(r.id, item?.name ?? "—")}
+                      style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 4, display: "flex" }}>
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              )
+            })}
+            {rewards.length === 0 && (
+              <tr><td colSpan={5} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhuma recompensa cadastrada. Busque um item acima para adicionar.</td></tr>
+            )}
+          </tbody>
+        </table>
+      )}
     </div>
   )
 }

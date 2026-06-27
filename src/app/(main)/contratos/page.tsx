@@ -568,6 +568,7 @@ export default function ContratosPage() {
   const [passModal, setPassModal]         = useState<ContractPass | null>(null)
   const [userSucatas, setUserSucatas]     = useState<number | null>(null)
   const [contractStats, setContractStats] = useState<{ completed: number; failed: number; expired: number; total: number; success_rate: number } | null>(null)
+  const [pointRewards, setPointRewards]  = useState<any[]>([])
   const [passConfirmStep, setPassConfirmStep] = useState<"points" | "cash" | null>(null)
   const [userPoints, setUserPoints]       = useState<number | null>(null)
   const trackRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -606,6 +607,7 @@ export default function ContratosPage() {
   useEffect(() => {
     fetch("/api/profile/points").then(r => r.json()).then(d => setUserSucatas(d.points ?? 0)).catch(() => {})
     fetch("/api/contratos/stats").then(r => r.json()).then(d => setContractStats(d)).catch(() => {})
+    fetch("/api/contratos/rewards").then(r => r.json()).then(d => setPointRewards(d.rewards ?? [])).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -1675,32 +1677,35 @@ export default function ContratosPage() {
                 </div>
               </div>
 
-              <div className="store-side-card contratos-side-fill">
-                <div className="contratos-side-head">
-                  <h2>Próximas Recompensas</h2>
-                  <button type="button" className="contratos-see-all">
-                    Ver Tudo
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-                <div className="contratos-next-rewards">
-                  {nextRewards.map((reward, i) => (
-                    <div key={i} className="contratos-next-reward">
-                      <div className="contratos-next-reward-thumb" style={{ backgroundImage: `url(${reward.image})` }} />
-                      <div className="contratos-next-reward-info">
-                        <strong>{reward.title}</strong>
-                        <span>Ao atingir {reward.threshold} REP</span>
-                        <div className="contratos-bar-row">
-                          <div className="store-reputation-bar">
-                            <span style={{ width: reward.progress }} />
+              {pointRewards.length > 0 && (
+                <div className="store-side-card contratos-side-fill">
+                  <div className="contratos-side-head">
+                    <h2>Próximas Recompensas</h2>
+                  </div>
+                  <div className="contratos-next-rewards">
+                    {pointRewards.filter(r => !r.unlocked).slice(0, 5).map((reward: any) => (
+                      <div key={reward.id} className="contratos-next-reward">
+                        <div className="contratos-next-reward-thumb"
+                          style={{ backgroundImage: reward.item?.icon_url ? `url(${reward.item.icon_url})` : undefined,
+                                   background: reward.item?.icon_url ? undefined : "rgba(255,255,255,0.05)" }} />
+                        <div className="contratos-next-reward-info">
+                          <strong>{reward.item?.name ?? "—"}</strong>
+                          <span>Ao atingir {reward.points_threshold.toLocaleString("pt-BR")} pts</span>
+                          <div className="contratos-bar-row">
+                            <div className="store-reputation-bar">
+                              <span style={{ width: `${reward.progress_pct}%` }} />
+                            </div>
+                            <span>{(userSucatas ?? 0).toLocaleString("pt-BR")} / {reward.points_threshold.toLocaleString("pt-BR")}</span>
                           </div>
-                          <span>{reward.current} / {reward.threshold}</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                    {pointRewards.filter(r => !r.unlocked).length === 0 && (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--green)", fontWeight: 800 }}>🏆 Todas as recompensas desbloqueadas!</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {activeTab === "Contratos Semanais" && (
                 <div className="store-side-card contratos-side-fill">
