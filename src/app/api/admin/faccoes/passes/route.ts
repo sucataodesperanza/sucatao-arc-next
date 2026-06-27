@@ -10,7 +10,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data: groups } = await admin
     .from("contract_groups")
-    .select("id, faction_id, title, description, type, starts_at, expires_at, active, factions(name, color)")
+    .select("id, faction_id, title, description, type, starts_at, expires_at, active, image_url, price_points, price_real, factions(name, color)")
     .order("created_at", { ascending: false })
 
   return NextResponse.json({ groups: groups ?? [] })

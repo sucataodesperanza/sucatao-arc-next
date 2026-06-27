@@ -48,7 +48,9 @@ function ContratosSection() {
   const [saving, setSaving]           = useState(false)
   const [createdId, setCreatedId]     = useState<string | null>(null)
   const [uploadingImg, setUploadingImg] = useState(false)
+  const [uploadingRowId, setUploadingRowId] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  const rowFileRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -83,6 +85,16 @@ function ContratosSection() {
   async function toggleActive(id: string, active: boolean) {
     await fetch(`/api/admin/contratos/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) })
     await load()
+  }
+
+  async function uploadRowImage(id: string, file: File) {
+    setUploadingRowId(id)
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await fetch(`/api/admin/contratos/${id}/image`, { method: "POST", body: fd })
+    setUploadingRowId(null)
+    if (res.ok) { toast.success("Imagem atualizada!"); await load() }
+    else toast.error("Erro ao enviar imagem.")
   }
 
   async function uploadImage(id: string, file: File) {
@@ -206,7 +218,7 @@ function ContratosSection() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
-              {["Tipo","Tier","Título","Facção","Recompensas","Expira","Ativo",""].map(h => (
+              {["Imagem","Tipo","Tier","Título","Facção","Recompensas","Expira","Ativo",""].map(h => (
                 <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
               ))}
             </tr>
@@ -214,6 +226,22 @@ function ContratosSection() {
           <tbody>
             {contracts.map(c => (
               <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                {/* Imagem */}
+                <td style={{ padding: "6px 8px" }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", overflow: "hidden", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                      {(c as Contract & { image_url?: string | null }).image_url
+                        ? <img src={(c as Contract & { image_url?: string | null }).image_url!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <Upload size={14} style={{ color: "var(--gray-500)" }} />}
+                    </div>
+                    <input ref={el => { rowFileRefs.current[c.id] = el }} type="file" accept="image/*" style={{ display: "none" }}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadRowImage(c.id, f) }} />
+                    <button type="button" onClick={() => rowFileRefs.current[c.id]?.click()} disabled={uploadingRowId === c.id}
+                      style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)", background: "none", border: "1px solid rgba(0,217,255,0.25)", borderRadius: 3, padding: "2px 5px", cursor: "pointer", font: "inherit", opacity: uploadingRowId === c.id ? 0.5 : 1, whiteSpace: "nowrap" }}>
+                      {uploadingRowId === c.id ? "..." : "Upload"}
+                    </button>
+                  </div>
+                </td>
                 <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950, opacity: 0.7 }}>{c.type}</span></td>
                 <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950 }}>{c.tier}</span></td>
                 <td style={{ padding: "8px", fontWeight: 800 }}>{c.title}</td>
@@ -387,7 +415,8 @@ function PassesSection() {
   })
   const [uploadingPassImg, setUploadingPassImg] = useState(false)
   const [createdPassId, setCreatedPassId]       = useState<string | null>(null)
-  const passFileRef = useRef<HTMLInputElement>(null)
+  const passFileRef    = useRef<HTMLInputElement>(null)
+  const passRowFileRefs = useRef<Record<string, HTMLInputElement | null>>({})
   const [mForm, setMForm] = useState({
     position: 1, title: "", description: "", total: 1, points_reward: 0,
   })
@@ -600,6 +629,27 @@ function PassesSection() {
                 {/* Missões */}
                 {isExpanded && (
                   <div style={{ padding: "12px 14px", borderTop: "1px solid var(--stroke)" }}>
+                    {/* Imagem do passe */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ width: 56, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
+                        {p.image_url
+                          ? <img src={p.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          : <Upload size={14} style={{ color: "var(--gray-500)" }} />}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Imagem do passe</span>
+                        <input
+                          type="file" accept="image/*" style={{ display: "none" }}
+                          ref={el => { passRowFileRefs.current[p.id] = el }}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadPassImage(p.id, f) }}
+                        />
+                        <button type="button" onClick={() => passRowFileRefs.current[p.id]?.click()} disabled={uploadingPassImg}
+                          style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)", background: "none", border: "1px solid rgba(0,217,255,0.3)", borderRadius: 4, padding: "4px 10px", cursor: "pointer", font: "inherit", opacity: uploadingPassImg ? 0.5 : 1 }}>
+                          {uploadingPassImg ? "Enviando..." : "Alterar imagem"}
+                        </button>
+                      </div>
+                    </div>
+
                     <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Missões ({groupMissions.length})</p>
 
                     {/* Lista de missões */}
