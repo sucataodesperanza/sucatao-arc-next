@@ -14,11 +14,11 @@ const navLinks = [
   { href: "/inventario", label: "Inventário", icon: Package    },
   { href: "/trades",     label: "Trades",     icon: Repeat2    },
   { href: "/faccoes",    label: "Facções",    icon: Flag       },
+  { href: "/contratos",  label: "Contratos",  icon: ScrollText },
   { href: "/crafting",   label: "Crafting",   icon: Hammer     },
   { href: "/reciclagem", label: "Reciclagem", icon: Recycle    },
   { href: "/mapas",      label: "Mapas",      icon: Map        },
   { href: "/arcpedia",   label: "Arcpedia",   icon: Bot        },
-  { href: "/contratos",  label: "Contratos",  icon: ScrollText },
   { href: "/rankings",   label: "Rankings",   icon: BarChart2  },
   { href: "/streamers",  label: "Streamers",  icon: Radio      },
 ]

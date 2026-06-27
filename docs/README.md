@@ -28,11 +28,11 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 4 | [Trades](telas/publicas/trades.md) | `/trades` | trades, trade_acceptances, trade_settings |
 | 5 | [Facções — Seleção](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity, Storage `faction-icons` |
 | — | [Facções — Visão Geral](telas/publicas/faccoes-visao-geral.md) | `/faccoes/visao-geral` | factions, user_factions, user_faction_activity, profiles |
-| 6 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
-| 7 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
-| 8 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
-| 9 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
-| 10 | [Contratos](telas/publicas/contratos.md) | `/contratos` | hardcoded |
+| 6 | [Contratos](telas/publicas/contratos.md) | `/contratos` | hardcoded |
+| 7 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
+| 8 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
+| 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
+| 10 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
 | — | [ARC Intel](telas/publicas/arcs.md) | `/arcs` | arc-data (local) |
 | — | [Meu Perfil](telas/publicas/perfil.md) | `/perfil` | profiles, Storage |
 | — | [Perfil Público](telas/publicas/perfil-publico.md) | `/perfil/[id]` | profiles, seller_inventory |
