@@ -500,8 +500,14 @@ function PassesSection() {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...mForm, group_id: groupId }),
     })
     setSavingMission(false)
-    if (res.ok) { toast.success("Missão adicionada!"); setMForm({ position: mForm.position + 1, title: "", description: "", total: 1, points_reward: 0 }); await loadMissions(groupId) }
-    else toast.error("Erro ao adicionar missão.")
+    if (res.ok) {
+      toast.success("Missão adicionada!")
+      setMForm({ position: mForm.position + 1, title: "", description: "", total: 1, points_reward: 0 })
+      await loadMissions(groupId)
+    } else {
+      const body = await res.json().catch(() => ({}))
+      toast.error(`Erro: ${body.error ?? "Não foi possível adicionar a missão."}`)
+    }
   }
 
   async function completeMission(missionId: string, userId: string) {

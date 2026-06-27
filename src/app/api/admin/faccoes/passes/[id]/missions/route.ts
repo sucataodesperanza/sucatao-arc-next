@@ -8,8 +8,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (guard.error) return guard.error
 
   const { id } = await params
-  const supabase = await createClient()
-  const { data } = await supabase
+  const admin = createAdminClient()
+  const { data } = await admin
     .from("contract_group_missions")
     .select("*")
     .eq("group_id", id)
