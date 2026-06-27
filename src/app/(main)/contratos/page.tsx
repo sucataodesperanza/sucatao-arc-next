@@ -565,7 +565,9 @@ export default function ContratosPage() {
   const [passes, setPasses]       = useState<ContractPass[]>([])
   const [loadingPasses, setLoadingPasses] = useState(false)
   const [buyingId, setBuyingId]   = useState<string | null>(null)
-  const [passModal, setPassModal] = useState<ContractPass | null>(null)
+  const [passModal, setPassModal]         = useState<ContractPass | null>(null)
+  const [passConfirmStep, setPassConfirmStep] = useState<"points" | "cash" | null>(null)
+  const [userPoints, setUserPoints]       = useState<number | null>(null)
 
   // Passes ativos do usuário (comprados)
   const [myPasses, setMyPasses]   = useState<Pass[]>([])
@@ -1283,7 +1285,7 @@ export default function ContratosPage() {
                             <span style={{ color: pct === 100 ? "#3df28b" : typeColor }}>{pct}%</span>
                           </div>
                           <div className="cv-card-actions">
-                            <button type="button" className="cv-card-details" onClick={() => setPassModal(pass)}>
+                            <button type="button" className="cv-card-details" onClick={() => { setPassModal(pass); setPassConfirmStep(null); fetch("/api/profile/points").then(r => r.json()).then(d => setUserPoints(d.points ?? null)).catch(() => {}) }}>
                               Ver Detalhes
                             </button>
                           </div>
@@ -1294,7 +1296,7 @@ export default function ContratosPage() {
                           ) : (
                             <button type="button" className="btn-aceitar" style={{ marginTop: 8 }}
                               disabled={buyingId === pass.id}
-                              onClick={() => setPassModal(pass)}>
+                              onClick={() => { setPassModal(pass); setPassConfirmStep(null); fetch("/api/profile/points").then(r => r.json()).then(d => setUserPoints(d.points ?? null)).catch(() => {}) }}>
                               <Zap size={14} fill="currentColor" />
                               {buyingId === pass.id ? "Aceitando..." : "ACEITAR"}
                             </button>
@@ -1627,68 +1629,153 @@ export default function ContratosPage() {
         </button>
       </div>
 
-      {/* ── Modal de compra de passe ── */}
+      {/* ── Modal de compra de passe (2 etapas) ── */}
       {passModal && (
-        <div className="cdm-overlay" onClick={() => setPassModal(null)}>
+        <div className="cdm-overlay" onClick={() => { setPassModal(null); setPassConfirmStep(null) }}>
           <div className="cdm-modal" style={{ maxWidth: 480, gridTemplateColumns: "1fr" }} onClick={e => e.stopPropagation()}>
-            <button className="cdm-close" type="button" onClick={() => setPassModal(null)}>✕</button>
+            <button className="cdm-close" type="button" onClick={() => { setPassModal(null); setPassConfirmStep(null) }}>✕</button>
             <div className="cdm-left" style={{ padding: 24 }}>
+
+              {/* Imagem / header */}
               {passModal.image_url && (
                 <div className="cdm-hero" style={{ backgroundImage: `url(${passModal.image_url})`, borderRadius: 8, marginBottom: 16 }}>
                   <div className="cdm-hero-overlay" />
                   <div className="cdm-hero-content">
-                    <span className="cdm-op-badge">{({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string,string>)[passModal.type] ?? passModal.type}</span>
+                    <span className="cdm-op-badge">{({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string, string>)[passModal.type] ?? passModal.type}</span>
                     <h2 className="cdm-title">{passModal.title}</h2>
                   </div>
                 </div>
               )}
               {!passModal.image_url && <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 950 }}>{passModal.title}</h2>}
-              {passModal.description && <p style={{ margin: "0 0 16px", fontSize: 13, color: "var(--paper-dim)" }}>{passModal.description}</p>}
 
-              <div className="cdm-rewards-grid" style={{ marginBottom: 16 }}>
-                <div className="cdm-reward-item" style={{ color: "#ffd400" }}><Coins size={16} /><strong>{passModal.total_points.toLocaleString("pt-BR")}</strong><span>pts totais</span></div>
-                <div className="cdm-reward-item" style={{ color: "#5fa8ff" }}><Zap size={16} /><strong>{passModal.missions_count}</strong><span>missões</span></div>
+              {/* Info do passe */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                  {({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string, string>)[passModal.type]} · <strong style={{ color: "var(--paper)" }}>{passModal.missions_count} missões</strong>
+                </span>
+                {passModal.total_points > 0 && (
+                  <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                    Recompensas: <strong style={{ color: "#ffd400" }}>{passModal.total_points.toLocaleString("pt-BR")} pts</strong>
+                  </span>
+                )}
               </div>
 
               {passModal.purchased ? (
+                /* Já comprado */
                 <div style={{ textAlign: "center", padding: "16px 0" }}>
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 950, color: "#3df28b" }}>✓ Você já possui este passe</p>
-                  <button type="button" onClick={() => { setPassModal(null); setActiveTab("Contratos Ativos") }}
+                  <button type="button" onClick={() => { setPassModal(null); setPassConfirmStep(null); setActiveTab("Contratos Ativos") }}
                     style={{ marginTop: 12, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "#3df28b", padding: "10px 24px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit" }}>
                     Ver Meu Passe →
                   </button>
                 </div>
-              ) : (
+
+              ) : passConfirmStep === null ? (
+                /* ── Etapa 1: escolha de pagamento ── */
                 <div style={{ display: "grid", gap: 10 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Como deseja pagar?</p>
                   {passModal.price_points > 0 && (
-                    <button type="button" disabled={buyingId === passModal.id}
-                      onClick={async () => {
-                        setBuyingId(passModal.id)
-                        const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "points" }) })
-                        setBuyingId(null)
-                        if (res.ok) { setPassModal(null); await loadPasses(); setActiveTab("Contratos Ativos"); await loadMyPasses() }
-                        else { const b = await res.json().catch(() => ({})); alert(b.error ?? "Erro ao comprar.") }
-                      }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(255,212,0,0.35)", background: "rgba(255,212,0,0.07)", color: "var(--paper)", padding: "12px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === passModal.id ? 0.6 : 1 }}>
-                      <span>Comprar com Sucatas</span>
-                      <span style={{ color: "#ffd400" }}>{passModal.price_points.toLocaleString("pt-BR")} pts</span>
+                    <button type="button"
+                      onClick={() => setPassConfirmStep("points")}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(255,212,0,0.35)", background: "rgba(255,212,0,0.07)", color: "var(--paper)", padding: "14px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", transition: "background 0.15s" }}>
+                      <span>🪙 Comprar com Sucatas</span>
+                      <span style={{ color: "#ffd400", fontWeight: 950 }}>{passModal.price_points.toLocaleString("pt-BR")} pts</span>
                     </button>
                   )}
                   {passModal.price_real > 0 && (
-                    <button type="button" disabled={buyingId === passModal.id}
-                      onClick={async () => {
-                        setBuyingId(passModal.id)
-                        const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "cash" }) })
-                        const body = await res.json().catch(() => ({}))
-                        setBuyingId(null)
-                        if (res.ok && body.orderId) window.location.href = `/pagar/${body.orderId}`
-                        else alert(body.error ?? "Erro ao iniciar pagamento.")
-                      }}
-                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(61,242,139,0.35)", background: "rgba(61,242,139,0.08)", color: "var(--paper)", padding: "12px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === passModal.id ? 0.6 : 1 }}>
-                      <span>Pagar com PIX</span>
-                      <span style={{ color: "#3df28b" }}>R$ {Number(passModal.price_real).toFixed(2).replace(".", ",")}</span>
+                    <button type="button"
+                      onClick={() => setPassConfirmStep("cash")}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(61,242,139,0.35)", background: "rgba(61,242,139,0.07)", color: "var(--paper)", padding: "14px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", transition: "background 0.15s" }}>
+                      <span>🏦 Pagar com PIX</span>
+                      <span style={{ color: "#3df28b", fontWeight: 950 }}>R$ {Number(passModal.price_real).toFixed(2).replace(".", ",")}</span>
                     </button>
                   )}
+                </div>
+
+              ) : (
+                /* ── Etapa 2: confirmação ── */
+                <div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+                    <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Resumo da compra</p>
+
+                    <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--paper-dim)" }}>Passe</span>
+                        <strong style={{ color: "var(--paper)" }}>{passModal.title}</strong>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--paper-dim)" }}>Tipo</span>
+                        <span style={{ color: "var(--paper)" }}>
+                          {({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string, string>)[passModal.type]} · {passModal.missions_count} missões
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                        <span style={{ color: "var(--paper-dim)" }}>Valor</span>
+                        <strong style={{ color: passConfirmStep === "points" ? "#ffd400" : "#3df28b", fontSize: 15 }}>
+                          {passConfirmStep === "points"
+                            ? `${passModal.price_points.toLocaleString("pt-BR")} pts`
+                            : `R$ ${Number(passModal.price_real).toFixed(2).replace(".", ",")}`}
+                        </strong>
+                      </div>
+                      {passConfirmStep === "points" && userPoints !== null && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                            <span style={{ color: "var(--gray-500)" }}>Saldo atual</span>
+                            <span style={{ color: userPoints >= passModal.price_points ? "var(--paper)" : "var(--red)", fontWeight: 800 }}>
+                              {userPoints.toLocaleString("pt-BR")} pts
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                            <span style={{ color: "var(--gray-500)" }}>Após a compra</span>
+                            <span style={{ color: userPoints >= passModal.price_points ? "#3df28b" : "var(--red)", fontWeight: 950 }}>
+                              {Math.max(0, userPoints - passModal.price_points).toLocaleString("pt-BR")} pts
+                            </span>
+                          </div>
+                          {userPoints < passModal.price_points && (
+                            <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--red)", fontWeight: 800 }}>
+                              ⚠ Pontos insuficientes
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {passConfirmStep === "points" ? (
+                      <button type="button" className="btn-aceitar"
+                        disabled={buyingId === passModal.id || (userPoints !== null && userPoints < passModal.price_points)}
+                        onClick={async () => {
+                          setBuyingId(passModal.id)
+                          const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "points" }) })
+                          setBuyingId(null)
+                          if (res.ok) { setPassModal(null); setPassConfirmStep(null); await loadPasses(); setActiveTab("Contratos Ativos"); await loadMyPasses() }
+                          else { const b = await res.json().catch(() => ({})); alert(b.error ?? "Erro ao comprar.") }
+                        }}>
+                        <Zap size={14} fill="currentColor" />
+                        {buyingId === passModal.id ? "Confirmando..." : `Confirmar — ${passModal.price_points.toLocaleString("pt-BR")} pts`}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn-aceitar"
+                        disabled={buyingId === passModal.id}
+                        onClick={async () => {
+                          setBuyingId(passModal.id)
+                          const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "cash" }) })
+                          const body = await res.json().catch(() => ({}))
+                          setBuyingId(null)
+                          if (res.ok && body.orderId) window.location.href = `/pagar/${body.orderId}`
+                          else alert(body.error ?? "Erro ao iniciar pagamento.")
+                        }}>
+                        <Zap size={14} fill="currentColor" />
+                        {buyingId === passModal.id ? "Gerando PIX..." : `Confirmar — R$ ${Number(passModal.price_real).toFixed(2).replace(".", ",")}`}
+                      </button>
+                    )}
+                    <button type="button"
+                      onClick={() => setPassConfirmStep(null)}
+                      style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.03)", color: "var(--paper-dim)", padding: "10px 0", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit", letterSpacing: "0.05em" }}>
+                      ← Voltar
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
