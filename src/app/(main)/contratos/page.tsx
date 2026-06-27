@@ -568,6 +568,7 @@ export default function ContratosPage() {
   const [passModal, setPassModal]         = useState<ContractPass | null>(null)
   const [passConfirmStep, setPassConfirmStep] = useState<"points" | "cash" | null>(null)
   const [userPoints, setUserPoints]       = useState<number | null>(null)
+  const trackRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Passes ativos do usuário (comprados)
   const [myPasses, setMyPasses]   = useState<Pass[]>([])
@@ -1366,8 +1367,25 @@ export default function ContratosPage() {
                         </div>
 
                         {/* ── Trilha de missões ── */}
-                        <div className="ca-track-wrap" style={{ overflowX: "visible" }}>
-                          <div className="ca-track" style={{ width: "100%" }}>
+                        <div
+                          ref={el => { trackRefs.current[pass.id] = el }}
+                          className="ca-track-wrap"
+                          style={pass.type === "monthly"
+                            ? { overflowX: "auto", cursor: "grab", userSelect: "none" }
+                            : { overflowX: "visible" }}
+                          onMouseDown={pass.type === "monthly" ? e => {
+                            const el = trackRefs.current[pass.id]
+                            if (!el) return
+                            el.style.cursor = "grabbing"
+                            const startX = e.pageX - el.offsetLeft
+                            const startScroll = el.scrollLeft
+                            const onMove = (ev: MouseEvent) => { el.scrollLeft = startScroll - (ev.pageX - el.offsetLeft - startX) }
+                            const onUp = () => { el.style.cursor = "grab"; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
+                            window.addEventListener("mousemove", onMove)
+                            window.addEventListener("mouseup", onUp)
+                          } : undefined}
+                        >
+                          <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%" }}>
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
                               const nodeSize = isMilestone ? 52 : 40
@@ -1381,7 +1399,7 @@ export default function ContratosPage() {
                               const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
                               return (
                                 <div key={m.id} className="ca-track-node-wrap">
-                                  <div className="ca-track-node-col" style={{ flex: 1, minWidth: 0 }}>
+                                  <div className="ca-track-node-col" style={pass.type === "monthly" ? { width: isMilestone ? 80 : 64 } : { flex: 1, minWidth: 0 }}>
                                     {/* Recompensa acima */}
                                     <div className="ca-track-reward">
                                       {isMilestone && m.item_reward ? (
@@ -1414,7 +1432,7 @@ export default function ContratosPage() {
                                   {/* Conector */}
                                   {isNext && (
                                     <div className="ca-track-connector" style={{
-                                      flex: 1,
+                                      ...(pass.type === "monthly" ? { width: 24 } : { flex: 1 }),
                                       background: nextDone
                                         ? `color-mix(in srgb, ${passColor} 55%, transparent)`
                                         : "rgba(255,255,255,0.07)",
