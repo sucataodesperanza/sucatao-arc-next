@@ -15,11 +15,12 @@
 
 .faccoes-hub-layout {
   display: flex;
-  padding-right: var(--side-panel-width);
+  margin-right: calc(var(--side-panel-width) + var(--side-panel-gap));
+  transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .faccoes-hub-layout--no-panel {
-  padding-right: 0;
+  margin-right: var(--side-panel-gap);
 }
 
 .faccoes-hub-main {
@@ -610,102 +611,8 @@
   font-size: 14px;
 }
 
-/* Sidebar (shared store pattern) */
-
-.store-side-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  width: var(--side-panel-width);
-  overflow-y: auto;
-  border-left: 1px solid var(--stroke);
-  background: #03090d;
-  padding: 14px 12px;
-  gap: 0;
-}
-
-.store-user-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--stroke);
-  margin-bottom: 10px;
-}
-
-.store-user-avatar {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--surface-3);
-  border: 2px solid var(--stroke-strong);
-  color: var(--paper);
-  font-size: 16px;
-  font-weight: 950;
-}
-
-.store-user-level {
-  position: absolute;
-  bottom: -6px;
-  right: -6px;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--yellow);
-  border: 2px solid #03090d;
-  color: var(--ink);
-  font-size: 9px;
-  font-weight: 950;
-}
-
-.store-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.store-user-info strong {
-  color: var(--paper);
-  font-size: 14px;
-  font-weight: 950;
-}
-
-.store-user-online {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--green);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.store-user-online-dot {
-  display: block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-}
-
-.store-side-card {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px solid var(--stroke);
-  border-radius: 10px;
-  background: #080b15;
-}
+/* store-side-panel, store-user-card, store-side-card etc.
+   são definidos globalmente em globals.css — não redefinir aqui */
 
 .store-side-card h2 {
   flex-shrink: 0;
