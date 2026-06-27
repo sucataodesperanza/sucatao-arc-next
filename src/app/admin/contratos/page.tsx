@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { CheckCircle, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { CheckCircle, Plus, Trash2, ChevronDown, ChevronUp, Upload } from "lucide-react"
 import { useToast, useConfirm } from "@/components/admin-notifications"
 
 type Contract = {
@@ -42,7 +42,10 @@ function ContratosSection() {
   const [loading, setLoading]     = useState(true)
   const [showForm, setShowForm]   = useState(false)
   const [form, setForm]           = useState(emptyForm)
-  const [saving, setSaving]       = useState(false)
+  const [saving, setSaving]           = useState(false)
+  const [createdId, setCreatedId]     = useState<string | null>(null)
+  const [uploadingImg, setUploadingImg] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -62,13 +65,32 @@ function ContratosSection() {
     const body = { ...form, rep: form.rep === "" ? null : Number(form.rep), expires_at: form.expires_at || null, variant: form.variant || null }
     const res = await fetch("/api/admin/contratos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
     setSaving(false)
-    if (res.ok) { toast.success("Contrato criado!"); setShowForm(false); setForm(emptyForm); await load() }
-    else toast.error("Erro ao criar contrato.")
+    if (res.ok) {
+      const data = await res.json()
+      setCreatedId(data.id)
+      toast.success("Contrato criado! Agora selecione uma imagem.")
+      await load()
+      // mantém formulário aberto só para upload da imagem
+    } else toast.error("Erro ao criar contrato.")
   }
 
   async function toggleActive(id: string, active: boolean) {
     await fetch(`/api/admin/contratos/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active }) })
     await load()
+  }
+
+  async function uploadImage(id: string, file: File) {
+    setUploadingImg(true)
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await fetch(`/api/admin/contratos/${id}/image`, { method: "POST", body: fd })
+    setUploadingImg(false)
+    if (res.ok) {
+      const { url } = await res.json()
+      field("image_url", url)
+      toast.success("Imagem enviada!")
+      await load()
+    } else toast.error("Erro ao enviar imagem.")
   }
 
   async function del(id: string, title: string) {
@@ -87,7 +109,7 @@ function ContratosSection() {
     <div className="utility-panel">
       <div className="utility-panel-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div><strong>Contratos</strong><small>Contratos ativos exibidos na tela /contratos</small></div>
-        <button type="button" onClick={() => setShowForm(s => !s)}
+        <button type="button" onClick={() => { setShowForm(s => !s); setCreatedId(null); setForm(emptyForm) }}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
           {showForm ? <ChevronUp size={12} /> : <Plus size={12} />} {showForm ? "Cancelar" : "Novo Contrato"}
         </button>
@@ -122,7 +144,37 @@ function ContratosSection() {
             <label><span style={lbl}>Clima</span><input value={form.climate} onChange={e => field("climate", e.target.value)} style={inp} placeholder="Nublado" /></label>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-            <label><span style={lbl}>URL da imagem</span><input value={form.image_url} onChange={e => field("image_url", e.target.value)} style={inp} placeholder="/assets/bots/arc_sentinel.png" /></label>
+            <div>
+              <span style={lbl}>Imagem do contrato</span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                {/* Preview */}
+                <div style={{ width: 44, height: 44, borderRadius: 6, background: "rgba(255,255,255,0.05)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
+                  {form.image_url
+                    ? <img src={form.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : <Upload size={16} style={{ color: "var(--gray-500)" }} />}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                  <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }}
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      if (createdId) {
+                        uploadImage(createdId, file)
+                      } else {
+                        // Antes de criar: preview local temporário
+                        field("image_url", URL.createObjectURL(file))
+                        toast.info("Crie o contrato primeiro — a imagem será enviada após salvar.")
+                      }
+                    }} />
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploadingImg}
+                    style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper)", fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", opacity: uploadingImg ? 0.6 : 1 }}>
+                    {uploadingImg ? "Enviando..." : "Selecionar arquivo"}
+                  </button>
+                  <input value={form.image_url.startsWith("blob:") ? "" : form.image_url} onChange={e => field("image_url", e.target.value)}
+                    style={{ ...inp, fontSize: 10 }} placeholder="ou cole uma URL" />
+                </div>
+              </div>
+            </div>
             <label><span style={lbl}>Bônus — condição</span><input value={form.bonus_condition} onChange={e => field("bonus_condition", e.target.value)} style={inp} placeholder="Elimine todos sem morrer" /></label>
             <label><span style={lbl}>Bônus — recompensa</span><input value={form.bonus_reward} onChange={e => field("bonus_reward", e.target.value)} style={inp} placeholder="+80 REP extra" /></label>
           </div>
