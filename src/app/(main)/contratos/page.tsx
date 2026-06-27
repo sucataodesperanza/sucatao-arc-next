@@ -1400,15 +1400,9 @@ export default function ContratosPage() {
                               return (
                                 <div key={m.id} className="ca-track-node-wrap">
                                   <div className="ca-track-node-col" style={pass.type === "monthly" ? { width: isMilestone ? 80 : 64 } : { flex: 1, minWidth: 0 }}>
-                                    {/* Recompensa acima */}
-                                    <div className="ca-track-reward">
-                                      {isMilestone && m.item_reward ? (
-                                        <span style={{ fontSize: 10, fontWeight: 950, padding: "2px 8px", borderRadius: 4, background: "rgba(255,212,0,0.15)", border: "1px solid rgba(255,212,0,0.35)", color: "#ffd400" }}>🎁 Item</span>
-                                      ) : m.points_reward > 0 ? (
-                                        <span style={{ fontSize: 10, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.18)" : "#ffd400" }}>+{m.points_reward}pts</span>
-                                      ) : null}
-                                    </div>
-                                    {/* Nó */}
+                                    {/* Espaço vazio acima (mantém alinhamento) */}
+                                    <div className="ca-track-reward" />
+                                    {/* Nó — mostra recompensa dentro ou ✓ */}
                                     <div
                                       className={`ca-track-node${m.status === "active" ? " active" : ""}`}
                                       style={{
@@ -1419,14 +1413,26 @@ export default function ContratosPage() {
                                         boxShadow: m.status === "active" ? `0 0 20px color-mix(in srgb, ${passColor} 50%, transparent)` : "none",
                                         ["--node-color-alpha" as string]: `color-mix(in srgb, ${passColor} 25%, transparent)`,
                                         ["--node-color-mid" as string]: `color-mix(in srgb, ${passColor} 45%, transparent)`,
-                                        fontSize: isMilestone ? 18 : 14,
-                                        color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor,
+                                        flexDirection: "column" as const,
+                                        gap: 1,
                                       }}>
-                                      {m.status === "completed" ? "✓" : m.position}
+                                      {m.status === "completed" ? (
+                                        <span style={{ fontSize: isMilestone ? 20 : 16, color: passColor, fontWeight: 950 }}>✓</span>
+                                      ) : isMilestone && m.item_reward ? (
+                                        <span style={{ fontSize: 14 }}>🎁</span>
+                                      ) : m.points_reward > 0 ? (
+                                        <span style={{ fontSize: isMilestone ? 12 : 10, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
+                                          +{m.points_reward}
+                                        </span>
+                                      ) : (
+                                        <span style={{ fontSize: isMilestone ? 15 : 12, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor }}>
+                                          {m.position}
+                                        </span>
+                                      )}
                                     </div>
-                                    {/* Label */}
-                                    <span className="ca-track-label" style={{ color: m.status === "locked" ? "rgba(255,255,255,0.25)" : "var(--paper)" }}>
-                                      {m.title}
+                                    {/* Label: Dia X */}
+                                    <span className="ca-track-label" style={{ color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", fontSize: 10 }}>
+                                      Dia {m.position}
                                     </span>
                                   </div>
                                   {/* Conector */}
