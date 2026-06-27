@@ -1600,6 +1600,48 @@
 
 .cdm-buy-btn:hover { filter: brightness(1.12); }
 
+/* ── Botão ACEITAR global ── */
+.btn-aceitar {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 13px 0;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1aff8c 0%, #00d97e 40%, #00b866 100%);
+  color: #021a0a;
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  font-family: inherit;
+  box-shadow: 0 0 18px rgba(61,242,139,0.45), 0 2px 8px rgba(0,0,0,0.4);
+  transition: box-shadow 0.25s ease, filter 0.25s ease;
+}
+.btn-aceitar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  transition: left 0s;
+}
+.btn-aceitar:hover::before { left: 160%; transition: left 0.55s ease; }
+.btn-aceitar:hover {
+  box-shadow: 0 0 28px rgba(61,242,139,0.7), 0 4px 14px rgba(0,0,0,0.45);
+  filter: brightness(1.08);
+}
+.btn-aceitar:active { filter: brightness(0.92); box-shadow: 0 0 12px rgba(61,242,139,0.4); }
+.btn-aceitar:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
 .cdm-disclaimer {
   font-size: 10px;
   color: var(--gray-500);

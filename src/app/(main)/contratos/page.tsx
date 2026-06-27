@@ -805,11 +805,11 @@ export default function ContratosPage() {
                           ) : raw.user_status === "completed" ? (
                             <span style={{ fontSize: 10, fontWeight: 950, color: "var(--green)", textTransform: "uppercase" }}>Concluído</span>
                           ) : (
-                            <button type="button"
-                              style={{ background: "rgba(61,242,139,0.1)", border: "1px solid rgba(61,242,139,0.3)", color: "var(--green)", fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", opacity: acceptingId === raw.id ? 0.6 : 1 }}
+                            <button type="button" className="btn-aceitar"
                               disabled={acceptingId === raw.id}
                               onClick={() => handleAcceptActive(raw.id)}>
-                              {acceptingId === raw.id ? "..." : "Aceitar"}
+                              <Zap size={14} fill="currentColor" />
+                              {acceptingId === raw.id ? "Aceitando..." : "Aceitar"}
                             </button>
                           )}
                         </div>
@@ -932,7 +932,8 @@ export default function ContratosPage() {
                           <span>Progresso Atual</span>
                           <strong style={{ color: "#3df28b", fontSize: 18 }}>{selectedActiveContract.progress} / {selectedActiveContract.total}</strong>
                         </div>
-                        <button type="button" className="cdm-buy-btn" style={{ background: "#3df28b", color: "#021a0a" }} onClick={() => setSelectedActiveContract(null)}>
+                        <button type="button" className="btn-aceitar" onClick={() => setSelectedActiveContract(null)}>
+                          <Zap size={14} fill="currentColor" />
                           Acompanhar Contrato
                         </button>
                       </div>
@@ -1291,11 +1292,11 @@ export default function ContratosPage() {
                               {pct === 100 ? "✓ Concluído" : "Em Progresso"}
                             </span>
                           ) : (
-                            <button type="button"
+                            <button type="button" className="btn-aceitar" style={{ marginTop: 8 }}
                               disabled={buyingId === pass.id}
-                              onClick={() => setPassModal(pass)}
-                              style={{ marginTop: 8, width: "100%", background: `color-mix(in srgb, ${typeColor} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${typeColor} 40%, transparent)`, color: typeColor, padding: "10px 0", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", letterSpacing: "0.05em" }}>
-                              {buyingId === pass.id ? "..." : "ACEITAR"}
+                              onClick={() => setPassModal(pass)}>
+                              <Zap size={14} fill="currentColor" />
+                              {buyingId === pass.id ? "Aceitando..." : "ACEITAR"}
                             </button>
                           )}
                         </div>
