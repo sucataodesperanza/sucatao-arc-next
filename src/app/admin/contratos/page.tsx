@@ -626,9 +626,70 @@ function PassesSection() {
                   {isExpanded ? <ChevronUp size={14} style={{ color: "var(--gray-500)" }} /> : <ChevronDown size={14} style={{ color: "var(--gray-500)" }} />}
                 </div>
 
-                {/* Missões */}
+                {/* Expander: dados + missões */}
                 {isExpanded && (
                   <div style={{ padding: "12px 14px", borderTop: "1px solid var(--stroke)" }}>
+
+                    {/* ── Dados do passe (editáveis) ── */}
+                    <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Dados do Passe</p>
+                    <div style={{ display: "grid", gap: 10, marginBottom: 18, padding: 12, background: "rgba(0,0,0,0.15)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.05)" }}>
+                      {/* Título e descrição */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <label style={{ display: "grid", gap: 3 }}>
+                          <span style={{ ...lbl, marginBottom: 0 }}>Título</span>
+                          <input defaultValue={p.title}
+                            onBlur={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ title: e.target.value }) }); await load() }}
+                            style={inp} />
+                        </label>
+                        <label style={{ display: "grid", gap: 3 }}>
+                          <span style={{ ...lbl, marginBottom: 0 }}>Descrição</span>
+                          <input defaultValue={p.description}
+                            onBlur={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description: e.target.value }) }); await load() }}
+                            style={inp} />
+                        </label>
+                      </div>
+                      {/* Preços */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <label style={{ display: "grid", gap: 3 }}>
+                          <span style={{ ...lbl, marginBottom: 0 }}>Preço em Sucatas</span>
+                          <input type="number" min={0} defaultValue={p.price_points ?? 0}
+                            onBlur={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ price_points: Number(e.target.value) }) }); await load() }}
+                            style={inp} />
+                        </label>
+                        <label style={{ display: "grid", gap: 3 }}>
+                          <span style={{ ...lbl, marginBottom: 0 }}>Preço em R$</span>
+                          <input type="number" min={0} step={0.01} defaultValue={p.price_real ?? 0}
+                            onBlur={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ price_real: Number(e.target.value) }) }); await load() }}
+                            style={inp} />
+                        </label>
+                      </div>
+                      {/* Datas */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                        <label style={{ display: "grid", gap: 3 }}>
+                          <span style={{ ...lbl, marginBottom: 0 }}>Início</span>
+                          <input type="datetime-local" defaultValue={p.starts_at?.slice(0, 16)}
+                            onBlur={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ starts_at: e.target.value }) }); await load() }}
+                            style={inp} />
+                        </label>
+                        <label style={{ display: "grid", gap: 3 }}>
+                          <span style={{ ...lbl, marginBottom: 0 }}>Expira em</span>
+                          <input type="datetime-local" defaultValue={p.expires_at?.slice(0, 16)}
+                            onBlur={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expires_at: e.target.value }) }); await load() }}
+                            style={inp} />
+                        </label>
+                      </div>
+                      {/* Facção */}
+                      <label style={{ display: "grid", gap: 3 }}>
+                        <span style={{ ...lbl, marginBottom: 0 }}>Facção vinculada</span>
+                        <select defaultValue={p.faction_id ?? ""}
+                          onChange={async e => { await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ faction_id: e.target.value || null }) }); toast.success("Facção atualizada."); await load() }}
+                          style={{ ...inp, color: factions.find(f => f.id === p.faction_id)?.color ?? "var(--gray-500)" }}>
+                          <option value="">— Sem facção (passe geral)</option>
+                          {factions.map(f => <option key={f.id} value={f.id} style={{ color: "var(--paper)" }}>{f.name}</option>)}
+                        </select>
+                      </label>
+                    </div>
+
                     {/* Imagem do passe */}
                     <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, padding: "10px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 8, border: "1px solid rgba(255,255,255,0.05)" }}>
                       <div style={{ width: 56, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
