@@ -1,16 +1,9 @@
 .faccoes-hub-page {
   min-height: 100vh;
-  background: var(--bg);
-}
-
-/* Remove padding horizontal e max-width do shell nesta página */
-.content:has(.faccoes-hub-page) {
-  padding-inline: 0;
-}
-
-.content > .faccoes-hub-page {
   max-width: none;
-  margin: 0;
+  background: var(--bg);
+  margin: -52px -24px -72px;
+  padding: 52px 24px 72px;
 }
 
 .faccoes-hub-layout {
