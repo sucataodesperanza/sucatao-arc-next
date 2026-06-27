@@ -429,6 +429,26 @@ export default function FaccoesHubPage() {
                     {(() => {
                       const active = pass.missions.find(m => m.status === "active")
                       if (!active) return null
+                      const isBlocked = !!active.unlocks_at
+
+                      if (isBlocked) {
+                        // Countdown até meia-noite BRT
+                        const unlockDate = new Date(active.unlocks_at!)
+                        const diff = unlockDate.getTime() - Date.now()
+                        const h = Math.floor(diff / 3600000)
+                        const m = Math.floor((diff % 3600000) / 60000)
+                        return (
+                          <div style={{ margin: "0 20px 20px", padding: "14px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ width: 36, height: 36, borderRadius: "50%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", display: "grid", placeItems: "center", fontSize: 16, flexShrink: 0 }}>🔒</div>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "var(--paper-dim)" }}>Próxima missão disponível em</p>
+                              <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 950, color: faction.color }}>{h}h {m}m</p>
+                              <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>Renova à meia-noite (BRT) · {active.title}</p>
+                            </div>
+                          </div>
+                        )
+                      }
+
                       return (
                         <div style={{ margin: "0 20px 20px", padding: "14px 16px", background: `color-mix(in srgb, ${faction.color} 6%, transparent)`, border: `1px solid color-mix(in srgb, ${faction.color} 25%, transparent)`, borderRadius: 8 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>

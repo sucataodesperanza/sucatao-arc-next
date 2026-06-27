@@ -32,6 +32,42 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (existing) return NextResponse.json({ error: "Missão já concluída para este usuário." }, { status: 409 })
 
+  // Busca o grupo para verificar o tipo e a restrição diária
+  const { data: group } = await admin
+    .from("contract_groups")
+    .select("type")
+    .eq("id", mission.group_id)
+    .single()
+
+  // Passes com mais de 1 missão: máximo 1 conclusão por dia (calendário BRT = UTC-3)
+  if (group && group.type !== "daily") {
+    const brtOffsetMs = 3 * 60 * 60 * 1000
+    const nowBrt = new Date(Date.now() - brtOffsetMs)
+    const todayStartBrt = new Date(nowBrt)
+    todayStartBrt.setHours(0, 0, 0, 0)
+    const todayStartUtc = new Date(todayStartBrt.getTime() + brtOffsetMs)
+    const todayEndUtc   = new Date(todayStartUtc.getTime() + 86400000)
+
+    const { data: todayCompletion } = await admin
+      .from("user_mission_completions")
+      .select("id, completed_at")
+      .eq("user_id", userId)
+      .eq("group_id", mission.group_id)
+      .gte("completed_at", todayStartUtc.toISOString())
+      .lt("completed_at",  todayEndUtc.toISOString())
+      .limit(1)
+      .single()
+
+    if (todayCompletion) {
+      const unlocks_at = todayEndUtc.toISOString()
+      return NextResponse.json({
+        error: "Só é possível concluir 1 missão por dia neste passe.",
+        code: "daily_limit",
+        unlocks_at,
+      }, { status: 429 })
+    }
+  }
+
   // Registra conclusão
   const { error } = await admin
     .from("user_mission_completions")
