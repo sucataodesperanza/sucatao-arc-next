@@ -420,6 +420,9 @@ function PassesSection() {
   const [mForm, setMForm] = useState({
     position: 1, title: "", description: "", total: 1, points_reward: 0,
   })
+  // Estados de edição inline de descrição por missão
+  const [editingDescId, setEditingDescId] = useState<string | null>(null)
+  const [editingDescVal, setEditingDescVal] = useState("")
   const [savingPass, setSavingPass] = useState(false)
   const [savingMission, setSavingMission] = useState(false)
   // Item search por missão
@@ -771,7 +774,38 @@ function PassesSection() {
                           <span style={{ width: 24, height: 24, borderRadius: "50%", background: m.position % 5 === 0 ? "rgba(255,212,0,0.2)" : "rgba(255,255,255,0.05)", border: m.position % 5 === 0 ? "1px solid rgba(255,212,0,0.4)" : "1px solid var(--stroke)", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 950, color: m.position % 5 === 0 ? "var(--yellow)" : "var(--gray-500)", flexShrink: 0 }}>
                             {m.position}
                           </span>
-                          <span style={{ flex: 1, fontWeight: 800 }}>{m.title}</span>
+                          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
+                            <span style={{ fontWeight: 800, fontSize: 12 }}>{m.title}</span>
+                            {editingDescId === m.id ? (
+                              <div style={{ display: "flex", gap: 4 }}>
+                                <input autoFocus value={editingDescVal} onChange={e => setEditingDescVal(e.target.value)}
+                                  placeholder="Descrição da missão"
+                                  style={{ ...inp, fontSize: 11, flex: 1 }}
+                                  onKeyDown={async e => {
+                                    if (e.key === "Enter") {
+                                      await fetch(`/api/admin/faccoes/passes/missions/${m.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description: editingDescVal }) })
+                                      setEditingDescId(null)
+                                      await loadMissions(p.id)
+                                    } else if (e.key === "Escape") {
+                                      setEditingDescId(null)
+                                    }
+                                  }} />
+                                <button type="button" onClick={async () => {
+                                    await fetch(`/api/admin/faccoes/passes/missions/${m.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ description: editingDescVal }) })
+                                    setEditingDescId(null)
+                                    await loadMissions(p.id)
+                                  }}
+                                  style={{ background: "rgba(61,242,139,0.1)", border: "1px solid rgba(61,242,139,0.3)", color: "var(--green)", fontSize: 10, padding: "3px 8px", borderRadius: 4, cursor: "pointer", font: "inherit", fontWeight: 950 }}>✓</button>
+                                <button type="button" onClick={() => setEditingDescId(null)}
+                                  style={{ background: "none", border: "1px solid var(--stroke)", color: "var(--muted)", fontSize: 10, padding: "3px 8px", borderRadius: 4, cursor: "pointer", font: "inherit" }}>✕</button>
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: 10, color: m.description ? "var(--gray-500)" : "rgba(255,255,255,0.15)", cursor: "pointer", fontStyle: m.description ? "normal" : "italic" }}
+                                onClick={() => { setEditingDescId(m.id); setEditingDescVal(m.description ?? "") }}>
+                                {m.description || "Clique para adicionar descrição..."}
+                              </span>
+                            )}
+                          </div>
                           <span style={{ color: "var(--muted)", fontSize: 11 }}>total: {m.total}</span>
                           {/* Input editável de pontos */}
                           <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
@@ -850,15 +884,18 @@ function PassesSection() {
                     </div>
 
                     {/* Adicionar missão */}
-                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto auto auto", gap: 8, alignItems: "end" }}>
-                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>#</span><input type="number" min={1} value={mForm.position} onChange={e => setMForm(p => ({ ...p, position: Number(e.target.value) }))} style={{ ...inp, width: 52 }} /></label>
-                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Título da missão</span><input value={mForm.title} onChange={e => setMForm(p => ({ ...p, title: e.target.value }))} style={inp} placeholder="Elimine 5 inimigos ARC" /></label>
-                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Total</span><input type="number" min={1} value={mForm.total} onChange={e => setMForm(p => ({ ...p, total: Number(e.target.value) }))} style={{ ...inp, width: 64 }} /></label>
-                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Pontos</span><input type="number" min={0} value={mForm.points_reward} onChange={e => setMForm(p => ({ ...p, points_reward: Number(e.target.value) }))} style={{ ...inp, width: 80 }} /></label>
-                      <button type="button" onClick={() => addMission(p.id)} disabled={savingMission || !mForm.title}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, cursor: "pointer", borderRadius: 4, font: "inherit", alignSelf: "end", textTransform: "uppercase" }}>
-                        <Plus size={11} /> {savingMission ? "..." : "Add"}
-                      </button>
+                    <div style={{ display: "grid", gap: 8 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "auto 1fr 1fr auto auto auto", gap: 8, alignItems: "end" }}>
+                        <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>#</span><input type="number" min={1} value={mForm.position} onChange={e => setMForm(p => ({ ...p, position: Number(e.target.value) }))} style={{ ...inp, width: 52 }} /></label>
+                        <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Título da missão</span><input value={mForm.title} onChange={e => setMForm(p => ({ ...p, title: e.target.value }))} style={inp} placeholder="Elimine 5 inimigos ARC" /></label>
+                        <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Descrição (opcional)</span><input value={mForm.description} onChange={e => setMForm(p => ({ ...p, description: e.target.value }))} style={inp} placeholder="Complete a tarefa para avançar" /></label>
+                        <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Total</span><input type="number" min={1} value={mForm.total} onChange={e => setMForm(p => ({ ...p, total: Number(e.target.value) }))} style={{ ...inp, width: 64 }} /></label>
+                        <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Pontos</span><input type="number" min={0} value={mForm.points_reward} onChange={e => setMForm(p => ({ ...p, points_reward: Number(e.target.value) }))} style={{ ...inp, width: 80 }} /></label>
+                        <button type="button" onClick={() => addMission(p.id)} disabled={savingMission || !mForm.title}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, cursor: "pointer", borderRadius: 4, font: "inherit", alignSelf: "end", textTransform: "uppercase" }}>
+                          <Plus size={11} /> {savingMission ? "..." : "Add"}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
