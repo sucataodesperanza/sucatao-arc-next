@@ -8,7 +8,7 @@ Documentação técnica e funcional das telas do site ARC Raiders.
 docs/
 ├── telas/
 │   ├── publicas/    → 15 telas acessíveis pelos usuários
-│   └── admin/       → 12 telas do painel administrativo
+│   └── admin/       → 13 telas do painel administrativo
 └── apis/
     ├── trades.md    → endpoints do sistema de trades
     └── inventory.md → endpoints do inventário
@@ -31,7 +31,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 6 | [Contratos](telas/publicas/contratos.md) | `/contratos` | contracts, user_contracts, contract_groups, contract_group_missions, user_mission_completions, user_contract_group_purchases |
 | 7 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
 | 8 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
-| 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
+| 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | maps, map_markers, markerCategories (local) |
 | 10 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
 | — | [ARC Intel](telas/publicas/arcs.md) | `/arcs` | arc-data (local) |
 | — | [Meu Perfil](telas/publicas/perfil.md) | `/perfil` | profiles, Storage |
@@ -49,6 +49,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | [Estoque](telas/admin/estoque.md) | `/admin/estoque` | stock_items, catalog_items |
 | [Trades](telas/admin/trades.md) | `/admin/trades` | trades, trade_acceptances, trade_settings |
 | [Contratos](telas/admin/contratos.md) | `/admin/contratos` | contracts, user_contracts, Storage `contract-images` |
+| [Mapas](telas/admin/mapas.md) | `/admin/mapas` | maps, map_markers |
 | [Crafting](telas/admin/crafting.md) | `/admin/crafting` | catalog_items |
 | [Facções](telas/admin/faccoes.md) | `/admin/faccoes` | factions, user_factions, faction_activity |
 | [Arcpedia](telas/admin/arcpedia.md) | `/admin/arcpedia` | arcs |
@@ -75,6 +76,8 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `contracts` | Contratos individuais (tipo, tier, recompensas, sub-objetivos e inimigos como JSONB) |
 | `user_contracts` | Progresso e status do usuário por contrato individual (UNIQUE user_id+contract_id) |
 | `contract_point_rewards` | Recompensas (catalog_items) desbloqueadas ao atingir X pontos acumulados |
+| `maps` | Mapas do jogo (nome, label, descrição, image_url, status, index) — seed do arc-data.js |
+| `map_markers` | Marcadores em cada mapa (tipo, x/y %, título, nota, active) |
 | `contract_groups` | Contratos sequenciais (diário/semanal/mensal) com preço em pts e R$ |
 | `contract_group_missions` | Missões de cada contrato sequencial (posição, pontos, item_reward JSONB) |
 | `user_mission_completions` | Missões concluídas por usuário (limite 1/dia para weekly e monthly) |
