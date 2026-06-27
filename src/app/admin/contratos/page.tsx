@@ -949,7 +949,7 @@ function RewardsSection() {
   async function searchItems(q: string) {
     if (!q.trim()) { setResults([]); return }
     setSearching(true)
-    const res = await fetch(`/api/admin/catalog?q=${encodeURIComponent(q)}&limit=6`)
+    const res = await fetch(`/api/admin/catalog?q=${encodeURIComponent(q)}&limit=20`)
     const body = await res.json().catch(() => ({}))
     setResults(body.items ?? [])
     setSearching(false)
@@ -997,16 +997,24 @@ function RewardsSection() {
               <input value={query} onChange={e => { setQuery(e.target.value); searchItems(e.target.value) }}
                 placeholder="Ex: Caixa de Componentes Épicos..." style={{ ...inp, width: "100%" }} />
               {(results.length > 0 || searching) && (
-                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 6, overflow: "hidden", maxHeight: 200, overflowY: "auto" }}>
-                  {searching && <p style={{ margin: 0, padding: "8px 10px", fontSize: 11, color: "var(--muted)" }}>Buscando...</p>}
+                <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 8, overflow: "hidden", maxHeight: 400, overflowY: "auto", boxShadow: "0 8px 32px rgba(0,0,0,0.5)" }}>
+                  {searching && <p style={{ margin: 0, padding: "10px 14px", fontSize: 11, color: "var(--muted)" }}>Buscando...</p>}
+                  {!searching && results.length === 0 && <p style={{ margin: 0, padding: "10px 14px", fontSize: 11, color: "var(--muted)" }}>Nenhum item encontrado.</p>}
                   {results.map((item: any) => (
                     <button key={item.id} type="button" onClick={() => addReward(item)} disabled={saving}
-                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}>
-                      {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 24, height: 24, objectFit: "contain" }} />}
-                      <div style={{ flex: 1 }}>
-                        <span style={{ fontSize: 12, color: "var(--paper)", display: "block" }}>{item.name}</span>
+                      style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 14px", background: "none", border: "none", borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer", textAlign: "left", font: "inherit", transition: "background 0.1s" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.05)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                      <div style={{ width: 32, height: 32, flexShrink: 0, display: "grid", placeItems: "center", background: "rgba(255,255,255,0.04)", borderRadius: 6, overflow: "hidden" }}>
+                        {item.icon_url
+                          ? <img src={item.icon_url} alt="" style={{ width: 28, height: 28, objectFit: "contain" }} />
+                          : <span style={{ fontSize: 10, color: "var(--gray-500)" }}>—</span>}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 12, color: "var(--paper)", display: "block", fontWeight: 800, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</span>
                         {item.rarity && <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>}
                       </div>
+                      <span style={{ fontSize: 10, color: "var(--cyan)", fontWeight: 950, flexShrink: 0, opacity: 0.7 }}>+ {threshold.toLocaleString("pt-BR")} pts</span>
                     </button>
                   ))}
                 </div>
