@@ -383,8 +383,11 @@ function PassesSection() {
   const [form, setForm] = useState({
     faction_id: "", title: "", description: "", type: "weekly",
     starts_at: "", expires_at: "", active: true,
-    price_points: 0, price_real: 0,
+    price_points: 0, price_real: 0, image_url: "",
   })
+  const [uploadingPassImg, setUploadingPassImg] = useState(false)
+  const [createdPassId, setCreatedPassId]       = useState<string | null>(null)
+  const passFileRef = useRef<HTMLInputElement>(null)
   const [mForm, setMForm] = useState({
     position: 1, title: "", description: "", total: 1, points_reward: 0,
   })
@@ -419,13 +422,38 @@ function PassesSection() {
   async function createPass() {
     if (!form.title || !form.starts_at || !form.expires_at) return toast.error("Preencha título, início e expiração.")
     setSavingPass(true)
-    const payload = { ...form, faction_id: form.faction_id || null }
+    const payload = { ...form, faction_id: form.faction_id || null, image_url: form.image_url || null }
     const res = await fetch("/api/admin/faccoes/passes", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
     })
     setSavingPass(false)
-    if (res.ok) { toast.success("Passe criado!"); setShowForm(false); await load() }
-    else toast.error("Erro ao criar passe.")
+    if (res.ok) {
+      const data = await res.json()
+      setCreatedPassId(data.id)
+      toast.success("Passe criado! Adicione uma imagem se desejar.")
+      await load()
+    } else toast.error("Erro ao criar passe.")
+  }
+
+  async function uploadPassImage(id: string, file: File) {
+    setUploadingPassImg(true)
+    const fd = new FormData()
+    fd.append("file", file)
+    // Reutiliza o bucket contract-images via o endpoint de imagem de contratos
+    // mas salvamos a URL no passe via PATCH
+    const ext = file.name.split(".").pop() ?? "png"
+    const path = `pass-${id}.${ext}`
+    const buffer = await file.arrayBuffer()
+    const uploadRes = await fetch(`/api/admin/faccoes/passes/${id}/image`, {
+      method: "POST", body: fd,
+    })
+    setUploadingPassImg(false)
+    if (uploadRes.ok) {
+      const { url } = await uploadRes.json()
+      setForm(p => ({ ...p, image_url: url }))
+      toast.success("Imagem enviada!")
+      await load()
+    } else toast.error("Erro ao enviar imagem.")
   }
 
   async function deletePass(id: string) {
@@ -468,7 +496,7 @@ function PassesSection() {
     <div className="utility-panel" style={{ marginTop: 16 }}>
       <div className="utility-panel-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div><strong>Passes de Batalha de Facção</strong><small>Diários (1 missão), Semanais (7) e Mensais (30)</small></div>
-        <button type="button" onClick={() => setShowForm(s => !s)}
+        <button type="button" onClick={() => { setShowForm(s => !s); setCreatedPassId(null); setForm(f => ({ ...f, image_url: "" })) }}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
           {showForm ? <ChevronUp size={12} /> : <Plus size={12} />} {showForm ? "Cancelar" : "Novo Passe"}
         </button>
@@ -497,6 +525,38 @@ function PassesSection() {
             <label><span style={lbl}>Início *</span><input type="datetime-local" value={form.starts_at} onChange={e => setForm(p => ({ ...p, starts_at: e.target.value }))} style={inp} /></label>
             <label><span style={lbl}>Expira em *</span><input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} style={inp} /></label>
           </div>
+          {/* Imagem do passe */}
+          <div>
+            <span style={lbl}>Imagem do passe</span>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <div style={{ width: 52, height: 52, borderRadius: 8, background: "rgba(255,255,255,0.05)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
+                {form.image_url
+                  ? <img src={form.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : <Upload size={18} style={{ color: "var(--gray-500)" }} />}
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                <input ref={passFileRef} type="file" accept="image/*" style={{ display: "none" }}
+                  onChange={e => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    if (createdPassId) {
+                      uploadPassImage(createdPassId, file)
+                    } else {
+                      setForm(p => ({ ...p, image_url: URL.createObjectURL(file) }))
+                      toast.info("Crie o passe primeiro — a imagem será enviada após salvar.")
+                    }
+                  }} />
+                <button type="button" onClick={() => passFileRef.current?.click()} disabled={uploadingPassImg}
+                  style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper)", fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", opacity: uploadingPassImg ? 0.6 : 1 }}>
+                  {uploadingPassImg ? "Enviando..." : "Selecionar arquivo"}
+                </button>
+                <input value={form.image_url.startsWith("blob:") ? "" : form.image_url}
+                  onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))}
+                  style={{ ...inp, fontSize: 10 }} placeholder="ou cole uma URL" />
+              </div>
+            </div>
+          </div>
+
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <label>
               <span style={lbl}>Preço em Sucatas (0 = gratuito)</span>
