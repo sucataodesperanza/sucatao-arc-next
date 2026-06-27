@@ -20,7 +20,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     .select("id, title, price_points, price_real, active, starts_at, expires_at")
     .eq("id", id)
     .eq("active", true)
-    .lte("starts_at", new Date().toISOString())
     .gte("expires_at", new Date().toISOString())
     .single()
 
