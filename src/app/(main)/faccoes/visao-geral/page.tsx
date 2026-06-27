@@ -40,7 +40,7 @@ const EVENTS = [
   { label: "Extração Especial",         time: "Começa em 1d 02h"  },
 ]
 
-const tabs = ["Visão Geral", "Guerra de Facções", "Ranking de Facções", "Recompensas", "Minha Facção"]
+const tabs = ["Visão Geral", "Recompensas", "Guerra de Facções", "Ranking de Facções", "Minha Facção"]
 
 export default function FaccoesHubPage() {
   const router                        = useRouter()
