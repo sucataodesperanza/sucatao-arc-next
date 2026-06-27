@@ -417,7 +417,7 @@ function PassesSection() {
   }
 
   async function createPass() {
-    if (!form.faction_id || !form.title || !form.starts_at || !form.expires_at) return toast.error("Preencha os campos obrigatórios.")
+    if (!form.title || !form.starts_at || !form.expires_at) return toast.error("Preencha título, início e expiração.")
     setSavingPass(true)
     const payload = { ...form, faction_id: form.faction_id || null }
     const res = await fetch("/api/admin/faccoes/passes", {
