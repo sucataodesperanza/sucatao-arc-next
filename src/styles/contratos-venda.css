@@ -1896,7 +1896,7 @@
 /* Trilha */
 .ca-track-wrap { padding: 24px 24px 8px; }
 .ca-track { display: flex; align-items: flex-start; width: 100%; }
-.ca-track-node-wrap { display: flex; align-items: center; flex: 1; min-width: 0; }
+.ca-track-node-wrap { display: flex; align-items: flex-start; flex: 1; min-width: 0; }
 .ca-track-node-col {
   display: flex;
   flex-direction: column;
@@ -1920,7 +1920,7 @@
   height: 4px;
   border-radius: 2px;
   flex-shrink: 0;
-  margin-top: -40px;
+  margin-top: 24px; /* metade do nó (52px / 2 = 26px) - 2px da borda */
   transition: background 0.3s;
 }
 .ca-track-label {

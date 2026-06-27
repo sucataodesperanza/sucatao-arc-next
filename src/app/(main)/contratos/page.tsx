@@ -1400,8 +1400,6 @@ export default function ContratosPage() {
                               return (
                                 <div key={m.id} className="ca-track-node-wrap">
                                   <div className="ca-track-node-col" style={pass.type === "monthly" ? { width: 72 } : { flex: 1, minWidth: 0 }}>
-                                    {/* Espaço vazio acima (mantém alinhamento) */}
-                                    <div className="ca-track-reward" />
                                     {/* Nó — mostra recompensa dentro ou ✓ */}
                                     <div
                                       className={`ca-track-node${m.status === "active" ? " active" : ""}`}
