@@ -1439,8 +1439,8 @@ export default function ContratosPage() {
                                       height: 4,
                                       borderRadius: 2,
                                       marginTop: 24,
-                                      marginLeft: 12,
-                                      marginRight: 12,
+                                      marginLeft: 16,
+                                      marginRight: 16,
                                       background: nextDone
                                         ? `color-mix(in srgb, ${passColor} 55%, transparent)`
                                         : "rgba(255,255,255,0.07)",
