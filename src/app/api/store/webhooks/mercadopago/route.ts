@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const status = String(payment.status ?? "").toLowerCase()
 
     if (status === "approved") {
-      await supabase
+      const { data: updatedOrders } = await supabase
         .from("orders")
         .update({
           status: "completed",
@@ -63,6 +63,18 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", orderId)
         .neq("payment_status", "paid")
+        .select("id, user_id, pass_group_id")
+
+      // Ativa passe se for uma compra de passe via PIX
+      if (updatedOrders?.length) {
+        const ord = updatedOrders[0] as { id: string; user_id: string; pass_group_id?: string | null }
+        if (ord.pass_group_id) {
+          await supabase.from("user_contract_group_purchases").upsert({
+            user_id: ord.user_id, group_id: ord.pass_group_id,
+            payment_method: "pix", order_id: ord.id,
+          }, { onConflict: "user_id,group_id" })
+        }
+      }
     } else if (status === "pending" || status === "in_process") {
       await supabase
         .from("orders")

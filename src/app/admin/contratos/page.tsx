@@ -383,6 +383,7 @@ function PassesSection() {
   const [form, setForm] = useState({
     faction_id: "", title: "", description: "", type: "weekly",
     starts_at: "", expires_at: "", active: true,
+    price_points: 0, price_real: 0,
   })
   const [mForm, setMForm] = useState({
     position: 1, title: "", description: "", total: 1, points_reward: 0,
@@ -418,8 +419,9 @@ function PassesSection() {
   async function createPass() {
     if (!form.faction_id || !form.title || !form.starts_at || !form.expires_at) return toast.error("Preencha os campos obrigatórios.")
     setSavingPass(true)
+    const payload = { ...form, faction_id: form.faction_id || null }
     const res = await fetch("/api/admin/faccoes/passes", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
     })
     setSavingPass(false)
     if (res.ok) { toast.success("Passe criado!"); setShowForm(false); await load() }
@@ -494,6 +496,16 @@ function PassesSection() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <label><span style={lbl}>Início *</span><input type="datetime-local" value={form.starts_at} onChange={e => setForm(p => ({ ...p, starts_at: e.target.value }))} style={inp} /></label>
             <label><span style={lbl}>Expira em *</span><input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} style={inp} /></label>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label>
+              <span style={lbl}>Preço em Sucatas (0 = gratuito)</span>
+              <input type="number" min={0} value={form.price_points} onChange={e => setForm(p => ({ ...p, price_points: Number(e.target.value) }))} style={inp} />
+            </label>
+            <label>
+              <span style={lbl}>Preço em R$ (0 = sem pagamento PIX)</span>
+              <input type="number" min={0} step={0.01} value={form.price_real} onChange={e => setForm(p => ({ ...p, price_real: Number(e.target.value) }))} style={inp} placeholder="Ex: 9.90" />
+            </label>
           </div>
           <button type="button" onClick={createPass} disabled={savingPass}
             style={{ background: "rgba(61,242,139,0.12)", border: "1px solid rgba(61,242,139,0.4)", color: "var(--green)", padding: "9px 20px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", alignSelf: "flex-start" }}>

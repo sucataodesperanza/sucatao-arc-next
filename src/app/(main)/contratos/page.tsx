@@ -7,6 +7,8 @@ import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
 import "../../../styles/contratos-venda.css"
 import type { Contract as ApiContract } from "@/app/api/contratos/route"
+import type { ContractPass } from "@/app/api/contratos/passes/route"
+import type { Pass } from "@/app/api/faccoes/recompensas/route"
 
 type ContractType = "Principal" | "Secundário" | "Diário" | "Facção"
 
@@ -183,7 +185,7 @@ const contracts_UNUSED: Contract[] = [
   },
 ]
 
-const tabs = ["Contratos Ativos", "Histórico"]
+const tabs = ["Contratos à Venda", "Contratos Ativos", "Histórico"]
 
 type DailyContract = {
   title: string
@@ -554,10 +556,19 @@ export default function ContratosPage() {
   const [acceptedContracts, setAcceptedContracts] = useState<Set<number>>(new Set())
   const [acceptedWeeklyContracts, setAcceptedWeeklyContracts] = useState<Set<number>>(new Set())
 
-  // Contratos ativos do banco
+  // Contratos à venda (contratos ativos do banco)
   const [apiContracts, setApiContracts] = useState<ApiContract[]>([])
   const [loadingContracts, setLoadingContracts] = useState(true)
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
+
+  // Passes à venda
+  const [passes, setPasses]       = useState<ContractPass[]>([])
+  const [loadingPasses, setLoadingPasses] = useState(false)
+  const [buyingId, setBuyingId]   = useState<string | null>(null)
+
+  // Passes ativos do usuário (comprados)
+  const [myPasses, setMyPasses]   = useState<Pass[]>([])
+  const [loadingMyPasses, setLoadingMyPasses] = useState(false)
 
   const loadContracts = useCallback(async () => {
     setLoadingContracts(true)
@@ -567,7 +578,28 @@ export default function ContratosPage() {
     setLoadingContracts(false)
   }, [])
 
+  const loadPasses = useCallback(async () => {
+    setLoadingPasses(true)
+    const res = await fetch("/api/contratos/passes")
+    const body = await res.json().catch(() => ({ passes: [] }))
+    setPasses(body.passes ?? [])
+    setLoadingPasses(false)
+  }, [])
+
+  const loadMyPasses = useCallback(async () => {
+    setLoadingMyPasses(true)
+    const res = await fetch("/api/contratos/passes/meus")
+    const body = await res.json().catch(() => ({ passes: [] }))
+    setMyPasses(body.passes ?? [])
+    setLoadingMyPasses(false)
+  }, [])
+
   useEffect(() => { loadContracts() }, [loadContracts])
+
+  useEffect(() => {
+    if (activeTab === "Contratos à Venda" && passes.length === 0) loadPasses()
+    if (activeTab === "Contratos Ativos" && myPasses.length === 0) loadMyPasses()
+  }, [activeTab])
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
@@ -660,7 +692,7 @@ export default function ContratosPage() {
             <span className="store-tab-indicator" style={{ left: indicator.left, width: indicator.width }} />
           </div>
 
-          {activeTab === "Contratos Ativos" && (
+          {activeTab === "Contratos à Venda" && (
             <>
               <div className="contratos-hero-row">
                 <div className="hero-banner" style={{ backgroundImage: "url(/assets/bots/arc_rocketeer.png)" }}>
@@ -1196,7 +1228,207 @@ export default function ContratosPage() {
             </div>
           )}
 
-          {activeTab !== "Contratos Ativos" && activeTab !== "Contratos Diários" && activeTab !== "Contratos Semanais" && activeTab !== "Histórico" && (
+          {/* ── Aba: Contratos à Venda (passes disponíveis para compra) ── */}
+          {activeTab === "Contratos à Venda" && (
+            <div>
+              {loadingPasses ? (
+                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando passes...</p>
+              ) : passes.length === 0 ? (
+                <div className="contratos-placeholder">
+                  <h2>Nenhum passe disponível</h2>
+                  <p>Novos passes serão lançados em breve. Fique de olho!</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+                  {passes.map(pass => {
+                    const TYPE_LABEL: Record<string, string> = { daily: "Diário · 1 missão", weekly: "Semanal · 7 missões", monthly: "Mensal · 30 missões" }
+                    const TYPE_COLOR: Record<string, string> = { daily: "var(--green)", weekly: "var(--yellow)", monthly: "var(--purple)" }
+                    const color = TYPE_COLOR[pass.type] ?? "var(--cyan)"
+                    const expiresIn = (() => {
+                      const diff = new Date(pass.expires_at).getTime() - Date.now()
+                      if (diff <= 0) return "Expirado"
+                      const d = Math.floor(diff / 86400000)
+                      const h = Math.floor((diff % 86400000) / 3600000)
+                      return d > 0 ? `${d}d ${h}h restantes` : `${h}h restantes`
+                    })()
+                    return (
+                      <div key={pass.id} style={{ background: "var(--surface-2)", border: `1px solid ${pass.purchased ? color : "var(--stroke)"}`, borderRadius: 12, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                        {/* Header */}
+                        <div style={{ padding: "16px 18px", borderBottom: "1px solid var(--stroke)", background: pass.purchased ? `color-mix(in srgb, ${color} 6%, transparent)` : "transparent" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                            <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${color} 15%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)` }}>
+                              {TYPE_LABEL[pass.type] ?? pass.type}
+                            </span>
+                            {pass.purchased && (
+                              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--green)", marginLeft: "auto" }}>✓ ATIVO</span>
+                            )}
+                          </div>
+                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{pass.title}</h3>
+                          {pass.description && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{pass.description}</p>}
+                        </div>
+                        {/* Info */}
+                        <div style={{ padding: "12px 18px", display: "flex", gap: 16, fontSize: 12, color: "var(--gray-500)" }}>
+                          <span>{pass.missions_count} missão{pass.missions_count !== 1 ? "ões" : ""}</span>
+                          <span>{expiresIn}</span>
+                        </div>
+                        {/* Preços + Botões */}
+                        {!pass.purchased && (
+                          <div style={{ padding: "0 18px 16px", display: "grid", gap: 8, marginTop: "auto" }}>
+                            {pass.price_points > 0 && (
+                              <button type="button"
+                                disabled={buyingId === pass.id}
+                                onClick={async () => {
+                                  setBuyingId(pass.id)
+                                  const res = await fetch(`/api/contratos/passes/${pass.id}/buy`, {
+                                    method: "POST", headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ mode: "points" }),
+                                  })
+                                  setBuyingId(null)
+                                  if (res.ok) { await loadPasses(); setActiveTab("Contratos Ativos"); await loadMyPasses() }
+                                  else { const b = await res.json().catch(() => ({})); alert(b.error ?? "Erro ao comprar.") }
+                                }}
+                                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid rgba(255,212,0,0.3)", background: "rgba(255,212,0,0.06)", color: "var(--paper)", padding: "10px 14px", fontSize: 12, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === pass.id ? 0.6 : 1 }}>
+                                <span>Comprar com Sucatas</span>
+                                <span style={{ color: "var(--yellow)", fontWeight: 950 }}>{pass.price_points.toLocaleString("pt-BR")} pts</span>
+                              </button>
+                            )}
+                            {pass.price_real > 0 && (
+                              <button type="button"
+                                disabled={buyingId === pass.id}
+                                onClick={async () => {
+                                  setBuyingId(pass.id)
+                                  const res = await fetch(`/api/contratos/passes/${pass.id}/buy`, {
+                                    method: "POST", headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ mode: "cash" }),
+                                  })
+                                  const body = await res.json().catch(() => ({}))
+                                  setBuyingId(null)
+                                  if (res.ok && body.orderId) window.location.href = `/pagar/${body.orderId}`
+                                  else alert(body.error ?? "Erro ao iniciar pagamento.")
+                                }}
+                                style={{ display: "flex", alignItems: "center", justifyContent: "space-between", border: "1px solid rgba(61,242,139,0.3)", background: "rgba(61,242,139,0.06)", color: "var(--paper)", padding: "10px 14px", fontSize: 12, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", opacity: buyingId === pass.id ? 0.6 : 1 }}>
+                                <span>Pagar com PIX</span>
+                                <span style={{ color: "var(--green)", fontWeight: 950 }}>R$ {Number(pass.price_real).toFixed(2).replace(".", ",")}</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {pass.purchased && (
+                          <div style={{ padding: "0 18px 16px" }}>
+                            <button type="button" onClick={() => setActiveTab("Contratos Ativos")}
+                              style={{ width: "100%", border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, background: `color-mix(in srgb, ${color} 8%, transparent)`, color, padding: "10px 14px", fontSize: 12, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", textTransform: "uppercase" }}>
+                              Ver Meu Passe →
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Aba: Contratos Ativos (passes comprados com missões) ── */}
+          {activeTab === "Contratos Ativos" && (
+            <div>
+              {loadingMyPasses ? (
+                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando seus passes...</p>
+              ) : myPasses.length === 0 ? (
+                <div className="contratos-placeholder">
+                  <h2>Nenhum passe ativo</h2>
+                  <p>Vá para a aba <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para adquirir um passe.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 24 }}>
+                  {myPasses.map(pass => {
+                    const TYPE_COLOR: Record<string, string> = { daily: "var(--green)", weekly: "var(--yellow)", monthly: "var(--purple)" }
+                    const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                    const passColor = TYPE_COLOR[pass.type] ?? "var(--cyan)"
+                    const expiresIn = (() => {
+                      const diff = new Date(pass.expires_at).getTime() - Date.now()
+                      if (diff <= 0) return "Expirado"
+                      const d = Math.floor(diff / 86400000); const h = Math.floor((diff % 86400000) / 3600000)
+                      return d > 0 ? `${d}d ${h}h` : `${h}h`
+                    })()
+                    return (
+                      <div key={pass.id} style={{ background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 12, overflow: "hidden" }}>
+                        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--stroke)", display: "flex", alignItems: "center", gap: 12 }}>
+                          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${passColor} 15%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 30%, transparent)` }}>
+                            {TYPE_LABEL[pass.type] ?? pass.type}
+                          </span>
+                          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 950, color: "var(--paper)" }}>{pass.title}</h2>
+                          <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--gray-500)" }}>Expira em: <strong style={{ color: passColor }}>{expiresIn}</strong></span>
+                          <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{pass.total_completed}/{pass.missions.length} concluídas</span>
+                        </div>
+                        {/* Trilha */}
+                        <div style={{ padding: "20px", overflowX: "auto" }}>
+                          <div style={{ display: "flex", alignItems: "flex-start", gap: 0, minWidth: "max-content" }}>
+                            {pass.missions.map((m, i) => {
+                              const isMilestone = m.position % 5 === 0
+                              const nodeColor = m.status !== "locked" ? passColor : "rgba(255,255,255,0.15)"
+                              return (
+                                <div key={m.id} style={{ display: "flex", alignItems: "center" }}>
+                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: isMilestone ? 100 : 80 }}>
+                                    <div style={{ height: 32, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                                      {isMilestone && m.item_reward ? (
+                                        <div style={{ background: "rgba(255,212,0,0.15)", border: "1px solid rgba(255,212,0,0.4)", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 950, color: "var(--yellow)" }}>🎁 Item</div>
+                                      ) : m.points_reward > 0 ? (
+                                        <span style={{ fontSize: 10, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "var(--yellow)", fontWeight: 800 }}>+{m.points_reward}pts</span>
+                                      ) : null}
+                                    </div>
+                                    <div style={{ width: isMilestone ? 48 : 36, height: isMilestone ? 48 : 36, borderRadius: "50%", background: m.status === "completed" ? `color-mix(in srgb, ${passColor} 25%, transparent)` : m.status === "active" ? `color-mix(in srgb, ${passColor} 15%, transparent)` : "rgba(255,255,255,0.04)", border: `2px solid ${nodeColor}`, display: "grid", placeItems: "center", boxShadow: m.status === "active" ? `0 0 16px color-mix(in srgb, ${passColor} 40%, transparent)` : "none", flexShrink: 0 }}>
+                                      {m.status === "completed" ? <span style={{ fontSize: isMilestone ? 18 : 14, color: passColor }}>✓</span> : <span style={{ fontSize: isMilestone ? 16 : 12, fontWeight: 950, color: m.status === "active" ? passColor : "rgba(255,255,255,0.2)" }}>{m.position}</span>}
+                                    </div>
+                                    <span style={{ fontSize: 10, textAlign: "center", color: m.status === "locked" ? "rgba(255,255,255,0.3)" : "var(--paper)", lineHeight: 1.3, maxWidth: isMilestone ? 90 : 70, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{m.title}</span>
+                                  </div>
+                                  {i < pass.missions.length - 1 && (
+                                    <div style={{ width: 24, height: 2, background: pass.missions[i + 1].status === "locked" ? "rgba(255,255,255,0.08)" : `color-mix(in srgb, ${passColor} 40%, transparent)`, marginTop: -32, flexShrink: 0 }} />
+                                  )}
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+                        {/* Missão atual */}
+                        {(() => {
+                          const active = pass.missions.find(m => m.status === "active")
+                          if (!active) return <div style={{ padding: "12px 20px 16px", fontSize: 13, color: "var(--green)", fontWeight: 950 }}>✓ Todas as missões concluídas!</div>
+                          if (active.unlocks_at) {
+                            const diff = new Date(active.unlocks_at).getTime() - Date.now()
+                            const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000)
+                            return (
+                              <div style={{ margin: "0 20px 20px", padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
+                                <span style={{ fontSize: 18 }}>🔒</span>
+                                <div>
+                                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "var(--paper-dim)" }}>Próxima missão disponível em</p>
+                                  <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 950, color: passColor }}>{h}h {m}m</p>
+                                </div>
+                              </div>
+                            )
+                          }
+                          return (
+                            <div style={{ margin: "0 20px 20px", padding: "14px 16px", background: `color-mix(in srgb, ${passColor} 6%, transparent)`, border: `1px solid color-mix(in srgb, ${passColor} 25%, transparent)`, borderRadius: 8 }}>
+                              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: passColor }}>Missão atual — #{active.position}</span>
+                              <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: 800, color: "var(--paper)" }}>{active.title}</p>
+                              {active.description && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{active.description}</p>}
+                              <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12 }}>
+                                <span style={{ color: "var(--gray-500)" }}>Meta: {active.total}×</span>
+                                {active.points_reward > 0 && <span style={{ color: "var(--yellow)" }}>+{active.points_reward} pts</span>}
+                                {active.item_reward && <span style={{ color: "var(--cyan)" }}>🎁 Item especial</span>}
+                              </div>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== "Contratos à Venda" && activeTab !== "Contratos Ativos" && activeTab !== "Contratos Diários" && activeTab !== "Contratos Semanais" && activeTab !== "Histórico" && (
             <div className="contratos-placeholder">
               <h2>Em breve</h2>
               <p>Esta seção está em construção. Novos contratos da categoria &quot;{activeTab}&quot; estarão disponíveis em breve.</p>
