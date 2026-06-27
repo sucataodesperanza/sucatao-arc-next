@@ -3,12 +3,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Award, ChevronRight, ExternalLink,
+  Award, ChevronRight, Coins, ExternalLink,
   HelpCircle, ImageOff, Shield, Swords,
   Users, Zap,
 } from "lucide-react"
 import "../../../../styles/faccoes-hub.css"
+import "../../../../styles/contratos-venda.css"
 import type { DashboardData } from "@/app/api/faccoes/dashboard/route"
+import type { Contract } from "@/app/api/contratos/route"
 
 /* ── helpers ── */
 function timeAgo(iso: string) {
@@ -43,20 +45,22 @@ const tabs = ["Visão Geral", "Guerra de Facções", "Ranking de Facções", "Re
 export default function FaccoesHubPage() {
   const router                        = useRouter()
   const [data, setData]               = useState<DashboardData | null>(null)
+  const [factionContracts, setFactionContracts] = useState<Contract[]>([])
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(tabs[0])
   const tabRefs                       = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
 
   useEffect(() => {
-    fetch("/api/faccoes/dashboard")
-      .then(r => r.json())
-      .then((d: DashboardData) => {
-        if (!d.faction) { router.replace("/faccoes"); return }
-        setData(d)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch("/api/faccoes/dashboard").then(r => r.json()),
+      fetch("/api/faccoes/contratos").then(r => r.json()).catch(() => ({ contracts: [] })),
+    ]).then(([d, c]: [DashboardData, { contracts: Contract[] }]) => {
+      if (!d.faction) { router.replace("/faccoes"); return }
+      setData(d)
+      setFactionContracts(c.contracts ?? [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [router])
 
   useLayoutEffect(() => {
@@ -181,8 +185,77 @@ export default function FaccoesHubPage() {
 
               {/* ── Linha 2: Contratos ativos de facção + Recompensa da Facção Vencedora ── */}
               <div className="faccoes-hub-split-row">
-                <div className="faccoes-hub-placeholder-block">
-                  <span>CONTRATOS ATIVOS DE FACÇÃO</span>
+                {/* Contratos de facção */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <h2 style={{ margin: 0, fontSize: 13, fontWeight: 950, textTransform: "uppercase" }}>CONTRATOS ATIVOS DE FACÇÃO</h2>
+                      <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>Contratos exclusivos para membros da {faction.name}.</p>
+                    </div>
+                    <a href="/contratos" style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: faction.color, textDecoration: "none", display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                      Ver Contratos <ChevronRight size={12} />
+                    </a>
+                  </div>
+
+                  {factionContracts.length === 0 ? (
+                    <div className="faccoes-hub-placeholder-block" style={{ minHeight: 160 }}>
+                      <span>Nenhum contrato de facção ativo no momento</span>
+                    </div>
+                  ) : (
+                    <div className="cv-cards-scroll" style={{ paddingBottom: 4 }}>
+                      {factionContracts.map(c => {
+                        const tierColors: Record<string, { color: string; border: string }> = {
+                          "Básico":   { color: "#5fa8ff", border: "rgba(91,166,255,0.4)"  },
+                          "Avançado": { color: "#ffd400", border: "rgba(255,196,0,0.4)"   },
+                          "Épico":    { color: "#b477ff", border: "rgba(180,119,255,0.4)" },
+                          "Lendário": { color: "#ff8c42", border: "rgba(255,140,66,0.4)"  },
+                        }
+                        const tier = tierColors[c.tier] ?? tierColors["Básico"]
+                        const pct  = c.user_progress != null ? Math.round((c.user_progress / c.total) * 100) : 0
+                        const expiresIn = c.expires_at ? (() => {
+                          const diff = new Date(c.expires_at!).getTime() - Date.now()
+                          const d = Math.floor(diff / 86400000)
+                          const h = Math.floor((diff % 86400000) / 3600000)
+                          return diff > 0 ? `${d}d ${h}h` : "Expirado"
+                        })() : "—"
+                        return (
+                          <div key={c.id} className={`cv-card${c.variant ? ` cv-card--${c.variant}` : ""}`} style={{ minWidth: 220, maxWidth: 260 }}>
+                            {c.variant && <div className="cv-card-frame" />}
+                            <div className="cv-card-bg">
+                              <div className="cv-card-bg-img" style={{ backgroundImage: `url(${c.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
+                            </div>
+                            <div className="cv-card-badges">
+                              <span className="cv-card-type" style={{ color: faction.color }}>{c.type}</span>
+                              <span className="cv-card-tier" style={{ color: tier.color, borderColor: tier.border }}>{c.tier}</span>
+                            </div>
+                            <div className="cv-card-body">
+                              <strong className="cv-card-name">{c.title}</strong>
+                              <p className="cv-card-desc">{c.description}</p>
+                              <div className="cv-card-section-label">Progresso</div>
+                              <div className="ca-progress-wrap">
+                                <div className="ca-progress-bar">
+                                  <span style={{ width: `${pct}%` }} />
+                                </div>
+                                <span className="ca-progress-label">{c.user_progress ?? 0}/{c.total}</span>
+                              </div>
+                              <div className="cv-card-footer-meta" style={{ marginTop: 6 }}>
+                                <span className="cv-card-players" style={{ fontSize: 10 }}>
+                                  {c.sucatas > 0 && <><Coins size={10} style={{ color: "var(--yellow)" }} />{c.sucatas} pts</>}
+                                </span>
+                                <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{expiresIn}</span>
+                              </div>
+                              {c.user_status === "completed" && (
+                                <span style={{ fontSize: 10, fontWeight: 950, color: "var(--green)", textTransform: "uppercase", marginTop: 6, display: "block" }}>✓ Concluído</span>
+                              )}
+                              {c.user_status === "active" && (
+                                <span style={{ fontSize: 10, fontWeight: 950, color: "var(--yellow)", textTransform: "uppercase", marginTop: 6, display: "block" }}>Em progresso</span>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
                 <div className="faccoes-hub-objectives">
                   <h2>RECOMPENSA DA FACÇÃO VENCEDORA</h2>

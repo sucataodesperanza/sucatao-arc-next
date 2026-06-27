@@ -26,12 +26,14 @@ const TYPES = ["Principal", "Secundário", "Diário", "Facção"]
 const TIERS = ["Básico", "Avançado", "Épico", "Lendário"]
 const RISKS = ["Baixo", "Médio", "Alto", "Extremo"]
 
+type Faction = { id: string; name: string; color: string }
+
 const emptyForm = {
   type: "Principal", tier: "Básico", title: "", description: "", story: "",
   objective: "", total: 1, sucatas: 0, xp: 0, rep: "", location: "",
   estimated_time: "", best_time_of_day: "", climate: "", environmental_risk: "Médio",
   expires_at: "", variant: "", bonus_condition: "", bonus_reward: "",
-  image_url: "", success_rate: 50, active: true,
+  image_url: "", success_rate: 50, active: true, faction_id: "",
 }
 
 /* ── Seção de contratos ── */
@@ -39,6 +41,7 @@ function ContratosSection() {
   const toast = useToast()
   const { confirm } = useConfirm()
   const [contracts, setContracts] = useState<Contract[]>([])
+  const [factions, setFactions]   = useState<Faction[]>([])
   const [loading, setLoading]     = useState(true)
   const [showForm, setShowForm]   = useState(false)
   const [form, setForm]           = useState(emptyForm)
@@ -49,9 +52,12 @@ function ContratosSection() {
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch("/api/admin/contratos")
-    const body = await res.json().catch(() => ({}))
-    setContracts(body.contracts ?? [])
+    const [cRes, fRes] = await Promise.all([
+      fetch("/api/admin/contratos").then(r => r.json()).catch(() => ({})),
+      fetch("/api/admin/faccoes").then(r => r.json()).catch(() => ({})),
+    ])
+    setContracts(cRes.contracts ?? [])
+    setFactions(fRes.factions ?? [])
     setLoading(false)
   }, [])
 
@@ -62,7 +68,7 @@ function ContratosSection() {
   async function save() {
     if (!form.title || !form.objective) return toast.error("Título e objetivo são obrigatórios.")
     setSaving(true)
-    const body = { ...form, rep: form.rep === "" ? null : Number(form.rep), expires_at: form.expires_at || null, variant: form.variant || null }
+    const body = { ...form, rep: form.rep === "" ? null : Number(form.rep), expires_at: form.expires_at || null, variant: form.variant || null, faction_id: form.faction_id || null }
     const res = await fetch("/api/admin/contratos", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
     setSaving(false)
     if (res.ok) {
@@ -123,6 +129,15 @@ function ContratosSection() {
             <label><span style={lbl}>Tier</span><select value={form.tier} onChange={e => field("tier", e.target.value)} style={sel}>{TIERS.map(t => <option key={t}>{t}</option>)}</select></label>
             <label><span style={lbl}>Risco Ambiental</span><select value={form.environmental_risk} onChange={e => field("environmental_risk", e.target.value)} style={sel}>{RISKS.map(r => <option key={r}>{r}</option>)}</select></label>
             <label><span style={lbl}>Variante (opcional)</span><select value={form.variant} onChange={e => field("variant", e.target.value)} style={sel}><option value="">Nenhuma</option><option value="dourada">Dourada</option><option value="holografica">Holográfica</option><option value="corrompida">Corrompida</option></select></label>
+            <label>
+              <span style={lbl}>Facção (opcional)</span>
+              <select value={form.faction_id} onChange={e => field("faction_id", e.target.value)} style={sel}>
+                <option value="">Sem facção — visível para todos</option>
+                {factions.map(f => (
+                  <option key={f.id} value={f.id}>{f.name}</option>
+                ))}
+              </select>
+            </label>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
             <label><span style={lbl}>Título</span><input value={form.title} onChange={e => field("title", e.target.value)} style={inp} placeholder="Ameaça Mecânica" /></label>
@@ -191,7 +206,7 @@ function ContratosSection() {
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
-              {["Tipo","Tier","Título","Objetivo","Recompensas","Expira","Ativo",""].map(h => (
+              {["Tipo","Tier","Título","Facção","Recompensas","Expira","Ativo",""].map(h => (
                 <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
               ))}
             </tr>
@@ -202,7 +217,13 @@ function ContratosSection() {
                 <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950, opacity: 0.7 }}>{c.type}</span></td>
                 <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950 }}>{c.tier}</span></td>
                 <td style={{ padding: "8px", fontWeight: 800 }}>{c.title}</td>
-                <td style={{ padding: "8px", color: "var(--muted)", maxWidth: 200 }}>{c.objective}</td>
+                <td style={{ padding: "8px", fontSize: 11 }}>
+                  {(c as Contract & { faction_id?: string }).faction_id
+                    ? <span style={{ color: factions.find(f => f.id === (c as Contract & { faction_id?: string }).faction_id)?.color ?? "var(--cyan)", fontWeight: 800 }}>
+                        {factions.find(f => f.id === (c as Contract & { faction_id?: string }).faction_id)?.name ?? "—"}
+                      </span>
+                    : <em style={{ color: "var(--gray-500)" }}>—</em>}
+                </td>
                 <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--yellow)" }}>{c.sucatas} pts</span>
                   {c.xp > 0 && <span style={{ color: "var(--blue)", marginLeft: 6 }}>{c.xp} xp</span>}

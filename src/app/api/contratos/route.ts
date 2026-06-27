@@ -38,6 +38,7 @@ export type Contract = {
   players_completed: number
   best_record_time: string
   best_record_player: string
+  faction_id: string | null
   // progresso do usuário (null se não aceitou)
   user_progress: number | null
   user_status: string | null
