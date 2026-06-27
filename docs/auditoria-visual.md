@@ -23,7 +23,7 @@ Mapeamento do estado de cada tela em relação à nova identidade visual do site
 | ✅ Atualizada | Perfil | `/perfil` |
 | ✅ Atualizada | Perfil Público | `/perfil/[id]` |
 | ✅ Atualizada | Carrinho | `/carrinho` |
-| ⚠️ Pendente | Pagamento PIX | `/pagar/[id]` |
+| ✅ Atualizada | Pagamento PIX | `/pagar/[id]` |
 | ⚠️ Pendente | Pedido Confirmado | `/pedido-confirmado` |
 
 ## Páginas de Autenticação
