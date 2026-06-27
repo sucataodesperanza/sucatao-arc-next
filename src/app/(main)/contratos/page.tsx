@@ -1388,7 +1388,7 @@ export default function ContratosPage() {
                           <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%", alignItems: "flex-start" }}>
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
-                              const nodeSize = 52
+                              const nodeSize = 64
                               const hasItem = !!m.item_reward
                               // Cor da borda baseada na raridade do item
                               const rarityColor: Record<string, string> = {
@@ -1428,26 +1428,26 @@ export default function ContratosPage() {
                                         gap: 1,
                                       }}>
                                       {m.status === "completed" ? (
-                                        <span style={{ fontSize: 20, color: nodeColor, fontWeight: 950 }}>✓</span>
+                                        <span style={{ fontSize: 24, color: nodeColor, fontWeight: 950 }}>✓</span>
                                       ) : hasItem && (m.item_reward as any)?.item_image ? (
                                         <img
                                           src={(m.item_reward as any).item_image}
                                           alt={(m.item_reward as any).item_name}
                                           style={{
-                                            width: 34, height: 34,
+                                            width: 44, height: 44,
                                             objectFit: "contain",
                                             opacity: m.status === "locked" ? 0.25 : 1,
                                             filter: m.status === "locked" ? "grayscale(1)" : `drop-shadow(0 0 6px ${nodeColor})`,
                                           }}
                                         />
                                       ) : hasItem ? (
-                                        <span style={{ fontSize: 20, opacity: m.status === "locked" ? 0.25 : 1 }}>🎁</span>
+                                        <span style={{ fontSize: 24, opacity: m.status === "locked" ? 0.25 : 1 }}>🎁</span>
                                       ) : m.points_reward > 0 ? (
-                                        <span style={{ fontSize: 11, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
+                                        <span style={{ fontSize: 12, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
                                           +{m.points_reward}
                                         </span>
                                       ) : (
-                                        <span style={{ fontSize: 14, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor }}>
+                                        <span style={{ fontSize: 16, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor }}>
                                           {m.position}
                                         </span>
                                       )}
@@ -1460,9 +1460,9 @@ export default function ContratosPage() {
                                   {isNext && (
                                     <div style={{
                                       ...(pass.type === "monthly" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
-                                      height: 4,
-                                      borderRadius: 2,
-                                      marginTop: 24,
+                                      height: 5,
+                                      borderRadius: 3,
+                                      marginTop: 30,
                                       marginLeft: 24,
                                       marginRight: 24,
                                       background: nextDone
