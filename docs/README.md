@@ -30,7 +30,6 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | — | [Facções — Visão Geral](telas/publicas/faccoes-visao-geral.md) | `/faccoes/visao-geral` | factions, user_factions, user_faction_activity, profiles |
 | 6 | [Contratos](telas/publicas/contratos.md) | `/contratos` | contracts, user_contracts, contract_groups, contract_group_missions, user_mission_completions, user_contract_group_purchases |
 | 7 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
-| 8 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
 | 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | maps, map_markers, markerCategories (local) |
 | 10 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
 | — | [Meu Perfil](telas/publicas/perfil.md) | `/perfil` | profiles, Storage |
@@ -124,5 +123,5 @@ const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
 
 | Arquivo | Conteúdo | Usado em |
 |---|---|---|
-| `src/data/arc-data.js` | 567 itens, 17 bots | arcpedia, reciclagem, home |
+| `src/data/arc-data.js` | 567 itens, 17 bots | arcpedia, home |
 | `src/data/map-markers.js` | Marcadores de mapa por categoria | /mapas |
