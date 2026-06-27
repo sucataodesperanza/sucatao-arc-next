@@ -107,7 +107,7 @@ export default function CarrinhoPage() {
           </div>
           <h2>Seu carrinho está vazio</h2>
           <p>Explore o catálogo e adicione itens para resgatar ou comprar.</p>
-          <a href="/loja" className="btn-aceitar" style={{ display: "inline-flex", width: "auto", padding: "13px 28px", textDecoration: "none" }}>
+          <a href="/loja" className="carrinho-checkout-btn" style={{ display: "inline-flex", width: "auto", padding: "13px 28px", textDecoration: "none" }}>
             <Zap size={14} fill="currentColor" />
             Ver catálogo
           </a>
@@ -248,14 +248,14 @@ export default function CarrinhoPage() {
 
               {/* Botão */}
               {!loadingUser && !userId ? (
-                <a href="/login" className="btn-aceitar" style={{ marginTop: 16, textDecoration: "none" }}>
+                <a href="/login" className="carrinho-checkout-btn" style={{ marginTop: 16, textDecoration: "none" }}>
                   <Zap size={14} fill="currentColor" />
                   Entrar para finalizar
                 </a>
               ) : (
                 <button
                   type="button"
-                  className="btn-aceitar"
+                  className="carrinho-checkout-btn"
                   style={{ marginTop: 16 }}
                   disabled={checkingOut || insufficientPoints}
                   onClick={handleCheckout}
