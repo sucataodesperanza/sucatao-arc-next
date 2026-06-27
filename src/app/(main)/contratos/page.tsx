@@ -942,13 +942,6 @@ export default function ContratosPage() {
                 </div>
               )}
 
-              <div className="contratos-tip">
-                <div className="contratos-tip-image" style={{ backgroundImage: "url(/assets/bots/arc_wasp.png)" }} />
-                <div>
-                  <h2>Dica do Contrato</h2>
-                  <p>Contratos do tipo Facção rendem mais reputação para sua facção escolhida. Priorize-os se quiser subir de nível mais rápido entre os Raiders.</p>
-                </div>
-              </div>
             </>
           )}
 
@@ -1419,6 +1412,15 @@ export default function ContratosPage() {
               <p>Esta seção está em construção. Novos contratos da categoria &quot;{activeTab}&quot; estarão disponíveis em breve.</p>
             </div>
           )}
+
+          {/* ── Dica do Contrato — rodapé fixo da área principal ── */}
+          <div className="contratos-tip">
+            <div className="contratos-tip-image" style={{ backgroundImage: "url(/assets/bots/arc_wasp.png)" }} />
+            <div>
+              <h2>Dica do Contrato</h2>
+              <p>Contratos do tipo Facção rendem mais reputação para sua facção escolhida. Priorize-os se quiser subir de nível mais rápido entre os Raiders.</p>
+            </div>
+          </div>
         </div>
 
         <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de contratos">
