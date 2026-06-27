@@ -1373,6 +1373,11 @@ export default function ContratosPage() {
                         </div>
                         {/* Missão atual */}
                         {(() => {
+                          if (pass.missions.length === 0) return (
+                            <div style={{ padding: "12px 20px 16px", fontSize: 12, color: "var(--gray-500)" }}>
+                              Nenhuma missão cadastrada ainda.
+                            </div>
+                          )
                           const active = pass.missions.find(m => m.status === "active")
                           if (!active) return <div style={{ padding: "12px 20px 16px", fontSize: 13, color: "var(--green)", fontWeight: 950 }}>✓ Todas as missões concluídas!</div>
                           if (active.unlocks_at) {
