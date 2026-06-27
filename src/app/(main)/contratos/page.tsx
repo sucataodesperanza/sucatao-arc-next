@@ -1388,7 +1388,7 @@ export default function ContratosPage() {
                           <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%", alignItems: "flex-start" }}>
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
-                              const nodeSize = 64
+                              const nodeSize = 76
                               const hasItem = !!m.item_reward
                               // Cor da borda baseada na raridade do item
                               const rarityColor: Record<string, string> = {
@@ -1428,13 +1428,13 @@ export default function ContratosPage() {
                                         gap: 1,
                                       }}>
                                       {m.status === "completed" ? (
-                                        <span style={{ fontSize: 24, color: nodeColor, fontWeight: 950 }}>✓</span>
+                                        <span style={{ fontSize: 28, color: nodeColor, fontWeight: 950 }}>✓</span>
                                       ) : hasItem && (m.item_reward as any)?.item_image ? (
                                         <img
                                           src={(m.item_reward as any).item_image}
                                           alt={(m.item_reward as any).item_name}
                                           style={{
-                                            width: 44, height: 44,
+                                            width: 54, height: 54,
                                             objectFit: "contain",
                                             opacity: m.status === "locked" ? 0.25 : 1,
                                             filter: m.status === "locked" ? "grayscale(1)" : `drop-shadow(0 0 6px ${nodeColor})`,
@@ -1460,9 +1460,9 @@ export default function ContratosPage() {
                                   {isNext && (
                                     <div style={{
                                       ...(pass.type === "monthly" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
-                                      height: 5,
+                                      height: 6,
                                       borderRadius: 3,
-                                      marginTop: 30,
+                                      marginTop: 36,
                                       marginLeft: 24,
                                       marginRight: 24,
                                       background: nextDone
