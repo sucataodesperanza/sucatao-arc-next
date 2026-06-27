@@ -94,7 +94,38 @@ Lista de contratos sequenciais comprados pelo usuário.
 | Meus contratos sequenciais | `user_contract_group_purchases` + missões + conclusões | `GET /api/contratos/passes/meus` |
 | Saldo de pontos (modal confirmação) | `profiles.points` | `GET /api/profile/points` |
 | Imagem do contrato | Storage `contract-images` ou `/assets/bots/` | `contracts.image_url` |
-| Painel lateral | **Hardcoded** | — |
+| Sucatas do usuário (painel) | `profiles.points` | `GET /api/profile/points` |
+| Resumo do Histórico (painel) | `user_contracts` | `GET /api/contratos/stats` |
+| Meus Contratos (painel) | `user_contract_group_purchases` + missões | `GET /api/contratos/passes/meus` (já carregado) |
+| Próximas Recompensas (painel) | **Hardcoded** | — |
+
+---
+
+## Painel Lateral
+
+| Bloco | Status | Fonte |
+|---|---|---|
+| **Sucatas** — saldo real + barra de % concluídos | ✅ Real | `profiles.points` + `user_contracts` |
+| **Meus Contratos** — lista os contratos sequenciais ativos do usuário | ✅ Real | `user_contract_group_purchases` + missões |
+| **Resumo do Histórico** (aba Histórico) — concluídos, falhos, taxa de sucesso, sucatas | ✅ Real | `user_contracts` via `GET /api/contratos/stats` |
+| **Progresso de Reputação** — nível, barra REP | ⚠️ Decorativo | — |
+| **Próximas Recompensas** — itens por threshold de REP | ⚠️ Decorativo | — |
+
+### `GET /api/contratos/stats`
+
+Retorna estatísticas do usuário calculadas de `user_contracts`:
+
+```json
+{
+  "completed": 5,
+  "failed": 2,
+  "expired": 1,
+  "total": 8,
+  "success_rate": 71
+}
+```
+
+`success_rate = completed / (completed + failed) × 100`. Se nenhum decisivo, retorna 0.
 
 ---
 
