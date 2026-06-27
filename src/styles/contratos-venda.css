@@ -1830,3 +1830,129 @@
   border-color: rgba(180,0,0,0.3);
   background: rgba(180,0,0,0.07);
 }
+
+/* ── Contratos Ativos — visual aprimorado ── */
+
+/* Pulse no nó ativo */
+@keyframes node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--node-color-alpha), 0 0 16px var(--node-color-mid); }
+  50%       { box-shadow: 0 0 0 8px transparent, 0 0 28px var(--node-color-mid); }
+}
+
+.ca-pass-wrap {
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+/* Header com imagem de fundo */
+.ca-pass-header {
+  position: relative;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px 24px 16px;
+  overflow: hidden;
+}
+.ca-pass-header-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.35) saturate(1.2);
+}
+.ca-pass-header-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(8,12,20,0.85) 100%);
+}
+.ca-pass-header-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ca-pass-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 950;
+  color: var(--paper);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.ca-pass-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Trilha */
+.ca-track-wrap { padding: 24px 24px 8px; overflow-x: auto; }
+.ca-track { display: flex; align-items: flex-start; min-width: max-content; }
+.ca-track-node-wrap { display: flex; align-items: center; }
+.ca-track-node-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.ca-track-reward { height: 28px; display: flex; align-items: flex-end; justify-content: center; }
+.ca-track-node {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid;
+  transition: box-shadow 0.3s, border-color 0.3s;
+  flex-shrink: 0;
+  font-weight: 950;
+}
+.ca-track-node.active {
+  animation: node-pulse 2s ease-in-out infinite;
+}
+.ca-track-connector {
+  height: 4px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: -40px;
+  transition: background 0.3s;
+}
+.ca-track-label {
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.3;
+  max-width: 70px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card missão atual */
+.ca-mission-card {
+  margin: 0 20px 20px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ca-mission-card-inner {
+  padding: 16px 18px;
+  display: grid;
+  gap: 10px;
+}
+.ca-mission-progress-bar {
+  height: 5px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ca-mission-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}

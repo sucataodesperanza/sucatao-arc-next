@@ -1323,89 +1323,167 @@ export default function ContratosPage() {
               ) : (
                 <div style={{ display: "grid", gap: 24 }}>
                   {myPasses.map(pass => {
-                    const TYPE_COLOR: Record<string, string> = { daily: "var(--green)", weekly: "var(--yellow)", monthly: "var(--purple)" }
+                    const TYPE_COLOR: Record<string, string> = { daily: "#3df28b", weekly: "#ffd400", monthly: "#b477ff" }
                     const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
-                    const passColor = TYPE_COLOR[pass.type] ?? "var(--cyan)"
+                    const passColor = TYPE_COLOR[pass.type] ?? "#5fa8ff"
                     const expiresIn = (() => {
                       const diff = new Date(pass.expires_at).getTime() - Date.now()
                       if (diff <= 0) return "Expirado"
                       const d = Math.floor(diff / 86400000); const h = Math.floor((diff % 86400000) / 3600000)
                       return d > 0 ? `${d}d ${h}h` : `${h}h`
                     })()
+                    const pct = pass.missions.length > 0 ? Math.round((pass.total_completed / pass.missions.length) * 100) : 0
+                    const active = pass.missions.find(m => m.status === "active")
+
                     return (
-                      <div key={pass.id} style={{ background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 12, overflow: "hidden" }}>
-                        <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--stroke)", display: "flex", alignItems: "center", gap: 12 }}>
-                          <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${passColor} 15%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 30%, transparent)` }}>
-                            {TYPE_LABEL[pass.type] ?? pass.type}
-                          </span>
-                          <h2 style={{ margin: 0, fontSize: 15, fontWeight: 950, color: "var(--paper)" }}>{pass.title}</h2>
-                          <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--gray-500)" }}>Expira em: <strong style={{ color: passColor }}>{expiresIn}</strong></span>
-                          <span style={{ fontSize: 11, color: "var(--gray-500)" }}>{pass.total_completed}/{pass.missions.length} concluídas</span>
+                      <div key={pass.id} className="ca-pass-wrap">
+                        {/* ── Header cinematográfico ── */}
+                        <div className="ca-pass-header">
+                          {(pass as any).image_url && <div className="ca-pass-header-bg" style={{ backgroundImage: `url(${(pass as any).image_url})` }} />}
+                          <div className="ca-pass-header-overlay" />
+                          <div className="ca-pass-header-content">
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, alignSelf: "flex-start" }}>
+                                {TYPE_LABEL[pass.type] ?? pass.type}
+                              </span>
+                              <h2 className="ca-pass-title">{pass.title}</h2>
+                            </div>
+                            <div className="ca-pass-meta">
+                              <div style={{ textAlign: "right" }}>
+                                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Progresso</p>
+                                <p style={{ margin: "2px 0 0", fontSize: 18, fontWeight: 950, color: passColor }}>{pass.total_completed}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>/{pass.missions.length}</span></p>
+                              </div>
+                              <div style={{ textAlign: "right" }}>
+                                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Expira em</p>
+                                <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 950, color: "var(--paper)" }}>{expiresIn}</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Barra de progresso geral */}
+                          <div style={{ position: "relative", zIndex: 1, marginTop: 12, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: passColor, borderRadius: 2, transition: "width 0.5s ease" }} />
+                          </div>
                         </div>
-                        {/* Trilha */}
-                        <div style={{ padding: "20px", overflowX: "auto" }}>
-                          <div style={{ display: "flex", alignItems: "flex-start", gap: 0, minWidth: "max-content" }}>
+
+                        {/* ── Trilha de missões ── */}
+                        <div className="ca-track-wrap">
+                          <div className="ca-track">
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
-                              const nodeColor = m.status !== "locked" ? passColor : "rgba(255,255,255,0.15)"
+                              const nodeSize = isMilestone ? 52 : 40
+                              const nodeColor = m.status === "locked" ? "rgba(255,255,255,0.12)" : passColor
+                              const nodeBg = m.status === "completed"
+                                ? `color-mix(in srgb, ${passColor} 30%, transparent)`
+                                : m.status === "active"
+                                ? `color-mix(in srgb, ${passColor} 12%, #0a0e16)`
+                                : "rgba(255,255,255,0.03)"
+                              const isNext = i < pass.missions.length - 1
+                              const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
                               return (
-                                <div key={m.id} style={{ display: "flex", alignItems: "center" }}>
-                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: isMilestone ? 100 : 80 }}>
-                                    <div style={{ height: 32, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                                <div key={m.id} className="ca-track-node-wrap">
+                                  <div className="ca-track-node-col" style={{ width: isMilestone ? 90 : 72 }}>
+                                    {/* Recompensa acima */}
+                                    <div className="ca-track-reward">
                                       {isMilestone && m.item_reward ? (
-                                        <div style={{ background: "rgba(255,212,0,0.15)", border: "1px solid rgba(255,212,0,0.4)", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 950, color: "var(--yellow)" }}>🎁 Item</div>
+                                        <span style={{ fontSize: 10, fontWeight: 950, padding: "2px 8px", borderRadius: 4, background: "rgba(255,212,0,0.15)", border: "1px solid rgba(255,212,0,0.35)", color: "#ffd400" }}>🎁 Item</span>
                                       ) : m.points_reward > 0 ? (
-                                        <span style={{ fontSize: 10, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "var(--yellow)", fontWeight: 800 }}>+{m.points_reward}pts</span>
+                                        <span style={{ fontSize: 10, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.18)" : "#ffd400" }}>+{m.points_reward}pts</span>
                                       ) : null}
                                     </div>
-                                    <div style={{ width: isMilestone ? 48 : 36, height: isMilestone ? 48 : 36, borderRadius: "50%", background: m.status === "completed" ? `color-mix(in srgb, ${passColor} 25%, transparent)` : m.status === "active" ? `color-mix(in srgb, ${passColor} 15%, transparent)` : "rgba(255,255,255,0.04)", border: `2px solid ${nodeColor}`, display: "grid", placeItems: "center", boxShadow: m.status === "active" ? `0 0 16px color-mix(in srgb, ${passColor} 40%, transparent)` : "none", flexShrink: 0 }}>
-                                      {m.status === "completed" ? <span style={{ fontSize: isMilestone ? 18 : 14, color: passColor }}>✓</span> : <span style={{ fontSize: isMilestone ? 16 : 12, fontWeight: 950, color: m.status === "active" ? passColor : "rgba(255,255,255,0.2)" }}>{m.position}</span>}
+                                    {/* Nó */}
+                                    <div
+                                      className={`ca-track-node${m.status === "active" ? " active" : ""}`}
+                                      style={{
+                                        width: nodeSize, height: nodeSize,
+                                        background: nodeBg,
+                                        borderColor: nodeColor,
+                                        borderWidth: m.status === "active" ? 3 : 2,
+                                        boxShadow: m.status === "active" ? `0 0 20px color-mix(in srgb, ${passColor} 50%, transparent)` : "none",
+                                        ["--node-color-alpha" as string]: `color-mix(in srgb, ${passColor} 25%, transparent)`,
+                                        ["--node-color-mid" as string]: `color-mix(in srgb, ${passColor} 45%, transparent)`,
+                                        fontSize: isMilestone ? 18 : 14,
+                                        color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor,
+                                      }}>
+                                      {m.status === "completed" ? "✓" : m.position}
                                     </div>
-                                    <span style={{ fontSize: 10, textAlign: "center", color: m.status === "locked" ? "rgba(255,255,255,0.3)" : "var(--paper)", lineHeight: 1.3, maxWidth: isMilestone ? 90 : 70, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{m.title}</span>
+                                    {/* Label */}
+                                    <span className="ca-track-label" style={{ color: m.status === "locked" ? "rgba(255,255,255,0.25)" : "var(--paper)" }}>
+                                      {m.title}
+                                    </span>
                                   </div>
-                                  {i < pass.missions.length - 1 && (
-                                    <div style={{ width: 24, height: 2, background: pass.missions[i + 1].status === "locked" ? "rgba(255,255,255,0.08)" : `color-mix(in srgb, ${passColor} 40%, transparent)`, marginTop: -32, flexShrink: 0 }} />
+                                  {/* Conector */}
+                                  {isNext && (
+                                    <div className="ca-track-connector" style={{
+                                      width: 32,
+                                      background: nextDone
+                                        ? `color-mix(in srgb, ${passColor} 55%, transparent)`
+                                        : "rgba(255,255,255,0.07)",
+                                    }} />
                                   )}
                                 </div>
                               )
                             })}
                           </div>
                         </div>
-                        {/* Missão atual */}
-                        {(() => {
-                          if (pass.missions.length === 0) return (
-                            <div style={{ padding: "12px 20px 16px", fontSize: 12, color: "var(--gray-500)" }}>
-                              Nenhuma missão cadastrada ainda.
+
+                        {/* ── Card missão atual ── */}
+                        {pass.missions.length === 0 ? (
+                          <div style={{ padding: "12px 24px 20px", fontSize: 12, color: "var(--gray-500)" }}>Nenhuma missão cadastrada ainda.</div>
+                        ) : !active ? (
+                          <div style={{ padding: "16px 24px 20px", display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ fontSize: 22 }}>🏆</span>
+                            <span style={{ fontSize: 14, fontWeight: 950, color: "#3df28b" }}>Todas as missões concluídas!</span>
+                          </div>
+                        ) : active.unlocks_at ? (
+                          <div style={{ margin: "0 20px 20px", padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, display: "flex", alignItems: "center", gap: 14 }}>
+                            <span style={{ fontSize: 28, flexShrink: 0 }}>🔒</span>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Próxima missão disponível em</p>
+                              <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 950, color: passColor }}>
+                                {Math.floor((new Date(active.unlocks_at).getTime() - Date.now()) / 3600000)}h{" "}
+                                {Math.floor(((new Date(active.unlocks_at).getTime() - Date.now()) % 3600000) / 60000)}m
+                              </p>
+                              <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Renova à meia-noite (BRT) · {active.title}</p>
                             </div>
-                          )
-                          const active = pass.missions.find(m => m.status === "active")
-                          if (!active) return <div style={{ padding: "12px 20px 16px", fontSize: 13, color: "var(--green)", fontWeight: 950 }}>✓ Todas as missões concluídas!</div>
-                          if (active.unlocks_at) {
-                            const diff = new Date(active.unlocks_at).getTime() - Date.now()
-                            const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000)
-                            return (
-                              <div style={{ margin: "0 20px 20px", padding: "12px 16px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, display: "flex", alignItems: "center", gap: 12 }}>
-                                <span style={{ fontSize: 18 }}>🔒</span>
-                                <div>
-                                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: "var(--paper-dim)" }}>Próxima missão disponível em</p>
-                                  <p style={{ margin: "4px 0 0", fontSize: 20, fontWeight: 950, color: passColor }}>{h}h {m}m</p>
+                          </div>
+                        ) : (
+                          <div className="ca-mission-card" style={{ margin: "0 20px 20px" }}>
+                            <div className="ca-mission-card-inner" style={{ background: `color-mix(in srgb, ${passColor} 7%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${passColor} 22%, transparent)` }}>
+                              {/* Badges */}
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, letterSpacing: "0.07em" }}>
+                                  {TYPE_LABEL[pass.type]} · Missão {active.position}/{pass.missions.length}
+                                </span>
+                                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginLeft: "auto" }}>Contrato expira em {expiresIn}</span>
+                              </div>
+                              {/* Título */}
+                              <div>
+                                <p style={{ margin: 0, fontSize: 9, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}>Missão Atual</p>
+                                <p style={{ margin: "4px 0 0", fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{active.title}</p>
+                                {active.description && <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{active.description}</p>}
+                              </div>
+                              {/* Barra de progresso */}
+                              <div>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 11 }}>
+                                  <span style={{ color: "rgba(255,255,255,0.4)" }}>Progresso</span>
+                                  <span style={{ color: passColor, fontWeight: 950 }}>0 / {active.total}</span>
+                                </div>
+                                <div className="ca-mission-progress-bar">
+                                  <div className="ca-mission-progress-fill" style={{ width: "0%", background: passColor }} />
                                 </div>
                               </div>
-                            )
-                          }
-                          return (
-                            <div style={{ margin: "0 20px 20px", padding: "14px 16px", background: `color-mix(in srgb, ${passColor} 6%, transparent)`, border: `1px solid color-mix(in srgb, ${passColor} 25%, transparent)`, borderRadius: 8 }}>
-                              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: passColor }}>Missão atual — #{active.position}</span>
-                              <p style={{ margin: "6px 0 0", fontSize: 14, fontWeight: 800, color: "var(--paper)" }}>{active.title}</p>
-                              {active.description && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{active.description}</p>}
-                              <div style={{ display: "flex", gap: 12, marginTop: 8, fontSize: 12 }}>
-                                <span style={{ color: "var(--gray-500)" }}>Meta: {active.total}×</span>
-                                {active.points_reward > 0 && <span style={{ color: "var(--yellow)" }}>+{active.points_reward} pts</span>}
-                                {active.item_reward && <span style={{ color: "var(--cyan)" }}>🎁 Item especial</span>}
-                              </div>
+                              {/* Recompensa */}
+                              {active.points_reward > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                  <Coins size={13} style={{ color: "#ffd400" }} />
+                                  <span style={{ color: "#ffd400", fontWeight: 950 }}>+{active.points_reward.toLocaleString("pt-BR")} pts</span>
+                                  <span style={{ color: "rgba(255,255,255,0.3)" }}>ao completar</span>
+                                  {active.item_reward && <><span style={{ color: "rgba(255,255,255,0.2)" }}>·</span><span style={{ color: "var(--cyan)" }}>🎁 Item especial</span></>}
+                                </div>
+                              )}
                             </div>
-                          )
-                        })()}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
