@@ -3,15 +3,18 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  Award, ChevronRight, Coins, ExternalLink,
+  Award, ChevronLeft, ChevronRight, Coins, ExternalLink,
   HelpCircle, ImageOff, Shield, Swords,
   Users, Zap,
 } from "lucide-react"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../../styles/faccoes-hub.css"
 import "../../../../styles/contratos-venda.css"
 import type { DashboardData } from "@/app/api/faccoes/dashboard/route"
 import type { Contract } from "@/app/api/contratos/route"
 import type { Pass } from "@/app/api/faccoes/recompensas/route"
+
+const PANEL_KEY = "faccoes-hub-panel-open"
 
 /* ── helpers ── */
 function timeAgo(iso: string) {
@@ -50,6 +53,17 @@ export default function FaccoesHubPage() {
   const [passes, setPasses]           = useState<Pass[]>([])
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(tabs[0])
+  const [panelOpen, setPanelOpen]     = useState(true)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(PANEL_KEY)
+    if (stored !== null) setPanelOpen(stored === "true")
+  }, [])
+
+  function setPanel(val: boolean) {
+    setPanelOpen(val)
+    localStorage.setItem(PANEL_KEY, String(val))
+  }
   const tabRefs                       = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
 
@@ -90,7 +104,7 @@ export default function FaccoesHubPage() {
 
   return (
     <div className="faccoes-hub-page">
-      <div className="faccoes-hub-layout">
+      <div className={`faccoes-hub-layout${panelOpen ? "" : " faccoes-hub-layout--no-panel"}`}>
         <div className="faccoes-hub-main">
 
           {/* ── Topbar ── */}
@@ -479,17 +493,8 @@ export default function FaccoesHubPage() {
         </div>
 
         {/* ── Sidebar direita ── */}
-        <aside className="store-side-panel" aria-label="Painel de facções">
-          {/* Perfil do usuário */}
-          <div className="store-user-card">
-            <div className="store-user-avatar" style={{ background: `color-mix(in srgb, ${faction.color} 20%, #0a0e16)` }}>
-              {avatarUrl ? <img src={avatarUrl} alt={userName} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : userName[0]?.toUpperCase()}
-            </div>
-            <div className="store-user-info">
-              <strong>{userName}</strong>
-              <span className="store-user-online"><span className="store-user-online-dot" />Online</span>
-            </div>
-          </div>
+        <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de facções">
+          <SidePanelUserHeader onClose={() => setPanel(false)} showStats={false} />
 
           <div className="faction-hub-rep">
             <div className="faction-hub-rep-row">
@@ -567,6 +572,11 @@ export default function FaccoesHubPage() {
             </button>
           </div>
         </aside>
+
+        <button type="button" className="store-panel-reopen" onClick={() => setPanel(true)} aria-label="Abrir painel">
+          <ChevronLeft size={16} strokeWidth={2.5} />
+          <span>Painel</span>
+        </button>
       </div>
     </div>
   )

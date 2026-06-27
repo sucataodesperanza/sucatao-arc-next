@@ -18,6 +18,10 @@
   padding-right: var(--side-panel-width);
 }
 
+.faccoes-hub-layout--no-panel {
+  padding-right: 0;
+}
+
 .faccoes-hub-main {
   display: flex;
   flex: 1 1 auto;
