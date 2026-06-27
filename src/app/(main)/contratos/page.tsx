@@ -566,6 +566,8 @@ export default function ContratosPage() {
   const [loadingPasses, setLoadingPasses] = useState(false)
   const [buyingId, setBuyingId]   = useState<string | null>(null)
   const [passModal, setPassModal]         = useState<ContractPass | null>(null)
+  const [userSucatas, setUserSucatas]     = useState<number | null>(null)
+  const [contractStats, setContractStats] = useState<{ completed: number; failed: number; expired: number; total: number; success_rate: number } | null>(null)
   const [passConfirmStep, setPassConfirmStep] = useState<"points" | "cash" | null>(null)
   const [userPoints, setUserPoints]       = useState<number | null>(null)
   const trackRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -599,6 +601,12 @@ export default function ContratosPage() {
   }, [])
 
   useEffect(() => { loadContracts() }, [loadContracts])
+
+  // Dados do painel lateral
+  useEffect(() => {
+    fetch("/api/profile/points").then(r => r.json()).then(d => setUserSucatas(d.points ?? 0)).catch(() => {})
+    fetch("/api/contratos/stats").then(r => r.json()).then(d => setContractStats(d)).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (activeTab === "Contratos à Venda" && passes.length === 0) loadPasses()
@@ -1569,19 +1577,21 @@ export default function ContratosPage() {
           <div className="contratos-reputation">
             <div className="contratos-reputation-row">
               <div className="contratos-reputation-value">
-                <span>Reputação</span>
-                <strong>5.250 / 10.000 REP</strong>
+                <span>Sucatas</span>
+                <strong style={{ color: "var(--yellow)" }}>
+                  {userSucatas !== null ? userSucatas.toLocaleString("pt-BR") : "—"} pts
+                </strong>
               </div>
               <div className="contratos-reputation-badge">
-                <span>Mercador</span>
+                <span>Contratos</span>
                 <span className="contratos-reputation-tier">
                   <Shield size={14} fill="currentColor" />
-                  Lendário
+                  {contractStats?.completed ?? 0} concluídos
                 </span>
               </div>
             </div>
             <div className="store-reputation-bar">
-              <span style={{ width: "82.5%" }} />
+              <span style={{ width: `${contractStats && contractStats.total > 0 ? Math.round((contractStats.completed / contractStats.total) * 100) : 0}%` }} />
             </div>
           </div>
 
@@ -1592,19 +1602,19 @@ export default function ContratosPage() {
                 <div className="historico-summary-grid">
                   <div className="historico-summary-stat historico-stat-green">
                     <span className="historico-stat-icon"><Trophy size={18} /></span>
-                    <div><span>Contratos Concluídos</span><strong>128</strong></div>
+                    <div><span>Contratos Concluídos</span><strong>{contractStats?.completed ?? "—"}</strong></div>
                   </div>
                   <div className="historico-summary-stat historico-stat-red">
                     <span className="historico-stat-icon"><XCircle size={18} /></span>
-                    <div><span>Contratos Falhos</span><strong>32</strong></div>
+                    <div><span>Contratos Falhos</span><strong>{contractStats?.failed ?? "—"}</strong></div>
                   </div>
                   <div className="historico-summary-stat historico-stat-blue">
                     <span className="historico-stat-icon"><BarChart2 size={18} /></span>
-                    <div><span>Taxa de Sucesso</span><strong>80%</strong></div>
+                    <div><span>Taxa de Sucesso</span><strong>{contractStats ? `${contractStats.success_rate}%` : "—"}</strong></div>
                   </div>
                   <div className="historico-summary-stat historico-stat-yellow">
                     <span className="historico-stat-icon"><Coins size={18} /></span>
-                    <div><span>Recompensas Recebidas</span><strong>245.750</strong></div>
+                    <div><span>Sucatas do usuário</span><strong>{userSucatas !== null ? userSucatas.toLocaleString("pt-BR") : "—"}</strong></div>
                   </div>
                 </div>
               </div>
@@ -1723,36 +1733,38 @@ export default function ContratosPage() {
                 </div>
               )}
 
-              {activeTab !== "Contratos Semanais" && (
+              {activeTab !== "Contratos Semanais" && myPasses.length > 0 && (
                 <div className="store-side-card contratos-side-fill">
                   <div className="contratos-side-head">
-                    <h2>Contratos Diários</h2>
-                    <span className="contratos-renew">Renova em: {formatCountdown(secondsLeft, false)}</span>
+                    <h2>Meus Contratos</h2>
+                    <button type="button" className="contratos-see-all" onClick={() => setActiveTab("Contratos Ativos")}>
+                      Ver Todos <ChevronRight size={12} />
+                    </button>
                   </div>
                   <div className="contratos-daily-list">
-                    {dailyContracts.slice(0, 3).map((contract, i) => (
-                      <div key={i} className={`contratos-daily-item${contract.done ? " done" : ""}`}>
-                        <div className="contratos-daily-info">
-                          <strong>{contract.title}</strong>
-                          {contract.done ? (
-                            <div className="contratos-daily-progress-row">
-                              <span className="contratos-daily-count done">{contract.progress} / {contract.total}</span>
-                              <span className="contratos-daily-done">
-                                <Check size={12} />
-                                Concluído
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="contratos-daily-count">{contract.progress} / {contract.total}</span>
-                          )}
+                    {myPasses.slice(0, 3).map(pass => {
+                      const TYPE_COLOR: Record<string, string> = { daily: "#3df28b", weekly: "#ffd400", monthly: "#b477ff" }
+                      const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                      const passColor = TYPE_COLOR[pass.type] ?? "#5fa8ff"
+                      const active = pass.missions.find(m => m.status === "active")
+                      const allDone = pass.missions.length > 0 && !active
+                      return (
+                        <div key={pass.id} className={`contratos-daily-item${allDone ? " done" : ""}`}>
+                          <div className="contratos-daily-info">
+                            <strong style={{ color: passColor }}>{TYPE_LABEL[pass.type]}</strong>
+                            <span style={{ fontSize: 11, color: "var(--paper)", fontWeight: 800 }}>{pass.title}</span>
+                            {allDone ? (
+                              <div className="contratos-daily-progress-row">
+                                <span className="contratos-daily-count done">{pass.total_completed}/{pass.missions.length}</span>
+                                <span className="contratos-daily-done"><Check size={12} />Concluído</span>
+                              </div>
+                            ) : (
+                              <span className="contratos-daily-count">{pass.total_completed} / {pass.missions.length} missões</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="contratos-daily-rewards">
-                          {contract.rewards.slice(0, 2).map((reward, j) => (
-                            <DailyRewardBadge key={j} reward={reward} />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
