@@ -11,6 +11,7 @@ import "../../../../styles/faccoes-hub.css"
 import "../../../../styles/contratos-venda.css"
 import type { DashboardData } from "@/app/api/faccoes/dashboard/route"
 import type { Contract } from "@/app/api/contratos/route"
+import type { Pass } from "@/app/api/faccoes/recompensas/route"
 
 /* ── helpers ── */
 function timeAgo(iso: string) {
@@ -46,6 +47,7 @@ export default function FaccoesHubPage() {
   const router                        = useRouter()
   const [data, setData]               = useState<DashboardData | null>(null)
   const [factionContracts, setFactionContracts] = useState<Contract[]>([])
+  const [passes, setPasses]           = useState<Pass[]>([])
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(tabs[0])
   const tabRefs                       = useRef<(HTMLButtonElement | null)[]>([])
@@ -55,10 +57,12 @@ export default function FaccoesHubPage() {
     Promise.all([
       fetch("/api/faccoes/dashboard").then(r => r.json()),
       fetch("/api/faccoes/contratos").then(r => r.json()).catch(() => ({ contracts: [] })),
-    ]).then(([d, c]: [DashboardData, { contracts: Contract[] }]) => {
+      fetch("/api/faccoes/recompensas").then(r => r.json()).catch(() => ({ passes: [] })),
+    ]).then(([d, c, r]: [DashboardData, { contracts: Contract[] }, { passes: Pass[] }]) => {
       if (!d.faction) { router.replace("/faccoes"); return }
       setData(d)
       setFactionContracts(c.contracts ?? [])
+      setPasses(r.passes ?? [])
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [router])
@@ -318,7 +322,135 @@ export default function FaccoesHubPage() {
             </>
           )}
 
-          {activeTab !== "Visão Geral" && (
+          {activeTab === "Recompensas" && (
+            <div style={{ display: "grid", gap: 24 }}>
+              {passes.length === 0 ? (
+                <div className="faccoes-hub-placeholder">
+                  <h2>Nenhum passe ativo</h2>
+                  <p>Seu admin ainda não criou passes de batalha para esta facção.</p>
+                </div>
+              ) : passes.map(pass => {
+                const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                const TYPE_COLOR: Record<string, string> = { daily: "var(--green)", weekly: "var(--yellow)", monthly: "var(--purple)" }
+                const typeColor = TYPE_COLOR[pass.type] ?? "var(--cyan)"
+                const expiresIn = (() => {
+                  const diff = new Date(pass.expires_at).getTime() - Date.now()
+                  if (diff <= 0) return "Expirado"
+                  const d = Math.floor(diff / 86400000)
+                  const h = Math.floor((diff % 86400000) / 3600000)
+                  return d > 0 ? `${d}d ${h}h` : `${h}h`
+                })()
+                return (
+                  <div key={pass.id} style={{ background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 12, overflow: "hidden" }}>
+                    {/* Header */}
+                    <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--stroke)", display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${typeColor} 15%, transparent)`, color: typeColor, border: `1px solid color-mix(in srgb, ${typeColor} 30%, transparent)` }}>
+                        {TYPE_LABEL[pass.type] ?? pass.type}
+                      </span>
+                      <h2 style={{ margin: 0, fontSize: 15, fontWeight: 950, color: "var(--paper)" }}>{pass.title}</h2>
+                      <span style={{ marginLeft: "auto", fontSize: 11, color: "var(--gray-500)" }}>
+                        Expira em: <strong style={{ color: typeColor }}>{expiresIn}</strong>
+                      </span>
+                      <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                        {pass.total_completed}/{pass.missions.length} concluídas
+                      </span>
+                    </div>
+
+                    {/* Trilha de missões */}
+                    <div style={{ padding: "20px", overflowX: "auto" }}>
+                      <div style={{ display: "flex", alignItems: "flex-start", gap: 0, minWidth: "max-content" }}>
+                        {pass.missions.map((m, i) => {
+                          const isMilestone = m.position % 5 === 0
+                          const nodeColor = m.status === "completed" ? faction.color
+                            : m.status === "active" ? faction.color
+                            : "rgba(255,255,255,0.15)"
+                          const textColor = m.status === "locked" ? "rgba(255,255,255,0.3)" : "var(--paper)"
+
+                          return (
+                            <div key={m.id} style={{ display: "flex", alignItems: "center" }}>
+                              {/* Nó da missão */}
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, width: isMilestone ? 100 : 80 }}>
+                                {/* Reward badge acima do nó */}
+                                <div style={{ height: 32, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+                                  {isMilestone && m.item_reward ? (
+                                    <div style={{ background: "rgba(255,212,0,0.15)", border: "1px solid rgba(255,212,0,0.4)", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 950, color: "var(--yellow)", display: "flex", alignItems: "center", gap: 4 }}>
+                                      🎁 Item
+                                    </div>
+                                  ) : m.points_reward > 0 ? (
+                                    <span style={{ fontSize: 10, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "var(--yellow)", fontWeight: 800 }}>
+                                      +{m.points_reward}pts
+                                    </span>
+                                  ) : null}
+                                </div>
+
+                                {/* Círculo do nó */}
+                                <div style={{
+                                  width: isMilestone ? 48 : 36,
+                                  height: isMilestone ? 48 : 36,
+                                  borderRadius: "50%",
+                                  background: m.status === "completed"
+                                    ? `color-mix(in srgb, ${faction.color} 25%, transparent)`
+                                    : m.status === "active"
+                                    ? `color-mix(in srgb, ${faction.color} 15%, transparent)`
+                                    : "rgba(255,255,255,0.04)",
+                                  border: `2px solid ${nodeColor}`,
+                                  display: "grid",
+                                  placeItems: "center",
+                                  position: "relative",
+                                  boxShadow: m.status === "active" ? `0 0 16px color-mix(in srgb, ${faction.color} 40%, transparent)` : "none",
+                                  transition: "all 0.2s",
+                                  flexShrink: 0,
+                                }}>
+                                  {m.status === "completed"
+                                    ? <span style={{ fontSize: isMilestone ? 18 : 14, color: faction.color }}>✓</span>
+                                    : m.status === "active"
+                                    ? <span style={{ fontSize: isMilestone ? 16 : 12, fontWeight: 950, color: faction.color }}>{m.position}</span>
+                                    : <span style={{ fontSize: isMilestone ? 16 : 12, fontWeight: 950, color: "rgba(255,255,255,0.2)" }}>{m.position}</span>
+                                  }
+                                </div>
+
+                                {/* Título da missão */}
+                                <span style={{ fontSize: 10, textAlign: "center", color: textColor, lineHeight: 1.3, maxWidth: isMilestone ? 90 : 70, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                                  {m.title}
+                                </span>
+                              </div>
+
+                              {/* Conector entre nós */}
+                              {i < pass.missions.length - 1 && (
+                                <div style={{ width: 24, height: 2, background: pass.missions[i + 1].status === "locked" ? "rgba(255,255,255,0.08)" : `color-mix(in srgb, ${faction.color} 40%, transparent)`, marginTop: -32, flexShrink: 0 }} />
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Missão atual em destaque */}
+                    {(() => {
+                      const active = pass.missions.find(m => m.status === "active")
+                      if (!active) return null
+                      return (
+                        <div style={{ margin: "0 20px 20px", padding: "14px 16px", background: `color-mix(in srgb, ${faction.color} 6%, transparent)`, border: `1px solid color-mix(in srgb, ${faction.color} 25%, transparent)`, borderRadius: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                            <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: faction.color }}>Missão atual — #{active.position}</span>
+                          </div>
+                          <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: "var(--paper)" }}>{active.title}</p>
+                          {active.description && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{active.description}</p>}
+                          <div style={{ display: "flex", gap: 12, marginTop: 10, fontSize: 12 }}>
+                            <span style={{ color: "var(--gray-500)" }}>Objetivo: completar <strong style={{ color: "var(--paper)" }}>{active.total}×</strong></span>
+                            {active.points_reward > 0 && <span style={{ color: "var(--yellow)" }}>+{active.points_reward} pts ao concluir</span>}
+                            {active.item_reward && <span style={{ color: "var(--cyan)" }}>🎁 Item especial ao concluir</span>}
+                          </div>
+                        </div>
+                      )
+                    })()}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {activeTab !== "Visão Geral" && activeTab !== "Recompensas" && (
             <div className="faccoes-hub-placeholder">
               <h2>Em breve</h2>
               <p>Esta seção estará disponível em breve.</p>

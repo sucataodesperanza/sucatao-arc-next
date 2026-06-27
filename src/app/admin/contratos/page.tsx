@@ -369,6 +369,206 @@ function AcceitancesSection() {
   )
 }
 
+/* ── Seção de passes de batalha ── */
+function PassesSection() {
+  const toast = useToast()
+  const { confirm } = useConfirm()
+  const [passes, setPasses]         = useState<any[]>([])
+  const [factions, setFactions]     = useState<Faction[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [showForm, setShowForm]     = useState(false)
+  const [expanded, setExpanded]     = useState<string | null>(null)
+  const [missions, setMissions]     = useState<Record<string, any[]>>({})
+  const [completing, setCompleting] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    faction_id: "", title: "", description: "", type: "weekly",
+    starts_at: "", expires_at: "", active: true,
+  })
+  const [mForm, setMForm] = useState({
+    position: 1, title: "", description: "", total: 1, points_reward: 0,
+  })
+  const [savingPass, setSavingPass] = useState(false)
+  const [savingMission, setSavingMission] = useState(false)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const [pRes, fRes] = await Promise.all([
+      fetch("/api/admin/faccoes/passes").then(r => r.json()).catch(() => ({})),
+      fetch("/api/admin/faccoes").then(r => r.json()).catch(() => ({})),
+    ])
+    setPasses(pRes.groups ?? [])
+    setFactions(fRes.factions ?? [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function loadMissions(groupId: string) {
+    const res = await fetch(`/api/admin/faccoes/passes/${groupId}/missions`)
+    const body = await res.json().catch(() => ({}))
+    setMissions(prev => ({ ...prev, [groupId]: body.missions ?? [] }))
+  }
+
+  async function toggleExpand(id: string) {
+    if (expanded === id) { setExpanded(null); return }
+    setExpanded(id)
+    await loadMissions(id)
+  }
+
+  async function createPass() {
+    if (!form.faction_id || !form.title || !form.starts_at || !form.expires_at) return toast.error("Preencha os campos obrigatórios.")
+    setSavingPass(true)
+    const res = await fetch("/api/admin/faccoes/passes", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form),
+    })
+    setSavingPass(false)
+    if (res.ok) { toast.success("Passe criado!"); setShowForm(false); await load() }
+    else toast.error("Erro ao criar passe.")
+  }
+
+  async function deletePass(id: string) {
+    const ok = await confirm("Remover este passe e todas as missões/progresso?")
+    if (!ok) return
+    await fetch(`/api/admin/faccoes/passes/${id}`, { method: "DELETE" })
+    toast.success("Passe removido.")
+    await load()
+  }
+
+  async function addMission(groupId: string) {
+    if (!mForm.title) return toast.error("Título da missão obrigatório.")
+    setSavingMission(true)
+    const res = await fetch(`/api/admin/faccoes/passes/${groupId}/missions`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...mForm, group_id: groupId }),
+    })
+    setSavingMission(false)
+    if (res.ok) { toast.success("Missão adicionada!"); setMForm({ position: mForm.position + 1, title: "", description: "", total: 1, points_reward: 0 }); await loadMissions(groupId) }
+    else toast.error("Erro ao adicionar missão.")
+  }
+
+  async function completeMission(missionId: string, userId: string) {
+    setCompleting(missionId)
+    const res = await fetch(`/api/admin/faccoes/passes/missions/${missionId}/complete`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user_id: userId }),
+    })
+    setCompleting(null)
+    if (res.ok) {
+      const body = await res.json()
+      toast.success(`✓ Missão concluída! ${body.points_credited} pts creditados.`)
+    } else toast.error("Erro ao concluir missão.")
+  }
+
+  const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+  const TYPE_COLOR: Record<string, string> = { daily: "var(--green)", weekly: "var(--yellow)", monthly: "var(--purple)" }
+  const inp: React.CSSProperties = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--text)", padding: "7px 10px", fontSize: 12, borderRadius: 4, font: "inherit", width: "100%" }
+  const lbl: React.CSSProperties = { fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", display: "block", marginBottom: 4 }
+
+  return (
+    <div className="utility-panel" style={{ marginTop: 16 }}>
+      <div className="utility-panel-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div><strong>Passes de Batalha de Facção</strong><small>Diários (1 missão), Semanais (7) e Mensais (30)</small></div>
+        <button type="button" onClick={() => setShowForm(s => !s)}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
+          {showForm ? <ChevronUp size={12} /> : <Plus size={12} />} {showForm ? "Cancelar" : "Novo Passe"}
+        </button>
+      </div>
+
+      {/* Formulário novo passe */}
+      {showForm && (
+        <div style={{ background: "rgba(0,0,0,0.2)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 16, marginBottom: 16, display: "grid", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+            <label><span style={lbl}>Facção *</span>
+              <select value={form.faction_id} onChange={e => setForm(p => ({ ...p, faction_id: e.target.value }))} style={inp}>
+                <option value="">Selecionar...</option>
+                {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              </select>
+            </label>
+            <label><span style={lbl}>Tipo *</span>
+              <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={inp}>
+                <option value="daily">Diário (1 missão)</option>
+                <option value="weekly">Semanal (7 missões)</option>
+                <option value="monthly">Mensal (30 missões)</option>
+              </select>
+            </label>
+            <label><span style={lbl}>Título *</span><input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} style={inp} placeholder="Semana da Guardia #1" /></label>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+            <label><span style={lbl}>Início *</span><input type="datetime-local" value={form.starts_at} onChange={e => setForm(p => ({ ...p, starts_at: e.target.value }))} style={inp} /></label>
+            <label><span style={lbl}>Expira em *</span><input type="datetime-local" value={form.expires_at} onChange={e => setForm(p => ({ ...p, expires_at: e.target.value }))} style={inp} /></label>
+          </div>
+          <button type="button" onClick={createPass} disabled={savingPass}
+            style={{ background: "rgba(61,242,139,0.12)", border: "1px solid rgba(61,242,139,0.4)", color: "var(--green)", padding: "9px 20px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", alignSelf: "flex-start" }}>
+            {savingPass ? "Criando..." : "✓ Criar Passe"}
+          </button>
+        </div>
+      )}
+
+      {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
+        <div style={{ display: "grid", gap: 8 }}>
+          {passes.map(p => {
+            const fac = p.factions
+            const isExpanded = expanded === p.id
+            const groupMissions = missions[p.id] ?? []
+            return (
+              <div key={p.id} style={{ border: "1px solid var(--stroke)", borderRadius: 8, overflow: "hidden" }}>
+                {/* Header do passe */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "rgba(255,255,255,0.02)", cursor: "pointer" }} onClick={() => toggleExpand(p.id)}>
+                  <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "2px 8px", borderRadius: 4, background: `color-mix(in srgb, ${TYPE_COLOR[p.type]} 15%, transparent)`, color: TYPE_COLOR[p.type], border: `1px solid color-mix(in srgb, ${TYPE_COLOR[p.type]} 30%, transparent)` }}>
+                    {TYPE_LABEL[p.type] ?? p.type}
+                  </span>
+                  <span style={{ fontWeight: 800, fontSize: 13, color: fac?.color ?? "var(--paper)" }}>{fac?.name ?? "—"}</span>
+                  <span style={{ fontSize: 13 }}>{p.title}</span>
+                  <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--gray-500)" }}>
+                    {new Date(p.starts_at).toLocaleDateString("pt-BR")} → {new Date(p.expires_at).toLocaleDateString("pt-BR")}
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 950, color: p.active ? "var(--green)" : "var(--gray-500)" }}>{p.active ? "ATIVO" : "INATIVO"}</span>
+                  <button type="button" onClick={e => { e.stopPropagation(); deletePass(p.id) }} style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 4 }}><Trash2 size={14} /></button>
+                  {isExpanded ? <ChevronUp size={14} style={{ color: "var(--gray-500)" }} /> : <ChevronDown size={14} style={{ color: "var(--gray-500)" }} />}
+                </div>
+
+                {/* Missões */}
+                {isExpanded && (
+                  <div style={{ padding: "12px 14px", borderTop: "1px solid var(--stroke)" }}>
+                    <p style={{ margin: "0 0 10px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Missões ({groupMissions.length})</p>
+
+                    {/* Lista de missões */}
+                    <div style={{ display: "grid", gap: 6, marginBottom: 14 }}>
+                      {groupMissions.map((m: any) => (
+                        <div key={m.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "rgba(255,255,255,0.02)", borderRadius: 6, border: "1px solid rgba(255,255,255,0.05)", fontSize: 12 }}>
+                          <span style={{ width: 24, height: 24, borderRadius: "50%", background: m.position % 5 === 0 ? "rgba(255,212,0,0.2)" : "rgba(255,255,255,0.05)", border: m.position % 5 === 0 ? "1px solid rgba(255,212,0,0.4)" : "1px solid var(--stroke)", display: "grid", placeItems: "center", fontSize: 10, fontWeight: 950, color: m.position % 5 === 0 ? "var(--yellow)" : "var(--gray-500)", flexShrink: 0 }}>
+                            {m.position}
+                          </span>
+                          <span style={{ flex: 1, fontWeight: 800 }}>{m.title}</span>
+                          <span style={{ color: "var(--muted)", fontSize: 11 }}>total: {m.total}</span>
+                          {m.points_reward > 0 && <span style={{ color: "var(--yellow)", fontSize: 11 }}>{m.points_reward} pts</span>}
+                          {m.item_reward && <span style={{ color: "var(--cyan)", fontSize: 11 }}>🎁 item</span>}
+                        </div>
+                      ))}
+                      {groupMissions.length === 0 && <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma missão adicionada.</p>}
+                    </div>
+
+                    {/* Adicionar missão */}
+                    <div style={{ display: "grid", gridTemplateColumns: "auto 1fr auto auto auto auto", gap: 8, alignItems: "end" }}>
+                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>#</span><input type="number" min={1} value={mForm.position} onChange={e => setMForm(p => ({ ...p, position: Number(e.target.value) }))} style={{ ...inp, width: 52 }} /></label>
+                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Título da missão</span><input value={mForm.title} onChange={e => setMForm(p => ({ ...p, title: e.target.value }))} style={inp} placeholder="Elimine 5 inimigos ARC" /></label>
+                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Total</span><input type="number" min={1} value={mForm.total} onChange={e => setMForm(p => ({ ...p, total: Number(e.target.value) }))} style={{ ...inp, width: 64 }} /></label>
+                      <label style={{ display: "grid", gap: 3 }}><span style={{ ...lbl, marginBottom: 2 }}>Pontos</span><input type="number" min={0} value={mForm.points_reward} onChange={e => setMForm(p => ({ ...p, points_reward: Number(e.target.value) }))} style={{ ...inp, width: 80 }} /></label>
+                      <button type="button" onClick={() => addMission(p.id)} disabled={savingMission || !mForm.title}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "7px 12px", fontSize: 11, fontWeight: 950, cursor: "pointer", borderRadius: 4, font: "inherit", alignSelf: "end", textTransform: "uppercase" }}>
+                        <Plus size={11} /> {savingMission ? "..." : "Add"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {passes.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhum passe criado.</p>}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminContratosPage() {
   return (
     <div>
@@ -378,6 +578,7 @@ export default function AdminContratosPage() {
       </div>
       <ContratosSection />
       <AcceitancesSection />
+      <PassesSection />
     </div>
   )
 }
