@@ -1433,10 +1433,15 @@ export default function ContratosPage() {
                                         <img
                                           src={(m.item_reward as any).item_image}
                                           alt={(m.item_reward as any).item_name}
-                                          style={{ width: 30, height: 30, objectFit: "contain", opacity: m.status === "locked" ? 0.3 : 1 }}
+                                          style={{
+                                            width: 34, height: 34,
+                                            objectFit: "contain",
+                                            opacity: m.status === "locked" ? 0.25 : 1,
+                                            filter: m.status === "locked" ? "grayscale(1)" : `drop-shadow(0 0 6px ${nodeColor})`,
+                                          }}
                                         />
                                       ) : hasItem ? (
-                                        <span style={{ fontSize: 18, opacity: m.status === "locked" ? 0.3 : 1 }}>🎁</span>
+                                        <span style={{ fontSize: 20, opacity: m.status === "locked" ? 0.25 : 1 }}>🎁</span>
                                       ) : m.points_reward > 0 ? (
                                         <span style={{ fontSize: 11, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
                                           +{m.points_reward}

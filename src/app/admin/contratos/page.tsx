@@ -506,7 +506,7 @@ function PassesSection() {
       body: JSON.stringify({
         item_reward: {
           item_name:    item.name,
-          item_image:   item.image ?? null,
+          item_image:   item.icon_url ?? item.image ?? null,
           item_rarity:  item.rarity ?? null,
           item_qty:     1,
         },
@@ -797,7 +797,9 @@ function PassesSection() {
                           <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 160 }}>
                             {m.item_reward ? (
                               <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", background: "rgba(0,217,255,0.06)", border: "1px solid rgba(0,217,255,0.2)", borderRadius: 5 }}>
-                                {m.item_reward.item_image && <img src={m.item_reward.item_image} alt="" style={{ width: 18, height: 18, objectFit: "contain" }} />}
+                                {m.item_reward.item_image
+                                  ? <img src={m.item_reward.item_image} alt="" style={{ width: 18, height: 18, objectFit: "contain" }} />
+                                  : <span style={{ fontSize: 13 }}>🎁</span>}
                                 <span style={{ fontSize: 10, color: "var(--cyan)", fontWeight: 800, flex: 1 }}>{m.item_reward.item_name}</span>
                                 <button type="button" onClick={() => clearMissionItem(m.id, p.id)}
                                   style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 0, fontSize: 11, display: "flex" }}>✕</button>
@@ -815,7 +817,7 @@ function PassesSection() {
                                       <button key={item.id} type="button"
                                         onClick={() => setMissionItem(m.id, item, p.id)}
                                         style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}>
-                                        {item.image && <img src={item.image} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+                                        {(item.icon_url ?? item.image) && <img src={item.icon_url ?? item.image} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
                                         <span style={{ fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
                                         {item.rarity && <span style={{ fontSize: 10, color: "var(--gray-500)", marginLeft: "auto" }}>{item.rarity}</span>}
                                       </button>
