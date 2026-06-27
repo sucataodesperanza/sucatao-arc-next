@@ -728,8 +728,37 @@ function PassesSection() {
                           </span>
                           <span style={{ flex: 1, fontWeight: 800 }}>{m.title}</span>
                           <span style={{ color: "var(--muted)", fontSize: 11 }}>total: {m.total}</span>
-                          {m.points_reward > 0 && <span style={{ color: "var(--yellow)", fontSize: 11 }}>{m.points_reward} pts</span>}
+                          {/* Input editável de pontos */}
+                          <label style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                            <input
+                              type="number" min={0}
+                              defaultValue={m.points_reward ?? 0}
+                              onBlur={async e => {
+                                const val = Number(e.target.value)
+                                if (val === (m.points_reward ?? 0)) return
+                                const res = await fetch(`/api/admin/faccoes/passes/missions/${m.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ points_reward: val }),
+                                })
+                                if (res.ok) { toast.success("Pontos atualizados!"); await loadMissions(p.id) }
+                                else toast.error("Erro ao atualizar pontos.")
+                              }}
+                              style={{ width: 64, background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--yellow)", padding: "3px 6px", fontSize: 11, fontWeight: 950, borderRadius: 4, font: "inherit", textAlign: "right" }}
+                            />
+                            <span style={{ fontSize: 10, color: "var(--yellow)" }}>pts</span>
+                          </label>
                           {m.item_reward && <span style={{ color: "var(--cyan)", fontSize: 11 }}>🎁 item</span>}
+                          <button type="button"
+                            onClick={async () => {
+                              const ok = await confirm(`Remover missão #${m.position}?`)
+                              if (!ok) return
+                              await fetch(`/api/admin/faccoes/passes/missions/${m.id}`, { method: "DELETE" })
+                              await loadMissions(p.id)
+                            }}
+                            style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 2, display: "flex", flexShrink: 0 }}>
+                            <Trash2 size={13} />
+                          </button>
                         </div>
                       ))}
                       {groupMissions.length === 0 && <p style={{ margin: 0, fontSize: 12, color: "var(--muted)" }}>Nenhuma missão adicionada.</p>}
