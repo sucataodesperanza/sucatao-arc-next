@@ -137,3 +137,30 @@ Cada missão na lista exibe:
 | Editar missão | `PATCH /api/admin/faccoes/passes/missions/:id` |
 | Remover missão | `DELETE /api/admin/faccoes/passes/missions/:id` |
 | Completar missão de usuário | `POST /api/admin/faccoes/passes/missions/:id/complete` |
+
+---
+
+## Seção 4 — Próximas Recompensas (por Pontos)
+
+Itens do catálogo desbloqueados ao atingir determinada quantidade de sucatas acumuladas (`profiles.points`). Aparecem no painel lateral de `/contratos`.
+
+### Adicionar recompensa
+
+1. Digitar nome do item no campo de busca → autocomplete de `catalog_items` (até 20 resultados)
+2. Definir o **limiar de pontos** (ex: 9.000 = precisa ter acumulado 9.000 pts)
+3. Clicar no item no dropdown → inserção imediata
+
+### Tabela de recompensas
+
+- **Limiar**: input numérico inline editável (blur salva via PATCH)
+- **Ativo**: checkbox inline (false = oculto no painel do usuário)
+- **Remover**: lixeira com confirmação
+
+### Fontes de Dados
+
+| Ação | Endpoint |
+|---|---|
+| Listar | `GET /api/admin/contratos/rewards` |
+| Criar | `POST /api/admin/contratos/rewards` — body: `{ item_id, points_threshold }` |
+| Editar | `PATCH /api/admin/contratos/rewards/:id` — body: `{ points_threshold?, active? }` |
+| Remover | `DELETE /api/admin/contratos/rewards/:id` |

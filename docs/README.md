@@ -74,6 +74,7 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `reward_items` | Itens de recompensa (gift cards, merch, sorteios) |
 | `contracts` | Contratos individuais (tipo, tier, recompensas, sub-objetivos e inimigos como JSONB) |
 | `user_contracts` | Progresso e status do usuário por contrato individual (UNIQUE user_id+contract_id) |
+| `contract_point_rewards` | Recompensas (catalog_items) desbloqueadas ao atingir X pontos acumulados |
 | `contract_groups` | Contratos sequenciais (diário/semanal/mensal) com preço em pts e R$ |
 | `contract_group_missions` | Missões de cada contrato sequencial (posição, pontos, item_reward JSONB) |
 | `user_mission_completions` | Missões concluídas por usuário (limite 1/dia para weekly e monthly) |

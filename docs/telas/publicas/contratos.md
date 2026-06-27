@@ -97,7 +97,7 @@ Lista de contratos sequenciais comprados pelo usuário.
 | Sucatas do usuário (painel) | `profiles.points` | `GET /api/profile/points` |
 | Resumo do Histórico (painel) | `user_contracts` | `GET /api/contratos/stats` |
 | Meus Contratos (painel) | `user_contract_group_purchases` + missões | `GET /api/contratos/passes/meus` (já carregado) |
-| Próximas Recompensas (painel) | **Hardcoded** | — |
+| Próximas Recompensas (painel) | `contract_point_rewards` + `catalog_items` | `GET /api/contratos/rewards` |
 
 ---
 
@@ -108,8 +108,8 @@ Lista de contratos sequenciais comprados pelo usuário.
 | **Sucatas** — saldo real + barra de % concluídos | ✅ Real | `profiles.points` + `user_contracts` |
 | **Meus Contratos** — lista os contratos sequenciais ativos do usuário | ✅ Real | `user_contract_group_purchases` + missões |
 | **Resumo do Histórico** (aba Histórico) — concluídos, falhos, taxa de sucesso, sucatas | ✅ Real | `user_contracts` via `GET /api/contratos/stats` |
+| **Próximas Recompensas** — itens do catálogo com limiar de pontos | ✅ Real | `contract_point_rewards` + `catalog_items` via `GET /api/contratos/rewards` |
 | **Progresso de Reputação** — nível, barra REP | ⚠️ Decorativo | — |
-| **Próximas Recompensas** — itens por threshold de REP | ⚠️ Decorativo | — |
 
 ### `GET /api/contratos/stats`
 
@@ -126,6 +126,27 @@ Retorna estatísticas do usuário calculadas de `user_contracts`:
 ```
 
 `success_rate = completed / (completed + failed) × 100`. Se nenhum decisivo, retorna 0.
+
+### `GET /api/contratos/rewards`
+
+Retorna recompensas ativas ordenadas por `points_threshold` com o progresso do usuário:
+
+```json
+{
+  "rewards": [
+    {
+      "id": "uuid",
+      "points_threshold": 9000,
+      "item": { "name": "Caixa Épica", "icon_url": "...", "rarity": "Epic" },
+      "progress_pct": 91,
+      "unlocked": false
+    }
+  ],
+  "user_points": 8250
+}
+```
+
+O frontend exibe apenas recompensas com `unlocked: false` (até 5). Barra de progresso = `profiles.points / points_threshold`.
 
 ---
 
@@ -199,6 +220,17 @@ Retorna estatísticas do usuário calculadas de `user_contracts`:
 | `purchased_at` | timestamptz | — |
 
 > UNIQUE `(user_id, group_id)` — usuário não pode comprar o mesmo contrato duas vezes.
+
+### `contract_point_rewards` (recompensas por pontos acumulados)
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `id` | uuid PK | — |
+| `item_id` | text FK → catalog_items | Item do catálogo como recompensa |
+| `points_threshold` | integer | Quantidade de `profiles.points` necessária para desbloquear |
+| `active` | boolean | `false` = oculto no painel |
+
+> Recompensas são exibidas ordenadas por `points_threshold` ascendente. Só aparecem as ainda não desbloqueadas pelo usuário (até 5). Gerenciadas em `/admin/contratos`.
 
 ## Regras de Negócio
 
