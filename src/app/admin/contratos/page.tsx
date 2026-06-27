@@ -217,12 +217,25 @@ function ContratosSection() {
                 <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950, opacity: 0.7 }}>{c.type}</span></td>
                 <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950 }}>{c.tier}</span></td>
                 <td style={{ padding: "8px", fontWeight: 800 }}>{c.title}</td>
-                <td style={{ padding: "8px", fontSize: 11 }}>
-                  {(c as Contract & { faction_id?: string }).faction_id
-                    ? <span style={{ color: factions.find(f => f.id === (c as Contract & { faction_id?: string }).faction_id)?.color ?? "var(--cyan)", fontWeight: 800 }}>
-                        {factions.find(f => f.id === (c as Contract & { faction_id?: string }).faction_id)?.name ?? "—"}
-                      </span>
-                    : <em style={{ color: "var(--gray-500)" }}>—</em>}
+                <td style={{ padding: "8px" }}>
+                  <select
+                    value={(c as Contract & { faction_id?: string | null }).faction_id ?? ""}
+                    onChange={async e => {
+                      const val = e.target.value
+                      await fetch(`/api/admin/contratos/${c.id}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ faction_id: val || null }),
+                      })
+                      await load()
+                    }}
+                    style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: (c as Contract & { faction_id?: string | null }).faction_id ? factions.find(f => f.id === (c as Contract & { faction_id?: string | null }).faction_id)?.color ?? "var(--paper)" : "var(--gray-500)", padding: "4px 8px", fontSize: 11, fontWeight: 800, borderRadius: 4, font: "inherit", cursor: "pointer" }}
+                  >
+                    <option value="">— Sem facção</option>
+                    {factions.map(f => (
+                      <option key={f.id} value={f.id} style={{ color: "var(--paper)" }}>{f.name}</option>
+                    ))}
+                  </select>
                 </td>
                 <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--yellow)" }}>{c.sucatas} pts</span>
