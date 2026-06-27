@@ -1,23 +1,32 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ChevronLeft, MapPin } from "lucide-react"
-import { mapMarkers as localMarkers, markerCategories } from "@/data/map-markers"
+import { markerCategories } from "@/data/map-markers"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/mapas.css"
 import type { MapRecord, MapMarker } from "@/app/api/mapas/route"
 
 const catLabels = markerCategories as Record<string, { label: string; color: string }>
-
 const PANEL_KEY = "mapas-panel-open"
 
+const CAT_ICONS: Record<string, string> = {
+  loot:    "💰",
+  extract: "🚀",
+  key:     "🔑",
+  danger:  "⚠️",
+  route:   "🗺️",
+}
+
 export default function MapasPage() {
-  const [maps, setMaps]                     = useState<MapRecord[]>([])
-  const [markers, setMarkers]               = useState<MapMarker[]>([])
-  const [loading, setLoading]               = useState(true)
-  const [selectedMapId, setSelectedMapId]   = useState("")
-  const [selectedMarkerId, setSelectedMarkerId] = useState<number | null>(null)
-  const [panelOpen, setPanelOpen]           = useState(true)
+  const [maps, setMaps]                         = useState<MapRecord[]>([])
+  const [markers, setMarkers]                   = useState<MapMarker[]>([])
+  const [loading, setLoading]                   = useState(true)
+  const [selectedMapId, setSelectedMapId]       = useState("")
+  const [activeMarkerId, setActiveMarkerId]     = useState<string | null>(null)
+  const [hoveredMarkerId, setHoveredMarkerId]   = useState<string | null>(null)
+  const [panelOpen, setPanelOpen]               = useState(true)
+  const imgRef                                  = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
@@ -41,9 +50,9 @@ export default function MapasPage() {
       .catch(() => setLoading(false))
   }, [])
 
-  const selectedMap     = maps.find(m => m.id === selectedMapId)
-  const visibleMarkers  = markers.filter(m => m.map_id === selectedMapId)
-  const selectedMarker  = selectedMarkerId !== null ? visibleMarkers[selectedMarkerId] : null
+  const selectedMap    = maps.find(m => m.id === selectedMapId)
+  const visibleMarkers = markers.filter(m => m.map_id === selectedMapId)
+  const activeMarker   = visibleMarkers.find(m => m.id === activeMarkerId)
 
   const catCounts = visibleMarkers.reduce<Record<string, number>>((acc, m) => {
     acc[m.type] = (acc[m.type] ?? 0) + 1
@@ -52,10 +61,15 @@ export default function MapasPage() {
 
   function selectMap(id: string) {
     setSelectedMapId(id)
-    setSelectedMarkerId(null)
+    setActiveMarkerId(null)
+    setHoveredMarkerId(null)
   }
 
-  if (loading) return <div style={{ padding: 64, textAlign: "center", color: "var(--gray-500)" }}>Carregando mapas...</div>
+  if (loading) return (
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", color: "var(--gray-500)" }}>
+      Carregando mapas...
+    </div>
+  )
 
   return (
     <div className={`mapas-page${panelOpen ? "" : " mapas-page--panel-closed"}`}>
@@ -71,140 +85,203 @@ export default function MapasPage() {
             </div>
           </div>
 
-          {/* Lista de mapas */}
-          <div className="mapas-list">
-            {maps.map(m => (
-              <button
-                key={m.id}
-                type="button"
-                className={`mapas-map-btn${m.id === selectedMapId ? " active" : ""}${m.status !== "ready" ? " pending" : ""}`}
-                onClick={() => m.status === "ready" && selectMap(m.id)}
-                disabled={m.status !== "ready"}
-              >
-                <span className="mapas-map-name">{m.name}</span>
-                {m.label && <span className="mapas-map-label">{m.label}</span>}
-                {m.status !== "ready" && <span className="mapas-map-badge">Em breve</span>}
-              </button>
-            ))}
-          </div>
+          {/* Layout: sidebar de seleção + visualizador */}
+          <div className="mapas-browser">
 
-          {/* Visualizador */}
-          {selectedMap && (
-            <div className="mapas-viewer">
-              <div className="mapas-viewer-header">
-                <div>
-                  <h2 className="mapas-viewer-title">{selectedMap.name}</h2>
-                  {selectedMap.description && (
-                    <p className="mapas-viewer-desc">{selectedMap.description}</p>
-                  )}
-                </div>
-                <div className="mapas-legend">
-                  {Object.entries(catCounts).map(([type, count]) => (
-                    <span key={type} className="mapas-legend-item" style={{ color: catLabels[type]?.color ?? "#fff" }}>
-                      <MapPin size={11} />
-                      {catLabels[type]?.label ?? type} ({count})
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {selectedMap.image_url ? (
-                <div className="mapas-canvas-wrap">
-                  <img
-                    src={selectedMap.image_url}
-                    alt={selectedMap.name}
-                    className="mapas-canvas-img"
-                    draggable={false}
-                  />
-                  {visibleMarkers.map((marker, i) => (
-                    <button
-                      key={marker.id}
-                      type="button"
-                      className={`mapas-pin${selectedMarkerId === i ? " active" : ""}`}
-                      style={{
-                        left:  `${marker.x}%`,
-                        top:   `${marker.y}%`,
-                        color: catLabels[marker.type]?.color ?? "#fff",
-                      }}
-                      onClick={() => setSelectedMarkerId(selectedMarkerId === i ? null : i)}
-                      title={marker.title}
-                    >
-                      <MapPin size={18} fill="currentColor" />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="mapas-canvas-placeholder">
-                  <p>Imagem do mapa em breve.</p>
-                </div>
-              )}
-
-              {/* Detalhe do marcador */}
-              {selectedMarker && (
-                <div className="mapas-marker-detail" style={{ borderColor: catLabels[selectedMarker.type]?.color }}>
-                  <span className="mapas-marker-type" style={{ color: catLabels[selectedMarker.type]?.color }}>
-                    {catLabels[selectedMarker.type]?.label ?? selectedMarker.type}
-                  </span>
-                  <h3>{selectedMarker.title}</h3>
-                  {selectedMarker.note && <p>{selectedMarker.note}</p>}
-                </div>
-              )}
+            {/* ── Sidebar de seleção ── */}
+            <div className="mapas-selector">
+              {maps.map(m => (
+                <button
+                  key={m.id}
+                  type="button"
+                  className={`mapas-map-item${m.id === selectedMapId ? " active" : ""}${m.status !== "ready" ? " pending" : ""}`}
+                  onClick={() => m.status === "ready" && selectMap(m.id)}
+                  disabled={m.status !== "ready"}
+                >
+                  {/* Miniatura */}
+                  <div className="mapas-map-thumb">
+                    {m.image_url ? (
+                      <img src={m.image_url} alt={m.name} />
+                    ) : (
+                      <div className="mapas-map-thumb-placeholder">
+                        <MapPin size={14} style={{ color: "var(--gray-500)" }} />
+                      </div>
+                    )}
+                  </div>
+                  {/* Info */}
+                  <div className="mapas-map-item-info">
+                    <strong>{m.name}</strong>
+                    <span>{m.label}</span>
+                  </div>
+                  {/* Status dot */}
+                  <div className={`mapas-status-dot ${m.status}`} />
+                </button>
+              ))}
             </div>
-          )}
+
+            {/* ── Visualizador ── */}
+            {selectedMap && (
+              <div className="mapas-viewer">
+                {/* Header */}
+                <div className="mapas-viewer-head">
+                  <div>
+                    <p className="mapas-viewer-label">{selectedMap.label}</p>
+                    <h2 className="mapas-viewer-title">{selectedMap.name}</h2>
+                  </div>
+                  <span className={`mapas-badge ${selectedMap.status}`}>
+                    {selectedMap.status === "ready" ? "Disponível" : "Em breve"}
+                  </span>
+                </div>
+
+                {/* Mapa com marcadores */}
+                {selectedMap.image_url ? (
+                  <div className="mapas-viewer-media">
+                    <img
+                      ref={imgRef}
+                      src={selectedMap.image_url}
+                      alt={selectedMap.name}
+                      draggable={false}
+                    />
+                    {/* Pinos */}
+                    {visibleMarkers.map(marker => {
+                      const color = catLabels[marker.type]?.color ?? "#5fa8ff"
+                      const isActive  = marker.id === activeMarkerId
+                      const isHovered = marker.id === hoveredMarkerId
+                      return (
+                        <div
+                          key={marker.id}
+                          className={`mapas-pin-wrap${isActive ? " active" : ""}`}
+                          style={{ left: `${marker.x}%`, top: `${marker.y}%` }}
+                          onMouseEnter={() => setHoveredMarkerId(marker.id)}
+                          onMouseLeave={() => setHoveredMarkerId(null)}
+                          onClick={() => setActiveMarkerId(isActive ? null : marker.id)}
+                        >
+                          {/* Pino */}
+                          <button
+                            type="button"
+                            className={`mapas-ping${isActive ? " active" : ""}`}
+                            style={{ "--ping-color": color } as React.CSSProperties}
+                            aria-label={marker.title}
+                          >
+                            <span style={{ fontSize: 9 }}>{CAT_ICONS[marker.type] ?? "📍"}</span>
+                          </button>
+
+                          {/* Tooltip ao hover */}
+                          {(isHovered || isActive) && (
+                            <div className="mapas-tooltip">
+                              <span className="mapas-tooltip-cat" style={{ color }}>
+                                {catLabels[marker.type]?.label ?? marker.type}
+                              </span>
+                              <strong className="mapas-tooltip-title">{marker.title}</strong>
+                              {marker.note && <p className="mapas-tooltip-note">{marker.note}</p>}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <div className="mapas-no-image">
+                    <MapPin size={32} style={{ opacity: 0.3 }} />
+                    <span>Imagem do mapa em breve</span>
+                  </div>
+                )}
+
+                {/* Legenda de categorias */}
+                {visibleMarkers.length > 0 && (
+                  <div className="mapas-legend-bar">
+                    {Object.entries(catLabels).map(([type, cat]) => {
+                      const count = catCounts[type] ?? 0
+                      if (!count) return null
+                      return (
+                        <span key={type} className="mapas-legend-chip" style={{ "--chip-color": cat.color } as React.CSSProperties}>
+                          <span className="mapas-legend-dot" />
+                          {cat.label} <strong>{count}</strong>
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Lista de marcadores por categoria */}
           {visibleMarkers.length > 0 && (
-            <div className="mapas-markers-grid">
-              {Object.entries(catLabels).map(([type, cat]) => {
-                const typeMarkers = visibleMarkers.filter(m => m.type === type)
-                if (!typeMarkers.length) return null
-                return (
-                  <div key={type} className="mapas-markers-group">
-                    <h3 style={{ color: cat.color }}>{cat.label}</h3>
-                    <ul>
-                      {typeMarkers.map((m, i) => {
-                        const idx = visibleMarkers.indexOf(m)
-                        return (
-                          <li key={m.id}>
-                            <button
-                              type="button"
-                              className={`mapas-marker-item${selectedMarkerId === idx ? " active" : ""}`}
-                              onClick={() => setSelectedMarkerId(selectedMarkerId === idx ? null : idx)}
-                            >
-                              <MapPin size={12} style={{ color: cat.color }} />
-                              {m.title}
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                )
-              })}
+            <div className="mapas-panel-card">
+              <p className="mapas-panel-section-label">Marcadores neste mapa</p>
+              <div className="mapas-cat-list">
+                {Object.entries(catLabels).map(([type, cat]) => {
+                  const typeMarkers = visibleMarkers.filter(m => m.type === type)
+                  if (!typeMarkers.length) return null
+                  return (
+                    <div key={type}>
+                      <div className="mapas-cat-row">
+                        <div className="mapas-cat-dot" style={{ background: cat.color }} />
+                        <span className="mapas-cat-label">{cat.label}</span>
+                        <span className="mapas-cat-count">{typeMarkers.length}</span>
+                      </div>
+                      <div className="mapas-marker-list">
+                        {typeMarkers.map(m => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            className={`mapas-marker-row${m.id === activeMarkerId ? " active" : ""}`}
+                            style={{ "--ping-color": cat.color } as React.CSSProperties}
+                            onClick={() => setActiveMarkerId(m.id === activeMarkerId ? null : m.id)}
+                          >
+                            <div className="mapas-marker-row-dot" />
+                            <span className="mapas-marker-row-name">{m.title}</span>
+                            {m.note && <span className="mapas-marker-row-cat">{m.note.slice(0, 28)}{m.note.length > 28 ? "…" : ""}</span>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
         </div>
 
+        {/* Painel lateral direito */}
         <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de mapas">
           <SidePanelUserHeader onClose={() => setPanel(false)} showStats={false} />
 
           {selectedMap && (
-            <div className="store-side-card">
-              <h2>{selectedMap.name}</h2>
-              {selectedMap.label && <p className="store-side-label">{selectedMap.label}</p>}
-              {selectedMap.description && <p style={{ fontSize: 13, color: "var(--paper-dim)", margin: "8px 0 0", lineHeight: 1.6 }}>{selectedMap.description}</p>}
+            <div className="mapas-panel-card">
+              <div className="mapas-panel-head">
+                <span>{selectedMap.label}</span>
+                <strong>{selectedMap.name}</strong>
+              </div>
+              {selectedMap.description && (
+                <p className="mapas-panel-desc">{selectedMap.description}</p>
+              )}
             </div>
           )}
 
-          <div className="store-side-card">
-            <h2>Categorias</h2>
-            <div style={{ display: "grid", gap: 6, marginTop: 8 }}>
+          {/* Marcador ativo */}
+          {activeMarker && (
+            <div className="mapas-panel-card">
+              <div className="mapas-marker-detail">
+                <p className="mapas-marker-cat" style={{ color: catLabels[activeMarker.type]?.color }}>
+                  {CAT_ICONS[activeMarker.type]} {catLabels[activeMarker.type]?.label ?? activeMarker.type}
+                </p>
+                <span className="mapas-marker-title">{activeMarker.title}</span>
+                {activeMarker.note && <p className="mapas-marker-note">{activeMarker.note}</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Categorias */}
+          <div className="mapas-panel-card">
+            <p className="mapas-panel-section-label">Categorias</p>
+            <div className="mapas-cat-list">
               {Object.entries(catLabels).map(([type, cat]) => (
-                <div key={type} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
-                  <span style={{ color: cat.color, display: "flex", alignItems: "center", gap: 6 }}>
-                    <MapPin size={12} />{cat.label}
-                  </span>
-                  <span style={{ color: "var(--paper-dim)" }}>{catCounts[type] ?? 0}</span>
+                <div key={type} className="mapas-cat-row">
+                  <div className="mapas-cat-dot" style={{ background: cat.color }} />
+                  <span className="mapas-cat-label">{CAT_ICONS[type]} {cat.label}</span>
+                  <span className="mapas-cat-count">{catCounts[type] ?? 0}</span>
                 </div>
               ))}
             </div>

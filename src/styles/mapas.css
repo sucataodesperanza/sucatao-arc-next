@@ -412,6 +412,131 @@
   flex-shrink: 0;
 }
 
+/* ── Thumbnail no card de mapa ── */
+.mapas-map-thumb {
+  width: 52px;
+  height: 36px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.mapas-map-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.mapas-map-thumb-placeholder { width: 100%; height: 100%; display: grid; place-items: center; }
+
+/* ── Pino com wrapper (para tooltip) ── */
+.mapas-pin-wrap {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 5;
+  cursor: pointer;
+}
+.mapas-pin-wrap:hover,
+.mapas-pin-wrap.active { z-index: 20; }
+
+.mapas-ping {
+  position: relative;
+  width: 28px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  filter: drop-shadow(0 2px 6px color-mix(in srgb, var(--ping-color, #5fa8ff) 60%, transparent));
+  transition: transform 0.15s, filter 0.15s;
+}
+.mapas-ping::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ping-color, #5fa8ff);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg) scale(0.9);
+  opacity: 0.9;
+  z-index: -1;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.mapas-pin-wrap:hover .mapas-ping,
+.mapas-pin-wrap.active .mapas-ping {
+  transform: scale(1.2);
+  filter: drop-shadow(0 4px 12px color-mix(in srgb, var(--ping-color, #5fa8ff) 80%, transparent));
+}
+.mapas-ping span { position: relative; z-index: 1; pointer-events: none; }
+
+/* ── Tooltip do marcador ── */
+.mapas-tooltip {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 160px;
+  max-width: 220px;
+  background: rgba(8,14,22,0.95);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  white-space: normal;
+}
+.mapas-tooltip-cat {
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+.mapas-tooltip-title {
+  font-size: 12px;
+  font-weight: 950;
+  color: var(--paper);
+  text-transform: uppercase;
+}
+.mapas-tooltip-note {
+  margin: 0;
+  font-size: 10px;
+  color: var(--paper-dim);
+  line-height: 1.5;
+}
+
+/* ── Legenda barra inferior do viewer ── */
+.mapas-legend-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-top: 1px solid var(--stroke);
+  background: rgba(255,255,255,0.01);
+}
+.mapas-legend-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--chip-color) 25%, transparent);
+  background: color-mix(in srgb, var(--chip-color) 8%, transparent);
+  font-size: 11px;
+  color: var(--paper-dim);
+  font-weight: 800;
+}
+.mapas-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--chip-color);
+  flex-shrink: 0;
+}
+.mapas-legend-chip strong { color: var(--chip-color); }
+
 /* ── Responsivo ── */
 
 @media (max-width: 900px) {
