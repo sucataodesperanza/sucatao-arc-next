@@ -33,7 +33,6 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 8 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
 | 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | maps, map_markers, markerCategories (local) |
 | 10 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
-| — | [ARC Intel](telas/publicas/arcs.md) | `/arcs` | arc-data (local) |
 | — | [Meu Perfil](telas/publicas/perfil.md) | `/perfil` | profiles, Storage |
 | — | [Perfil Público](telas/publicas/perfil-publico.md) | `/perfil/[id]` | profiles, seller_inventory |
 | — | [Carrinho](telas/publicas/carrinho.md) | `/carrinho` | profiles, CartContext |
