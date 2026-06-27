@@ -1389,11 +1389,24 @@ export default function ContratosPage() {
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
                               const nodeSize = 52
-                              const nodeColor = m.status === "locked" ? "rgba(255,255,255,0.12)" : passColor
+                              const hasItem = !!m.item_reward
+                              // Cor da borda baseada na raridade do item
+                              const rarityColor: Record<string, string> = {
+                                comum: "#5fa8ff", incomum: "#3df28b", raro: "#ffd400",
+                                épico: "#b477ff", lendário: "#ff8c42",
+                                common: "#5fa8ff", uncommon: "#3df28b", rare: "#ffd400",
+                                epic: "#b477ff", legendary: "#ff8c42",
+                              }
+                              const itemBorderColor = hasItem
+                                ? (rarityColor[(m.item_reward as any)?.item_rarity?.toLowerCase()] ?? "#5fa8ff")
+                                : null
+                              const nodeColor = m.status === "locked"
+                                ? "rgba(255,255,255,0.12)"
+                                : (itemBorderColor ?? passColor)
                               const nodeBg = m.status === "completed"
-                                ? `color-mix(in srgb, ${passColor} 30%, transparent)`
+                                ? `color-mix(in srgb, ${nodeColor} 30%, transparent)`
                                 : m.status === "active"
-                                ? `color-mix(in srgb, ${passColor} 12%, #0a0e16)`
+                                ? `color-mix(in srgb, ${nodeColor} 12%, #0a0e16)`
                                 : "rgba(255,255,255,0.03)"
                               const isNext = i < pass.missions.length - 1
                               const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
@@ -1415,9 +1428,15 @@ export default function ContratosPage() {
                                         gap: 1,
                                       }}>
                                       {m.status === "completed" ? (
-                                        <span style={{ fontSize: 20, color: passColor, fontWeight: 950 }}>✓</span>
-                                      ) : isMilestone && m.item_reward ? (
-                                        <span style={{ fontSize: 16 }}>🎁</span>
+                                        <span style={{ fontSize: 20, color: nodeColor, fontWeight: 950 }}>✓</span>
+                                      ) : hasItem && (m.item_reward as any)?.item_image ? (
+                                        <img
+                                          src={(m.item_reward as any).item_image}
+                                          alt={(m.item_reward as any).item_name}
+                                          style={{ width: 30, height: 30, objectFit: "contain", opacity: m.status === "locked" ? 0.3 : 1 }}
+                                        />
+                                      ) : hasItem ? (
+                                        <span style={{ fontSize: 18, opacity: m.status === "locked" ? 0.3 : 1 }}>🎁</span>
                                       ) : m.points_reward > 0 ? (
                                         <span style={{ fontSize: 11, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
                                           +{m.points_reward}

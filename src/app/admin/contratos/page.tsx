@@ -422,6 +422,11 @@ function PassesSection() {
   })
   const [savingPass, setSavingPass] = useState(false)
   const [savingMission, setSavingMission] = useState(false)
+  // Item search por missão
+  const [itemSearchMission, setItemSearchMission] = useState<string | null>(null) // mission id
+  const [itemQuery, setItemQuery] = useState("")
+  const [itemResults, setItemResults] = useState<any[]>([])
+  const [searchingItem, setSearchingItem] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -483,6 +488,46 @@ function PassesSection() {
       toast.success("Imagem enviada!")
       await load()
     } else toast.error("Erro ao enviar imagem.")
+  }
+
+  async function searchItems(q: string) {
+    if (!q.trim()) { setItemResults([]); return }
+    setSearchingItem(true)
+    const res = await fetch(`/api/admin/catalog?q=${encodeURIComponent(q)}&limit=6`)
+    const body = await res.json().catch(() => ({}))
+    setItemResults(body.items ?? [])
+    setSearchingItem(false)
+  }
+
+  async function setMissionItem(missionId: string, item: any, groupId: string) {
+    await fetch(`/api/admin/faccoes/passes/missions/${missionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        item_reward: {
+          item_name:    item.name,
+          item_image:   item.image ?? null,
+          item_rarity:  item.rarity ?? null,
+          item_qty:     1,
+        },
+        points_reward: 0, // missões de item não dão pontos
+      }),
+    })
+    setItemSearchMission(null)
+    setItemQuery("")
+    setItemResults([])
+    toast.success(`Item "${item.name}" vinculado à missão!`)
+    await loadMissions(groupId)
+  }
+
+  async function clearMissionItem(missionId: string, groupId: string) {
+    await fetch(`/api/admin/faccoes/passes/missions/${missionId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item_reward: null }),
+    })
+    toast.success("Item removido da missão.")
+    await loadMissions(groupId)
   }
 
   async function deletePass(id: string) {
@@ -748,7 +793,45 @@ function PassesSection() {
                             />
                             <span style={{ fontSize: 10, color: "var(--yellow)" }}>pts</span>
                           </label>
-                          {m.item_reward && <span style={{ color: "var(--cyan)", fontSize: 11 }}>🎁 item</span>}
+                          {/* Controle de item */}
+                          <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 160 }}>
+                            {m.item_reward ? (
+                              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "4px 8px", background: "rgba(0,217,255,0.06)", border: "1px solid rgba(0,217,255,0.2)", borderRadius: 5 }}>
+                                {m.item_reward.item_image && <img src={m.item_reward.item_image} alt="" style={{ width: 18, height: 18, objectFit: "contain" }} />}
+                                <span style={{ fontSize: 10, color: "var(--cyan)", fontWeight: 800, flex: 1 }}>{m.item_reward.item_name}</span>
+                                <button type="button" onClick={() => clearMissionItem(m.id, p.id)}
+                                  style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 0, fontSize: 11, display: "flex" }}>✕</button>
+                              </div>
+                            ) : itemSearchMission === m.id ? (
+                              <div style={{ position: "relative" }}>
+                                <input autoFocus value={itemQuery}
+                                  onChange={e => { setItemQuery(e.target.value); searchItems(e.target.value) }}
+                                  placeholder="Buscar item no catálogo..."
+                                  style={{ ...inp, fontSize: 11, width: "100%" }} />
+                                {(itemResults.length > 0 || searchingItem) && (
+                                  <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 50, background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 6, overflow: "hidden", maxHeight: 180, overflowY: "auto" }}>
+                                    {searchingItem && <p style={{ margin: 0, padding: "8px 10px", fontSize: 11, color: "var(--muted)" }}>Buscando...</p>}
+                                    {itemResults.map((item: any) => (
+                                      <button key={item.id} type="button"
+                                        onClick={() => setMissionItem(m.id, item, p.id)}
+                                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "7px 10px", background: "none", border: "none", cursor: "pointer", textAlign: "left", font: "inherit" }}>
+                                        {item.image && <img src={item.image} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+                                        <span style={{ fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
+                                        {item.rarity && <span style={{ fontSize: 10, color: "var(--gray-500)", marginLeft: "auto" }}>{item.rarity}</span>}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                                <button type="button" onClick={() => { setItemSearchMission(null); setItemQuery(""); setItemResults([]) }}
+                                  style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", padding: 0 }}>✕</button>
+                              </div>
+                            ) : (
+                              <button type="button" onClick={() => { setItemSearchMission(m.id); setItemQuery(""); setItemResults([]) }}
+                                style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)", background: "none", border: "1px dashed rgba(0,217,255,0.3)", borderRadius: 4, padding: "3px 8px", cursor: "pointer", font: "inherit", whiteSpace: "nowrap" }}>
+                                + Item
+                              </button>
+                            )}
+                          </div>
                           <button type="button"
                             onClick={async () => {
                               const ok = await confirm(`Remover missão #${m.position}?`)
