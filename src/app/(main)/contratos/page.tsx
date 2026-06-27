@@ -1388,7 +1388,7 @@ export default function ContratosPage() {
                           <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%" }}>
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
-                              const nodeSize = isMilestone ? 52 : 40
+                              const nodeSize = 52
                               const nodeColor = m.status === "locked" ? "rgba(255,255,255,0.12)" : passColor
                               const nodeBg = m.status === "completed"
                                 ? `color-mix(in srgb, ${passColor} 30%, transparent)`
@@ -1399,7 +1399,7 @@ export default function ContratosPage() {
                               const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
                               return (
                                 <div key={m.id} className="ca-track-node-wrap">
-                                  <div className="ca-track-node-col" style={pass.type === "monthly" ? { width: isMilestone ? 80 : 64 } : { flex: 1, minWidth: 0 }}>
+                                  <div className="ca-track-node-col" style={pass.type === "monthly" ? { width: 72 } : { flex: 1, minWidth: 0 }}>
                                     {/* Espaço vazio acima (mantém alinhamento) */}
                                     <div className="ca-track-reward" />
                                     {/* Nó — mostra recompensa dentro ou ✓ */}
@@ -1417,15 +1417,15 @@ export default function ContratosPage() {
                                         gap: 1,
                                       }}>
                                       {m.status === "completed" ? (
-                                        <span style={{ fontSize: isMilestone ? 20 : 16, color: passColor, fontWeight: 950 }}>✓</span>
+                                        <span style={{ fontSize: 20, color: passColor, fontWeight: 950 }}>✓</span>
                                       ) : isMilestone && m.item_reward ? (
-                                        <span style={{ fontSize: 14 }}>🎁</span>
+                                        <span style={{ fontSize: 16 }}>🎁</span>
                                       ) : m.points_reward > 0 ? (
-                                        <span style={{ fontSize: isMilestone ? 12 : 10, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
+                                        <span style={{ fontSize: 11, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
                                           +{m.points_reward}
                                         </span>
                                       ) : (
-                                        <span style={{ fontSize: isMilestone ? 15 : 12, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor }}>
+                                        <span style={{ fontSize: 14, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor }}>
                                           {m.position}
                                         </span>
                                       )}
