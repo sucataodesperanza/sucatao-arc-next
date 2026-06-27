@@ -21,15 +21,14 @@ export async function GET() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Passes gerais ativos (faction_id IS NULL)
+  // Passes gerais à venda: ainda não expirados (starts_at pode ser futuro — mostra na vitrine)
   const { data: groups } = await supabase
     .from("contract_groups")
     .select("id, title, description, type, starts_at, expires_at, price_points, price_real, faction_id")
     .is("faction_id", null)
     .eq("active", true)
-    .lte("starts_at", new Date().toISOString())
     .gte("expires_at", new Date().toISOString())
-    .order("type")
+    .order("starts_at", { ascending: true })
 
   if (!groups?.length) return NextResponse.json({ passes: [] })
 
