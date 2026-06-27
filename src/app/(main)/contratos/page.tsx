@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { BarChart2, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Skull, Star, Target, Trophy, Truck, Users, Wallet, XCircle, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
@@ -1385,7 +1385,7 @@ export default function ContratosPage() {
                             window.addEventListener("mouseup", onUp)
                           } : undefined}
                         >
-                          <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%" }}>
+                          <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%", alignItems: "flex-start" }}>
                             {pass.missions.map((m, i) => {
                               const isMilestone = m.position % 5 === 0
                               const nodeSize = 52
@@ -1398,9 +1398,9 @@ export default function ContratosPage() {
                               const isNext = i < pass.missions.length - 1
                               const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
                               return (
-                                <div key={m.id} className="ca-track-node-wrap">
-                                  <div className="ca-track-node-col" style={pass.type === "monthly" ? { width: 72 } : { flex: 1, minWidth: 0 }}>
-                                    {/* Nó — mostra recompensa dentro ou ✓ */}
+                                <React.Fragment key={m.id}>
+                                  {/* Nó (tamanho fixo, sem flex grow) */}
+                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0, width: pass.type === "monthly" ? 64 : undefined }}>
                                     <div
                                       className={`ca-track-node${m.status === "active" ? " active" : ""}`}
                                       style={{
@@ -1428,21 +1428,24 @@ export default function ContratosPage() {
                                         </span>
                                       )}
                                     </div>
-                                    {/* Label: Dia X */}
-                                    <span className="ca-track-label" style={{ color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", fontSize: 10 }}>
+                                    <span style={{ fontSize: 10, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", textAlign: "center" as const }}>
                                       Dia {m.position}
                                     </span>
                                   </div>
-                                  {/* Conector */}
+                                  {/* Conector — irmão direto, flex: 1 igual entre todos */}
                                   {isNext && (
-                                    <div className="ca-track-connector" style={{
-                                      ...(pass.type === "monthly" ? { width: 24 } : { flex: 1 }),
+                                    <div style={{
+                                      ...(pass.type === "monthly" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
+                                      height: 4,
+                                      borderRadius: 2,
+                                      marginTop: 24, // metade do nó (52/2 = 26) - 2 borda
                                       background: nextDone
                                         ? `color-mix(in srgb, ${passColor} 55%, transparent)`
                                         : "rgba(255,255,255,0.07)",
+                                      transition: "background 0.3s",
                                     }} />
                                   )}
-                                </div>
+                                </React.Fragment>
                               )
                             })}
                           </div>
