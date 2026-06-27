@@ -1438,7 +1438,9 @@ export default function ContratosPage() {
                                       ...(pass.type === "monthly" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
                                       height: 4,
                                       borderRadius: 2,
-                                      marginTop: 24, // metade do nó (52/2 = 26) - 2 borda
+                                      marginTop: 24,
+                                      marginLeft: 8,
+                                      marginRight: 8,
                                       background: nextDone
                                         ? `color-mix(in srgb, ${passColor} 55%, transparent)`
                                         : "rgba(255,255,255,0.07)",
