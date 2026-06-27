@@ -117,8 +117,51 @@ export default function FaccoesHubPage() {
             <>
               {/* ── Linha 1: Informações sobre a facção + Sua Contribuição ── */}
               <div className="faccoes-hub-split-row">
-                <div className="faccoes-hub-placeholder-block">
-                  <span>INFORMAÇÕES SOBRE A FACÇÃO</span>
+                {/* Banner de informações da facção */}
+                <div className="faction-info-banner" style={{ "--faction-color": faction.color } as React.CSSProperties}>
+                  {/* Glow decorativo no lado direito (onde ficaria a imagem cinematográfica) */}
+                  <div className="faction-info-banner-glow" />
+
+                  {/* Conteúdo esquerdo */}
+                  <div className="faction-info-banner-left">
+                    <div className="faction-info-banner-identity">
+                      {faction.icon_url
+                        ? <img src={faction.icon_url} alt={faction.name} className="faction-info-banner-icon" />
+                        : <ImageOff size={40} style={{ color: faction.color, opacity: 0.6 }} />}
+                      <div>
+                        <h2 className="faction-info-banner-name">{faction.name}</h2>
+                        <p className="faction-info-banner-tagline">{faction.tagline}</p>
+                      </div>
+                    </div>
+                    <p className="faction-info-banner-desc">{faction.description}</p>
+                    <button type="button" className="faction-info-banner-btn">SAIBA MAIS</button>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="faction-info-banner-stats">
+                    <div className="faction-info-stat-card">
+                      <span className="faction-info-stat-label">SUA REPUTAÇÃO</span>
+                      <span className="faction-info-stat-value">18</span>
+                      <span className="faction-info-stat-badge" style={{ color: faction.color }}>ESPECIALISTA</span>
+                      <div className="faction-info-stat-bar">
+                        <div style={{ width: "81%", background: faction.color }} />
+                      </div>
+                      <span className="faction-info-stat-bar-label">3.240 / 4.000</span>
+                    </div>
+
+                    <div className="faction-info-stat-card">
+                      <span className="faction-info-stat-label">INFLUÊNCIA DA {faction.name.toUpperCase()}</span>
+                      <span className="faction-info-stat-value" style={{ fontSize: 22 }}>24.380.230</span>
+                      <span className="faction-info-stat-sub">POSIÇÃO GLOBAL: #421</span>
+                    </div>
+
+                    <div className="faction-info-stat-card">
+                      <span className="faction-info-stat-label">OBJETIVO DA SEMANA</span>
+                      <span className="faction-info-stat-objective" style={{ color: faction.color }}>RECUPERAR TECNOLOGIA PERDIDA</span>
+                      <span className="faction-info-stat-value">76%</span>
+                      <span className="faction-info-stat-sub">FALTAM 3 DIAS</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="faccoes-hub-contribution">
                   <h2>SUA CONTRIBUIÇÃO</h2>

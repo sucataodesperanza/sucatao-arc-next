@@ -1136,3 +1136,170 @@
 .faccoes-hub-split-row .faccoes-hub-placeholder-block {
   min-height: 240px;
 }
+
+/* ── Banner de informações da facção ── */
+.faction-info-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #070b13;
+  border: 1px solid color-mix(in srgb, var(--faction-color) 20%, transparent);
+  gap: 0;
+}
+
+.faction-info-banner-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 100% at 80% 50%, color-mix(in srgb, var(--faction-color) 18%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 80% at 95% 50%, color-mix(in srgb, var(--faction-color) 10%, transparent) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.faction-info-banner-left {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 24px 16px;
+  max-width: 52%;
+}
+
+.faction-info-banner-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.faction-info-banner-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px var(--faction-color));
+  flex-shrink: 0;
+}
+
+.faction-info-banner-name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 950;
+  text-transform: uppercase;
+  color: var(--paper);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.faction-info-banner-tagline {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faction-color);
+}
+
+.faction-info-banner-desc {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.6;
+}
+
+.faction-info-banner-btn {
+  align-self: flex-start;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  color: var(--paper);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.faction-info-banner-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.35);
+}
+
+/* Stats row */
+.faction-info-banner-stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.faction-info-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+.faction-info-stat-card:last-child { border-right: none; }
+
+.faction-info-stat-label {
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.4);
+}
+
+.faction-info-stat-value {
+  font-size: 28px;
+  font-weight: 950;
+  color: var(--paper);
+  line-height: 1.1;
+}
+
+.faction-info-stat-badge {
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.faction-info-stat-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.faction-info-stat-bar div {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.faction-info-stat-bar-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+}
+
+.faction-info-stat-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.faction-info-stat-objective {
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+}
