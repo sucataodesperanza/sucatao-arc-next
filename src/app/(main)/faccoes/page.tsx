@@ -101,7 +101,13 @@ export default function FaccoesPage() {
   const hasJoined   = myFactionId !== null
 
   return (
-    <div className={`faccoes-page${panelOpen ? "" : " faccoes-page--panel-closed"}`}>
+    <div className={`faccoes-page${panelOpen ? "" : " faccoes-page--panel-closed"}`} style={{ position: "relative" }}>
+      <div style={{ position: "fixed", inset: 0, zIndex: 100, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(2,7,11,0.55)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.2em", color: "var(--cyan)", opacity: 0.7 }}>Em Breve</span>
+        <h2 style={{ margin: 0, fontSize: 32, fontWeight: 950, textTransform: "uppercase", color: "var(--paper)" }}>Facções</h2>
+        <p style={{ margin: 0, fontSize: 14, color: "var(--paper-dim)", textAlign: "center", maxWidth: 340 }}>O sistema de facções está sendo preparado. Em breve você poderá escolher seu caminho no Sucatão.</p>
+        <button type="button" onClick={() => history.back()} style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "var(--paper)", padding: "10px 20px", fontSize: 13, fontWeight: 800, cursor: "pointer", borderRadius: 6, font: "inherit" }}>← Voltar</button>
+      </div>
       <div className={`faccoes-layout${panelOpen ? "" : " faccoes-layout--no-panel"}`}>
         <div className="faccoes-main">
           <section className="faccoes-hero" style={{ "--hero-image": "url(/assets/bots/arc_the_queen.png)" } as React.CSSProperties}>
