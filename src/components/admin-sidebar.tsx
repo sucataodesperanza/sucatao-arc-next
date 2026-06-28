@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ArrowLeft, ArrowLeftRight, Bot, ClipboardList, Flag, Gift, Hammer, Home, Map, Package, ScrollText, Star, Ticket, Warehouse } from "lucide-react"
+import { ArrowLeft, ArrowLeftRight, Bot, ClipboardList, Flag, Gift, Hammer, Home, Map, Package, ScrollText, Star, Ticket, TrendingUp, Warehouse } from "lucide-react"
 
 const links = [
-  { href: "/admin/home",    label: "Home",    icon: Home          },
+  { href: "/admin/home",     label: "Home",     icon: Home       },
+  { href: "/admin/economia", label: "Economia", icon: TrendingUp },
   { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
   { href: "/admin/catalogo", label: "Catálogo", icon: Package },
   { href: "/admin/estoque", label: "Estoque", icon: Warehouse },
