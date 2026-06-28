@@ -36,12 +36,12 @@ function AuthForm() {
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
+      setLoading(false)
       if (error) {
-        setLoading(false)
         setStatus("E-mail ou senha incorretos.")
       } else {
-        router.push(searchParams.get("next") || "/")
         router.refresh()
+        router.push(searchParams.get("next") || "/")
       }
     } else {
       if (password.length < 6) {
