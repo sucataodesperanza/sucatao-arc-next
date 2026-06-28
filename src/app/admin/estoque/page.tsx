@@ -8,7 +8,6 @@ import "../../../styles/admin-estoque.css"
 
 type StockItem = {
   catalog_item_id: string
-  value: number
   quantity: number
   featured: boolean
   catalog_items: { name: string; item_type: string | null; rarity: string | null; icon_url: string | null }
@@ -119,7 +118,7 @@ export default function AdminEstoquePage() {
     await fetch("/api/admin/stock", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ catalog_item_id: item.id, value: 0, quantity: 0, featured: false }),
+      body: JSON.stringify({ catalog_item_id: item.id, quantity: 0, featured: false }),
     })
     load()
     loadAvailable()
@@ -160,7 +159,6 @@ export default function AdminEstoquePage() {
                   <th style={{ padding: "8px" }}>Nome</th>
                   <th style={{ padding: "8px" }}>Tipo</th>
                   <th style={{ padding: "8px" }}>Raridade</th>
-                  <th style={{ padding: "8px" }}>Valor</th>
                   <th style={{ padding: "8px" }}>Quantidade</th>
                   <th style={{ padding: "8px" }}>Destaque</th>
                   <th style={{ padding: "8px" }}></th>
@@ -177,18 +175,6 @@ export default function AdminEstoquePage() {
                     <td style={{ padding: "8px", fontWeight: 800 }}>{item.catalog_items.name}</td>
                     <td style={{ padding: "8px", color: "var(--muted)" }}>{getItemTypeLabel(item.catalog_items.item_type)}</td>
                     <td style={{ padding: "8px", color: "var(--muted)" }}>{getRarityLabel(item.catalog_items.rarity)}</td>
-                    <td style={{ padding: "8px" }}>
-                      <input
-                        type="number"
-                        value={item.value}
-                        style={numberInputStyle}
-                        onChange={e => {
-                          const value = e.target.value === "" ? 0 : Number(e.target.value)
-                          if (!Number.isNaN(value)) setItems(prev => prev.map(it => it.catalog_item_id === item.catalog_item_id ? { ...it, value } : it))
-                        }}
-                        onBlur={() => patchItem(item.catalog_item_id, { value: item.value })}
-                      />
-                    </td>
                     <td style={{ padding: "8px" }}>
                       <input
                         type="number"
@@ -212,7 +198,7 @@ export default function AdminEstoquePage() {
                   </tr>
                 ))}
                 {items.length === 0 && (
-                  <tr><td colSpan={8} style={{ padding: "24px", textAlign: "center", color: "var(--muted)" }}>Nenhum item em estoque. Use a busca acima para adicionar itens do catálogo.</td></tr>
+                  <tr><td colSpan={7} style={{ padding: "24px", textAlign: "center", color: "var(--muted)" }}>Nenhum item em estoque. Use a busca acima para adicionar itens do catálogo.</td></tr>
                 )}
               </tbody>
             </table>
