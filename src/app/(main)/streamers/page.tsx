@@ -29,7 +29,10 @@ const steps = [
 
 export default function StreamersPage() {
   const carouselRef = useRef<HTMLDivElement>(null)
+  type LiveData = { viewer_count: number; is_live: boolean; title?: string; thumbnail?: string }
+
   const [streamers, setStreamers]   = useState<Streamer[]>([])
+  const [live, setLive]             = useState<Record<string, LiveData>>({})
   const [panelOpen, setPanelOpen]   = useState(true)
   const [loading, setLoading]       = useState(true)
   const [applyOpen, setApplyOpen]   = useState(false)
@@ -37,10 +40,14 @@ export default function StreamersPage() {
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
     if (stored !== null) setPanelOpen(stored === "true")
-    fetch("/api/streamers")
-      .then(r => r.json())
-      .then(d => { setStreamers(d.streamers ?? []); setLoading(false) })
-      .catch(() => setLoading(false))
+    Promise.all([
+      fetch("/api/streamers").then(r => r.json()),
+      fetch("/api/streamers/live").then(r => r.json()).catch(() => ({ live: {} })),
+    ]).then(([s, l]) => {
+      setStreamers(s.streamers ?? [])
+      setLive(l.live ?? {})
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
   function setPanel(val: boolean) {
@@ -96,13 +103,21 @@ export default function StreamersPage() {
             ) : (
               <div className="streamers-carousel-wrap">
                 <div className="streamers-carousel" ref={carouselRef}>
-                  {streamers.map(s => (
+                  {streamers.map(s => {
+                    const liveData = live[s.id]
+                    const isLive   = liveData?.is_live ?? false
+                    const viewers  = isLive
+                      ? liveData!.viewer_count.toLocaleString("pt-BR")
+                      : s.viewers_text || "—"
+                    return (
                     <div key={s.id} className="streamer-card">
-                      <div className="streamer-card-thumb" style={{ backgroundImage: s.avatar_url ? `url(${s.avatar_url})` : undefined }}>
-                        <span className="streamer-live-tag">Parceiro</span>
+                      <div className="streamer-card-thumb" style={{ backgroundImage: (isLive && liveData?.thumbnail) ? `url(${liveData.thumbnail})` : s.avatar_url ? `url(${s.avatar_url})` : undefined }}>
+                        <span className="streamer-live-tag" style={isLive ? { background: "var(--red)", color: "#fff" } : {}}>
+                          {isLive ? "Ao Vivo" : "Parceiro"}
+                        </span>
                         <span className="streamer-viewers">
                           <Users size={10} />
-                          {s.viewers_text || "—"}
+                          {viewers}
                         </span>
                         <div className="streamer-avatar" style={{ background: `${s.color}33`, borderColor: s.color, color: s.color }}>
                           {s.name[0]}
@@ -121,7 +136,7 @@ export default function StreamersPage() {
                         {s.channel_url ? (
                           <Link href={s.channel_url} target="_blank" rel="noopener noreferrer" className="streamer-watch-btn">
                             <Monitor size={12} />
-                            Assistir
+                            {isLive ? "Assistir ao Vivo" : "Assistir"}
                           </Link>
                         ) : (
                           <button type="button" className="streamer-watch-btn" disabled style={{ opacity: 0.4 }}>
@@ -131,7 +146,8 @@ export default function StreamersPage() {
                         )}
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
                 <button type="button" className="streamers-carousel-btn" onClick={scrollCarousel} aria-label="Ver mais">
                   <ChevronRight size={16} />
