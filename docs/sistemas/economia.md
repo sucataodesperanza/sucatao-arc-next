@@ -227,6 +227,85 @@ Painel com:
 
 ---
 
+---
+
+## Sistema de Precificação VEI
+
+### Tabela `economy_settings` (singleton)
+
+| Campo | Tipo | Default | Descrição |
+|---|---|---|---|
+| `points_multiplier` | numeric(10,4) | 100 | VEI × mult = preço em pontos |
+| `cash_multiplier` | numeric(10,4) | 0.10 | VEI × mult = preço em R$ |
+
+**Exemplo:** VEI 80 × 100 = 8.000 pts · VEI 80 × 0.10 = R$ 8,00
+
+### Campos adicionados em `stock_items`
+
+| Campo | Tipo | Descrição |
+|---|---|---|
+| `price_points` | integer | Preço em pontos (gerado pelo VEI, editável pelo admin) |
+| `price_cash` | numeric(10,2) | Preço em R$ (gerado pelo VEI, editável pelo admin) |
+
+### Fluxo de precificação
+
+```
+Novo item no estoque (POST /api/admin/stock)
+    ↓
+lib/pricing.ts → calcItemPrice(itemId)
+    ↓
+Busca VEI em item_economics
+    ↓
+price_points = round(vei × points_multiplier)
+price_cash   = round(vei × cash_multiplier, 2)
+    ↓
+Salvo em stock_items (admin pode sobrescrever)
+```
+
+### Checkout atualizado
+
+O checkout usa `price_points` do estoque quando disponível. Fallback: `value × 24` (sistema antigo).
+
+### Utilitário `lib/pricing.ts`
+
+```ts
+const { price_points, price_cash, vei } = await calcItemPrice(itemId)
+// ou com multiplicadores explícitos:
+const pricing = await calcItemPrice(itemId, { points_multiplier: 150, cash_multiplier: 0.15 })
+```
+
+### APIs de precificação
+
+| Endpoint | Método | Descrição |
+|---|---|---|
+| `/api/admin/economia/settings` | GET | Busca multiplicadores atuais |
+| `/api/admin/economia/settings` | PATCH | Atualiza `points_multiplier` e `cash_multiplier` |
+| `/api/admin/stock/bulk-add` | POST | Adiciona TODOS os catalog_items ao estoque com preços VEI |
+| `/api/admin/stock/apply-vei` | POST | Aplica preços VEI a itens já no estoque (todos ou subset) |
+| `/api/admin/economia/vei-list` | GET | Lista VEI de todos os itens para análise |
+
+### Admin `/admin/precos`
+
+Tela dedicada para análise e gestão de preços:
+- **Configuração de multiplicadores** com preview ao vivo ("VEI 80 × 100 = 8.000 pts")
+- **Botão "Add Todos ao Estoque"** — insere todos os `catalog_items` ativos com preços VEI
+- **Botão "Aplicar VEI a Todos"** — recalcula preços de todos os itens já no estoque
+- **Seleção múltipla** com "Aplicar VEI aos selecionados"
+- **Distribuição por raridade e categoria** (contagem visual)
+- **Tabela** com: nome, ícone, raridade, tipo, VEI, preço pts atual (editável inline), preço pts sugerido, delta %, preço R$ atual (editável), preço R$ sugerido
+- **Filtros**: busca por nome, raridade, categoria, faixa de VEI (baixo/médio/alto)
+
+### Sequência de setup inicial
+
+```
+1. /admin/economia → "Recalcular VEI"  (popula item_economics)
+2. /admin/precos   → "Add Todos ao Estoque"  (insere itens + preços)
+3. /admin/precos   → Ajustar multiplicadores se necessário
+4. /admin/precos   → "Aplicar VEI a Todos" se ajustou multiplicadores
+```
+
+---
+
 ## Roadmap Futuro
 
 | Feature | Fase | Descrição |
