@@ -7,6 +7,7 @@ import {
   Heart, Megaphone, Monitor, Shield, Star, Users,
 } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
+import StreamerApplyModal from "@/components/streamer-apply-modal"
 import "../../../styles/streamers.css"
 import type { Streamer } from "@/app/api/streamers/route"
 
@@ -28,9 +29,10 @@ const steps = [
 
 export default function StreamersPage() {
   const carouselRef = useRef<HTMLDivElement>(null)
-  const [streamers, setStreamers] = useState<Streamer[]>([])
-  const [panelOpen, setPanelOpen] = useState(true)
-  const [loading, setLoading]     = useState(true)
+  const [streamers, setStreamers]   = useState<Streamer[]>([])
+  const [panelOpen, setPanelOpen]   = useState(true)
+  const [loading, setLoading]       = useState(true)
+  const [applyOpen, setApplyOpen]   = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
@@ -52,6 +54,7 @@ export default function StreamersPage() {
 
   return (
     <div className={`streamers-page${panelOpen ? "" : " streamers-page--no-panel"}`}>
+      {applyOpen && <StreamerApplyModal onClose={() => setApplyOpen(false)} />}
       <div className={`store-layout${panelOpen ? "" : " store-layout--no-panel"}`}>
         <div className="streamers-main">
 
@@ -171,10 +174,10 @@ export default function StreamersPage() {
                   </div>
                 ))}
               </div>
-              <a href="#" className="streamers-cta-btn">
+              <button type="button" onClick={() => setApplyOpen(true)} className="streamers-cta-btn">
                 Quero me Inscrever
                 <ExternalLink size={14} />
-              </a>
+              </button>
             </div>
 
             <div className="streamers-ranking-card">

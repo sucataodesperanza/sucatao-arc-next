@@ -1,8 +1,14 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { BadgeCheck, Plus, Trash2 } from "lucide-react"
+import { BadgeCheck, Check, Plus, Trash2, X } from "lucide-react"
 import { useToast } from "@/components/admin-notifications"
+
+type Application = {
+  id: string; nickname: string; platform: string; channel_url: string
+  message: string; status: string; created_at: string
+  profiles: { name: string | null; email: string | null } | null
+}
 
 type Streamer = {
   id: string; name: string; platform: string; channel_url: string | null
@@ -15,14 +21,21 @@ const PLATFORMS = ["twitch", "youtube", "kick"]
 
 export default function AdminStreamersPage() {
   const toast = useToast()
+  const [tab, setTab]             = useState<"streamers" | "applications">("streamers")
   const [streamers, setStreamers] = useState<Streamer[]>([])
+  const [applications, setApps]   = useState<Application[]>([])
   const [form, setForm]           = useState({ ...EMPTY })
   const [adding, setAdding]       = useState(false)
   const [saving, setSaving]       = useState<string | null>(null)
+  const [acting, setActing]       = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    const r = await fetch("/api/admin/streamers").then(r => r.json()).catch(() => ({ streamers: [] }))
-    setStreamers(r.streamers ?? [])
+    const [sr, ar] = await Promise.all([
+      fetch("/api/admin/streamers").then(r => r.json()).catch(() => ({ streamers: [] })),
+      fetch("/api/admin/streamers/applications").then(r => r.json()).catch(() => ({ applications: [] })),
+    ])
+    setStreamers(sr.streamers ?? [])
+    setApps(ar.applications ?? [])
   }, [])
 
   useEffect(() => { load() }, [load])
@@ -51,6 +64,16 @@ export default function AdminStreamersPage() {
     await load()
   }
 
+  async function reviewApp(id: string, action: "approve" | "reject") {
+    setActing(id)
+    const res = await fetch(`/api/admin/streamers/applications/${id}`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }),
+    })
+    setActing(null)
+    if (res.ok) { toast.success(action === "approve" ? "Aprovado! Streamer criado e e-mail enviado." : "Rejeitado."); await load() }
+    else { const b = await res.json().catch(() => ({})); toast.error(b.error ?? "Erro.") }
+  }
+
   const inp: React.CSSProperties = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "7px 10px", fontSize: 12, borderRadius: 4, font: "inherit", width: "100%" }
 
   return (
@@ -60,6 +83,59 @@ export default function AdminStreamersPage() {
         <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 950, textTransform: "uppercase" }}>STREAMERS</h1>
       </div>
 
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 16, borderBottom: "1px solid var(--stroke)", paddingBottom: 0 }}>
+        {([["streamers", `Streamers (${streamers.length})`], ["applications", `Inscrições (${applications.filter(a => a.status === "pending").length} pendentes)`]] as const).map(([key, label]) => (
+          <button key={key} type="button" onClick={() => setTab(key)}
+            style={{ padding: "8px 16px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", border: "none", background: "none", cursor: "pointer", color: tab === key ? "var(--cyan)" : "var(--gray-500)", borderBottom: tab === key ? "2px solid var(--cyan)" : "2px solid transparent", font: "inherit", marginBottom: -1 }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "applications" && (
+        <div className="utility-panel">
+          <div className="utility-panel-head"><strong>Inscrições Recebidas</strong><small>Aprove para criar o streamer automaticamente e notificar por e-mail</small></div>
+          {applications.length === 0 ? (
+            <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhuma inscrição recebida ainda.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {applications.map(app => {
+                const STATUS_COLOR: Record<string, string> = { pending: "var(--yellow)", approved: "var(--green)", rejected: "var(--red)" }
+                const STATUS_LABEL: Record<string, string> = { pending: "Pendente", approved: "Aprovado", rejected: "Rejeitado" }
+                return (
+                  <div key={app.id} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <strong style={{ fontSize: 14 }}>{app.nickname}</strong>
+                        <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: STATUS_COLOR[app.status] ?? "var(--muted)" }}>{STATUS_LABEL[app.status] ?? app.status}</span>
+                        <span style={{ fontSize: 10, color: "var(--gray-500)", textTransform: "capitalize" }}>{app.platform}</span>
+                      </div>
+                      <a href={app.channel_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "var(--cyan)", textDecoration: "none", display: "block", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.channel_url}</a>
+                      {app.message && <p style={{ margin: 0, fontSize: 12, color: "var(--paper-dim)", fontStyle: "italic" }}>"{app.message}"</p>}
+                      <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{(app.profiles as any)?.name ?? "—"} · {new Date(app.created_at).toLocaleDateString("pt-BR")}</p>
+                    </div>
+                    {app.status === "pending" && (
+                      <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
+                        <button type="button" disabled={acting === app.id} onClick={() => reviewApp(app.id, "approve")}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "6px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
+                          <Check size={12} />Aprovar
+                        </button>
+                        <button type="button" disabled={acting === app.id} onClick={() => reviewApp(app.id, "reject")}
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, border: "1px solid rgba(255,60,60,0.3)", background: "rgba(255,60,60,0.06)", color: "var(--red)", padding: "6px 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
+                          <X size={12} />Rejeitar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "streamers" && <>
       {/* Formulário novo streamer */}
       <div className="utility-panel" style={{ marginBottom: 16 }}>
         <div className="utility-panel-head"><strong>Adicionar Streamer</strong></div>
@@ -176,6 +252,7 @@ export default function AdminStreamersPage() {
           </tbody>
         </table>
       </div>
+      </>}
     </div>
   )
 }
