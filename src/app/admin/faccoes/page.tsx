@@ -32,6 +32,8 @@ function EditableCell({ value, onSave }: { value: string; onSave: (v: string) =>
   )
 }
 
+const EMPTY_FACTION = { slug: "", name: "", tagline: "", description: "", color: "#5fa8ff", bonuses: [] as string[], active: true, position: 99 }
+
 /* ── Seção de facções ── */
 function FacoesSection() {
   const toast = useToast()
@@ -40,6 +42,9 @@ function FacoesSection() {
   const [loading, setLoading] = useState(true)
   const [uploadingId, setUploadingId] = useState<string | null>(null)
   const fileRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ ...EMPTY_FACTION })
+  const [creating, setCreating] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -78,6 +83,18 @@ function FacoesSection() {
     await load()
   }
 
+  async function createFaction() {
+    if (!form.name.trim() || !form.slug.trim()) return toast.error("Nome e slug são obrigatórios.")
+    setCreating(true)
+    const res = await fetch("/api/admin/faccoes", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, bonuses: form.bonuses.filter(Boolean) }),
+    })
+    setCreating(false)
+    if (res.ok) { toast.success("Facção criada!"); setForm({ ...EMPTY_FACTION }); setShowForm(false); await load() }
+    else { const b = await res.json().catch(() => ({})); toast.error(b.error ?? "Erro ao criar.") }
+  }
+
   async function patchBonuses(id: string, raw: string) {
     const bonuses = raw.split("\n").map(s => s.trim()).filter(Boolean)
     await patchFaction(id, { bonuses })
@@ -100,6 +117,64 @@ function FacoesSection() {
       <div className="utility-panel-head">
         <strong>Facções</strong>
         <small>Edite nome, cor, bônus e ícone de cada facção</small>
+      </div>
+
+      {/* Botão + formulário nova facção */}
+      <div style={{ marginBottom: 16 }}>
+        {!showForm ? (
+          <button type="button" onClick={() => setShowForm(true)}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 14px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
+            <Plus size={12} /> Nova Facção
+          </button>
+        ) : (
+          <div style={{ border: "1px solid var(--stroke)", borderRadius: 8, padding: 16, background: "rgba(255,255,255,0.02)", marginBottom: 8 }}>
+            <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)" }}>Nova Facção</p>
+            {(() => {
+              const inp: React.CSSProperties = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "7px 10px", fontSize: 12, borderRadius: 4, font: "inherit", width: "100%" }
+              return (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  <label style={{ display: "grid", gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Nome *</span>
+                    <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} style={inp} placeholder="Ex: Ferro Velho" />
+                  </label>
+                  <label style={{ display: "grid", gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Slug * (único, sem espaços)</span>
+                    <input value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value.toLowerCase().replace(/\s+/g, "-") }))} style={inp} placeholder="ferro-velho" />
+                  </label>
+                  <label style={{ display: "grid", gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Tagline</span>
+                    <input value={form.tagline} onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))} style={inp} placeholder="Frase curta" />
+                  </label>
+                  <label style={{ display: "grid", gap: 4, gridColumn: "1 / -1" }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Descrição</span>
+                    <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={2} style={{ ...inp, resize: "vertical" }} />
+                  </label>
+                  <label style={{ display: "grid", gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Cor</span>
+                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                      <input type="color" value={form.color} onChange={e => setForm(p => ({ ...p, color: e.target.value }))} style={{ width: 36, height: 36, border: "1px solid var(--stroke)", borderRadius: 4, background: "none", padding: 2, cursor: "pointer" }} />
+                      <input value={form.color} onChange={e => setForm(p => ({ ...p, color: e.target.value }))} style={{ ...inp, flex: 1 }} />
+                    </div>
+                  </label>
+                  <label style={{ display: "grid", gap: 4 }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Posição</span>
+                    <input type="number" min={1} value={form.position} onChange={e => setForm(p => ({ ...p, position: Number(e.target.value) }))} style={inp} />
+                  </label>
+                  <div style={{ display: "flex", alignItems: "end", gap: 8 }}>
+                    <button type="button" onClick={createFaction} disabled={creating}
+                      style={{ border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
+                      {creating ? "Criando..." : "Criar"}
+                    </button>
+                    <button type="button" onClick={() => setShowForm(false)}
+                      style={{ border: "1px solid var(--stroke)", background: "none", color: "var(--muted)", padding: "8px 12px", fontSize: 11, cursor: "pointer", borderRadius: 4, font: "inherit" }}>
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )
+            })()}
+          </div>
+        )}
       </div>
 
       {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
