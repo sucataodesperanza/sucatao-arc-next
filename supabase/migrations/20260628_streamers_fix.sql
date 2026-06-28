@@ -2,8 +2,9 @@
 -- Aditivo — sem DROP.
 
 -- Garante colunas que podem estar faltando se a tabela foi criada parcialmente
--- username pode existir com not null em versoes antigas — torna nullable
+-- colunas not null de versoes antigas — torna nullable
 alter table public.streamers alter column username drop not null;
+alter table public.streamers alter column url      drop not null;
 
 alter table public.streamers add column if not exists platform     text not null default 'twitch';
 alter table public.streamers add column if not exists channel_url  text null;
