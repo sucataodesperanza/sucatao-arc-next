@@ -2,6 +2,9 @@
 -- Aditivo — sem DROP.
 
 -- Garante colunas que podem estar faltando se a tabela foi criada parcialmente
+-- username pode existir com not null em versoes antigas — torna nullable
+alter table public.streamers alter column username drop not null;
+
 alter table public.streamers add column if not exists platform     text not null default 'twitch';
 alter table public.streamers add column if not exists channel_url  text null;
 alter table public.streamers add column if not exists avatar_url   text null;
@@ -28,11 +31,11 @@ drop policy if exists "streamer_avatars_select" on storage.objects;
 create policy "streamer_avatars_select" on storage.objects
   for select using (bucket_id = 'streamer-avatars');
 
--- Seed
-insert into public.streamers (name, platform, viewers_text, verified, position, color, avatar_url) values
-  ('Patife',    'twitch', '8.2K', true,  1, '#7c3aed', '/assets/bots/arc_sentinel.png'),
-  ('Yoda',      'twitch', '5.1K', true,  2, '#3df28b', '/assets/bots/arc_shredder.png'),
-  ('Hayashii',  'twitch', '3.7K', true,  3, '#ffd400', '/assets/bots/arc_spotter.png'),
-  ('Marginal',  'twitch', '2.9K', true,  4, '#F5090D', '/assets/bots/arc_matriarch.png'),
-  ('Bruninzor', 'twitch', '1.8K', false, 5, '#5fa8ff', '/assets/bots/arc_leaper.png')
+-- Seed (username incluso para compatibilidade com schema antigo)
+insert into public.streamers (name, username, platform, viewers_text, verified, position, color, avatar_url) values
+  ('Patife',    'patife',    'twitch', '8.2K', true,  1, '#7c3aed', '/assets/bots/arc_sentinel.png'),
+  ('Yoda',      'yoda',      'twitch', '5.1K', true,  2, '#3df28b', '/assets/bots/arc_shredder.png'),
+  ('Hayashii',  'hayashii',  'twitch', '3.7K', true,  3, '#ffd400', '/assets/bots/arc_spotter.png'),
+  ('Marginal',  'marginal',  'twitch', '2.9K', true,  4, '#F5090D', '/assets/bots/arc_matriarch.png'),
+  ('Bruninzor', 'bruninzor', 'twitch', '1.8K', false, 5, '#5fa8ff', '/assets/bots/arc_leaper.png')
 on conflict do nothing;
