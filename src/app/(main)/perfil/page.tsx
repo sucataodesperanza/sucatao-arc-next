@@ -2,28 +2,23 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Camera } from "lucide-react"
+import { Camera, Package, ShoppingBag, TrendingUp } from "lucide-react"
 import type { Area } from "react-easy-crop"
 import { createClient } from "@/lib/supabase/client"
 import { getCroppedImageBlob } from "@/lib/crop-image"
 import { AvatarCropModal } from "@/components/avatar-crop-modal"
-import arcData from "@/data/arc-data"
 import { isValidCpf } from "@/lib/cpf"
 import "../../../styles/perfil.css"
 
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
-type Item = { id: string; name: string; type?: string; value?: number }
-const rawPerfilData = arcData as unknown as { items: Item[]; bots: unknown[]; maps: Array<{ status?: string }>; trades: { value: unknown[]; Count: number } }
-const data = {
-  items: rawPerfilData.items,
-  bots: rawPerfilData.bots,
-  maps: rawPerfilData.maps,
-  trades: Array.isArray(rawPerfilData.trades) ? rawPerfilData.trades : (rawPerfilData.trades?.value ?? []),
-}
+type Order = { id: string; created_at: string; status: string; total: number; payment_method: string | null; items: { name: string; qty?: number }[] }
+type EcoLog = { id: string; action: string; value: number; currency: string; source: string; created_at: string }
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
+function formatDate(iso: string) { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) }
+function formatDateShort(iso: string) { return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) }
 
 export default function PerfilPage() {
   const router = useRouter()
@@ -40,21 +35,39 @@ export default function PerfilPage() {
   const [cpf, setCpf]               = useState("")
   const [cpfSaving, setCpfSaving]   = useState(false)
   const [cpfMsg, setCpfMsg]         = useState("")
+  const [memberSince, setMemberSince] = useState<string | null>(null)
+  const [totalSpent, setTotalSpent]   = useState(0)
+  const [totalOrders, setTotalOrders] = useState(0)
+  const [inventoryCount, setInventoryCount] = useState(0)
+  const [orders, setOrders]           = useState<Order[]>([])
+  const [ecoLogs, setEcoLogs]         = useState<EcoLog[]>([])
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       setUser(user)
       setLoading(false)
       if (!user) return
-      supabase.from("profiles").select("points, avatar_url, game_id, cpf").eq("id", user.id).single().then(({ data }) => {
-        if (data) {
-          setPoints(data.points ?? 0)
-          setAvatarUrl(data.avatar_url ?? null)
-          setGameId(data.game_id ?? "")
-          setCpf(data.cpf ?? "")
-        }
-      })
+
+      const [profileRes, inventoryRes, ordersRes, ecoRes] = await Promise.all([
+        supabase.from("profiles").select("points, avatar_url, game_id, cpf, total_spent, total_orders, created_at").eq("id", user.id).single(),
+        supabase.from("user_inventory").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("orders").select("id, created_at, status, total, payment_method, items").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        supabase.from("economy_logs").select("id, action, value, currency, source, created_at").eq("player_id", user.id).order("created_at", { ascending: false }).limit(20),
+      ])
+
+      if (profileRes.data) {
+        setPoints(profileRes.data.points ?? 0)
+        setAvatarUrl(profileRes.data.avatar_url ?? null)
+        setGameId(profileRes.data.game_id ?? "")
+        setCpf(profileRes.data.cpf ?? "")
+        setTotalSpent(Number(profileRes.data.total_spent ?? 0))
+        setTotalOrders(profileRes.data.total_orders ?? 0)
+        setMemberSince(profileRes.data.created_at ?? null)
+      }
+      setInventoryCount(inventoryRes.count ?? 0)
+      setOrders((ordersRes.data ?? []) as unknown as Order[])
+      setEcoLogs((ecoRes.data ?? []) as unknown as EcoLog[])
     })
   }, [])
 
@@ -195,8 +208,10 @@ export default function PerfilPage() {
 
   const displayName = user?.user_metadata?.name ?? user?.email?.split("@")[0] ?? "Visitante"
   const initial = displayName[0]?.toUpperCase() ?? "S"
-  const readyMaps = data.maps.filter(m => m.status === "ready").length
-  const redeemableCount = data.items.filter(i => (i.value ?? 0) * 24 <= points).length
+
+  const ACTION_LABEL: Record<string, string> = { buy: "Compra", sell: "Venda", reward: "Recompensa", earn: "Ganho", spend: "Gasto", trade: "Trade" }
+  const ACTION_COLOR: Record<string, string> = { buy: "var(--red)", sell: "var(--green)", reward: "var(--yellow)", earn: "var(--green)", spend: "var(--red)", trade: "var(--cyan)" }
+  const SOURCE_LABEL: Record<string, string> = { shop: "Loja", trade: "Trade", contract: "Contrato", auction: "Leilão", reward: "Recompensa", admin: "Admin" }
 
   return (
     <>
@@ -309,50 +324,102 @@ export default function PerfilPage() {
         </div>
       </section>
 
-      <section aria-label="Carteira">
-        <p className="home-section-label">Carteira</p>
+      {/* Estatísticas */}
+      <section aria-label="Estatísticas">
+        <p className="home-section-label">Estatísticas</p>
         <div className="profile-stat-grid">
           <article className="profile-stat-card">
-            <span>Carteira real</span>
-            <strong>0</strong>
-            <p>Saldo reaproveitado para compra direta de itens no marketplace.</p>
-          </article>
-          <article className="profile-stat-card">
-            <span>Pontos do site</span>
+            <span>Pontos disponíveis</span>
             <strong>{formatNumber(points)}</strong>
-            <p>Inclui pontos base da conta e bônus das tarefas diárias concluídas.</p>
+            <p>Saldo atual para trocar na loja.</p>
           </article>
           <article className="profile-stat-card">
-            <span>Resgates possíveis</span>
-            <strong>{formatNumber(redeemableCount)}</strong>
-            <p>Quantidade estimada de itens que o jogador já pode trocar.</p>
+            <span>Itens no inventário</span>
+            <strong>{formatNumber(inventoryCount)}</strong>
+            <p>Total de itens que você possui.</p>
           </article>
+          <article className="profile-stat-card">
+            <span>Total de pedidos</span>
+            <strong>{formatNumber(totalOrders)}</strong>
+            <p>Compras realizadas na loja.</p>
+          </article>
+          <article className="profile-stat-card">
+            <span>Total gasto (R$)</span>
+            <strong>R$ {totalSpent.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</strong>
+            <p>Valor acumulado em compras via PIX.</p>
+          </article>
+          {memberSince && (
+            <article className="profile-stat-card">
+              <span>Membro desde</span>
+              <strong>{formatDate(memberSince)}</strong>
+              <p>Data em que você se cadastrou no Sucatão.</p>
+            </article>
+          )}
         </div>
       </section>
 
-      <section aria-label="Progresso diário">
-        <p className="home-section-label">Progresso diário</p>
-        <div className="profile-stat-grid">
-          <article className="profile-stat-card"><span>Concluídas</span><strong>0/0</strong></article>
-          <article className="profile-stat-card"><span>Pontos do dia</span><strong>0</strong></article>
-          <article className="profile-stat-card"><span>Bônus</span><strong>N/D</strong></article>
-        </div>
-      </section>
-
-      <section aria-label="Resumo da conta">
-        <p className="home-section-label">Resumo da conta</p>
-        <div className="profile-stat-grid">
-          <article className="profile-stat-card"><span>Favoritos</span><strong>0</strong></article>
-          <article className="profile-stat-card"><span>Itens no catálogo</span><strong>{formatNumber(data.items.length)}</strong></article>
-          <article className="profile-stat-card"><span>Trades ativos</span><strong>{formatNumber(Array.isArray(data.trades) ? data.trades.length : 0)}</strong></article>
-          <article className="profile-stat-card"><span>Mapas prontos</span><strong>{readyMaps}</strong></article>
-        </div>
-      </section>
-
-      <section aria-label="Histórico">
-        <p className="home-section-label">Histórico</p>
+      {/* Histórico de pedidos */}
+      <section aria-label="Histórico de pedidos">
+        <p className="home-section-label">Últimos Pedidos</p>
         <div className="profile-card">
-          <p className="profile-empty">Nenhum evento registrado.</p>
+          {orders.length === 0 ? (
+            <p className="profile-empty">Nenhum pedido realizado ainda.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {orders.map(order => {
+                const statusColor: Record<string, string> = { paid: "var(--green)", pending: "var(--yellow)", cancelled: "var(--red)", failed: "var(--red)" }
+                const statusLabel: Record<string, string> = { paid: "Pago", pending: "Pendente", cancelled: "Cancelado", failed: "Falhou" }
+                const itemNames = Array.isArray(order.items) ? order.items.map((i: any) => i.name ?? i.itemId ?? "Item").slice(0, 3).join(", ") : "—"
+                return (
+                  <div key={order.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 13 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.05)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                      <ShoppingBag size={14} style={{ color: "var(--cyan)" }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{itemNames}{Array.isArray(order.items) && order.items.length > 3 ? ` +${order.items.length - 3}` : ""}</p>
+                      <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{formatDate(order.created_at)} · {order.payment_method === "points" ? "Pontos" : "PIX"}</p>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 950, color: order.payment_method === "points" ? "var(--yellow)" : "var(--green)" }}>
+                        {order.payment_method === "points" ? `${formatNumber(order.total)} pts` : `R$ ${Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                      </p>
+                      <p style={{ margin: "2px 0 0", fontSize: 11, fontWeight: 950, color: statusColor[order.status] ?? "var(--muted)" }}>{statusLabel[order.status] ?? order.status}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Movimentações de pontos */}
+      <section aria-label="Movimentações de pontos">
+        <p className="home-section-label">Movimentações de Pontos</p>
+        <div className="profile-card">
+          {ecoLogs.length === 0 ? (
+            <p className="profile-empty">Nenhuma movimentação registrada.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {ecoLogs.map(log => {
+                const isPositive = ["reward", "earn", "sell"].includes(log.action)
+                return (
+                  <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 13 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: `color-mix(in srgb, ${ACTION_COLOR[log.action] ?? "var(--gray-500)"} 12%, transparent)`, display: "grid", placeItems: "center", flexShrink: 0 }}>
+                      <TrendingUp size={14} style={{ color: ACTION_COLOR[log.action] ?? "var(--gray-500)" }} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontWeight: 800 }}>{ACTION_LABEL[log.action] ?? log.action}</p>
+                      <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{SOURCE_LABEL[log.source] ?? log.source} · {formatDateShort(log.created_at)}</p>
+                    </div>
+                    <p style={{ margin: 0, fontWeight: 950, color: isPositive ? "var(--green)" : "var(--red)", flexShrink: 0 }}>
+                      {isPositive ? "+" : "-"}{formatNumber(Math.abs(Number(log.value)))} {log.currency === "cash" ? "R$" : "pts"}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </section>
     </div>
