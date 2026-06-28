@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart2, Bot, Flag, Hammer, Home, LogIn, Map, MoreHorizontal, Package, Radio, Recycle, Repeat2, ScrollText, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
+import { BarChart2, Bot, Flag, Hammer, Home, LogIn, Map, MoreHorizontal, Package, Radio, Repeat2, ScrollText, Settings, Shield, ShoppingCart, Store, User } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { BrandMark } from "./brand-mark"
 import { LogoutButton } from "./logout-button"
@@ -13,12 +13,11 @@ const navLinks = [
   { href: "/loja",       label: "Loja",       icon: Store      },
   { href: "/inventario", label: "Inventário", icon: Package    },
   { href: "/trades",     label: "Trades",     icon: Repeat2    },
-  { href: "/arcpedia",   label: "Arcpedia",   icon: Bot        },
-  { href: "/crafting",   label: "Crafting",   icon: Hammer     },
-  { href: "/reciclagem", label: "Reciclagem", icon: Recycle    },
-  { href: "/mapas",      label: "Mapas",      icon: Map        },
   { href: "/faccoes",    label: "Facções",    icon: Flag       },
   { href: "/contratos",  label: "Contratos",  icon: ScrollText },
+  { href: "/crafting",   label: "Crafting",   icon: Hammer     },
+  { href: "/mapas",      label: "Mapas",      icon: Map        },
+  { href: "/arcpedia",   label: "Arcpedia",   icon: Bot        },
   { href: "/rankings",   label: "Rankings",   icon: BarChart2  },
   { href: "/streamers",  label: "Streamers",  icon: Radio      },
 ]

@@ -2,7 +2,9 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
+import * as LucideIcons from "lucide-react"
 import { ArrowLeftRight, ArrowRight, CheckCircle, ChevronLeft, ChevronRight, Coins, Flag, Medal, Megaphone, ScrollText, Sparkles, TrendingUp } from "lucide-react"
+import type { HomeNews, HomeSlide } from "@/app/api/home/route"
 import { createClient } from "@/lib/supabase/client"
 import type { Trade } from "@/app/api/trades/route"
 import type { MyTrade } from "@/app/api/trades/my/route"
@@ -20,58 +22,10 @@ const rarityLabelsPt: Record<string, string> = {
   Common: "Comum", Uncommon: "Incomum", Rare: "Raro", Epic: "Épico", Legendary: "Lendário", Unknown: "Desconhecido"
 }
 
-const newsItems = [
-  {
-    icon: Megaphone,
-    image: "/assets/bots/arc_bastion.png",
-    date: "11 DE JUNHO DE 2026",
-    title: "Reposição de Estoque Concluída",
-    text: "Novos itens raros chegaram ao catálogo. Confira os preços atualizados de troca e recompensas.",
-  },
-  {
-    icon: TrendingUp,
-    image: "/assets/bots/arc_rocketeer.png",
-    date: "08 DE JUNHO DE 2026",
-    title: "Ranking de Recicladores",
-    text: "Veja quem mais reciclou componentes essa semana e dispute o topo do ranking da comunidade.",
-    href: "/rankings",
-  },
-]
-
-const heroSlides = [
-  {
-    image: "/assets/bots/arc_matriarch.png",
-    tag: "Atualizações da Loja",
-    icon: Sparkles,
-    title: "O Sucatão Tem Tudo Que Você Precisa",
-    text: "Itens, componentes e equipamentos para sua jornada na Superfície. Compre, troque e recicle direto pelo catálogo.",
-    cta: { label: "Ver catálogo", href: "/loja" },
-  },
-  {
-    image: "/assets/bots/arc_sentinel.png",
-    tag: "Marketplace",
-    icon: ArrowLeftRight,
-    title: "Troque Itens Com Outros Raiders",
-    text: "Compre e venda equipamentos raros no marketplace. Novas ofertas todos os dias da comunidade.",
-    cta: { label: "Ver trades", href: "/trades" },
-  },
-  {
-    image: "/assets/bots/arc_the_queen.png",
-    tag: "Facções",
-    icon: Flag,
-    title: "Escolha Sua Facção e Domine",
-    text: "Junte-se a uma das 5 facções e dispute o topo dos rankings. Recompensas exclusivas para os melhores.",
-    cta: { label: "Ver facções", href: "/faccoes" },
-  },
-  {
-    image: "/assets/bots/arc_leaper.png",
-    tag: "Contratos",
-    icon: ScrollText,
-    title: "Complete Contratos e Ganhe Recompensas",
-    text: "Missões diárias e semanais com Sucatas, XP e itens exclusivos. Acumule reputação e suba no ranking.",
-    cta: { label: "Ver contratos", href: "/contratos" },
-  },
-]
+// Helper para resolver ícone Lucide pelo nome
+function getLucideIcon(name: string): React.ComponentType<{ size?: number }> {
+  return (LucideIcons as any)[name] ?? Megaphone
+}
 
 const categories = [
   { href: "/loja", tag: "EVENTO", tone: "yellow", image: "/assets/bots/arc_wasp.png", title: "Itens", text: "Catálogo completo com valores e raridades." },
@@ -82,6 +36,8 @@ const categories = [
 
 export default function HomePage() {
   const [activeSlide, setActiveSlide] = useState(0)
+  const [newsItems, setNewsItems]     = useState<HomeNews[]>([])
+  const [heroSlides, setHeroSlides]   = useState<HomeSlide[]>([])
   const [tradesOpen, setTradesOpen] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [displayName, setDisplayName] = useState("Visitante")
@@ -112,6 +68,11 @@ export default function HomePage() {
     if (stored === "false") setTradesOpen(false)
     const storedTab = localStorage.getItem("trades-active-tab")
     if (storedTab === "meus" || storedTab === "todos") setActiveTab(storedTab)
+    // Carrega conteúdo da home do banco
+    fetch("/api/home").then(r => r.json()).then(d => {
+      if (d.news?.length)   setNewsItems(d.news)
+      if (d.slides?.length) { setHeroSlides(d.slides); setActiveSlide(0) }
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -213,24 +174,25 @@ export default function HomePage() {
           <p className="home-section-label">Notas de atualização mais recentes</p>
           <div className="news-grid">
             {newsItems.map((news, i) => {
+              const NewsIcon = getLucideIcon(news.icon_name)
               const inner = (
                 <>
-                  <div className="news-card-media" style={{ backgroundImage: `url(${news.image})` }}>
-                    <span className="news-card-badge"><news.icon size={16} /></span>
+                  <div className="news-card-media" style={{ backgroundImage: news.image_url ? `url(${news.image_url})` : undefined }}>
+                    <span className="news-card-badge"><NewsIcon size={16} /></span>
                   </div>
                   <div className="news-card-body">
                     <h3>{news.title}</h3>
                     <p>{news.text}</p>
-                    <span className="news-card-date">{news.date}</span>
+                    <span className="news-card-date">{news.date_label}</span>
                   </div>
                 </>
               )
               return news.href ? (
-                <Link key={i} href={news.href} className="news-card news-card--link">
+                <Link key={news.id ?? i} href={news.href} className="news-card news-card--link">
                   {inner}
                 </Link>
               ) : (
-                <article key={i} className="news-card">{inner}</article>
+                <article key={news.id ?? i} className="news-card">{inner}</article>
               )
             })}
           </div>
@@ -241,25 +203,30 @@ export default function HomePage() {
           <div className="hero-banner">
             {heroSlides.map((slide, i) => (
               <div
-                key={i}
+                key={slide.id ?? i}
                 className="hero-banner-bg"
-                style={{ backgroundImage: `url(${slide.image})`, opacity: i === activeSlide ? 1 : 0 }}
+                style={{ backgroundImage: slide.image_url ? `url(${slide.image_url})` : undefined, opacity: i === activeSlide ? 1 : 0 }}
               />
             ))}
-            <div className="hero-banner-content" key={activeSlide}>
-              {(() => { const Icon = heroSlides[activeSlide].icon; return (
-                <span className="hero-banner-tag">
-                  <Icon size={12} />
-                  {heroSlides[activeSlide].tag}
-                </span>
-              )})()}
-              <h2>{heroSlides[activeSlide].title}</h2>
-              <p>{heroSlides[activeSlide].text}</p>
-              <Link href={heroSlides[activeSlide].cta.href} className="hero-banner-cta">
-                {heroSlides[activeSlide].cta.label}
-                <ArrowRight size={16} />
-              </Link>
-            </div>
+            {heroSlides.length > 0 && (() => {
+              const slide = heroSlides[activeSlide] ?? heroSlides[0]
+              if (!slide) return null
+              const Icon = getLucideIcon(slide.icon_name)
+              return (
+                <div className="hero-banner-content" key={activeSlide}>
+                  <span className="hero-banner-tag">
+                    <Icon size={12} />
+                    {slide.tag}
+                  </span>
+                  <h2>{slide.title}</h2>
+                  <p>{slide.text}</p>
+                  <Link href={slide.cta_href} className="hero-banner-cta">
+                    {slide.cta_label}
+                    <ArrowRight size={16} />
+                  </Link>
+                </div>
+              )
+            })()}
             <div className="hero-banner-dots">
               {heroSlides.map((_, i) => (
                 <span

@@ -1,61 +1,68 @@
 "use client"
 
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
-  BadgeCheck, ChevronRight, ExternalLink, Gift, Heart,
-  Megaphone, Monitor, Radio, Shield, Star, Trophy, Users, Zap,
+  BadgeCheck, ChevronLeft, ChevronRight, ExternalLink, Gift,
+  Heart, Megaphone, Monitor, Shield, Star, Users,
 } from "lucide-react"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
+import StreamerApplyModal from "@/components/streamer-apply-modal"
 import "../../../styles/streamers.css"
+import type { Streamer } from "@/app/api/streamers/route"
 
-const streamers = [
-  { id: "1", name: "Patife",    verified: true,  viewers: "8.2K", color: "#7c3aed", image: "/assets/bots/arc_sentinel.png"  },
-  { id: "2", name: "Yoda",      verified: true,  viewers: "5.1K", color: "#3df28b", image: "/assets/bots/arc_shredder.png"  },
-  { id: "3", name: "Hayashii",  verified: true,  viewers: "3.7K", color: "#ffd400", image: "/assets/bots/arc_spotter.png"   },
-  { id: "4", name: "Marginal",  verified: true,  viewers: "2.9K", color: "#F5090D", image: "/assets/bots/arc_matriarch.png" },
-  { id: "5", name: "Bruninzor", verified: false, viewers: "1.8K", color: "#5fa8ff", image: "/assets/bots/arc_leaper.png"    },
-]
+const PANEL_KEY = "streamers-panel-open"
 
 const benefits = [
-  { icon: Shield,   title: "Itens Exclusivos",   text: "Acesso a skins, charms, emblemas e itens exclusivos para parceiros."   },
-  { icon: Users,    title: "Apoio no Jogo",       text: "Suporte prioritário da equipe e acesso ao canal exclusivo."             },
-  { icon: Star,     title: "Eventos Especiais",   text: "Convites para eventos, lives e partidas exclusivas."                   },
-  { icon: Megaphone,title: "Divulgação Oficial",  text: "Destaque nas redes oficiais e dentro do jogo."                         },
-  { icon: Gift,     title: "Recompensas",          text: "Ganhe recompensas baseadas no seu engajamento."                        },
+  { icon: Shield,    title: "Itens Exclusivos",  text: "Acesso a skins, charms, emblemas e itens exclusivos para parceiros."  },
+  { icon: Users,     title: "Apoio no Jogo",      text: "Suporte prioritário da equipe e acesso ao canal exclusivo."            },
+  { icon: Star,      title: "Eventos Especiais",  text: "Convites para eventos, lives e partidas exclusivas."                   },
+  { icon: Megaphone, title: "Divulgação Oficial", text: "Destaque nas redes oficiais e dentro do jogo."                        },
+  { icon: Gift,      title: "Recompensas",        text: "Ganhe recompensas baseadas no seu engajamento."                       },
 ]
 
 const steps = [
-  { num: 1, title: "Faça lives de ARC Raiders",    text: "Transmita regularmente o jogo em qualquer plataforma de streaming."          },
-  { num: 2, title: "Construa sua comunidade",       text: "Mantenha uma comunidade ativa e engajada com seu conteúdo."                  },
-  { num: 3, title: "Inscreva-se no programa",       text: "Preencha o formulário e nossa equipe analisará sua inscrição."               },
-]
-
-const ranking = [
-  { rank: 1, name: "Patife",    verified: true,  game: "Jogando: ARC Raiders", hours: "156h", viewers: "1.2M", points: "24.850" },
-  { rank: 2, name: "Yoda",      verified: true,  game: "Jogando: ARC Raiders", hours: "132h", viewers: "985K", points: "21.300" },
-  { rank: 3, name: "Hayashii",  verified: true,  game: "Jogando: ARC Raiders", hours: "110h", viewers: "763K", points: "18.420" },
-  { rank: 4, name: "Marginal",  verified: false, game: "Jogando: ARC Raiders", hours: "98h",  viewers: "612K", points: "15.670" },
-  { rank: 5, name: "Bruninzor", verified: false, game: "Jogando: ARC Raiders", hours: "85h",  viewers: "544K", points: "12.910" },
+  { num: 1, title: "Faça lives de ARC Raiders", text: "Transmita regularmente o jogo em qualquer plataforma de streaming."   },
+  { num: 2, title: "Construa sua comunidade",   text: "Mantenha uma comunidade ativa e engajada com seu conteúdo."            },
+  { num: 3, title: "Inscreva-se no programa",   text: "Preencha o formulário e nossa equipe analisará sua inscrição."        },
 ]
 
 export default function StreamersPage() {
   const carouselRef = useRef<HTMLDivElement>(null)
+  const [streamers, setStreamers]   = useState<Streamer[]>([])
+  const [panelOpen, setPanelOpen]   = useState(true)
+  const [loading, setLoading]       = useState(true)
+  const [applyOpen, setApplyOpen]   = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem(PANEL_KEY)
+    if (stored !== null) setPanelOpen(stored === "true")
+    fetch("/api/streamers")
+      .then(r => r.json())
+      .then(d => { setStreamers(d.streamers ?? []); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  function setPanel(val: boolean) {
+    setPanelOpen(val)
+    localStorage.setItem(PANEL_KEY, String(val))
+  }
 
   function scrollCarousel() {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 220, behavior: "smooth" })
-    }
+    carouselRef.current?.scrollBy({ left: 220, behavior: "smooth" })
   }
 
   return (
-    <div className="streamers-page">
-      <div className="streamers-layout">
+    <div className={`streamers-page${panelOpen ? "" : " streamers-page--no-panel"}`}>
+      {applyOpen && <StreamerApplyModal onClose={() => setApplyOpen(false)} />}
+      <div className={`store-layout${panelOpen ? "" : " store-layout--no-panel"}`}>
         <div className="streamers-main">
 
           {/* Hero */}
           <div className="streamers-hero">
             <div className="streamers-hero-bg" />
             <div className="streamers-hero-content">
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--cyan)", opacity: 0.7 }}>Sucatão</p>
               <h1>Programa <span>de</span> Streamers</h1>
               <p>Parceiros que levam ARC Raiders ainda mais longe.<br />Acompanhe, apoie e ganhe recompensas exclusivas!</p>
             </div>
@@ -64,61 +71,76 @@ export default function StreamersPage() {
                 <span className="streamers-live-dot" />
                 Ao Vivo Agora
               </span>
-              <span className="streamers-live-count">286</span>
-              <span className="streamers-live-label">
-                Streamers ao vivo<br />jogando ARC Raiders
-              </span>
+              <span className="streamers-live-count">{streamers.length > 0 ? streamers.length : "—"}</span>
+              <span className="streamers-live-label">Streamers parceiros<br />ativos no programa</span>
             </div>
           </div>
 
-          {/* Featured streamers */}
+          {/* Streamers em destaque */}
           <section>
             <div className="streamers-section-head">
               <h2>Streamers em Destaque</h2>
-              <a href="#" className="streamers-see-all">Ver todos</a>
             </div>
-            <div className="streamers-carousel-wrap">
-              <div className="streamers-carousel" ref={carouselRef}>
-                {streamers.map(s => (
-                  <div key={s.id} className="streamer-card">
-                    <div className="streamer-card-thumb" style={{ backgroundImage: `url(${s.image})` }}>
-                      <span className="streamer-live-tag">Ao Vivo</span>
-                      <span className="streamer-viewers">
-                        <Users size={10} />
-                        {s.viewers}
-                      </span>
-                      <div
-                        className="streamer-avatar"
-                        style={{ background: `${s.color}33`, borderColor: s.color, color: s.color }}
-                      >
-                        {s.name[0]}
-                      </div>
+            {loading ? (
+              <div className="streamers-carousel-wrap">
+                <div className="streamers-carousel">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="streamer-card skeleton">
+                      <div className="streamer-card-thumb skeleton-block" />
                     </div>
-                    <div className="streamer-card-body">
-                      <div className="streamer-name-row">
-                        <span className="streamer-name">{s.name}</span>
-                        {s.verified && <BadgeCheck size={14} className="streamer-verified" />}
-                      </div>
-                      <p className="streamer-game">Jogando: ARC Raiders</p>
-                      <div className="streamer-tags">
-                        <span className="streamer-tag">BR</span>
-                        <span className="streamer-tag">FPS</span>
-                      </div>
-                      <button type="button" className="streamer-watch-btn">
-                        <Monitor size={12} />
-                        Assistir
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-              <button type="button" className="streamers-carousel-btn" onClick={scrollCarousel} aria-label="Ver mais">
-                <ChevronRight size={16} />
-              </button>
-            </div>
+            ) : streamers.length === 0 ? (
+              <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhum streamer cadastrado ainda.</p>
+            ) : (
+              <div className="streamers-carousel-wrap">
+                <div className="streamers-carousel" ref={carouselRef}>
+                  {streamers.map(s => (
+                    <div key={s.id} className="streamer-card">
+                      <div className="streamer-card-thumb" style={{ backgroundImage: s.avatar_url ? `url(${s.avatar_url})` : undefined }}>
+                        <span className="streamer-live-tag">Parceiro</span>
+                        <span className="streamer-viewers">
+                          <Users size={10} />
+                          {s.viewers_text || "—"}
+                        </span>
+                        <div className="streamer-avatar" style={{ background: `${s.color}33`, borderColor: s.color, color: s.color }}>
+                          {s.name[0]}
+                        </div>
+                      </div>
+                      <div className="streamer-card-body">
+                        <div className="streamer-name-row">
+                          <span className="streamer-name">{s.name}</span>
+                          {s.verified && <BadgeCheck size={14} className="streamer-verified" />}
+                        </div>
+                        <p className="streamer-game">Jogando: ARC Raiders</p>
+                        <div className="streamer-tags">
+                          <span className="streamer-tag">BR</span>
+                          <span className="streamer-tag" style={{ textTransform: "capitalize" }}>{s.platform}</span>
+                        </div>
+                        {s.channel_url ? (
+                          <Link href={s.channel_url} target="_blank" rel="noopener noreferrer" className="streamer-watch-btn">
+                            <Monitor size={12} />
+                            Assistir
+                          </Link>
+                        ) : (
+                          <button type="button" className="streamer-watch-btn" disabled style={{ opacity: 0.4 }}>
+                            <Monitor size={12} />
+                            Assistir
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="button" className="streamers-carousel-btn" onClick={scrollCarousel} aria-label="Ver mais">
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </section>
 
-          {/* Benefits */}
+          {/* Benefícios */}
           <section>
             <div className="streamers-section-head">
               <h2>Benefícios para Parceiros</h2>
@@ -128,9 +150,7 @@ export default function StreamersPage() {
                 const Icon = b.icon
                 return (
                   <div key={b.title} className="streamer-benefit">
-                    <div className="streamer-benefit-icon">
-                      <Icon size={18} />
-                    </div>
+                    <div className="streamer-benefit-icon"><Icon size={18} /></div>
                     <strong>{b.title}</strong>
                     <p>{b.text}</p>
                   </div>
@@ -139,7 +159,7 @@ export default function StreamersPage() {
             </div>
           </section>
 
-          {/* Steps + Ranking */}
+          {/* Como se tornar + Ranking */}
           <div className="streamers-bottom-grid">
             <div className="streamers-steps-card">
               <h2>Como se Tornar um Parceiro</h2>
@@ -154,61 +174,57 @@ export default function StreamersPage() {
                   </div>
                 ))}
               </div>
-              <a href="#" className="streamers-cta-btn">
+              <button type="button" onClick={() => setApplyOpen(true)} className="streamers-cta-btn">
                 Quero me Inscrever
                 <ExternalLink size={14} />
-              </a>
+              </button>
             </div>
 
             <div className="streamers-ranking-card">
               <div className="streamers-ranking-head">
-                <h2>Ranking de Parceiros</h2>
-                <a href="#" className="streamers-see-all">Ver ranking completo</a>
+                <h2>Parceiros Cadastrados</h2>
               </div>
               <table className="streamers-ranking-table">
                 <thead>
                   <tr>
                     <th>#</th>
                     <th>Streamer</th>
-                    <th>Horas Transmitidas</th>
-                    <th>Espectadores</th>
-                    <th>Pontos</th>
+                    <th>Plataforma</th>
+                    <th>Viewers</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {ranking.map(row => (
-                    <tr key={row.rank}>
+                  {streamers.map((s, i) => (
+                    <tr key={s.id}>
                       <td>
-                        {row.rank <= 3 ? (
-                          <div className={`streamer-rank-badge streamer-rank-${row.rank}`}>
-                            <span>{row.rank}</span>
-                          </div>
+                        {i < 3 ? (
+                          <div className={`streamer-rank-badge streamer-rank-${i + 1}`}><span>{i + 1}</span></div>
                         ) : (
-                          <span className="streamer-rank-num">{row.rank}</span>
+                          <span className="streamer-rank-num">{i + 1}</span>
                         )}
                       </td>
                       <td>
                         <div className="streamer-table-player">
-                          <div className="streamer-table-avatar">{row.name[0]}</div>
+                          <div className="streamer-table-avatar" style={{ borderColor: s.color, color: s.color }}>
+                            {s.avatar_url
+                              ? <img src={s.avatar_url} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+                              : s.name[0]}
+                          </div>
                           <div>
                             <div className="streamer-table-name">
-                              {row.name}
-                              {row.verified && <BadgeCheck size={13} style={{ color: "#5fa8ff" }} />}
+                              {s.name}
+                              {s.verified && <BadgeCheck size={13} style={{ color: "#5fa8ff" }} />}
                             </div>
-                            <div className="streamer-table-sub">{row.game}</div>
                           </div>
                         </div>
                       </td>
-                      <td>{row.hours}</td>
-                      <td>{row.viewers}</td>
-                      <td>
-                        <span className="streamer-points-cell">
-                          <Star size={12} fill="currentColor" />
-                          {row.points}
-                        </span>
-                      </td>
+                      <td style={{ textTransform: "capitalize" }}>{s.platform}</td>
+                      <td><span className="streamer-points-cell"><Users size={12} />{s.viewers_text || "—"}</span></td>
                     </tr>
                   ))}
+                  {streamers.length === 0 && !loading && (
+                    <tr><td colSpan={4} style={{ textAlign: "center", color: "var(--muted)", padding: 16, fontSize: 12 }}>Nenhum streamer cadastrado.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -216,93 +232,61 @@ export default function StreamersPage() {
 
         </div>
 
-        {/* Sidebar */}
-        <aside className="store-side-panel" aria-label="Painel de streamers">
-          <div className="store-user-card">
-            <div className="store-user-avatar">
-              D
-              <span className="store-user-level">42</span>
-            </div>
-            <div className="store-user-info">
-              <strong>Draakaarrysss</strong>
-              <span className="store-user-online">
-                <span className="store-user-online-dot" />
-                Online
-              </span>
-            </div>
-          </div>
-
-          <div className="store-side-card">
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, marginBottom: 12 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Reputação</span>
-              <strong style={{ fontSize: 18, fontWeight: 950, color: "var(--paper)" }}>5.250</strong>
-              <div style={{ fontSize: 11, color: "var(--gray-500)" }}>/ 10.000 REP</div>
-            </div>
-            <div className="store-reputation-bar" style={{ marginBottom: 8 }}>
-              <span style={{ width: "52.5%", background: "#ffd400" }} />
-            </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#ffd400" }}>Mercador</span>
-              <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Lendário</span>
-            </div>
-          </div>
+        {/* Painel lateral */}
+        <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de streamers">
+          <SidePanelUserHeader onClose={() => setPanel(false)} showStats />
 
           <div className="store-side-card">
             <h2>Apoie seu Streamer Favorito</h2>
             <div className="streamers-support-card">
-              <div className="streamers-heart-icon">
-                <Heart size={28} fill="currentColor" />
-              </div>
+              <div className="streamers-heart-icon"><Heart size={28} fill="currentColor" /></div>
               <p className="streamers-support-text">Assista, participe do chat e mostre seu apoio!</p>
               <p className="streamers-support-sub">Quanto mais você interage, mais seu streamer favorito cresce no ranking!</p>
-              <a href="#" className="streamers-learn-more">Saiba Mais</a>
             </div>
           </div>
 
-          <div className="store-side-card">
-            <h2>Recompensas Globais</h2>
-            <div className="streamers-rewards-progress">
-              <span className="streamers-rewards-meta">Próxima meta · Meta da Comunidade</span>
-              <div className="streamers-rewards-bar-wrap">
-                <div className="streamers-rewards-bar-label">
-                  <span>15.000.000</span>
-                  <span>20.000.000 XP</span>
-                </div>
-                <div className="streamers-rewards-bar">
-                  <span style={{ width: "75%" }} />
-                </div>
+          {streamers.length > 0 && (
+            <div className="store-side-card">
+              <h2>Top Streamers</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {streamers.slice(0, 5).map((s, i) => (
+                  <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ width: 18, fontSize: 11, fontWeight: 950, color: i < 3 ? "var(--yellow)" : "var(--gray-500)", textAlign: "center" }}>{i + 1}</span>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", border: `1.5px solid ${s.color}`, background: `${s.color}22`, display: "grid", placeItems: "center", fontSize: 11, fontWeight: 950, color: s.color, flexShrink: 0, overflow: "hidden" }}>
+                      {s.avatar_url
+                        ? <img src={s.avatar_url} alt={s.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : s.name[0]}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 12, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: "var(--gray-500)" }}>{s.viewers_text} viewers</p>
+                    </div>
+                    {s.verified && <BadgeCheck size={12} style={{ color: "#5fa8ff", flexShrink: 0 }} />}
+                  </div>
+                ))}
               </div>
-              <div className="streamers-rewards-item">
-                <img src="/assets/items/painted_box.png" alt="Recompensa" className="streamers-rewards-img" />
-                <div>
-                  <div className="streamers-rewards-label">Recompensa</div>
-                  <div className="streamers-rewards-name">Caixa de Suprimentos Épica</div>
-                </div>
-              </div>
-              <button type="button" className="streamers-goal-btn">Ao atingir a meta</button>
             </div>
-          </div>
+          )}
 
           <div className="store-side-card">
             <h2>Conecte Suas Contas</h2>
             <p className="streamers-connect-text">Conecte suas contas para receber recompensas exclusivas no jogo.</p>
             <div className="streamers-connect-platforms">
-              <div className="streamers-platform">
-                <div className="streamers-platform-icon twitch">T</div>
-                <span className="streamers-platform-status connected">Conectado</span>
-              </div>
-              <div className="streamers-platform">
-                <div className="streamers-platform-icon youtube">▶</div>
-                <span className="streamers-platform-status connected">Conectado</span>
-              </div>
-              <div className="streamers-platform">
-                <div className="streamers-platform-icon discord">D</div>
-                <span className="streamers-platform-status pending">Conectar</span>
-              </div>
+              {[{ key: "twitch", label: "T", name: "Twitch" }, { key: "youtube", label: "▶", name: "YouTube" }, { key: "kick", label: "K", name: "Kick" }].map(p => (
+                <div key={p.key} className="streamers-platform">
+                  <div className={`streamers-platform-icon ${p.key}`}>{p.label}</div>
+                  <span className="streamers-platform-status pending">Conectar</span>
+                </div>
+              ))}
             </div>
             <a href="#" className="streamers-rules-btn">Ver Regras do Programa</a>
           </div>
         </aside>
+
+        <button type="button" className="store-panel-reopen" aria-label="Abrir painel" onClick={() => setPanel(true)}>
+          <ChevronLeft size={16} strokeWidth={2.5} />
+          <span>Painel</span>
+        </button>
       </div>
     </div>
   )

@@ -1,11 +1,14 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { BarChart2, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair, DoorOpen, HelpCircle, Hexagon, Package, Play, RadioTower, Recycle, RefreshCw, Scale, ScrollText, Shield, Skull, Star, Target, Trophy, Truck, Users, Wallet, XCircle, Zap } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
 import "../../../styles/contratos-venda.css"
+import type { Contract as ApiContract } from "@/app/api/contratos/route"
+import type { ContractPass } from "@/app/api/contratos/passes/route"
+import type { Pass } from "@/app/api/faccoes/recompensas/route"
 
 type ContractType = "Principal" | "Secundário" | "Diário" | "Facção"
 
@@ -76,7 +79,7 @@ const riskColorsActive: Record<string, string> = {
   Baixo: "#3df28b", Médio: "#ffd400", Alto: "#ff8c42", Extremo: "#F5090D",
 }
 
-const contracts: Contract[] = [
+const contracts_UNUSED: Contract[] = [
   {
     id: "1", type: "Principal", tier: "Épico",
     title: "Ameaça Mecânica",
@@ -182,7 +185,7 @@ const contracts: Contract[] = [
   },
 ]
 
-const tabs = ["Contratos Ativos", "Histórico"]
+const tabs = ["Contratos à Venda", "Contratos Ativos", "Histórico"]
 
 type DailyContract = {
   title: string
@@ -503,6 +506,45 @@ function DailyRewardBadge({ reward }: { reward: ContractReward }) {
 
 const PANEL_KEY = "contratos-panel-open"
 
+// Adapta ApiContract → Contract local (para reuso do JSX existente)
+function adapt(c: ApiContract): Contract {
+  return {
+    id:               c.id,
+    type:             c.type as ContractType,
+    tier:             c.tier as ContractTierActive,
+    title:            c.title,
+    description:      c.description,
+    image:            c.image_url ?? "/assets/bots/arc_sentinel.png",
+    progress:         c.user_progress ?? 0,
+    total:            c.total,
+    objective:        c.objective,
+    rewards:          c.rewards as ContractReward[],
+    sucatas:          c.sucatas,
+    xp:               c.xp,
+    rep:              c.rep ?? undefined,
+    players:          c.players_completed,
+    successRate:      c.success_rate,
+    expiresIn:        c.expires_at ? (() => {
+      const diff = new Date(c.expires_at!).getTime() - Date.now()
+      const d = Math.floor(diff / 86400000)
+      const h = Math.floor((diff % 86400000) / 3600000)
+      return diff > 0 ? `${d}d ${h}h` : "Expirado"
+    })() : "—",
+    variant:          (c.variant as ContractVariantActive | undefined) ?? undefined,
+    location:         c.location,
+    story:            c.story,
+    estimatedTime:    c.estimated_time,
+    bestTimeOfDay:    c.best_time_of_day,
+    climate:          c.climate,
+    environmentalRisk: c.environmental_risk,
+    objectives:       (c.objectives as ContractObjectiveActive[]).map(o => ({ ...o, progress: undefined, done: false })),
+    bonus:            { condition: c.bonus_condition, reward: c.bonus_reward },
+    enemies:          c.enemies as ContractEnemyActive[],
+    playersCompleted: c.players_completed,
+    bestRecord:       { time: c.best_record_time, player: c.best_record_player },
+  }
+}
+
 export default function ContratosPage() {
   const [panelOpen, setPanelOpen] = useState(true)
   const [activeTab, setActiveTab] = useState(tabs[0])
@@ -513,6 +555,72 @@ export default function ContratosPage() {
   const [weekSecondsLeft, setWeekSecondsLeft] = useState(0)
   const [acceptedContracts, setAcceptedContracts] = useState<Set<number>>(new Set())
   const [acceptedWeeklyContracts, setAcceptedWeeklyContracts] = useState<Set<number>>(new Set())
+
+  // Contratos à venda (contratos ativos do banco)
+  const [apiContracts, setApiContracts] = useState<ApiContract[]>([])
+  const [loadingContracts, setLoadingContracts] = useState(true)
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+
+  // Passes à venda
+  const [passes, setPasses]       = useState<ContractPass[]>([])
+  const [loadingPasses, setLoadingPasses] = useState(false)
+  const [buyingId, setBuyingId]   = useState<string | null>(null)
+  const [passModal, setPassModal]         = useState<ContractPass | null>(null)
+  const [scheduleModal, setScheduleModal] = useState<{ pass: Pass; mission: Pass["missions"][0] } | null>(null)
+  const [schedAvailableTimes, setSchedAvailableTimes] = useState<string[]>([])
+  const [schedDate, setSchedDate]         = useState("")
+  const [schedTime, setSchedTime]         = useState("")
+  const [schedGameId, setSchedGameId]     = useState("")
+  const [scheduling, setScheduling]       = useState(false)
+  const [schedMsg, setSchedMsg]           = useState("")
+  const [userSucatas, setUserSucatas]     = useState<number | null>(null)
+  const [contractStats, setContractStats] = useState<{ completed: number; failed: number; expired: number; total: number; success_rate: number } | null>(null)
+  const [pointRewards, setPointRewards]  = useState<any[]>([])
+  const [passConfirmStep, setPassConfirmStep] = useState<"points" | "cash" | null>(null)
+  const [userPoints, setUserPoints]       = useState<number | null>(null)
+  const trackRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  // Passes ativos do usuário (comprados)
+  const [myPasses, setMyPasses]   = useState<Pass[]>([])
+  const [loadingMyPasses, setLoadingMyPasses] = useState(false)
+
+  const loadContracts = useCallback(async () => {
+    setLoadingContracts(true)
+    const res = await fetch("/api/contratos")
+    const body = await res.json().catch(() => ({ contracts: [] }))
+    setApiContracts(body.contracts ?? [])
+    setLoadingContracts(false)
+  }, [])
+
+  const loadPasses = useCallback(async () => {
+    setLoadingPasses(true)
+    const res = await fetch("/api/contratos/passes")
+    const body = await res.json().catch(() => ({ passes: [] }))
+    setPasses(body.passes ?? [])
+    setLoadingPasses(false)
+  }, [])
+
+  const loadMyPasses = useCallback(async () => {
+    setLoadingMyPasses(true)
+    const res = await fetch("/api/contratos/passes/meus")
+    const body = await res.json().catch(() => ({ passes: [] }))
+    setMyPasses(body.passes ?? [])
+    setLoadingMyPasses(false)
+  }, [])
+
+  useEffect(() => { loadContracts() }, [loadContracts])
+
+  // Dados do painel lateral
+  useEffect(() => {
+    fetch("/api/profile/points").then(r => r.json()).then(d => setUserSucatas(d.points ?? 0)).catch(() => {})
+    fetch("/api/contratos/stats").then(r => r.json()).then(d => setContractStats(d)).catch(() => {})
+    fetch("/api/contratos/rewards").then(r => r.json()).then(d => setPointRewards(d.rewards ?? [])).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === "Contratos à Venda" && passes.length === 0) loadPasses()
+    if (activeTab === "Contratos Ativos" && myPasses.length === 0) loadMyPasses()
+  }, [activeTab])
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
@@ -533,6 +641,13 @@ export default function ContratosPage() {
     }, 1000)
     return () => clearInterval(interval)
   }, [])
+
+  async function handleAcceptActive(contractId: string) {
+    setAcceptingId(contractId)
+    const res = await fetch(`/api/contratos/${contractId}/accept`, { method: "POST" })
+    setAcceptingId(null)
+    if (res.ok || res.status === 409) await loadContracts()
+  }
 
   function handleAccept(index: number) {
     setAcceptedContracts(prev => {
@@ -598,7 +713,7 @@ export default function ContratosPage() {
             <span className="store-tab-indicator" style={{ left: indicator.left, width: indicator.width }} />
           </div>
 
-          {activeTab === "Contratos Ativos" && (
+          {activeTab === "Contratos à Venda" && (
             <>
               <div className="contratos-hero-row">
                 <div className="hero-banner" style={{ backgroundImage: "url(/assets/bots/arc_rocketeer.png)" }}>
@@ -655,7 +770,12 @@ export default function ContratosPage() {
               </div>
 
               <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
-                {contracts.map(contract => {
+                {loadingContracts ? (
+                  <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Carregando contratos...</p>
+                ) : apiContracts.length === 0 ? (
+                  <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Nenhum contrato ativo no momento.</p>
+                ) : null}
+                {apiContracts.map(raw => { const contract = adapt(raw);
                   const tier = tierColorsActive[contract.tier]
                   const typeColor = typeColorsActive[contract.type]
                   const pct = Math.round((contract.progress / contract.total) * 100)
@@ -700,6 +820,18 @@ export default function ContratosPage() {
                           <button type="button" className="cv-card-details" onClick={() => setSelectedActiveContract(contract)}>
                             Ver Detalhes
                           </button>
+                          {raw.user_status === "active" ? (
+                            <span style={{ fontSize: 10, fontWeight: 950, color: "var(--yellow)", textTransform: "uppercase" }}>Em progresso</span>
+                          ) : raw.user_status === "completed" ? (
+                            <span style={{ fontSize: 10, fontWeight: 950, color: "var(--green)", textTransform: "uppercase" }}>Concluído</span>
+                          ) : (
+                            <button type="button" className="btn-aceitar"
+                              disabled={acceptingId === raw.id}
+                              onClick={() => handleAcceptActive(raw.id)}>
+                              <Zap size={14} fill="currentColor" />
+                              {acceptingId === raw.id ? "Aceitando..." : "Aceitar"}
+                            </button>
+                          )}
                         </div>
                       </div>
                       {contract.variant && (
@@ -708,8 +840,7 @@ export default function ContratosPage() {
                         </div>
                       )}
                     </div>
-                  )
-                })}
+                  )})}
               </div>
 
               {/* Contract detail modal */}
@@ -821,7 +952,8 @@ export default function ContratosPage() {
                           <span>Progresso Atual</span>
                           <strong style={{ color: "#3df28b", fontSize: 18 }}>{selectedActiveContract.progress} / {selectedActiveContract.total}</strong>
                         </div>
-                        <button type="button" className="cdm-buy-btn" style={{ background: "#3df28b", color: "#021a0a" }} onClick={() => setSelectedActiveContract(null)}>
+                        <button type="button" className="btn-aceitar" onClick={() => setSelectedActiveContract(null)}>
+                          <Zap size={14} fill="currentColor" />
                           Acompanhar Contrato
                         </button>
                       </div>
@@ -831,13 +963,6 @@ export default function ContratosPage() {
                 </div>
               )}
 
-              <div className="contratos-tip">
-                <div className="contratos-tip-image" style={{ backgroundImage: "url(/assets/bots/arc_wasp.png)" }} />
-                <div>
-                  <h2>Dica do Contrato</h2>
-                  <p>Contratos do tipo Facção rendem mais reputação para sua facção escolhida. Priorize-os se quiser subir de nível mais rápido entre os Raiders.</p>
-                </div>
-              </div>
             </>
           )}
 
@@ -1118,12 +1243,356 @@ export default function ContratosPage() {
             </div>
           )}
 
-          {activeTab !== "Contratos Ativos" && activeTab !== "Contratos Diários" && activeTab !== "Contratos Semanais" && activeTab !== "Histórico" && (
+          {/* ── Aba: Contratos à Venda (passes disponíveis para compra) ── */}
+          {activeTab === "Contratos à Venda" && (
+            <div>
+              {loadingPasses ? (
+                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando contratos...</p>
+              ) : passes.length === 0 ? (
+                <div className="contratos-placeholder">
+                  <h2>Nenhum contrato disponível</h2>
+                  <p>Novos contratos serão lançados em breve. Fique de olho!</p>
+                </div>
+              ) : (
+                <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
+                  {passes.map(pass => {
+                    const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                    const TYPE_COLOR: Record<string, string> = { daily: "#3df28b", weekly: "#ffd400", monthly: "#b477ff" }
+                    const typeColor = TYPE_COLOR[pass.type] ?? "#5fa8ff"
+                    const pct = pass.missions_count > 0 ? Math.round((pass.user_completed / pass.missions_count) * 100) : 0
+                    const expiresIn = (() => {
+                      const diff = new Date(pass.expires_at).getTime() - Date.now()
+                      if (diff <= 0) return "Expirado"
+                      const d = Math.floor(diff / 86400000)
+                      const h = Math.floor((diff % 86400000) / 3600000)
+                      return `${d}d ${h}h`
+                    })()
+                    return (
+                      <div key={pass.id} className="cv-card">
+                        <div className="cv-card-bg">
+                          <div className="cv-card-bg-img" style={{ backgroundImage: `url(${pass.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
+                        </div>
+                        <div className="cv-card-badges">
+                          <span className="cv-card-type" style={{ color: typeColor }}>{TYPE_LABEL[pass.type] ?? pass.type}</span>
+                          <span className="cv-card-tier" style={{ color: typeColor, borderColor: `color-mix(in srgb, ${typeColor} 40%, transparent)` }}>
+                            {pass.missions_count} MISSÃO{pass.missions_count !== 1 ? "ÕES" : ""}
+                          </span>
+                        </div>
+                        <div className="cv-card-body">
+                          <strong className="cv-card-name">{pass.title}</strong>
+                          <p className="cv-card-desc">{pass.description}</p>
+                          <div className="cv-card-section-label">Objetivo</div>
+                          <div className="cv-card-objective">
+                            <Target size={11} />Complete {pass.missions_count} missões sequenciais
+                          </div>
+                          <div className="cv-card-section-label">Recompensas</div>
+                          <div className="cv-card-rewards">
+                            {pass.total_points > 0 && <span style={{ color: "#ffd400" }}><Coins size={11} />{pass.total_points.toLocaleString("pt-BR")} pts</span>}
+                            {pass.price_points > 0 && <span style={{ color: typeColor }}><Zap size={11} />{pass.price_points.toLocaleString("pt-BR")} pts</span>}
+                            {pass.price_real > 0 && <span style={{ color: "#3df28b" }}>R$ {Number(pass.price_real).toFixed(2).replace(".", ",")}</span>}
+                          </div>
+                          <div className="cv-card-section-label">Progresso</div>
+                          <div className="ca-progress-wrap">
+                            <div className="ca-progress-bar">
+                              <span style={{ width: `${pct}%` }} />
+                            </div>
+                            <span className="ca-progress-label">{pass.user_completed}/{pass.missions_count}</span>
+                          </div>
+                          <div className="cv-card-footer-meta">
+                            <span className="cv-card-players"><Clock size={11} />{expiresIn}</span>
+                            <span style={{ color: pct === 100 ? "#3df28b" : typeColor }}>{pct}%</span>
+                          </div>
+                          <div className="cv-card-actions">
+                            <button type="button" className="cv-card-details" onClick={() => { setPassModal(pass); setPassConfirmStep(null); fetch("/api/profile/points").then(r => r.json()).then(d => setUserPoints(d.points ?? null)).catch(() => {}) }}>
+                              Ver Detalhes
+                            </button>
+                          </div>
+                          {pass.purchased ? (
+                            <span style={{ display: "block", textAlign: "center", marginTop: 8, fontSize: 11, fontWeight: 950, color: "#3df28b", textTransform: "uppercase" }}>
+                              {pct === 100 ? "✓ Concluído" : "Em Progresso"}
+                            </span>
+                          ) : (
+                            <button type="button" className="btn-aceitar" style={{ marginTop: 8 }}
+                              disabled={buyingId === pass.id}
+                              onClick={() => { setPassModal(pass); setPassConfirmStep(null); fetch("/api/profile/points").then(r => r.json()).then(d => setUserPoints(d.points ?? null)).catch(() => {}) }}>
+                              <Zap size={14} fill="currentColor" />
+                              {buyingId === pass.id ? "Aceitando..." : "ACEITAR"}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Aba: Contratos Ativos (passes comprados com missões) ── */}
+          {activeTab === "Contratos Ativos" && (
+            <div>
+              {loadingMyPasses ? (
+                <p style={{ color: "var(--gray-500)", padding: 24 }}>Carregando seus contratos...</p>
+              ) : myPasses.length === 0 ? (
+                <div className="contratos-placeholder">
+                  <h2>Nenhum contrato ativo</h2>
+                  <p>Vá para a aba <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para adquirir um contrato.</p>
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 24 }}>
+                  {myPasses.map(pass => {
+                    const TYPE_COLOR: Record<string, string> = { daily: "#3df28b", weekly: "#ffd400", monthly: "#b477ff" }
+                    const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                    const passColor = TYPE_COLOR[pass.type] ?? "#5fa8ff"
+                    const expiresIn = (() => {
+                      const diff = new Date(pass.expires_at).getTime() - Date.now()
+                      if (diff <= 0) return "Expirado"
+                      const d = Math.floor(diff / 86400000); const h = Math.floor((diff % 86400000) / 3600000)
+                      return d > 0 ? `${d}d ${h}h` : `${h}h`
+                    })()
+                    const pct = pass.missions.length > 0 ? Math.round((pass.total_completed / pass.missions.length) * 100) : 0
+                    const active = pass.missions.find(m => m.status === "active")
+
+                    return (
+                      <div key={pass.id} className="ca-pass-wrap">
+                        {/* ── Header cinematográfico ── */}
+                        <div className="ca-pass-header">
+                          {(pass as any).image_url && <div className="ca-pass-header-bg" style={{ backgroundImage: `url(${(pass as any).image_url})` }} />}
+                          <div className="ca-pass-header-overlay" />
+                          <div className="ca-pass-header-content">
+                            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, alignSelf: "flex-start" }}>
+                                {TYPE_LABEL[pass.type] ?? pass.type}
+                              </span>
+                              <h2 className="ca-pass-title">{pass.title}</h2>
+                            </div>
+                            <div className="ca-pass-meta">
+                              <div style={{ textAlign: "right" }}>
+                                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Progresso</p>
+                                <p style={{ margin: "2px 0 0", fontSize: 18, fontWeight: 950, color: passColor }}>{pass.total_completed}<span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>/{pass.missions.length}</span></p>
+                              </div>
+                              <div style={{ textAlign: "right" }}>
+                                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Expira em</p>
+                                <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 950, color: "var(--paper)" }}>{expiresIn}</p>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Barra de progresso geral */}
+                          <div style={{ position: "relative", zIndex: 1, marginTop: 12, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: passColor, borderRadius: 2, transition: "width 0.5s ease" }} />
+                          </div>
+                        </div>
+
+                        {/* ── Trilha de missões ── */}
+                        <div
+                          ref={el => { trackRefs.current[pass.id] = el }}
+                          className="ca-track-wrap"
+                          style={pass.type === "monthly"
+                            ? { overflowX: "auto", cursor: "grab", userSelect: "none" }
+                            : { overflowX: "visible" }}
+                          onMouseDown={pass.type === "monthly" ? e => {
+                            const el = trackRefs.current[pass.id]
+                            if (!el) return
+                            el.style.cursor = "grabbing"
+                            const startX = e.pageX - el.offsetLeft
+                            const startScroll = el.scrollLeft
+                            const onMove = (ev: MouseEvent) => { el.scrollLeft = startScroll - (ev.pageX - el.offsetLeft - startX) }
+                            const onUp = () => { el.style.cursor = "grab"; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
+                            window.addEventListener("mousemove", onMove)
+                            window.addEventListener("mouseup", onUp)
+                          } : undefined}
+                        >
+                          <div className="ca-track" style={pass.type === "monthly" ? { minWidth: "max-content", width: "auto" } : { width: "100%", alignItems: "flex-start" }}>
+                            {pass.missions.map((m, i) => {
+                              const isMilestone = m.position % 5 === 0
+                              const nodeSize = 76
+                              const hasItem = !!m.item_reward
+                              // Cor da borda baseada na raridade do item
+                              const rarityColor: Record<string, string> = {
+                                comum: "#5fa8ff", incomum: "#3df28b", raro: "#ffd400",
+                                épico: "#b477ff", lendário: "#ff8c42",
+                                common: "#5fa8ff", uncommon: "#3df28b", rare: "#ffd400",
+                                epic: "#b477ff", legendary: "#ff8c42",
+                              }
+                              const itemBorderColor = hasItem
+                                ? (rarityColor[(m.item_reward as any)?.item_rarity?.toLowerCase()] ?? "#5fa8ff")
+                                : null
+                              const nodeColor = m.status === "locked"
+                                ? "rgba(255,255,255,0.12)"
+                                : (itemBorderColor ?? passColor)
+                              const nodeBg = m.status === "completed"
+                                ? `color-mix(in srgb, ${nodeColor} 30%, transparent)`
+                                : m.status === "active"
+                                ? `color-mix(in srgb, ${nodeColor} 12%, #0a0e16)`
+                                : "rgba(255,255,255,0.03)"
+                              const isNext = i < pass.missions.length - 1
+                              const nextDone = isNext && (pass.missions[i + 1].status === "completed" || pass.missions[i + 1].status === "active")
+                              return (
+                                <React.Fragment key={m.id}>
+                                  {/* Nó (tamanho fixo, sem flex grow) */}
+                                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0, width: pass.type === "monthly" ? 64 : undefined }}>
+                                    <div
+                                      className={`ca-track-node${m.status === "active" ? " active" : ""}`}
+                                      style={{
+                                        width: nodeSize, height: nodeSize,
+                                        background: nodeBg,
+                                        borderColor: nodeColor,
+                                        borderWidth: m.status === "active" ? 3 : 2,
+                                        boxShadow: m.status === "active" ? `0 0 20px color-mix(in srgb, ${passColor} 50%, transparent)` : "none",
+                                        ["--node-color-alpha" as string]: `color-mix(in srgb, ${passColor} 25%, transparent)`,
+                                        ["--node-color-mid" as string]: `color-mix(in srgb, ${passColor} 45%, transparent)`,
+                                        flexDirection: "column" as const,
+                                        gap: 1,
+                                      }}>
+                                      {m.status === "completed" ? (
+                                        <span style={{ fontSize: 28, color: nodeColor, fontWeight: 950 }}>✓</span>
+                                      ) : hasItem && (m.item_reward as any)?.item_image ? (
+                                        <img
+                                          src={(m.item_reward as any).item_image}
+                                          alt={(m.item_reward as any).item_name}
+                                          style={{
+                                            width: 54, height: 54,
+                                            objectFit: "contain",
+                                            opacity: m.status === "locked" ? 0.25 : 1,
+                                            filter: m.status === "locked" ? "grayscale(1)" : `drop-shadow(0 0 6px ${nodeColor})`,
+                                          }}
+                                        />
+                                      ) : hasItem ? (
+                                        <span style={{ fontSize: 24, opacity: m.status === "locked" ? 0.25 : 1 }}>🎁</span>
+                                      ) : m.points_reward > 0 ? (
+                                        <span style={{ fontSize: 12, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.25)" : passColor, lineHeight: 1, textAlign: "center" as const }}>
+                                          +{m.points_reward}
+                                        </span>
+                                      ) : (
+                                        <span style={{ fontSize: 16, fontWeight: 950, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : passColor }}>
+                                          {m.position}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span style={{ fontSize: 10, color: m.status === "locked" ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", textAlign: "center" as const }}>
+                                      Dia {m.position}
+                                    </span>
+                                  </div>
+                                  {/* Conector — irmão direto, flex: 1 igual entre todos */}
+                                  {isNext && (
+                                    <div style={{
+                                      ...(pass.type === "monthly" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
+                                      height: 6,
+                                      borderRadius: 3,
+                                      marginTop: 36,
+                                      marginLeft: 24,
+                                      marginRight: 24,
+                                      background: nextDone
+                                        ? `color-mix(in srgb, ${passColor} 55%, transparent)`
+                                        : "rgba(255,255,255,0.07)",
+                                      transition: "background 0.3s",
+                                    }} />
+                                  )}
+                                </React.Fragment>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {/* ── Card missão atual ── */}
+                        {pass.missions.length === 0 ? (
+                          <div style={{ padding: "12px 24px 20px", fontSize: 12, color: "var(--gray-500)" }}>Nenhuma missão cadastrada ainda.</div>
+                        ) : !active ? (
+                          <div style={{ padding: "16px 24px 20px", display: "flex", alignItems: "center", gap: 10 }}>
+                            <span style={{ fontSize: 22 }}>🏆</span>
+                            <span style={{ fontSize: 14, fontWeight: 950, color: "#3df28b" }}>Todas as missões concluídas!</span>
+                          </div>
+                        ) : active.unlocks_at ? (
+                          <div style={{ margin: "0 20px 20px", padding: "14px 18px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, display: "flex", alignItems: "center", gap: 14 }}>
+                            <span style={{ fontSize: 28, flexShrink: 0 }}>🔒</span>
+                            <div>
+                              <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Próxima missão disponível em</p>
+                              <p style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 950, color: passColor }}>
+                                {Math.floor((new Date(active.unlocks_at).getTime() - Date.now()) / 3600000)}h{" "}
+                                {Math.floor(((new Date(active.unlocks_at).getTime() - Date.now()) % 3600000) / 60000)}m
+                              </p>
+                              <p style={{ margin: "2px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Renova à meia-noite (BRT) · {active.title}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="ca-mission-card" style={{ margin: "0 20px 20px" }}>
+                            <div className="ca-mission-card-inner" style={{ background: `color-mix(in srgb, ${passColor} 7%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${passColor} 22%, transparent)` }}>
+                              {/* Badges */}
+                              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                                <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, letterSpacing: "0.07em" }}>
+                                  {TYPE_LABEL[pass.type]} · Missão {active.position}/{pass.missions.length}
+                                </span>
+                                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginLeft: "auto" }}>Contrato expira em {expiresIn}</span>
+                              </div>
+                              {/* Título */}
+                              <div>
+                                <p style={{ margin: 0, fontSize: 9, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}>Missão Atual</p>
+                                <p style={{ margin: "4px 0 0", fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{active.title}</p>
+                              </div>
+                              {/* Barra de progresso */}
+                              <div>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 11 }}>
+                                  <span style={{ color: "rgba(255,255,255,0.4)" }}>Progresso</span>
+                                  <span style={{ color: passColor, fontWeight: 950 }}>0 / {active.total}</span>
+                                </div>
+                                <div className="ca-mission-progress-bar">
+                                  <div className="ca-mission-progress-fill" style={{ width: "0%", background: passColor }} />
+                                </div>
+                              </div>
+                              {/* Descrição abaixo da barra */}
+                              {active.description && (
+                                <p style={{ margin: 0, fontSize: 12, color: "var(--paper-dim)", lineHeight: 1.5 }}>{active.description}</p>
+                              )}
+                              {/* Recompensa */}
+                              {active.points_reward > 0 && (
+                                <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
+                                  <Coins size={13} style={{ color: "#ffd400" }} />
+                                  <span style={{ color: "#ffd400", fontWeight: 950 }}>+{active.points_reward.toLocaleString("pt-BR")} pts</span>
+                                  <span style={{ color: "rgba(255,255,255,0.3)" }}>ao completar</span>
+                                  {active.item_reward && <><span style={{ color: "rgba(255,255,255,0.2)" }}>·</span><span style={{ color: "var(--cyan)" }}>🎁 Item especial</span></>}
+                                </div>
+                              )}
+                              {/* Agendamento */}
+                              {(active as any).schedule?.status === "scheduled" ? (
+                                <div style={{ background: `color-mix(in srgb, ${passColor} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${passColor} 25%, transparent)`, borderRadius: 8, padding: "10px 12px", fontSize: 12 }}>
+                                  <p style={{ margin: 0, fontWeight: 950, color: passColor }}>✓ Entrega agendada</p>
+                                  <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.5)" }}>
+                                    {new Date((active as any).schedule.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} in-game
+                                  </p>
+                                  {(active as any).schedule.game_id && <p style={{ margin: "3px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{(active as any).schedule.game_id}</strong></p>}
+                                </div>
+                              ) : (
+                                <button type="button" className="carrinho-checkout-btn" style={{ marginTop: 4 }}
+                                  onClick={() => setScheduleModal({ pass, mission: active })}>
+                                  <Zap size={14} fill="currentColor" /> Agendar Entrega
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab !== "Contratos à Venda" && activeTab !== "Contratos Ativos" && activeTab !== "Contratos Diários" && activeTab !== "Contratos Semanais" && activeTab !== "Histórico" && (
             <div className="contratos-placeholder">
               <h2>Em breve</h2>
               <p>Esta seção está em construção. Novos contratos da categoria &quot;{activeTab}&quot; estarão disponíveis em breve.</p>
             </div>
           )}
+
+          {/* ── Dica do Contrato — rodapé fixo da área principal ── */}
+          <div className="contratos-tip">
+            <div className="contratos-tip-image" style={{ backgroundImage: "url(/assets/bots/arc_wasp.png)" }} />
+            <div>
+              <h2>Dica do Contrato</h2>
+              <p>Contratos do tipo Facção rendem mais reputação para sua facção escolhida. Priorize-os se quiser subir de nível mais rápido entre os Raiders.</p>
+            </div>
+          </div>
         </div>
 
         <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel de contratos">
@@ -1132,19 +1601,21 @@ export default function ContratosPage() {
           <div className="contratos-reputation">
             <div className="contratos-reputation-row">
               <div className="contratos-reputation-value">
-                <span>Reputação</span>
-                <strong>5.250 / 10.000 REP</strong>
+                <span>Sucatas</span>
+                <strong style={{ color: "var(--yellow)" }}>
+                  {userSucatas !== null ? userSucatas.toLocaleString("pt-BR") : "—"} pts
+                </strong>
               </div>
               <div className="contratos-reputation-badge">
-                <span>Mercador</span>
+                <span>Contratos</span>
                 <span className="contratos-reputation-tier">
                   <Shield size={14} fill="currentColor" />
-                  Lendário
+                  {contractStats?.completed ?? 0} concluídos
                 </span>
               </div>
             </div>
             <div className="store-reputation-bar">
-              <span style={{ width: "82.5%" }} />
+              <span style={{ width: `${contractStats && contractStats.total > 0 ? Math.round((contractStats.completed / contractStats.total) * 100) : 0}%` }} />
             </div>
           </div>
 
@@ -1155,19 +1626,19 @@ export default function ContratosPage() {
                 <div className="historico-summary-grid">
                   <div className="historico-summary-stat historico-stat-green">
                     <span className="historico-stat-icon"><Trophy size={18} /></span>
-                    <div><span>Contratos Concluídos</span><strong>128</strong></div>
+                    <div><span>Contratos Concluídos</span><strong>{contractStats?.completed ?? "—"}</strong></div>
                   </div>
                   <div className="historico-summary-stat historico-stat-red">
                     <span className="historico-stat-icon"><XCircle size={18} /></span>
-                    <div><span>Contratos Falhos</span><strong>32</strong></div>
+                    <div><span>Contratos Falhos</span><strong>{contractStats?.failed ?? "—"}</strong></div>
                   </div>
                   <div className="historico-summary-stat historico-stat-blue">
                     <span className="historico-stat-icon"><BarChart2 size={18} /></span>
-                    <div><span>Taxa de Sucesso</span><strong>80%</strong></div>
+                    <div><span>Taxa de Sucesso</span><strong>{contractStats ? `${contractStats.success_rate}%` : "—"}</strong></div>
                   </div>
                   <div className="historico-summary-stat historico-stat-yellow">
                     <span className="historico-stat-icon"><Coins size={18} /></span>
-                    <div><span>Recompensas Recebidas</span><strong>245.750</strong></div>
+                    <div><span>Sucatas do usuário</span><strong>{userSucatas !== null ? userSucatas.toLocaleString("pt-BR") : "—"}</strong></div>
                   </div>
                 </div>
               </div>
@@ -1228,32 +1699,35 @@ export default function ContratosPage() {
                 </div>
               </div>
 
-              <div className="store-side-card contratos-side-fill">
-                <div className="contratos-side-head">
-                  <h2>Próximas Recompensas</h2>
-                  <button type="button" className="contratos-see-all">
-                    Ver Tudo
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-                <div className="contratos-next-rewards">
-                  {nextRewards.map((reward, i) => (
-                    <div key={i} className="contratos-next-reward">
-                      <div className="contratos-next-reward-thumb" style={{ backgroundImage: `url(${reward.image})` }} />
-                      <div className="contratos-next-reward-info">
-                        <strong>{reward.title}</strong>
-                        <span>Ao atingir {reward.threshold} REP</span>
-                        <div className="contratos-bar-row">
-                          <div className="store-reputation-bar">
-                            <span style={{ width: reward.progress }} />
+              {pointRewards.length > 0 && (
+                <div className="store-side-card contratos-side-fill">
+                  <div className="contratos-side-head">
+                    <h2>Próximas Recompensas</h2>
+                  </div>
+                  <div className="contratos-next-rewards">
+                    {pointRewards.filter(r => !r.unlocked).slice(0, 5).map((reward: any) => (
+                      <div key={reward.id} className="contratos-next-reward">
+                        <div className="contratos-next-reward-thumb"
+                          style={{ backgroundImage: reward.item?.icon_url ? `url(${reward.item.icon_url})` : undefined,
+                                   background: reward.item?.icon_url ? undefined : "rgba(255,255,255,0.05)" }} />
+                        <div className="contratos-next-reward-info">
+                          <strong>{reward.item?.name ?? "—"}</strong>
+                          <span>Ao atingir {reward.points_threshold.toLocaleString("pt-BR")} pts</span>
+                          <div className="contratos-bar-row">
+                            <div className="store-reputation-bar">
+                              <span style={{ width: `${reward.progress_pct}%` }} />
+                            </div>
+                            <span>{(userSucatas ?? 0).toLocaleString("pt-BR")} / {reward.points_threshold.toLocaleString("pt-BR")}</span>
                           </div>
-                          <span>{reward.current} / {reward.threshold}</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                    {pointRewards.filter(r => !r.unlocked).length === 0 && (
+                      <p style={{ margin: 0, fontSize: 12, color: "var(--green)", fontWeight: 800 }}>🏆 Todas as recompensas desbloqueadas!</p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {activeTab === "Contratos Semanais" && (
                 <div className="store-side-card contratos-side-fill">
@@ -1286,36 +1760,38 @@ export default function ContratosPage() {
                 </div>
               )}
 
-              {activeTab !== "Contratos Semanais" && (
+              {activeTab !== "Contratos Semanais" && myPasses.length > 0 && (
                 <div className="store-side-card contratos-side-fill">
                   <div className="contratos-side-head">
-                    <h2>Contratos Diários</h2>
-                    <span className="contratos-renew">Renova em: {formatCountdown(secondsLeft, false)}</span>
+                    <h2>Meus Contratos</h2>
+                    <button type="button" className="contratos-see-all" onClick={() => setActiveTab("Contratos Ativos")}>
+                      Ver Todos <ChevronRight size={12} />
+                    </button>
                   </div>
                   <div className="contratos-daily-list">
-                    {dailyContracts.slice(0, 3).map((contract, i) => (
-                      <div key={i} className={`contratos-daily-item${contract.done ? " done" : ""}`}>
-                        <div className="contratos-daily-info">
-                          <strong>{contract.title}</strong>
-                          {contract.done ? (
-                            <div className="contratos-daily-progress-row">
-                              <span className="contratos-daily-count done">{contract.progress} / {contract.total}</span>
-                              <span className="contratos-daily-done">
-                                <Check size={12} />
-                                Concluído
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="contratos-daily-count">{contract.progress} / {contract.total}</span>
-                          )}
+                    {myPasses.slice(0, 3).map(pass => {
+                      const TYPE_COLOR: Record<string, string> = { daily: "#3df28b", weekly: "#ffd400", monthly: "#b477ff" }
+                      const TYPE_LABEL: Record<string, string> = { daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+                      const passColor = TYPE_COLOR[pass.type] ?? "#5fa8ff"
+                      const active = pass.missions.find(m => m.status === "active")
+                      const allDone = pass.missions.length > 0 && !active
+                      return (
+                        <div key={pass.id} className={`contratos-daily-item${allDone ? " done" : ""}`}>
+                          <div className="contratos-daily-info">
+                            <strong style={{ color: passColor }}>{TYPE_LABEL[pass.type]}</strong>
+                            <span style={{ fontSize: 11, color: "var(--paper)", fontWeight: 800 }}>{pass.title}</span>
+                            {allDone ? (
+                              <div className="contratos-daily-progress-row">
+                                <span className="contratos-daily-count done">{pass.total_completed}/{pass.missions.length}</span>
+                                <span className="contratos-daily-done"><Check size={12} />Concluído</span>
+                              </div>
+                            ) : (
+                              <span className="contratos-daily-count">{pass.total_completed} / {pass.missions.length} missões</span>
+                            )}
+                          </div>
                         </div>
-                        <div className="contratos-daily-rewards">
-                          {contract.rewards.slice(0, 2).map((reward, j) => (
-                            <DailyRewardBadge key={j} reward={reward} />
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -1328,6 +1804,241 @@ export default function ContratosPage() {
           <span>Painel</span>
         </button>
       </div>
+
+      {/* ── Modal de agendamento de entrega ── */}
+      {scheduleModal && (
+        <div className="cdm-overlay" onClick={() => { setScheduleModal(null); setSchedDate(""); setSchedTime(""); setSchedMsg("") }}>
+          <div className="cdm-modal" style={{ maxWidth: 480, gridTemplateColumns: "1fr" }} onClick={e => e.stopPropagation()}>
+            <button className="cdm-close" type="button" onClick={() => { setScheduleModal(null); setSchedDate(""); setSchedTime(""); setSchedMsg("") }}>✕</button>
+            <div className="cdm-left" style={{ padding: 24 }}>
+              <h2 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 950 }}>Agendar Entrega</h2>
+              <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--paper-dim)" }}>
+                Missão {scheduleModal.mission.position} — {scheduleModal.mission.title}
+              </p>
+
+              {/* Seleção de data */}
+              <label style={{ display: "grid", gap: 4, marginBottom: 14 }}>
+                <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Data</span>
+                <input type="date" min={new Date().toISOString().slice(0, 10)} value={schedDate}
+                  onChange={async e => {
+                    setSchedDate(e.target.value)
+                    setSchedTime("")
+                    if (!e.target.value) return
+                    const res = await fetch(`/api/trades/available-times?date=${e.target.value}`)
+                    const body = await res.json().catch(() => ({}))
+                    setSchedAvailableTimes(body.times ?? [])
+                  }}
+                  style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 13, borderRadius: 8, font: "inherit", outline: "none", colorScheme: "dark" as const }} />
+              </label>
+
+              {/* Horários disponíveis */}
+              {schedDate && (
+                <div style={{ marginBottom: 14 }}>
+                  <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em", display: "block", marginBottom: 8 }}>Horário disponível</span>
+                  {schedAvailableTimes.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum horário disponível nesta data.</p>
+                  ) : (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {schedAvailableTimes.map(t => (
+                        <button key={t} type="button"
+                          onClick={() => setSchedTime(t)}
+                          style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${schedTime === t ? "var(--green)" : "var(--stroke)"}`, background: schedTime === t ? "rgba(61,242,139,0.12)" : "rgba(255,255,255,0.03)", color: schedTime === t ? "var(--green)" : "var(--paper-dim)", fontSize: 12, fontWeight: 950, cursor: "pointer", font: "inherit" }}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Game ID */}
+              <label style={{ display: "grid", gap: 4, marginBottom: 18 }}>
+                <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Seu Game ID (para o Sucatão te encontrar)</span>
+                <input type="text" placeholder="Ex: SucataoFan#1234" value={schedGameId} onChange={e => setSchedGameId(e.target.value)}
+                  style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 13, borderRadius: 8, font: "inherit", outline: "none" }} />
+              </label>
+
+              {schedMsg && <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 800, color: schedMsg.includes("✓") ? "var(--green)" : "var(--red)" }}>{schedMsg}</p>}
+
+              <button type="button" className="carrinho-checkout-btn"
+                disabled={!schedDate || !schedTime || scheduling}
+                onClick={async () => {
+                  setScheduling(true)
+                  setSchedMsg("")
+                  const res = await fetch(`/api/contratos/passes/missions/${scheduleModal.mission.id}/schedule`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ scheduled_at: `${schedDate}T${schedTime}:00`, game_id: schedGameId }),
+                  })
+                  setScheduling(false)
+                  if (res.ok) {
+                    setSchedMsg("✓ Entrega agendada com sucesso!")
+                    setTimeout(() => { setScheduleModal(null); setSchedDate(""); setSchedTime(""); setSchedMsg(""); loadMyPasses() }, 1800)
+                  } else {
+                    const b = await res.json().catch(() => ({}))
+                    setSchedMsg(b.error ?? "Erro ao agendar.")
+                  }
+                }}>
+                <Zap size={14} fill="currentColor" />
+                {scheduling ? "Agendando..." : schedDate && schedTime ? `Confirmar — ${schedDate.split("-").reverse().join("/")} às ${schedTime}` : "Confirmar horário"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de contrato (2 etapas) ── */}
+      {passModal && (
+        <div className="cdm-overlay" onClick={() => { setPassModal(null); setPassConfirmStep(null) }}>
+          <div className="cdm-modal" style={{ maxWidth: 480, gridTemplateColumns: "1fr" }} onClick={e => e.stopPropagation()}>
+            <button className="cdm-close" type="button" onClick={() => { setPassModal(null); setPassConfirmStep(null) }}>✕</button>
+            <div className="cdm-left" style={{ padding: 24 }}>
+
+              {/* Imagem / header */}
+              {passModal.image_url && (
+                <div className="cdm-hero" style={{ backgroundImage: `url(${passModal.image_url})`, borderRadius: 8, marginBottom: 16 }}>
+                  <div className="cdm-hero-overlay" />
+                  <div className="cdm-hero-content">
+                    <span className="cdm-op-badge">{({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string, string>)[passModal.type] ?? passModal.type}</span>
+                    <h2 className="cdm-title">{passModal.title}</h2>
+                  </div>
+                </div>
+              )}
+              {!passModal.image_url && <h2 style={{ margin: "0 0 8px", fontSize: 20, fontWeight: 950 }}>{passModal.title}</h2>}
+
+              {/* Info do passe */}
+              <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                  {({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string, string>)[passModal.type]} · <strong style={{ color: "var(--paper)" }}>{passModal.missions_count} missões</strong>
+                </span>
+                {passModal.total_points > 0 && (
+                  <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                    Recompensas: <strong style={{ color: "#ffd400" }}>{passModal.total_points.toLocaleString("pt-BR")} pts</strong>
+                  </span>
+                )}
+              </div>
+
+              {passModal.purchased ? (
+                /* Já comprado */
+                <div style={{ textAlign: "center", padding: "16px 0" }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 950, color: "#3df28b" }}>✓ Você já possui este contrato</p>
+                  <button type="button" onClick={() => { setPassModal(null); setPassConfirmStep(null); setActiveTab("Contratos Ativos") }}
+                    style={{ marginTop: 12, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "#3df28b", padding: "10px 24px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit" }}>
+                    Ver Meu Contrato →
+                  </button>
+                </div>
+
+              ) : passConfirmStep === null ? (
+                /* ── Etapa 1: escolha de pagamento ── */
+                <div style={{ display: "grid", gap: 10 }}>
+                  <p style={{ margin: "0 0 6px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Como deseja pagar?</p>
+                  {passModal.price_points > 0 && (
+                    <button type="button"
+                      onClick={() => setPassConfirmStep("points")}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(255,212,0,0.35)", background: "rgba(255,212,0,0.07)", color: "var(--paper)", padding: "14px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", transition: "background 0.15s" }}>
+                      <span>🪙 Comprar com Sucatas</span>
+                      <span style={{ color: "#ffd400", fontWeight: 950 }}>{passModal.price_points.toLocaleString("pt-BR")} pts</span>
+                    </button>
+                  )}
+                  {passModal.price_real > 0 && (
+                    <button type="button"
+                      onClick={() => setPassConfirmStep("cash")}
+                      style={{ display: "flex", justifyContent: "space-between", alignItems: "center", border: "1px solid rgba(61,242,139,0.35)", background: "rgba(61,242,139,0.07)", color: "var(--paper)", padding: "14px 16px", fontSize: 13, fontWeight: 950, cursor: "pointer", borderRadius: 8, font: "inherit", transition: "background 0.15s" }}>
+                      <span>🏦 Pagar com PIX</span>
+                      <span style={{ color: "#3df28b", fontWeight: 950 }}>R$ {Number(passModal.price_real).toFixed(2).replace(".", ",")}</span>
+                    </button>
+                  )}
+                </div>
+
+              ) : (
+                /* ── Etapa 2: confirmação ── */
+                <div>
+                  <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: 16, marginBottom: 16 }}>
+                    <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Resumo da compra</p>
+
+                    <div style={{ display: "grid", gap: 8, fontSize: 13 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--paper-dim)" }}>Contrato</span>
+                        <strong style={{ color: "var(--paper)" }}>{passModal.title}</strong>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ color: "var(--paper-dim)" }}>Tipo</span>
+                        <span style={{ color: "var(--paper)" }}>
+                          {({ daily: "Diário", weekly: "Semanal", monthly: "Mensal" } as Record<string, string>)[passModal.type]} · {passModal.missions_count} missões
+                        </span>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", paddingTop: 8, borderTop: "1px solid rgba(255,255,255,0.07)" }}>
+                        <span style={{ color: "var(--paper-dim)" }}>Valor</span>
+                        <strong style={{ color: passConfirmStep === "points" ? "#ffd400" : "#3df28b", fontSize: 15 }}>
+                          {passConfirmStep === "points"
+                            ? `${passModal.price_points.toLocaleString("pt-BR")} pts`
+                            : `R$ ${Number(passModal.price_real).toFixed(2).replace(".", ",")}`}
+                        </strong>
+                      </div>
+                      {passConfirmStep === "points" && userPoints !== null && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                            <span style={{ color: "var(--gray-500)" }}>Saldo atual</span>
+                            <span style={{ color: userPoints >= passModal.price_points ? "var(--paper)" : "var(--red)", fontWeight: 800 }}>
+                              {userPoints.toLocaleString("pt-BR")} pts
+                            </span>
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
+                            <span style={{ color: "var(--gray-500)" }}>Após a compra</span>
+                            <span style={{ color: userPoints >= passModal.price_points ? "#3df28b" : "var(--red)", fontWeight: 950 }}>
+                              {Math.max(0, userPoints - passModal.price_points).toLocaleString("pt-BR")} pts
+                            </span>
+                          </div>
+                          {userPoints < passModal.price_points && (
+                            <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--red)", fontWeight: 800 }}>
+                              ⚠ Pontos insuficientes
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {passConfirmStep === "points" ? (
+                      <button type="button" className="btn-aceitar"
+                        disabled={buyingId === passModal.id || (userPoints !== null && userPoints < passModal.price_points)}
+                        onClick={async () => {
+                          setBuyingId(passModal.id)
+                          const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "points" }) })
+                          setBuyingId(null)
+                          if (res.ok) { setPassModal(null); setPassConfirmStep(null); await loadPasses(); setActiveTab("Contratos Ativos"); await loadMyPasses() }
+                          else { const b = await res.json().catch(() => ({})); alert(b.error ?? "Erro ao comprar.") }
+                        }}>
+                        <Zap size={14} fill="currentColor" />
+                        {buyingId === passModal.id ? "Confirmando..." : `Confirmar — ${passModal.price_points.toLocaleString("pt-BR")} pts`}
+                      </button>
+                    ) : (
+                      <button type="button" className="btn-aceitar"
+                        disabled={buyingId === passModal.id}
+                        onClick={async () => {
+                          setBuyingId(passModal.id)
+                          const res = await fetch(`/api/contratos/passes/${passModal.id}/buy`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ mode: "cash" }) })
+                          const body = await res.json().catch(() => ({}))
+                          setBuyingId(null)
+                          if (res.ok && body.orderId) window.location.href = `/pagar/${body.orderId}`
+                          else alert(body.error ?? "Erro ao iniciar pagamento.")
+                        }}>
+                        <Zap size={14} fill="currentColor" />
+                        {buyingId === passModal.id ? "Gerando PIX..." : `Confirmar — R$ ${Number(passModal.price_real).toFixed(2).replace(".", ",")}`}
+                      </button>
+                    )}
+                    <button type="button"
+                      onClick={() => setPassConfirmStep(null)}
+                      style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.03)", color: "var(--paper-dim)", padding: "10px 0", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit", letterSpacing: "0.05em" }}>
+                      ← Voltar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

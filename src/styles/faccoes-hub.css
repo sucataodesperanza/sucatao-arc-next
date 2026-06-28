@@ -1,21 +1,20 @@
 .faccoes-hub-page {
   min-height: 100vh;
-  background: var(--bg);
-}
-
-/* Remove padding horizontal e max-width do shell nesta página */
-.content:has(.faccoes-hub-page) {
-  padding-inline: 0;
-}
-
-.content > .faccoes-hub-page {
   max-width: none;
-  margin: 0;
+  background: var(--bg);
+  margin: -52px -24px -72px;
+  padding: 52px 24px 72px;
 }
 
 .faccoes-hub-layout {
   display: flex;
-  padding-right: var(--side-panel-width);
+  margin-left: var(--side-panel-gap);
+  margin-right: calc(var(--side-panel-width) + var(--side-panel-gap));
+  transition: margin-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.faccoes-hub-layout--no-panel {
+  margin-right: var(--side-panel-gap);
 }
 
 .faccoes-hub-main {
@@ -606,101 +605,16 @@
   font-size: 14px;
 }
 
-/* Sidebar (shared store pattern) */
+/* store-side-panel, store-user-card, store-side-card etc.
+   são definidos globalmente em globals.css — não redefinir aqui */
 
-.store-side-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  width: var(--side-panel-width);
-  overflow-y: auto;
-  border-left: 1px solid var(--stroke);
-  background: #03090d;
-  padding: 14px 12px;
-  gap: 0;
+/* Garante que conteúdo interno não expanda o painel além do width fixo */
+.faccoes-hub-page .store-side-panel {
+  overflow-x: hidden;
 }
 
-.store-user-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--stroke);
-  margin-bottom: 10px;
-}
-
-.store-user-avatar {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--surface-3);
-  border: 2px solid var(--stroke-strong);
-  color: var(--paper);
-  font-size: 16px;
-  font-weight: 950;
-}
-
-.store-user-level {
-  position: absolute;
-  bottom: -6px;
-  right: -6px;
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--yellow);
-  border: 2px solid #03090d;
-  color: var(--ink);
-  font-size: 9px;
-  font-weight: 950;
-}
-
-.store-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.store-user-info strong {
-  color: var(--paper);
-  font-size: 14px;
-  font-weight: 950;
-}
-
-.store-user-online {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--green);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.store-user-online-dot {
-  display: block;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--green);
-}
-
-.store-side-card {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px solid var(--stroke);
-  border-radius: 10px;
-  background: #080b15;
+.faccoes-hub-page .store-side-panel * {
+  min-width: 0;
 }
 
 .store-side-card h2 {
@@ -1028,4 +942,278 @@
   .faccoes-hub-war-section {
     grid-template-columns: 1fr;
   }
+}
+
+
+/* ── Panorama ── */
+.faccoes-hub-panorama {
+  background: var(--surface-2);
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+.faccoes-hub-panorama-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+.faccoes-hub-panorama-header h2 { margin: 0 0 4px; font-size: 13px; font-weight: 950; text-transform: uppercase; }
+.faccoes-hub-panorama-header p  { margin: 0; font-size: 12px; color: var(--paper-dim); }
+.faccoes-hub-panorama-body { display: flex; align-items: center; gap: 24px; }
+.faccoes-hub-donut {
+  display: flex; flex-direction: column; align-items: center;
+  width: 140px; height: 140px; border-radius: 50%;
+  border: 8px solid var(--stroke); background: #0a0e16;
+  justify-content: center; flex-shrink: 0;
+}
+.faccoes-hub-donut-label { font-size: 9px; font-weight: 950; text-transform: uppercase; color: var(--gray-500); }
+.faccoes-hub-donut-value { font-size: 16px; font-weight: 950; color: var(--paper); }
+.faccoes-hub-donut-pts   { font-size: 9px; color: var(--gray-500); }
+
+/* ── Rewards carousel ── */
+.faccoes-hub-rewards-section { background: var(--surface-2); border: 1px solid var(--stroke); border-radius: 12px; padding: 20px 24px; }
+.faccoes-hub-rewards-section h2 { margin: 0 0 4px; font-size: 13px; font-weight: 950; text-transform: uppercase; }
+.faccoes-hub-rewards-track { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; margin-top: 14px; }
+.faccoes-hub-reward-card {
+  min-width: 140px; background: rgba(255,255,255,0.03); border: 1px solid var(--stroke);
+  border-radius: 10px; padding: 14px 12px; display: flex; flex-direction: column;
+  align-items: center; gap: 6px; text-align: center; font-size: 11px; color: var(--paper-dim);
+}
+.faccoes-hub-reward-card.current { border-color: var(--yellow); background: rgba(255,212,0,0.06); }
+.faccoes-hub-reward-level { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.faccoes-hub-reward-level span:first-child { font-size: 10px; font-weight: 950; text-transform: uppercase; color: var(--paper); }
+.faccoes-hub-reward-tier  { font-size: 9px; font-weight: 950; text-transform: uppercase; color: var(--yellow); }
+.faccoes-hub-reward-atual { font-size: 8px; background: var(--yellow); color: #000; padding: 2px 6px; border-radius: 4px; font-weight: 950; }
+.faccoes-hub-reward-img   { width: 64px; height: 64px; object-fit: contain; }
+.faccoes-hub-reward-card strong { font-size: 12px; color: var(--paper); }
+.faccoes-hub-reward-rep { font-size: 10px; display: flex; align-items: center; gap: 4px; color: var(--gray-500); }
+
+/* ── Bottom grid (feed + vantagens) ── */
+.faccoes-hub-bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.faccoes-hub-feed-card { background: var(--surface-2); border: 1px solid var(--stroke); border-radius: 12px; padding: 20px 24px; }
+.faccoes-hub-feed-card h2 { margin: 0 0 4px; font-size: 13px; font-weight: 950; text-transform: uppercase; }
+
+/* ── Vantagens ── */
+.faccoes-hub-vantagens { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.faccoes-hub-vantagem {
+  background: color-mix(in srgb, var(--faction-color) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--faction-color) 25%, transparent);
+  border-radius: 10px; padding: 14px 12px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center;
+}
+.faccoes-hub-vantagem-pct   { font-size: 22px; font-weight: 950; color: var(--faction-color); }
+.faccoes-hub-vantagem-label { font-size: 10px; color: var(--paper-dim); line-height: 1.4; }
+
+/* ── Right col (contribuição + objetivos) ── */
+.faccoes-hub-right-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.faccoes-hub-contribution,
+.faccoes-hub-objectives { background: var(--surface-2); border: 1px solid var(--stroke); border-radius: 12px; padding: 20px 24px; }
+.faccoes-hub-contribution h2,
+.faccoes-hub-objectives h2 { margin: 0 0 4px; font-size: 13px; font-weight: 950; text-transform: uppercase; }
+.faccoes-hub-rank-box { text-align: center; margin: 14px 0; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--stroke); }
+.faccoes-hub-rank-label { font-size: 9px; font-weight: 950; text-transform: uppercase; color: var(--gray-500); display: block; }
+.faccoes-hub-rank-num   { font-size: 32px; font-weight: 950; color: var(--paper); display: block; }
+.faccoes-hub-rank-sub   { font-size: 11px; color: var(--gray-500); }
+.faccoes-hub-stats-row  { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.faccoes-hub-stats-row div { background: rgba(255,255,255,0.03); border: 1px solid var(--stroke); border-radius: 8px; padding: 10px; text-align: center; }
+.faccoes-hub-stats-row div span  { font-size: 9px; font-weight: 950; text-transform: uppercase; color: var(--gray-500); display: block; }
+.faccoes-hub-stats-row div strong { font-size: 18px; color: var(--paper); display: block; margin-top: 4px; }
+.faccoes-hub-objective { display: flex; gap: 12px; align-items: flex-start; }
+.faccoes-hub-objective-icon { width: 36px; height: 36px; border-radius: 8px; display: grid; placeItems: center; flex-shrink: 0; place-items: center; }
+
+/* ── Placeholder blocks ── */
+.faccoes-hub-placeholder-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  border-radius: 12px;
+  border: 2px dashed rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.02);
+}
+.faccoes-hub-placeholder-block span {
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ── Split row: placeholder (esq) + card (dir) ── */
+.faccoes-hub-split-row {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 16px;
+  align-items: stretch;
+}
+.faccoes-hub-split-row .faccoes-hub-placeholder-block {
+  min-height: 240px;
+}
+
+/* ── Banner de informações da facção ── */
+.faction-info-banner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #070b13;
+  border: 1px solid color-mix(in srgb, var(--faction-color) 20%, transparent);
+  gap: 0;
+}
+
+.faction-info-banner-glow {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 60% 100% at 80% 50%, color-mix(in srgb, var(--faction-color) 18%, transparent) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 80% at 95% 50%, color-mix(in srgb, var(--faction-color) 10%, transparent) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.faction-info-banner-left {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 24px 16px;
+  max-width: 52%;
+}
+
+.faction-info-banner-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.faction-info-banner-icon {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px var(--faction-color));
+  flex-shrink: 0;
+}
+
+.faction-info-banner-name {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 950;
+  text-transform: uppercase;
+  color: var(--paper);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+.faction-info-banner-tagline {
+  margin: 4px 0 0;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faction-color);
+}
+
+.faction-info-banner-desc {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.6;
+}
+
+.faction-info-banner-btn {
+  align-self: flex-start;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  color: var(--paper);
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+.faction-info-banner-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.35);
+}
+
+/* Stats row */
+.faction-info-banner-stats {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.faction-info-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 18px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+.faction-info-stat-card:last-child { border-right: none; }
+
+.faction-info-stat-label {
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.4);
+}
+
+.faction-info-stat-value {
+  font-size: 28px;
+  font-weight: 950;
+  color: var(--paper);
+  line-height: 1.1;
+}
+
+.faction-info-stat-badge {
+  font-size: 10px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.faction-info-stat-bar {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+.faction-info-stat-bar div {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.faction-info-stat-bar-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+}
+
+.faction-info-stat-sub {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.faction-info-stat-objective {
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
 }

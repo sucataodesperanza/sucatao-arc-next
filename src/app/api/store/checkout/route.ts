@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createMercadoPagoPixPayment } from "@/lib/mercadopago"
 import { isValidCpf } from "@/lib/cpf"
 import { addItemsToInventory } from "@/lib/inventory"
+import { logEconomy } from "@/lib/economy"
 
 type CheckoutItem = {
   itemId: string
@@ -78,7 +79,8 @@ export async function POST(request: NextRequest) {
   const result: { points?: number; pointsOrderId?: string; cashOrderId?: string } = {}
 
   if (pointsItems.length > 0) {
-    const pointsCost = pointsItems.reduce((sum, i) => sum + Math.round(i.value * 24) * i.quantity, 0)
+    // Usa price_points do estoque se disponível, fallback para value × 24
+    const pointsCost = pointsItems.reduce((sum, i) => sum + ((i as any).pricePoints ? (i as any).pricePoints * i.quantity : Math.round(i.value * 24) * i.quantity), 0)
 
     const currentPoints = profile.points ?? 0
     if (currentPoints < pointsCost) {
@@ -134,6 +136,11 @@ export async function POST(request: NextRequest) {
 
     // Adiciona itens ao inventário do usuário (compra com pontos é imediata)
     await addItemsToInventory(user.id, pointsItems, "points")
+
+    // Registra no economy_logs
+    for (const item of pointsItems) {
+      await logEconomy({ player_id: user.id, action: "buy", value: Math.round(item.value * 24) * item.quantity, currency: "points", item_id: item.itemId, item_qty: item.quantity, source: "shop", source_id: order?.id })
+    }
   }
 
   if (cashItems.length > 0) {

@@ -10,9 +10,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const body = await request.json().catch(() => ({}))
 
   const update: Record<string, unknown> = {}
-  if (typeof body.value === "number") update.value = body.value
-  if (typeof body.quantity === "number") update.quantity = body.quantity
-  if (typeof body.featured === "boolean") update.featured = body.featured
+  if (typeof body.value        === "number")  update.value        = body.value
+  if (typeof body.quantity     === "number")  update.quantity     = body.quantity
+  if (typeof body.featured     === "boolean") update.featured     = body.featured
+  if (typeof body.price_points === "number")  update.price_points = body.price_points
+  if (typeof body.price_cash   === "number")  update.price_cash   = body.price_cash
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ error: "Nenhum campo válido para atualizar." }, { status: 400 })

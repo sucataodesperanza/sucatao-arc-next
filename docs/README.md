@@ -8,7 +8,7 @@ Documentação técnica e funcional das telas do site ARC Raiders.
 docs/
 ├── telas/
 │   ├── publicas/    → 15 telas acessíveis pelos usuários
-│   └── admin/       → 9 telas do painel administrativo
+│   └── admin/       → 13 telas do painel administrativo
 └── apis/
     ├── trades.md    → endpoints do sistema de trades
     └── inventory.md → endpoints do inventário
@@ -25,14 +25,13 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | 1 | [Início](telas/publicas/inicio.md) | `/` | trades, profiles |
 | 2 | [Loja](telas/publicas/loja.md) | `/loja` | catalog_items, stock_items, reward_items, profiles |
 | 3 | [Inventário](telas/publicas/inventario.md) | `/inventario` | user_inventory, inventory_history, profiles |
-| 4 | [Trades](telas/publicas/trades.md) | `/trades` | hardcoded (migração pendente) |
-| 5 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
-| 6 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
-| 7 | [Reciclagem](telas/publicas/reciclagem.md) | `/reciclagem` | arc-data (local) |
-| 8 | [Mapas](telas/publicas/mapas.md) | `/mapas` | arc-data, map-markers |
-| 9 | [Facções](telas/publicas/faccoes.md) | `/faccoes` | hardcoded |
-| 10 | [Contratos](telas/publicas/contratos.md) | `/contratos` | hardcoded |
-| — | [ARC Intel](telas/publicas/arcs.md) | `/arcs` | arc-data (local) |
+| 4 | [Trades](telas/publicas/trades.md) | `/trades` | trades, trade_acceptances, trade_settings |
+| 5 | [Facções — Seleção](telas/publicas/faccoes.md) | `/faccoes` | factions, user_factions, faction_activity, Storage `faction-icons` |
+| — | [Facções — Visão Geral](telas/publicas/faccoes-visao-geral.md) | `/faccoes/visao-geral` | factions, user_factions, user_faction_activity, profiles |
+| 6 | [Contratos](telas/publicas/contratos.md) | `/contratos` | contracts, user_contracts, contract_groups, contract_group_missions, user_mission_completions, user_contract_group_purchases |
+| 7 | [Crafting](telas/publicas/crafting.md) | `/crafting` | catalog_items |
+| 9 | [Mapas](telas/publicas/mapas.md) | `/mapas` | maps, map_markers, markerCategories (local) |
+| 10 | [Arcpedia](telas/publicas/arcpedia.md) | `/arcpedia` | arcs |
 | — | [Meu Perfil](telas/publicas/perfil.md) | `/perfil` | profiles, Storage |
 | — | [Perfil Público](telas/publicas/perfil-publico.md) | `/perfil/[id]` | profiles, seller_inventory |
 | — | [Carrinho](telas/publicas/carrinho.md) | `/carrinho` | profiles, CartContext |
@@ -47,7 +46,10 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | [Catálogo](telas/admin/catalogo.md) | `/admin/catalogo` | catalog_items |
 | [Estoque](telas/admin/estoque.md) | `/admin/estoque` | stock_items, catalog_items |
 | [Trades](telas/admin/trades.md) | `/admin/trades` | trades, trade_acceptances, trade_settings |
+| [Contratos](telas/admin/contratos.md) | `/admin/contratos` | contracts, user_contracts, Storage `contract-images` |
+| [Mapas](telas/admin/mapas.md) | `/admin/mapas` | maps, map_markers |
 | [Crafting](telas/admin/crafting.md) | `/admin/crafting` | catalog_items |
+| [Facções](telas/admin/faccoes.md) | `/admin/faccoes` | factions, user_factions, faction_activity |
 | [Arcpedia](telas/admin/arcpedia.md) | `/admin/arcpedia` | arcs |
 | [Cupons](telas/admin/cupons.md) | `/admin/cupons` | coupons |
 | [Loot Boxes](telas/admin/loot-boxes.md) | `/admin/loot-boxes` | loot_boxes |
@@ -61,10 +63,23 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `catalog_items` | Catálogo de itens (sincronizado via MetaForge) |
 | `stock_items` | Estoque da loja (subset do catálogo à venda) |
 | `arcs` | Inimigos ARC (sincronizados via MetaForge) |
+| `factions` | Facções disponíveis (nome, tagline, descrição, cor, icon_url, bonuses JSONB, attributes JSONB, position) |
+| `user_factions` | Filiação do usuário a uma facção (UNIQUE user_id — escolha permanente) |
+| `faction_activity` | Feed global de atividades das facções (gerenciado pelo admin via `/admin/faccoes`) |
+| `user_faction_activity` | Atividades por usuário dentro da facção (geradas pelo sistema: join, contratos, entregas) |
 | `trades` | Trades criados pelo Sucatão (pontos × item desejado) |
 | `trade_acceptances` | Registro de aceitações de trade (scheduled_at, game_id, status) — 1 ativa por trade |
 | `trade_settings` | Singleton com horário de funcionamento dos trades (operating_hours_start/end) |
 | `reward_items` | Itens de recompensa (gift cards, merch, sorteios) |
+| `contracts` | Contratos individuais (tipo, tier, recompensas, sub-objetivos e inimigos como JSONB) |
+| `user_contracts` | Progresso e status do usuário por contrato individual (UNIQUE user_id+contract_id) |
+| `contract_point_rewards` | Recompensas (catalog_items) desbloqueadas ao atingir X pontos acumulados |
+| `maps` | Mapas do jogo (nome, label, descrição, image_url, status, index) — seed do arc-data.js |
+| `map_markers` | Marcadores em cada mapa (tipo, x/y %, título, nota, active) |
+| `contract_groups` | Contratos sequenciais (diário/semanal/mensal) com preço em pts e R$ |
+| `contract_group_missions` | Missões de cada contrato sequencial (posição, pontos, item_reward JSONB) |
+| `user_mission_completions` | Missões concluídas por usuário (limite 1/dia para weekly e monthly) |
+| `user_contract_group_purchases` | Compras de contratos sequenciais (UNIQUE user_id+group_id) |
 | `user_inventory` | Inventário do jogador (`user_id + item_id FK → catalog_items + quantity`) |
 | `inventory_history` | Log append-only de cada evento de aquisição de item |
 | `orders` | Pedidos dos usuários |
@@ -79,6 +94,8 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 |---|---|---|
 | `avatars` | Público · upload restrito ao próprio usuário | Upload de foto de perfil |
 | `reward-images` | Público · upload restrito a admins | Imagens dos itens de recompensa |
+| `faction-icons` | Público · upload restrito a admins | Ícones das facções (override do `/assets/faccoes/` estático) |
+| `contract-images` | Público · upload restrito a admins | Imagens de contratos individuais e sequenciais |
 
 ## Infraestrutura Admin
 
@@ -106,5 +123,5 @@ const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
 
 | Arquivo | Conteúdo | Usado em |
 |---|---|---|
-| `src/data/arc-data.js` | 567 itens, 17 bots, 7 mapas | arcs, arcpedia, mapas, reciclagem, home |
+| `src/data/arc-data.js` | 567 itens, 17 bots | arcpedia, home |
 | `src/data/map-markers.js` | Marcadores de mapa por categoria | /mapas |

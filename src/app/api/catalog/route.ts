@@ -11,7 +11,7 @@ export async function GET() {
   // em algumas versões do PostgREST mesmo quando a RLS passa.
   const { data, error } = await supabase
     .from("stock_items")
-    .select("value, quantity, featured, catalog_items!inner(id, name, description, item_type, rarity, weight_kg, stack_size, icon_url, is_weapon, is_blueprint, is_craftable, is_recyclable)")
+    .select("value, quantity, featured, price_points, price_cash, catalog_items!inner(id, name, description, item_type, rarity, weight_kg, stack_size, icon_url, is_weapon, is_blueprint, is_craftable, is_recyclable)")
     .returns<StockJoinRow[]>()
 
   if (error) {

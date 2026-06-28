@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
-    .select("id, user_id, status, payment_status, payment_reference, items")
+    .select("id, user_id, status, payment_status, payment_reference, items, pass_group_id")
     .eq("id", orderId)
     .single()
 
@@ -66,12 +66,24 @@ export async function POST(request: NextRequest) {
     await supabase.from("orders").update(updates).eq("id", orderId)
 
     // Adiciona ao inventário APENAS quando o status muda para "paid" pela primeira vez
-    // (order.payment_status é o valor ANTES do update)
-    if (updates.payment_status === "paid" && order.payment_status !== "paid" && Array.isArray(order.items)) {
-      const inventoryItems = (order.items as Array<{ itemId?: string; quantity?: number }>)
-        .filter(i => i.itemId)
-        .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
-      await addItemsToInventory(order.user_id as string, inventoryItems, "pix")
+    if (updates.payment_status === "paid" && order.payment_status !== "paid") {
+      const passGroupId = (order as { pass_group_id?: string | null }).pass_group_id
+      if (passGroupId) {
+        // Passe comprado via PIX → ativa para o usuário
+        const { createAdminClient } = await import("@/lib/supabase/admin")
+        const admin = createAdminClient()
+        await admin.from("user_contract_group_purchases").upsert({
+          user_id: order.user_id as string, group_id: passGroupId,
+          payment_method: "pix", order_id: orderId,
+        }, { onConflict: "user_id,group_id" })
+      } else if (Array.isArray(order.items)) {
+        const inventoryItems = (order.items as Array<{ itemId?: string; quantity?: number; source?: string }>)
+          .filter(i => i.itemId && i.source !== "pass")
+          .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
+        if (inventoryItems.length > 0) {
+          await addItemsToInventory(order.user_id as string, inventoryItems, "pix")
+        }
+      }
     }
   }
 

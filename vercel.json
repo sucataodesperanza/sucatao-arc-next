@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-sync",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/admin/contratos/schedules/notify-expiring",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

@@ -438,7 +438,7 @@ export default function LojaPage() {
                       Atualiza em breve
                     </span>
                   </h2>
-                  <Link href="/loja" className="store-see-all">
+                  <Link href="/loja" className="store-see-all" onClick={() => setActiveTab("itens")}>
                     Ver todos os itens
                     <ArrowRight size={14} />
                   </Link>
