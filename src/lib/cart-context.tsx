@@ -10,6 +10,8 @@ export type CartItem = {
   type?: string
   rarity?: string
   value: number
+  pricePoints?: number
+  priceCash?: number
   weightKg?: number
   image?: string
   mode: CartMode

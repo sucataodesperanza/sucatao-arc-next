@@ -41,8 +41,8 @@ export default function CarrinhoPage() {
   const pointsItems = cart.items.filter(i => i.mode === "points")
   const cashItems   = cart.items.filter(i => i.mode === "cash")
 
-  const pointsTotal = pointsItems.reduce((sum, i) => sum + Math.round(i.value * 24) * i.quantity, 0)
-  const cashTotal   = cashItems.reduce((sum, i) => sum + i.value * i.quantity, 0)
+  const pointsTotal = pointsItems.reduce((sum, i) => sum + (i.pricePoints ?? Math.round(i.value * 24)) * i.quantity, 0)
+  const cashTotal   = cashItems.reduce((sum, i) => sum + (i.priceCash ?? i.value) * i.quantity, 0)
   const totalItems  = cart.items.reduce((s, i) => s + i.quantity, 0)
 
   const insufficientPoints = pointsItems.length > 0 && pointsTotal > points
