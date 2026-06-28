@@ -78,6 +78,7 @@ export default function MapasPage() {
         <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.2em", color: "var(--cyan)", opacity: 0.7 }}>Em Breve</span>
         <h2 style={{ margin: 0, fontSize: 32, fontWeight: 950, textTransform: "uppercase", color: "var(--paper)" }}>Mapas</h2>
         <p style={{ margin: 0, fontSize: 14, color: "var(--paper-dim)", textAlign: "center", maxWidth: 340 }}>O visualizador de mapas interativo está sendo preparado. Em breve você poderá explorar todos os mapas do jogo.</p>
+        <button type="button" onClick={() => history.back()} style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "var(--paper)", padding: "10px 20px", fontSize: 13, fontWeight: 800, cursor: "pointer", borderRadius: 6, font: "inherit" }}>← Voltar</button>
       </div>
       <div className={`store-layout${panelOpen ? "" : " store-layout--no-panel"}`}>
         <div className="mapas-main">

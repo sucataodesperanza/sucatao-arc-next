@@ -93,6 +93,7 @@ export default function RankingsPage() {
         <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.2em", color: "var(--cyan)", opacity: 0.7 }}>Em Breve</span>
         <h2 style={{ margin: 0, fontSize: 32, fontWeight: 950, textTransform: "uppercase", color: "var(--paper)" }}>Rankings</h2>
         <p style={{ margin: 0, fontSize: 14, color: "var(--paper-dim)", textAlign: "center", maxWidth: 340 }}>O sistema de rankings está sendo preparado. Em breve você poderá competir com outros Raiders.</p>
+        <button type="button" onClick={() => history.back()} style={{ marginTop: 8, display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.15)", background: "rgba(255,255,255,0.06)", color: "var(--paper)", padding: "10px 20px", fontSize: 13, fontWeight: 800, cursor: "pointer", borderRadius: 6, font: "inherit" }}>← Voltar</button>
       </div>
       <div className="rankings-layout">
         <div className="rankings-main">
