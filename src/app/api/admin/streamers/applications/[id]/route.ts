@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const admin = createAdminClient()
   const { data: app } = await admin
     .from("streamer_applications")
-    .select("*, profiles(name)")
+    .select("*")
     .eq("id", id)
     .single()
 
