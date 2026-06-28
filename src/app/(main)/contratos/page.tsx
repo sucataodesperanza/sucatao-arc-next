@@ -566,6 +566,13 @@ export default function ContratosPage() {
   const [loadingPasses, setLoadingPasses] = useState(false)
   const [buyingId, setBuyingId]   = useState<string | null>(null)
   const [passModal, setPassModal]         = useState<ContractPass | null>(null)
+  const [scheduleModal, setScheduleModal] = useState<{ pass: Pass; mission: Pass["missions"][0] } | null>(null)
+  const [schedAvailableTimes, setSchedAvailableTimes] = useState<string[]>([])
+  const [schedDate, setSchedDate]         = useState("")
+  const [schedTime, setSchedTime]         = useState("")
+  const [schedGameId, setSchedGameId]     = useState("")
+  const [scheduling, setScheduling]       = useState(false)
+  const [schedMsg, setSchedMsg]           = useState("")
   const [userSucatas, setUserSucatas]     = useState<number | null>(null)
   const [contractStats, setContractStats] = useState<{ completed: number; failed: number; expired: number; total: number; success_rate: number } | null>(null)
   const [pointRewards, setPointRewards]  = useState<any[]>([])
@@ -1545,6 +1552,21 @@ export default function ContratosPage() {
                                   {active.item_reward && <><span style={{ color: "rgba(255,255,255,0.2)" }}>·</span><span style={{ color: "var(--cyan)" }}>🎁 Item especial</span></>}
                                 </div>
                               )}
+                              {/* Agendamento */}
+                              {(active as any).schedule?.status === "scheduled" ? (
+                                <div style={{ background: `color-mix(in srgb, ${passColor} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${passColor} 25%, transparent)`, borderRadius: 8, padding: "10px 12px", fontSize: 12 }}>
+                                  <p style={{ margin: 0, fontWeight: 950, color: passColor }}>✓ Entrega agendada</p>
+                                  <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.5)" }}>
+                                    {new Date((active as any).schedule.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} in-game
+                                  </p>
+                                  {(active as any).schedule.game_id && <p style={{ margin: "3px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{(active as any).schedule.game_id}</strong></p>}
+                                </div>
+                              ) : (
+                                <button type="button" className="carrinho-checkout-btn" style={{ marginTop: 4 }}
+                                  onClick={() => setScheduleModal({ pass, mission: active })}>
+                                  <Zap size={14} fill="currentColor" /> Agendar Entrega
+                                </button>
+                              )}
                             </div>
                           </div>
                         )}
@@ -1782,6 +1804,87 @@ export default function ContratosPage() {
           <span>Painel</span>
         </button>
       </div>
+
+      {/* ── Modal de agendamento de entrega ── */}
+      {scheduleModal && (
+        <div className="cdm-overlay" onClick={() => { setScheduleModal(null); setSchedDate(""); setSchedTime(""); setSchedMsg("") }}>
+          <div className="cdm-modal" style={{ maxWidth: 480, gridTemplateColumns: "1fr" }} onClick={e => e.stopPropagation()}>
+            <button className="cdm-close" type="button" onClick={() => { setScheduleModal(null); setSchedDate(""); setSchedTime(""); setSchedMsg("") }}>✕</button>
+            <div className="cdm-left" style={{ padding: 24 }}>
+              <h2 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 950 }}>Agendar Entrega</h2>
+              <p style={{ margin: "0 0 18px", fontSize: 13, color: "var(--paper-dim)" }}>
+                Missão {scheduleModal.mission.position} — {scheduleModal.mission.title}
+              </p>
+
+              {/* Seleção de data */}
+              <label style={{ display: "grid", gap: 4, marginBottom: 14 }}>
+                <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Data</span>
+                <input type="date" min={new Date().toISOString().slice(0, 10)} value={schedDate}
+                  onChange={async e => {
+                    setSchedDate(e.target.value)
+                    setSchedTime("")
+                    if (!e.target.value) return
+                    const res = await fetch(`/api/trades/available-times?date=${e.target.value}`)
+                    const body = await res.json().catch(() => ({}))
+                    setSchedAvailableTimes(body.times ?? [])
+                  }}
+                  style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 13, borderRadius: 8, font: "inherit", outline: "none", colorScheme: "dark" as const }} />
+              </label>
+
+              {/* Horários disponíveis */}
+              {schedDate && (
+                <div style={{ marginBottom: 14 }}>
+                  <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em", display: "block", marginBottom: 8 }}>Horário disponível</span>
+                  {schedAvailableTimes.length === 0 ? (
+                    <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum horário disponível nesta data.</p>
+                  ) : (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                      {schedAvailableTimes.map(t => (
+                        <button key={t} type="button"
+                          onClick={() => setSchedTime(t)}
+                          style={{ padding: "6px 12px", borderRadius: 6, border: `1px solid ${schedTime === t ? "var(--green)" : "var(--stroke)"}`, background: schedTime === t ? "rgba(61,242,139,0.12)" : "rgba(255,255,255,0.03)", color: schedTime === t ? "var(--green)" : "var(--paper-dim)", fontSize: 12, fontWeight: 950, cursor: "pointer", font: "inherit" }}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Game ID */}
+              <label style={{ display: "grid", gap: 4, marginBottom: 18 }}>
+                <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", letterSpacing: "0.06em" }}>Seu Game ID (para o Sucatão te encontrar)</span>
+                <input type="text" placeholder="Ex: SucataoFan#1234" value={schedGameId} onChange={e => setSchedGameId(e.target.value)}
+                  style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 13, borderRadius: 8, font: "inherit", outline: "none" }} />
+              </label>
+
+              {schedMsg && <p style={{ margin: "0 0 12px", fontSize: 12, fontWeight: 800, color: schedMsg.includes("✓") ? "var(--green)" : "var(--red)" }}>{schedMsg}</p>}
+
+              <button type="button" className="carrinho-checkout-btn"
+                disabled={!schedDate || !schedTime || scheduling}
+                onClick={async () => {
+                  setScheduling(true)
+                  setSchedMsg("")
+                  const res = await fetch(`/api/contratos/passes/missions/${scheduleModal.mission.id}/schedule`, {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ scheduled_at: `${schedDate}T${schedTime}:00`, game_id: schedGameId }),
+                  })
+                  setScheduling(false)
+                  if (res.ok) {
+                    setSchedMsg("✓ Entrega agendada com sucesso!")
+                    setTimeout(() => { setScheduleModal(null); setSchedDate(""); setSchedTime(""); setSchedMsg(""); loadMyPasses() }, 1800)
+                  } else {
+                    const b = await res.json().catch(() => ({}))
+                    setSchedMsg(b.error ?? "Erro ao agendar.")
+                  }
+                }}>
+                <Zap size={14} fill="currentColor" />
+                {scheduling ? "Agendando..." : schedDate && schedTime ? `Confirmar — ${schedDate.split("-").reverse().join("/")} às ${schedTime}` : "Confirmar horário"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Modal de contrato (2 etapas) ── */}
       {passModal && (

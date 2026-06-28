@@ -909,6 +909,98 @@ function PassesSection() {
   )
 }
 
+/* ── Seção de agendamentos de entrega ── */
+function SchedulesSection() {
+  const toast = useToast()
+  const [schedules, setSchedules] = useState<any[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [confirming, setConfirming] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true)
+    const res = await fetch("/api/admin/contratos/schedules")
+    const body = await res.json().catch(() => ({}))
+    setSchedules(body.schedules ?? [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  async function confirm(id: string) {
+    setConfirming(id)
+    const res = await fetch(`/api/admin/contratos/schedules/${id}/confirm`, { method: "POST" })
+    setConfirming(null)
+    if (res.ok) {
+      const body = await res.json()
+      toast.success(`✓ Entrega confirmada! ${body.points_credited > 0 ? `${body.points_credited} pts creditados.` : ""} ${body.item_credited ? `Item "${body.item_credited}" adicionado ao inventário.` : ""}`)
+      await load()
+    } else {
+      const body = await res.json().catch(() => ({}))
+      toast.error(body.error ?? "Erro ao confirmar entrega.")
+    }
+  }
+
+  const STATUS_COLOR: Record<string, string> = { scheduled: "var(--cyan)", pending: "var(--yellow)", confirmed: "var(--green)", expired: "var(--gray-500)", cancelled: "var(--red)" }
+
+  return (
+    <div className="utility-panel" style={{ marginBottom: 16 }}>
+      <div className="utility-panel-head">
+        <strong>Agendamentos de Entrega</strong>
+        <small>Missões de contratos sequenciais aguardando confirmação</small>
+      </div>
+      {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+          <thead>
+            <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
+              {["Usuário", "Game ID", "Contrato", "Missão", "Horário", "Prazo", "Status", "Ação"].map(h => (
+                <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.map(s => {
+              const mission = s.contract_group_missions as { position: number; title: string; points_reward: number; item_reward: any } | null
+              const group   = s.contract_groups as { title: string; type: string } | null
+              const isOverdue = s.scheduled_at && new Date(s.scheduled_at) < new Date()
+              return (
+                <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <td style={{ padding: "8px", fontWeight: 800 }}>{s.user_name}</td>
+                  <td style={{ padding: "8px", fontFamily: "monospace", fontSize: 11, color: "var(--cyan)" }}>{s.game_id ?? "—"}</td>
+                  <td style={{ padding: "8px" }}><span style={{ fontSize: 10, opacity: 0.7 }}>{group?.type?.toUpperCase()}</span><br />{group?.title ?? "—"}</td>
+                  <td style={{ padding: "8px" }}>Dia {mission?.position} — {mission?.title ?? "—"}<br />
+                    {mission?.points_reward ? <span style={{ color: "var(--yellow)", fontSize: 10 }}>{mission.points_reward} pts</span> : null}
+                    {mission?.item_reward ? <span style={{ color: "var(--cyan)", fontSize: 10 }}> 🎁 {mission.item_reward.item_name}</span> : null}
+                  </td>
+                  <td style={{ padding: "8px", color: isOverdue ? "var(--red)" : "var(--paper)", fontSize: 11, whiteSpace: "nowrap" }}>
+                    {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : <em style={{ color: "var(--gray-500)" }}>Não agendado</em>}
+                  </td>
+                  <td style={{ padding: "8px", fontSize: 11, color: new Date(s.expires_at) < new Date() ? "var(--red)" : "var(--gray-500)", whiteSpace: "nowrap" }}>
+                    {new Date(s.expires_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    <span style={{ fontSize: 10, fontWeight: 950, color: STATUS_COLOR[s.status] ?? "var(--muted)" }}>{s.status.toUpperCase()}</span>
+                  </td>
+                  <td style={{ padding: "8px" }}>
+                    {s.status === "scheduled" && (
+                      <button type="button" onClick={() => confirm(s.id)} disabled={confirming === s.id}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "5px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: confirming === s.id ? 0.6 : 1 }}>
+                        <CheckCircle size={11} /> {confirming === s.id ? "..." : "Confirmar"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
+            {schedules.length === 0 && (
+              <tr><td colSpan={8} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum agendamento pendente.</td></tr>
+            )}
+          </tbody>
+        </table>
+      )}
+    </div>
+  )
+}
+
 export default function AdminContratosPage() {
   return (
     <div>
@@ -916,6 +1008,7 @@ export default function AdminContratosPage() {
         <p style={{ margin: 0, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--cyan)", opacity: 0.7 }}>Painel Administrativo</p>
         <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 950, textTransform: "uppercase" }}>CONTRATOS</h1>
       </div>
+      <SchedulesSection />
       <ContratosSection />
       <AcceitancesSection />
       <PassesSection />

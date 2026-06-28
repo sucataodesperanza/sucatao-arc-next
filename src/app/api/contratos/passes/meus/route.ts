@@ -54,6 +54,15 @@ export async function GET() {
     }
   }
 
+  // Agendamentos do usuário
+  const allMissionIds = (missions ?? []).map(m => m.id)
+  const { data: schedules } = allMissionIds.length > 0 ? await supabase
+    .from("contract_mission_schedules")
+    .select("id, mission_id, scheduled_at, game_id, status, expires_at")
+    .eq("user_id", user.id)
+    .in("mission_id", allMissionIds) : { data: [] }
+  const scheduleMap = Object.fromEntries((schedules ?? []).map(s => [s.mission_id, s]))
+
   const passes: Pass[] = generalPurchases.map(p => {
     const g = p.contract_groups as unknown as { id: string; title: string; description: string; type: string; starts_at: string; expires_at: string } | null
     if (!g) return null
@@ -73,6 +82,7 @@ export async function GET() {
         total: m.total, points_reward: m.points_reward, item_reward: m.item_reward as MissionReward,
         completed: done, completed_at: done ? (completedAtMap[m.id] ?? null) : null, status,
         unlocks_at: (status === "active" && blockedByDailyLimit) ? nextMidnightUtc.toISOString() : null,
+        schedule: status === "active" ? (scheduleMap[m.id] ?? null) : null,
       }
     })
 

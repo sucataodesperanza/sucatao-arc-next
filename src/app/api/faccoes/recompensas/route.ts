@@ -3,6 +3,14 @@ import { createClient } from "@/lib/supabase/server"
 
 export type MissionReward = { item_name: string; item_image: string; item_qty: number } | null
 
+export type MissionSchedule = {
+  id: string
+  scheduled_at: string | null
+  game_id: string | null
+  status: string
+  expires_at: string
+} | null
+
 export type Mission = {
   id: string
   position: number
@@ -17,6 +25,7 @@ export type Mission = {
   // derivado
   status: "completed" | "active" | "locked"
   unlocks_at: string | null  // quando a missão ativa fica disponível (null = já disponível)
+  schedule: MissionSchedule   // agendamento da missão ativa
 }
 
 export type Pass = {
@@ -73,6 +82,15 @@ export async function GET() {
     .eq("user_id", user.id)
     .in("group_id", groupIds)
 
+  // Agendamentos do usuário
+  const missionIds = (missions ?? []).map(m => m.id)
+  const { data: schedules } = missionIds.length > 0 ? await supabase
+    .from("contract_mission_schedules")
+    .select("id, mission_id, scheduled_at, game_id, status, expires_at")
+    .eq("user_id", user.id)
+    .in("mission_id", missionIds) : { data: [] }
+  const scheduleMap = Object.fromEntries((schedules ?? []).map(s => [s.mission_id, s]))
+
   const completedSet = new Set((completions ?? []).map(c => c.mission_id))
   const completedAtMap = Object.fromEntries((completions ?? []).map(c => [c.mission_id, c.completed_at]))
 
@@ -124,10 +142,10 @@ export async function GET() {
         completed:     done,
         completed_at:  done ? (completedAtMap[m.id] ?? null) : null,
         status,
-        // unlocks_at: se a missão é "active" mas o limite diário bloqueou, informa quando libera
         unlocks_at: (status === "active" && blockedByDailyLimit)
           ? nextMidnightUtc.toISOString()
           : null,
+        schedule: status === "active" ? (scheduleMap[m.id] ?? null) : null,
       }
     })
 
