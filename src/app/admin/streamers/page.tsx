@@ -5,9 +5,8 @@ import { BadgeCheck, Check, Plus, Trash2, X } from "lucide-react"
 import { useToast } from "@/components/admin-notifications"
 
 type Application = {
-  id: string; nickname: string; platform: string; channel_url: string
+  id: string; user_id: string; nickname: string; platform: string; channel_url: string
   message: string; status: string; created_at: string
-  profiles: { name: string | null; email: string | null } | null
 }
 
 type Streamer = {
@@ -113,7 +112,7 @@ export default function AdminStreamersPage() {
                       </div>
                       <a href={app.channel_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "var(--cyan)", textDecoration: "none", display: "block", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{app.channel_url}</a>
                       {app.message && <p style={{ margin: 0, fontSize: 12, color: "var(--paper-dim)", fontStyle: "italic" }}>"{app.message}"</p>}
-                      <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{(app.profiles as any)?.name ?? "—"} · {new Date(app.created_at).toLocaleDateString("pt-BR")}</p>
+                      <p style={{ margin: "4px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{new Date(app.created_at).toLocaleDateString("pt-BR")}</p>
                     </div>
                     {app.status === "pending" && (
                       <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
