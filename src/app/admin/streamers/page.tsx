@@ -69,7 +69,11 @@ export default function AdminStreamersPage() {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action }),
     })
     setActing(null)
-    if (res.ok) { toast.success(action === "approve" ? "Aprovado! Streamer criado e e-mail enviado." : "Rejeitado."); await load() }
+    if (res.ok) {
+      toast.success(action === "approve" ? "Aprovado! Streamer criado e e-mail enviado." : "Rejeitado.")
+      await load()
+      if (action === "approve") setTab("streamers")
+    }
     else { const b = await res.json().catch(() => ({})); toast.error(b.error ?? "Erro.") }
   }
 

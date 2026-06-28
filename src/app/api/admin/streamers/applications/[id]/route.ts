@@ -29,7 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   // Se aprovado: cria o streamer automaticamente
   if (action === "approve") {
-    await admin.from("streamers").insert({
+    const { error: insertError } = await admin.from("streamers").insert({
       name:         app.nickname,
       username:     app.nickname.toLowerCase().replace(/\s+/g, ""),
       platform:     app.platform,
@@ -39,7 +39,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       active:       true,
       position:     99,
       color:        "#5fa8ff",
-    }).select("id").single()
+    })
+    if (insertError) {
+      console.error("approve: erro ao criar streamer:", insertError)
+      return NextResponse.json({ error: "Aprovado, mas erro ao criar streamer: " + insertError.message }, { status: 500 })
+    }
 
     // E-mail de aprovação — busca de auth.users via admin
     const { data: authUser } = await admin.auth.admin.getUserById(app.user_id)
