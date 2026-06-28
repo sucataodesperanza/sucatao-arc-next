@@ -37,7 +37,18 @@ export default function AdminPrecosPage() {
   const load = useCallback(async () => {
     setLoading(true)
     const [stockRes, settingsRes, veiRes] = await Promise.all([
-      fetch("/api/admin/stock?pageSize=500").then(r => r.json()).catch(() => ({ items: [] })),
+      // Busca todos os itens do estoque em múltiplas páginas
+      (async () => {
+        const all: any[] = []
+        let pg = 1
+        while (true) {
+          const r = await fetch(`/api/admin/stock?pageSize=2000&page=${pg}`).then(r => r.json()).catch(() => ({ items: [], total: 0 }))
+          all.push(...(r.items ?? []))
+          if (all.length >= (r.total ?? 0) || !(r.items?.length)) break
+          pg++
+        }
+        return { items: all }
+      })(),
       fetch("/api/admin/economia/settings").then(r => r.json()).catch(() => ({ points_multiplier: 100, cash_multiplier: 0.10 })),
       fetch("/api/admin/economia/vei-list").then(r => r.json()).catch(() => ({ data: [] })),
     ])

@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
   const q = searchParams.get("q")?.trim() ?? ""
   const page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
-  const pageSize = Math.min(100, Math.max(1, Number(searchParams.get("pageSize") ?? "20") || 20))
+  const pageSize = Math.min(2000, Math.max(1, Number(searchParams.get("pageSize") ?? "20") || 20))
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
 
