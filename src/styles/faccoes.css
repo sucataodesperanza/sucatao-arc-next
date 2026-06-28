@@ -38,10 +38,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  min-height: 140px;
+  min-height: 160px;
   overflow: hidden;
-  padding: 28px 36px;
-  border-radius: 12px;
+  margin: -32px -24px 0;
+  padding: 40px 36px;
 }
 
 .faccoes-hero::before,
@@ -54,16 +54,13 @@
 .faccoes-hero::before {
   background-image: var(--hero-image);
   background-size: cover;
-  background-position: center 30%;
+  background-position: center 25%;
 }
 
 .faccoes-hero::after {
-  background: linear-gradient(
-    105deg,
-    rgba(2,7,11,0.96) 0%,
-    rgba(2,7,11,0.82) 55%,
-    rgba(2,7,11,0.55) 100%
-  );
+  background:
+    linear-gradient(105deg, rgba(2,7,11,0.97) 0%, rgba(2,7,11,0.85) 50%, rgba(2,7,11,0.5) 100%),
+    linear-gradient(180deg, rgba(2,7,11,0) 50%, rgba(2,7,11,1) 100%);
 }
 
 .faccoes-hero-content {
