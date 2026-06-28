@@ -104,104 +104,78 @@ export default function FaccoesPage() {
     <div className={`faccoes-page${panelOpen ? "" : " faccoes-page--panel-closed"}`}>
       <div className={`faccoes-layout${panelOpen ? "" : " faccoes-layout--no-panel"}`}>
         <div className="faccoes-main">
-
-          {/* ── Hero compacto ── */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24, padding: "20px 0 28px", borderBottom: "1px solid var(--stroke)", marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-              <Hexagon size={28} style={{ color: "var(--cyan)", flexShrink: 0, marginTop: 2 }} />
-              <div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.15em", color: "var(--cyan)", opacity: 0.7 }}>Sucatão</p>
-                <h1 style={{ margin: "2px 0 4px", fontSize: 26, fontWeight: 950, textTransform: "uppercase", lineHeight: 1 }}>Escolha sua Facção</h1>
-                <p style={{ margin: 0, fontSize: 13, color: "var(--paper-dim)" }}>Sua escolha definirá seu caminho no Sucatão. Cada facção possui objetivos únicos.</p>
-              </div>
+          <section className="faccoes-hero" style={{ "--hero-image": "url(/assets/bots/arc_the_queen.png)" } as React.CSSProperties}>
+            <div className="faccoes-hero-content">
+              <Hexagon size={32} className="faccoes-hero-icon" />
+              <h1>Escolha sua Facção</h1>
+              <p>Sua escolha definirá seu caminho no Sucatão. Cada facção possui objetivos, recompensas e valores únicos.</p>
+              <span className="faccoes-hero-warning">Atenção: essa escolha é permanente e não poderá ser alterada.</span>
+              <div className="faccoes-hero-divider"><Gem size={10} /></div>
+              <span className="faccoes-hero-hint">Selecione com sabedoria. O futuro do Sucatão começa agora.</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,180,0,0.08)", border: "1px solid rgba(255,180,0,0.25)", borderRadius: 8, padding: "10px 16px", flexShrink: 0 }}>
-              <AlertTriangle size={14} style={{ color: "var(--yellow)", flexShrink: 0 }} />
-              <span style={{ fontSize: 12, color: "var(--yellow)", fontWeight: 800 }}>Escolha permanente e irreversível</span>
-            </div>
-          </div>
+          </section>
 
-          {/* ── Cards horizontais ── */}
           {loading ? (
             <div style={{ padding: 48, textAlign: "center", color: "var(--gray-500)" }}>Carregando facções...</div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <div className="faccoes-grid">
               {factions.map(faction => {
                 const isSelected = myFactionId === faction.id
-                const attrs = (faction.attributes ?? {}) as Record<string, number>
                 return (
-                  <article key={faction.id}
-                    style={{ "--faction-color": faction.color, position: "relative", border: `1px solid ${isSelected ? faction.color : "var(--stroke)"}`, borderRadius: 12, background: isSelected ? `color-mix(in srgb, ${faction.color} 6%, var(--surface))` : "var(--surface)", overflow: "hidden", transition: "border-color 0.2s" } as React.CSSProperties}
-                    className="faccao-card-h">
-
-                    {/* Linha colorida no topo */}
-                    <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: faction.color, opacity: isSelected ? 1 : 0.4 }} />
-
-                    {/* Conteúdo principal (sempre visível) */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 20, padding: "20px 24px" }}>
-                      {/* Logo */}
-                      <div style={{ width: 80, height: 80, flexShrink: 0, display: "grid", placeItems: "center", background: `color-mix(in srgb, ${faction.color} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${faction.color} 30%, transparent)`, borderRadius: 12 }}>
-                        {faction.icon_url
-                          ? <img src={faction.icon_url} alt={faction.name} style={{ width: 52, height: 52, objectFit: "contain", filter: `drop-shadow(0 0 8px ${faction.color}88)` }} />
-                          : <ImageOff size={32} style={{ color: faction.color, opacity: 0.4 }} />}
-                      </div>
-
-                      {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 2 }}>
-                          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 950, textTransform: "uppercase", color: faction.color }}>{faction.name}</h3>
-                          {isSelected && <span style={{ fontSize: 10, fontWeight: 950, background: `${faction.color}22`, color: faction.color, border: `1px solid ${faction.color}44`, borderRadius: 4, padding: "2px 7px" }}>Sua facção</span>}
-                        </div>
-                        <p style={{ margin: "0 0 10px", fontSize: 13, color: "var(--paper-dim)", fontStyle: "italic" }}>{faction.tagline}</p>
-                        {/* Atributos */}
-                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-                          {ATTRIBUTE_LABELS.map(({ key, label }) => {
-                            const val = attrs[key] ?? 1
-                            return (
-                              <div key={key} style={{ display: "flex", alignItems: "center", gap: 5 }}>
-                                <span style={{ fontSize: 10, color: "var(--gray-500)", width: 68 }}>{label}</span>
-                                <div style={{ display: "flex", gap: 3 }}>
-                                  {[1,2,3].map(n => <span key={n} style={{ width: 8, height: 8, borderRadius: "50%", background: n <= val ? faction.color : "rgba(255,255,255,0.1)", display: "block", transition: "background 0.2s" }} />)}
-                                </div>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Botão */}
-                      <button type="button" disabled={hasJoined && !isSelected}
-                        onClick={() => { if (!hasJoined) { setJoinError(""); setConfirmFaction(faction) } }}
-                        style={{ flexShrink: 0, padding: "10px 24px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", border: `1px solid ${isSelected ? faction.color : "rgba(255,255,255,0.15)"}`, background: isSelected ? `color-mix(in srgb, ${faction.color} 15%, transparent)` : "rgba(255,255,255,0.04)", color: isSelected ? faction.color : "var(--paper)", borderRadius: 8, cursor: hasJoined ? "default" : "pointer", font: "inherit", opacity: hasJoined && !isSelected ? 0.3 : 1, transition: "all 0.2s" }}>
-                        {isSelected ? "Selecionada" : hasJoined ? "Indisponível" : "Escolher →"}
-                      </button>
+                  <article key={faction.id} className={`faction-card${isSelected ? " selected" : ""}`} style={{ "--faction-color": faction.color } as React.CSSProperties}>
+                    {isSelected && (
+                      <span className="faction-selected-badge"><Check size={14} strokeWidth={3} /></span>
+                    )}
+                    <div className="faction-banner">
+                      {faction.icon_url
+                        ? <img src={faction.icon_url} alt={faction.name} style={{ width: 120, height: 120, objectFit: "contain", position: "relative", zIndex: 1, filter: `drop-shadow(0 0 24px ${faction.color})`, transition: "transform 0.4s cubic-bezier(0.34,1.56,0.64,1), filter 0.35s ease" }} />
+                        : <ImageOff size={72} style={{ opacity: 0.3, color: faction.color, position: "relative", zIndex: 1 }} />}
                     </div>
-
-                    {/* Seção expandível (hover) */}
-                    <div className="faccao-expand">
-                      <div style={{ padding: "0 24px 20px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                        <div>
-                          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--gray-500)" }}>Sobre a facção</p>
-                          <p style={{ margin: 0, fontSize: 13, color: "var(--paper-dim)", lineHeight: 1.6 }}>{faction.description}</p>
-                        </div>
-                        <div>
-                          <p style={{ margin: "0 0 8px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--gray-500)" }}>Bônus da facção</p>
-                          <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-                            {(faction.bonuses ?? []).map((bonus, i) => (
-                              <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 7, fontSize: 13, color: "var(--paper-dim)" }}>
-                                <Gem size={11} style={{ color: faction.color, flexShrink: 0, marginTop: 2 }} />
-                                {bonus}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                    <div className="faction-body">
+                      <h3>{faction.name}</h3>
+                      <p className="faction-tagline">{faction.tagline}</p>
+                      <p className="faction-description">{faction.description}</p>
+                      <div className="faction-bonus">
+                        <span className="faction-bonus-label">Bônus da Facção</span>
+                        <ul>
+                          {(faction.bonuses ?? []).map((bonus, i) => (
+                            <li key={i}><Gem size={12} />{bonus}</li>
+                          ))}
+                        </ul>
                       </div>
+                      <button
+                        type="button"
+                        className="faction-choose"
+                        disabled={hasJoined}
+                        onClick={() => { setJoinError(""); setConfirmFaction(faction) }}
+                      >
+                        {isSelected ? "Selecionada" : hasJoined ? "Indisponível" : "Escolher"}
+                      </button>
                     </div>
                   </article>
                 )
               })}
             </div>
           )}
+
+          <div className="faccoes-notices">
+            <div className="faccoes-notice faccoes-notice-warning">
+              <AlertTriangle size={18} />
+              <div>
+                <strong>Escolha com Responsabilidade</strong>
+                <p>Após escolher sua facção, você terá acesso a contratos exclusivos, recompensas únicas e um caminho próprio dentro do Sucatão. Essa escolha é permanente e não poderá ser alterada.</p>
+              </div>
+            </div>
+            <div className="faccoes-notice faccoes-notice-info">
+              <div>
+                <strong>Não sabe qual escolher?</strong>
+                <p>Cada facção oferece vantagens únicas. Explore o Sucatão, conheça as histórias e escolha a que mais combina com você.</p>
+                <button type="button" className="faccoes-learn-more">
+                  Saiba mais sobre as facções <ArrowRight size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Painel lateral ── */}
