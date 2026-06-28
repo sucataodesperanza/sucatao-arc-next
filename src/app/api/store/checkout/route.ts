@@ -79,7 +79,8 @@ export async function POST(request: NextRequest) {
   const result: { points?: number; pointsOrderId?: string; cashOrderId?: string } = {}
 
   if (pointsItems.length > 0) {
-    const pointsCost = pointsItems.reduce((sum, i) => sum + Math.round(i.value * 24) * i.quantity, 0)
+    // Usa price_points do estoque se disponível, fallback para value × 24
+    const pointsCost = pointsItems.reduce((sum, i) => sum + ((i as any).pricePoints ? (i as any).pricePoints * i.quantity : Math.round(i.value * 24) * i.quantity), 0)
 
     const currentPoints = profile.points ?? 0
     if (currentPoints < pointsCost) {
