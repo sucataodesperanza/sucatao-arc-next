@@ -146,10 +146,10 @@ VEI = (sellValue_normalizado × 0.5) + (rarity_score × 0.3) + (category_score �
 | Categoria | Score |
 |---|---|
 | weapon / Weapon | 10 |
-| armor / Armor | 8 |
+| consumable / Consumable | 8 |
 | tool / Tool | 6 |
-| material / Material | 4 |
-| consumable / Consumable | 3 |
+| armor / Armor | 4 |
+| material / Material | 3 |
 | misc / Misc | 1 |
 
 #### Normalização do Valor de Venda
