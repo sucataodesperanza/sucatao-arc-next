@@ -8,7 +8,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data } = await admin
     .from("streamer_applications")
-    .select("*, profiles(name, email)")
+    .select("*, profiles(name)")
     .order("created_at", { ascending: false })
   return NextResponse.json({ applications: data ?? [] })
 }

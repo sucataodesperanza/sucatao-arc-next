@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const admin = createAdminClient()
   const { data: app } = await admin
     .from("streamer_applications")
-    .select("*, profiles(name, email)")
+    .select("*, profiles(name)")
     .eq("id", id)
     .single()
 
@@ -41,8 +41,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       color:        "#5fa8ff",
     }).select("id").single()
 
-    // E-mail de aprovação
-    const email = (app.profiles as any)?.email
+    // E-mail de aprovação — busca de auth.users via admin
+    const { data: authUser } = await admin.auth.admin.getUserById(app.user_id)
+    const email = authUser?.user?.email
     if (email && process.env.RESEND_API_KEY) {
       const { Resend } = await import("resend")
       const resend = new Resend(process.env.RESEND_API_KEY)
