@@ -87,6 +87,8 @@ export function useItemsCatalog() {
       type: getType(item),
       rarity: getRarity(item),
       value: item.value ?? 0,
+      pricePoints: item.pricePoints,
+      priceCash: item.priceCash,
       weightKg: item.weightKg,
       image: item.image,
       mode,

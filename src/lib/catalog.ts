@@ -105,7 +105,7 @@ export function mapStockItem(row: StockJoinRow): CatalogItem {
     isRecyclable: item.is_recyclable,
     image: item.icon_url ?? undefined,
     featured: row.featured,
-    pricePoints: row.price_points || undefined,
-    priceCash:   row.price_cash   || undefined,
+    pricePoints: row.price_points > 0 ? row.price_points : undefined,
+    priceCash:   row.price_cash   > 0 ? row.price_cash   : undefined,
   }
 }

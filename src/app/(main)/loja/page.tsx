@@ -483,11 +483,11 @@ export default function LojaPage() {
                             <span className="store-highlight-price">
                               <span className="store-highlight-price-cash">
                                 <Banknote size={14} />
-                                R$ {formatNumber(item.value)}
+                                R$ {formatNumber(item.priceCash ?? item.value)}
                               </span>
                               <span className="store-highlight-price-points">
                                 <Coins size={14} />
-                                {formatNumber(Math.round((item.value ?? 0) * 24))}
+                                {formatNumber(item.pricePoints ?? Math.round((item.value ?? 0) * 24))}
                               </span>
                             </span>
                             <button

@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
   let query = supabase
     .from("stock_items")
-    .select("catalog_item_id, value, quantity, featured, catalog_items!inner(name, item_type, rarity, icon_url)", { count: "exact" })
+    .select("catalog_item_id, value, quantity, featured, price_points, price_cash, catalog_items!inner(name, item_type, rarity, icon_url)", { count: "exact" })
     .order("catalog_item_id", { ascending: true })
 
   if (q) query = query.ilike("catalog_items.name", `%${q}%`)
