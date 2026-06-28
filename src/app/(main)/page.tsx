@@ -71,7 +71,7 @@ export default function HomePage() {
     // Carrega conteúdo da home do banco
     fetch("/api/home").then(r => r.json()).then(d => {
       if (d.news?.length)   setNewsItems(d.news)
-      if (d.slides?.length) setHeroSlides(d.slides)
+      if (d.slides?.length) { setHeroSlides(d.slides); setActiveSlide(0) }
     }).catch(() => {})
   }, [])
 
@@ -208,22 +208,25 @@ export default function HomePage() {
                 style={{ backgroundImage: slide.image_url ? `url(${slide.image_url})` : undefined, opacity: i === activeSlide ? 1 : 0 }}
               />
             ))}
-            {heroSlides.length > 0 && (
-              <div className="hero-banner-content" key={activeSlide}>
-                {(() => { const Icon = getLucideIcon(heroSlides[activeSlide].icon_name); return (
+            {heroSlides.length > 0 && (() => {
+              const slide = heroSlides[activeSlide] ?? heroSlides[0]
+              if (!slide) return null
+              const Icon = getLucideIcon(slide.icon_name)
+              return (
+                <div className="hero-banner-content" key={activeSlide}>
                   <span className="hero-banner-tag">
                     <Icon size={12} />
-                    {heroSlides[activeSlide].tag}
+                    {slide.tag}
                   </span>
-                )})()}
-                <h2>{heroSlides[activeSlide].title}</h2>
-                <p>{heroSlides[activeSlide].text}</p>
-                <Link href={heroSlides[activeSlide].cta_href} className="hero-banner-cta">
-                  {heroSlides[activeSlide].cta_label}
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            )}
+                  <h2>{slide.title}</h2>
+                  <p>{slide.text}</p>
+                  <Link href={slide.cta_href} className="hero-banner-cta">
+                    {slide.cta_label}
+                    <ArrowRight size={16} />
+                  </Link>
+                </div>
+              )
+            })()}
             <div className="hero-banner-dots">
               {heroSlides.map((_, i) => (
                 <span
