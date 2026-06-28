@@ -438,10 +438,10 @@ export default function LojaPage() {
                       Atualiza em breve
                     </span>
                   </h2>
-                  <Link href="/loja" className="store-see-all">
+                  <button type="button" className="store-see-all" onClick={() => setActiveTab("itens")}>
                     Ver todos os itens
                     <ArrowRight size={14} />
-                  </Link>
+                  </button>
                 </div>
                 <div className="store-highlight-grid">
                   {loadingHighlights ? (
