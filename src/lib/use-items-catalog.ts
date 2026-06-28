@@ -100,7 +100,7 @@ export function useItemsCatalog() {
   const types = useMemo(() => {
     const counts = new Map<string, number>()
     catalogItems.forEach(i => counts.set(getType(i), (counts.get(getType(i)) ?? 0) + 1))
-    return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t)
+    return [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([t]) => t)
   }, [catalogItems])
 
   const visibleBots = arcMeta.bots.slice(0, 6)
