@@ -26,6 +26,9 @@ export default function AdminPrecosPage() {
   const [loading, setLoading]           = useState(true)
   const [applying, setApplying]         = useState(false)
   const [bulkAdding, setBulkAdding]     = useState(false)
+  const [editingItem, setEditingItem]   = useState<StockItem | null>(null)
+  const [editForm, setEditForm]         = useState({ price_points: 0, price_cash: 0 })
+  const [savingEdit, setSavingEdit]     = useState(false)
   const [settings, setSettings]         = useState({ points_multiplier: 100, cash_multiplier: 0.10 })
   const [savingSettings, setSavingSettings] = useState(false)
   const [filterRarity, setFilterRarity] = useState("")
@@ -97,6 +100,28 @@ export default function AdminPrecosPage() {
     await load()
   }
 
+  function openEdit(item: StockItem) {
+    setEditingItem(item)
+    setEditForm({ price_points: item.price_points, price_cash: item.price_cash })
+  }
+
+  async function saveEdit() {
+    if (!editingItem) return
+    setSavingEdit(true)
+    const res = await fetch(`/api/admin/stock/${editingItem.catalog_item_id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ price_points: editForm.price_points, price_cash: editForm.price_cash }),
+    })
+    setSavingEdit(false)
+    if (res.ok) {
+      toast.success("Preços salvos!")
+      setEditingItem(null)
+      await load()
+    } else {
+      toast.error("Erro ao salvar preços.")
+    }
+  }
+
   // Filtros
   const rarities  = [...new Set(items.map(i => i.catalog_items?.rarity).filter(Boolean))]
   const types     = [...new Set(items.map(i => i.catalog_items?.item_type).filter(Boolean))]
@@ -125,8 +150,91 @@ export default function AdminPrecosPage() {
     byType[t]   = (byType[t]   ?? 0) + 1
   }
 
+  const modalInp: React.CSSProperties = { background: "rgba(0,0,0,0.4)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 14, borderRadius: 6, font: "inherit", width: "100%", boxSizing: "border-box" as const }
+
   return (
     <div>
+    {/* Modal de edição */}
+    {editingItem && (
+      <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(2,7,11,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
+        onClick={() => setEditingItem(null)}>
+        <div style={{ background: "var(--surface)", border: "1px solid var(--stroke)", borderRadius: 12, width: "100%", maxWidth: 440, padding: 28 }} onClick={e => e.stopPropagation()}>
+          {/* Header */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+            {editingItem.catalog_items?.icon_url && <img src={editingItem.catalog_items.icon_url} alt="" style={{ width: 36, height: 36, objectFit: "contain" }} />}
+            <div>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--cyan)", opacity: 0.7 }}>Editar Preços</p>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 950 }}>{editingItem.catalog_items?.name ?? editingItem.catalog_item_id}</h2>
+            </div>
+          </div>
+
+          {/* Referência VEI */}
+          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 12, marginBottom: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>VEI</p>
+              <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 950, color: (editingItem.vei ?? 0) >= 70 ? "var(--yellow)" : (editingItem.vei ?? 0) >= 40 ? "var(--cyan)" : "var(--paper-dim)" }}>
+                {(editingItem.vei ?? 0).toFixed(1)}
+              </p>
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Sugerido pts</p>
+              <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 800, color: "var(--paper-dim)" }}>{(editingItem.suggested_points ?? 0).toLocaleString("pt-BR")} pts</p>
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Sugerido R$</p>
+              <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 800, color: "var(--paper-dim)" }}>R$ {(editingItem.suggested_cash ?? 0).toFixed(2).replace(".", ",")}</p>
+            </div>
+          </div>
+
+          {/* Campos */}
+          <div style={{ display: "grid", gap: 14, marginBottom: 24 }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Preço em Pontos</span>
+              <div style={{ position: "relative" }}>
+                <input type="number" min={1} value={editForm.price_points}
+                  onChange={e => setEditForm(p => ({ ...p, price_points: Number(e.target.value) }))}
+                  style={{ ...modalInp, paddingRight: 44 }} />
+                <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--yellow)", fontWeight: 950, pointerEvents: "none" }}>pts</span>
+              </div>
+              {editingItem.suggested_points && editForm.price_points !== editingItem.suggested_points && (
+                <button type="button" onClick={() => setEditForm(p => ({ ...p, price_points: editingItem.suggested_points! }))}
+                  style={{ background: "none", border: "none", color: "var(--cyan)", fontSize: 11, cursor: "pointer", textAlign: "left", padding: 0, font: "inherit" }}>
+                  ↩ Usar sugerido ({editingItem.suggested_points?.toLocaleString("pt-BR")} pts)
+                </button>
+              )}
+            </label>
+
+            <label style={{ display: "grid", gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Preço em R$</span>
+              <div style={{ position: "relative" }}>
+                <input type="number" min={0.01} step={0.01} value={editForm.price_cash}
+                  onChange={e => setEditForm(p => ({ ...p, price_cash: Number(e.target.value) }))}
+                  style={{ ...modalInp, paddingRight: 44 }} />
+                <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--green)", fontWeight: 950, pointerEvents: "none" }}>R$</span>
+              </div>
+              {editingItem.suggested_cash && editForm.price_cash !== editingItem.suggested_cash && (
+                <button type="button" onClick={() => setEditForm(p => ({ ...p, price_cash: editingItem.suggested_cash! }))}
+                  style={{ background: "none", border: "none", color: "var(--cyan)", fontSize: 11, cursor: "pointer", textAlign: "left", padding: 0, font: "inherit" }}>
+                  ↩ Usar sugerido (R$ {editingItem.suggested_cash?.toFixed(2).replace(".", ",")})
+                </button>
+              )}
+            </label>
+          </div>
+
+          {/* Ações */}
+          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
+            <button type="button" onClick={() => setEditingItem(null)}
+              style={{ border: "1px solid var(--stroke)", background: "none", color: "var(--muted)", padding: "10px 20px", fontSize: 13, cursor: "pointer", borderRadius: 6, font: "inherit" }}>
+              Cancelar
+            </button>
+            <button type="button" onClick={saveEdit} disabled={savingEdit}
+              style={{ border: "none", background: "var(--cyan)", color: "#000", padding: "10px 24px", fontSize: 13, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", opacity: savingEdit ? 0.7 : 1 }}>
+              {savingEdit ? "Salvando..." : "Salvar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
       <div style={{ marginBottom: 24 }}>
         <p style={{ margin: 0, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--cyan)", opacity: 0.7 }}>Painel Administrativo</p>
         <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 950, textTransform: "uppercase" }}>ANÁLISE DE PREÇOS</h1>
@@ -246,7 +354,10 @@ export default function AdminPrecosPage() {
                   const diffCash = priceDiff(item.price_cash,   item.suggested_cash   ?? 0)
                   const rarColor = RARITY_COLORS[item.catalog_items?.rarity ?? "Unknown"] ?? "var(--gray-500)"
                   return (
-                    <tr key={item.catalog_item_id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <tr key={item.catalog_item_id} onClick={() => openEdit(item)}
+                      style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
+                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                      onMouseLeave={e => (e.currentTarget.style.background = "")}>
                       <td style={{ padding: "6px 4px" }}>
                         <input type="checkbox"
                           checked={selectedIds.has(item.catalog_item_id)}
@@ -264,7 +375,7 @@ export default function AdminPrecosPage() {
                         <strong style={{ color: (item.vei ?? 0) >= 70 ? "var(--yellow)" : (item.vei ?? 0) >= 40 ? "var(--cyan)" : "var(--paper-dim)" }}>{(item.vei ?? 0).toFixed(1)}</strong>
                       </td>
                       {/* Pts Atual (editável) */}
-                      <td style={{ padding: "6px 4px" }}>
+                      <td style={{ padding: "6px 4px" }} onClick={e => e.stopPropagation()}>
                         <input type="number" min={1} defaultValue={item.price_points}
                           onBlur={e => { const v = Number(e.target.value); if (v !== item.price_points) updatePrice(item.catalog_item_id, "price_points", v) }}
                           style={{ width: 80, background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--yellow)", padding: "3px 6px", fontSize: 11, fontWeight: 950, borderRadius: 4, font: "inherit", textAlign: "right" }} />
@@ -276,7 +387,7 @@ export default function AdminPrecosPage() {
                         </span>
                       </td>
                       {/* R$ Atual (editável) */}
-                      <td style={{ padding: "6px 4px" }}>
+                      <td style={{ padding: "6px 4px" }} onClick={e => e.stopPropagation()}>
                         <input type="number" min={0.01} step={0.01} defaultValue={item.price_cash}
                           onBlur={e => { const v = Number(e.target.value); if (v !== item.price_cash) updatePrice(item.catalog_item_id, "price_cash", v) }}
                           style={{ width: 80, background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--green)", padding: "3px 6px", fontSize: 11, fontWeight: 950, borderRadius: 4, font: "inherit", textAlign: "right" }} />
