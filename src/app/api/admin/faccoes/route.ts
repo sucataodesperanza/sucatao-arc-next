@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { revalidateTag } from "@/lib/cache"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -34,5 +35,6 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  revalidateTag("factions")
   return NextResponse.json({ id: data.id })
 }

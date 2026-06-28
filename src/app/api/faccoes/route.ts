@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { getCachedFactions } from "@/lib/cache"
 
 export type FactionAttributes = {
   combate:       number
@@ -24,13 +24,6 @@ export type Faction = {
 }
 
 export async function GET() {
-  const supabase = await createClient()
-  const { data, error } = await supabase
-    .from("factions")
-    .select("id, slug, name, tagline, description, color, icon_url, bonuses, attributes, active, position")
-    .eq("active", true)
-    .order("position", { ascending: true })
-
-  if (error) return NextResponse.json({ factions: [] })
-  return NextResponse.json({ factions: data ?? [] })
+  const factions = await getCachedFactions()
+  return NextResponse.json({ factions })
 }

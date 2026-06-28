@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { revalidateTag } from "@/lib/cache"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -16,6 +17,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const { error } = await admin.from("maps").update(update).eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  revalidateTag("maps")
   return NextResponse.json({ ok: true })
 }
 
@@ -28,5 +30,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   await admin.from("map_markers").delete().eq("map_id", id)
   const { error } = await admin.from("maps").delete().eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  revalidateTag("maps")
   return NextResponse.json({ ok: true })
 }
