@@ -1,13 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
   const guard = await requireAdmin()
   if (guard.error) return guard.error
-  const supabase = await createClient()
-  const { data } = await supabase.from("streamers").select("*").order("position")
+  const admin = createAdminClient()
+  const { data } = await admin.from("streamers").select("*").order("position")
   return NextResponse.json({ streamers: data ?? [] })
 }
 
