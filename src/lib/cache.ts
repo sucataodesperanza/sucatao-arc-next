@@ -74,7 +74,7 @@ export const getCachedActiveContracts = unstable_cache(
     // Exclui trades já aceitos
     const { data: accepted } = await db.from("trade_acceptances").select("trade_id").neq("status", "cancelled")
     const excludeIds = (accepted ?? []).map(a => a.trade_id)
-    let q = db.from("trades").select("id,offer_points,want_item_name,want_item_qty,want_item_icon,want_item_rarity,status,expires_at,created_at,faction_id").eq("status", "active").order("created_at", { ascending: false })
+    let q = db.from("trades").select("id,offer_points,want_item_name,want_item_qty,want_item_icon,want_item_rarity,status,expires_at,created_at").eq("status", "active").order("created_at", { ascending: false })
     if (excludeIds.length > 0) q = q.not("id", "in", `(${excludeIds.join(",")})`)
     const { data } = await q
     return data ?? []
