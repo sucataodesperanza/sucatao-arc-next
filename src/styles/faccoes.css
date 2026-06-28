@@ -1,3 +1,15 @@
+/* ── Cards horizontais de facção ── */
+.faccao-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  border-top: 0px solid var(--stroke);
+}
+.faccao-card-h:hover .faccao-expand {
+  max-height: 320px;
+  border-top-width: 1px;
+}
+
 .page-title {
   margin: 0;
   color: var(--paper);
