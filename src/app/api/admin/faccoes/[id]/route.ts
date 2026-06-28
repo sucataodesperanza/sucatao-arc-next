@@ -18,6 +18,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (body.color       !== undefined) update.color       = body.color
   if (body.icon_url    !== undefined) update.icon_url    = body.icon_url
   if (body.bonuses     !== undefined) update.bonuses     = body.bonuses
+  if (body.attributes  !== undefined) update.attributes  = body.attributes
   if (body.active      !== undefined) update.active      = body.active
   if (body.position    !== undefined) update.position    = body.position
 

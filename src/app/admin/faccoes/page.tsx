@@ -239,7 +239,7 @@ function FacoesSection() {
                             <span style={{ fontSize: 10, color: "var(--gray-500)", width: 80 }}>{label}</span>
                             {[1, 2, 3].map(n => (
                               <button key={n} type="button"
-                                onClick={() => patchFaction(f.id, { attributes: { ...(f.attributes as object), [key]: n } })}
+                                onClick={() => patchFaction(f.id, { attributes: { ...(f.attributes ?? {}), [key]: n } })}
                                 style={{ width: 20, height: 20, borderRadius: 4, border: `1px solid ${n <= val ? f.color : "var(--stroke)"}`, background: n <= val ? `color-mix(in srgb, ${f.color} 25%, transparent)` : "transparent", color: n <= val ? f.color : "var(--gray-500)", fontSize: 10, fontWeight: 950, cursor: "pointer", padding: 0, font: "inherit" }}>
                                 {n}
                               </button>
