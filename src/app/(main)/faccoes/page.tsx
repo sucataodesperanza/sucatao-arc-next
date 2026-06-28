@@ -106,12 +106,16 @@ export default function FaccoesPage() {
         <div className="faccoes-main">
           <section className="faccoes-hero" style={{ "--hero-image": "url(/assets/bots/arc_the_queen.png)" } as React.CSSProperties}>
             <div className="faccoes-hero-content">
-              <Hexagon size={32} className="faccoes-hero-icon" />
+              <Hexagon size={24} className="faccoes-hero-icon" />
               <h1>Escolha sua Facção</h1>
               <p>Sua escolha definirá seu caminho no Sucatão. Cada facção possui objetivos, recompensas e valores únicos.</p>
-              <span className="faccoes-hero-warning">Atenção: essa escolha é permanente e não poderá ser alterada.</span>
-              <div className="faccoes-hero-divider"><Gem size={10} /></div>
-              <span className="faccoes-hero-hint">Selecione com sabedoria. O futuro do Sucatão começa agora.</span>
+            </div>
+            <div className="faccoes-hero-warning">
+              <AlertTriangle size={20} />
+              <div className="faccoes-hero-warning-text">
+                <strong>Escolha Permanente</strong>
+                <span>Após escolher, não será possível trocar de facção. Decida com sabedoria.</span>
+              </div>
             </div>
           </section>
 
