@@ -32,6 +32,7 @@ const PANEL_KEY = "faccoes-panel-open"
 
 export default function FaccoesPage() {
   const router = useRouter()
+  const isPreview = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("preview") === "1"
   const [factions, setFactions]         = useState<Faction[]>([])
   const [userFaction, setUserFaction]   = useState<UserFaction | null | undefined>(undefined)
   const [activity, setActivity]         = useState<FactionActivity[]>([])
@@ -57,7 +58,7 @@ export default function FaccoesPage() {
     fetch("/api/faccoes/my")
       .then(r => r.json())
       .then(ud => {
-        if (ud.faction) {
+        if (ud.faction && !isPreview) {
           router.replace("/faccoes/visao-geral")
           return
         }
