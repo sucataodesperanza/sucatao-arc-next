@@ -56,7 +56,7 @@ create policy "economy_logs_select_own" on public.economy_logs for select using 
 create index if not exists idx_economy_logs_player   on public.economy_logs(player_id, created_at desc);
 create index if not exists idx_economy_logs_source   on public.economy_logs(source, created_at desc);
 create index if not exists idx_economy_logs_item     on public.economy_logs(item_id)   where item_id is not null;
-create index if not exists idx_economy_logs_week     on public.economy_logs(created_at) where created_at > now() - interval '7 days';
+create index if not exists idx_economy_logs_created  on public.economy_logs(created_at desc);
 
 -- Métricas econômicas por item (campos exclusivos do Sucatão)
 create table if not exists public.item_economics (
