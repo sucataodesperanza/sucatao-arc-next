@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (cashItems.length > 0) {
-    const total = cashItems.reduce((sum, i) => sum + i.value * i.quantity, 0)
+    const total = cashItems.reduce((sum, i) => sum + ((i as any).priceCash ?? i.value) * i.quantity, 0)
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -164,8 +164,8 @@ export async function POST(request: NextRequest) {
           image: i.image ?? null,
           quantity: i.quantity,
           mode: "cash",
-          price: i.value,
-          lineTotal: i.value * i.quantity,
+          price: (i as any).priceCash ?? i.value,
+          lineTotal: ((i as any).priceCash ?? i.value) * i.quantity,
         })),
       })
       .select("id")
