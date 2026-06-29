@@ -7,6 +7,7 @@ const rarityColors: Record<string, string> = {
 }
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
+function formatCash(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
 function resolveImage(image?: string) {
   if (!image) return undefined
@@ -21,7 +22,8 @@ type Props = {
 }
 
 export function CartItemRow({ item, onIncrease, onDecrease, onRemove }: Props) {
-  const lineValue = item.mode === "points" ? Math.round(item.value * 24) * item.quantity : item.value * item.quantity
+  const linePoints = (item.pricePoints ?? Math.round(item.value * 24)) * item.quantity
+  const lineCash   = (item.priceCash  ?? item.value) * item.quantity
 
   return (
     <div className="cart-item">
@@ -40,7 +42,7 @@ export function CartItemRow({ item, onIncrease, onDecrease, onRemove }: Props) {
         <button type="button" onClick={onIncrease} aria-label="Aumentar quantidade">+</button>
       </div>
       <div className="cart-item-value">
-        <strong>{formatNumber(lineValue)}</strong>
+        <strong>{item.mode === "points" ? formatNumber(linePoints) : formatCash(lineCash)}</strong>
         <span>{item.mode === "points" ? "pontos" : "valor real"}</span>
       </div>
       <button type="button" className="cart-item-remove" onClick={onRemove} aria-label="Remover item">×</button>

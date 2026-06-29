@@ -5,12 +5,13 @@ import { useCart } from "@/lib/cart-context"
 import { CartItemRow } from "./cart-item-row"
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
+function formatCash(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 
 export function CartDrawer() {
   const cart = useCart()
 
-  const pointsTotal = cart.items.filter(i => i.mode === "points").reduce((sum, i) => sum + Math.round(i.value * 24) * i.quantity, 0)
-  const cashTotal = cart.items.filter(i => i.mode === "cash").reduce((sum, i) => sum + i.value * i.quantity, 0)
+  const pointsTotal = cart.items.filter(i => i.mode === "points").reduce((sum, i) => sum + (i.pricePoints ?? Math.round(i.value * 24)) * i.quantity, 0)
+  const cashTotal   = cart.items.filter(i => i.mode === "cash").reduce((sum, i) => sum + (i.priceCash ?? i.value) * i.quantity, 0)
 
   return (
     <>
@@ -46,7 +47,7 @@ export function CartDrawer() {
             {cashTotal > 0 && (
               <div className="cart-summary-row">
                 <span>Total saldo real</span>
-                <strong>{formatNumber(cashTotal)}</strong>
+                <strong>R$ {formatCash(cashTotal)}</strong>
               </div>
             )}
             <Link href="/carrinho" className="cart-checkout-button" onClick={cart.closeDrawer}>

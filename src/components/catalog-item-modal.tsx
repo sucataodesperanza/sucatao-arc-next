@@ -1,6 +1,8 @@
 "use client"
 
 import { formatNumber, getRarity, getType, rarityColors, rarityMetaLabels, resolveImage, type ItemsCatalog } from "@/lib/use-items-catalog"
+
+function formatCash(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }
 import { getItemTypeLabel } from "@/lib/catalog"
 
 export function CatalogItemModal({ catalog }: { catalog: ItemsCatalog }) {
@@ -25,8 +27,8 @@ export function CatalogItemModal({ catalog }: { catalog: ItemsCatalog }) {
           <h2>{selectedItem.name}</h2>
           {selectedItem.description && <p className="catalog-modal-description">{selectedItem.description}</p>}
           <div className="catalog-modal-stats">
-            <span><small>Valor real</small><strong>R$ {formatNumber(selectedItem.value)}</strong></span>
-            <span><small>Pontos do site</small><strong>{formatNumber((selectedItem.value ?? 0) * 24)}</strong></span>
+            <span><small>Valor real</small><strong>R$ {formatCash(selectedItem.priceCash ?? selectedItem.value)}</strong></span>
+            <span><small>Pontos do site</small><strong>{formatNumber(selectedItem.pricePoints ?? Math.round((selectedItem.value ?? 0) * 24))}</strong></span>
             <span><small>Peso</small><strong>{selectedItem.weightKg ? `${selectedItem.weightKg} kg` : "N/D"}</strong></span>
             <span><small>Stack</small><strong>{selectedItem.stackSize ? formatNumber(selectedItem.stackSize) : "Livre"}</strong></span>
           </div>
