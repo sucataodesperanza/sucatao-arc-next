@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { Camera, Package, ShoppingBag, TrendingUp } from "lucide-react"
 import type { Area } from "react-easy-crop"
 import { createClient } from "@/lib/supabase/client"
@@ -46,7 +46,6 @@ export default function PerfilPage() {
   const [discordAvatar, setDiscordAvatar]     = useState<string | null>(null)
   const [discordDisconnecting, setDiscordDisconnecting] = useState(false)
   const [discordMsg, setDiscordMsg]           = useState("")
-  const searchParams = useSearchParams()
 
   useEffect(() => {
     const supabase = createClient()
@@ -75,11 +74,17 @@ export default function PerfilPage() {
         setDiscordAvatar(profileRes.data.discord_avatar ?? null)
       }
 
-      // Toast baseado no retorno do OAuth Discord
-      const discordParam = searchParams.get("discord")
+      // Toast baseado no retorno do OAuth Discord — lido via window para evitar Suspense
+      const params = new URLSearchParams(window.location.search)
+      const discordParam = params.get("discord")
       if (discordParam === "connected")  setDiscordMsg("connected")
       if (discordParam === "error")      setDiscordMsg("error")
       if (discordParam === "cancelled")  setDiscordMsg("cancelled")
+      if (discordParam) {
+        const clean = new URL(window.location.href)
+        clean.searchParams.delete("discord")
+        window.history.replaceState({}, "", clean.toString())
+      }
       setInventoryCount(inventoryRes.count ?? 0)
       setOrders((ordersRes.data ?? []) as unknown as Order[])
       setEcoLogs((ecoRes.data ?? []) as unknown as EcoLog[])
