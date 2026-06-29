@@ -147,7 +147,7 @@ export default function ArcpediaPage() {
 
           <div className="store-side-card">
             <div className="store-side-head">
-              <h2>AmeaÃ§as Detectadas</h2>
+              <h2>Ameaças Detectadas</h2>
             </div>
             <div className="store-side-list">
               {ARC_THREAT_ORDER.filter(t => threatCounts[t]).map(t => (
@@ -209,7 +209,7 @@ export default function ArcpediaPage() {
       {selected && (
         <div className="modal-backdrop" onClick={() => setSelected(null)}>
           <article className="catalog-modal" role="dialog" aria-modal onClick={e => e.stopPropagation()}>
-            <button className="catalog-modal-close" type="button" aria-label="Fechar detalhe" onClick={() => setSelected(null)}>Ã—</button>
+            <button className="catalog-modal-close" type="button" aria-label="Fechar detalhe" onClick={() => setSelected(null)}>×</button>
             <div className="catalog-modal-media">
               {selected.image
                 ? <img src={resolveImage(selected.image)} alt={selected.name} />
@@ -217,7 +217,7 @@ export default function ArcpediaPage() {
             </div>
             <div className="catalog-modal-content">
               <p className="catalog-modal-kicker" style={{ color: getArcThreatColor(getArcThreat(selected.threat)) }}>
-                AmeaÃ§a {getArcThreatLabel(selected.threat)} // {selected.type ?? "ARC unit"}
+                Ameaça {getArcThreatLabel(selected.threat)} // {selected.type ?? "ARC unit"}
               </p>
               <h2>{selected.name}</h2>
               {selected.description && <p className="catalog-modal-description">{selected.description}</p>}
