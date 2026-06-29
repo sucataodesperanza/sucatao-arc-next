@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import { Analytics } from "@/components/analytics"
+import Script from "next/script"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 import "../styles/layout.css"
@@ -17,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="pt-BR" className={inter.className}>
       <body className="app-shell" suppressHydrationWarning>
         <Providers>{children}</Providers>
-        <Analytics />
+        <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
       </body>
     </html>
   )
