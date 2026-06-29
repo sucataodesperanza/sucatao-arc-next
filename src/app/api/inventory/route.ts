@@ -14,6 +14,8 @@ export type InventoryEntry = {
     value: number | null
     weight_kg: number | null
     stack_size: number | null
+    price_points: number | null
+    price_cash: number | null
   }
 }
 
@@ -38,9 +40,30 @@ export async function GET() {
     return NextResponse.json({ items: [], capacity: 100, used: 0 })
   }
 
-  const items    = data ?? []
+  const items = data ?? []
+
+  // Busca preços do estoque para os itens do inventário
+  const catalogIds = [...new Set(items.map(e => e.catalog_items?.id).filter(Boolean))]
+  let priceMap: Record<string, { price_points: number | null; price_cash: number | null }> = {}
+  if (catalogIds.length > 0) {
+    const { data: stockData } = await supabase
+      .from("stock_items")
+      .select("catalog_item_id, price_points, price_cash")
+      .in("catalog_item_id", catalogIds)
+    for (const s of stockData ?? []) {
+      priceMap[s.catalog_item_id] = { price_points: s.price_points, price_cash: s.price_cash }
+    }
+  }
+
+  const itemsWithPrices = items.map(e => ({
+    ...e,
+    catalog_items: e.catalog_items
+      ? { ...e.catalog_items, ...( priceMap[e.catalog_items.id] ?? { price_points: null, price_cash: null }) }
+      : e.catalog_items,
+  }))
+
   const capacity = (profileRes.data as { inventory_capacity: number } | null)?.inventory_capacity ?? 100
   const used     = items.reduce((s, e) => s + e.quantity, 0)
 
-  return NextResponse.json({ items, capacity, used })
+  return NextResponse.json({ items: itemsWithPrices, capacity, used })
 }

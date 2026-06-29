@@ -99,7 +99,7 @@ export default function AdminHomePage() {
     const res = await fetch("/api/admin/home", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "news", ...newNewsForm, image_url: newNewsForm.image_url || null, href: newNewsForm.href || null }) })
     setSavingNews(false)
     if (res.ok) { toast.success("Nota criada!"); setNewNewsForm({ date_label: "", title: "", text: "", image_url: "", href: "", icon_name: "Megaphone" }); await load() }
-    else toast.error("Erro ao criar nota.")
+    else { const b = await res.json().catch(() => ({})); toast.error(`Erro ao criar nota: ${b.error ?? res.status}`) }
   }
 
   async function createSlide() {

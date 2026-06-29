@@ -200,7 +200,7 @@ export default function InventarioPage() {
   const rarosQty     = entries.filter(e => e.catalog_items?.rarity === "Rare").reduce((s, e) => s + e.quantity, 0)
   const epicosQty    = entries.filter(e => e.catalog_items?.rarity === "Epic").reduce((s, e) => s + e.quantity, 0)
   const lendariosQty = entries.filter(e => e.catalog_items?.rarity === "Legendary").reduce((s, e) => s + e.quantity, 0)
-  const valorTotal   = entries.reduce((s, e) => s + (e.catalog_items?.value ?? 0) * e.quantity, 0)
+  const valorTotal   = entries.reduce((s, e) => s + (e.catalog_items?.price_cash ?? e.catalog_items?.value ?? 0) * e.quantity, 0)
 
   const catCounts = useMemo(() => {
     const counts: Record<string, number> = { Todos: totalQty }
@@ -212,7 +212,7 @@ export default function InventarioPage() {
   }, [entries, totalQty])
 
   const topItems = useMemo(() =>
-    [...entries].sort((a, b) => (b.catalog_items?.value ?? 0) - (a.catalog_items?.value ?? 0)).slice(0, 5)
+    [...entries].sort((a, b) => (b.catalog_items?.price_cash ?? b.catalog_items?.value ?? 0) - (a.catalog_items?.price_cash ?? a.catalog_items?.value ?? 0)).slice(0, 5)
   , [entries])
 
   const rarityLegend = useMemo(() => [
@@ -377,7 +377,7 @@ export default function InventarioPage() {
                 <div className="inventario-stat">
                   <div className="inventario-stat-icon inventario-stat-icon--valor"><Coins size={18} /></div>
                   <div className="inventario-stat-body">
-                    <strong style={{ color: "var(--green)" }}>{valorTotal.toLocaleString("pt-BR")}</strong>
+                    <strong style={{ color: "var(--green)" }}>R$ {valorTotal.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
                     <span>Valor estimado</span>
                   </div>
                 </div>
@@ -433,7 +433,7 @@ export default function InventarioPage() {
                         <p className="inventario-item-cat">{getItemTypeLabel(item?.item_type)}</p>
                         <div className="inventario-item-value">
                           <Coins size={12} />
-                          {(item?.value ?? 0).toLocaleString("pt-BR")}
+                          {(item?.price_points ?? Math.round((item?.value ?? 0) * 24)).toLocaleString("pt-BR")} pts
                         </div>
                       </div>
                     </div>
@@ -506,7 +506,7 @@ export default function InventarioPage() {
                     <strong>{item?.name}</strong>
                     <span style={{ color: RARITY_COLORS[item?.rarity ?? ""] ?? "#566171" }}>{rarityLabel(item?.rarity)}</span>
                   </div>
-                  <span className="inventario-valioso-value">{(item?.value ?? 0).toLocaleString("pt-BR")}</span>
+                  <span className="inventario-valioso-value">R$ {(item?.price_cash ?? item?.value ?? 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
               )
             })}
