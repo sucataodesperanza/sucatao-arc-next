@@ -373,6 +373,128 @@
   font-size: 13px;
 }
 
+/* ── Discord ── */
+
+.profile-discord-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profile-discord-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: rgba(88, 101, 242, 0.12);
+  border: 1px solid rgba(88, 101, 242, 0.25);
+  color: #7289da;
+}
+
+.profile-discord-connected,
+.profile-discord-disconnected {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.profile-discord-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-discord-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--stroke-strong);
+  flex-shrink: 0;
+}
+
+.profile-discord-avatar-placeholder {
+  display: grid;
+  place-items: center;
+  background: rgba(88, 101, 242, 0.15);
+  color: #7289da;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.profile-discord-username {
+  margin: 0;
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.profile-discord-status {
+  margin: 2px 0 0;
+  color: var(--green);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.profile-discord-label {
+  margin: 0;
+  color: var(--paper);
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.profile-discord-hint {
+  margin: 4px 0 0;
+  color: var(--gray-500);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.profile-discord-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: filter 0.15s;
+}
+
+.profile-discord-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.profile-discord-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.profile-discord-btn-connect {
+  background: #5865F2;
+  color: #fff;
+}
+
+.profile-discord-btn-disconnect {
+  background: var(--surface-3);
+  border: 1px solid var(--stroke-strong);
+  color: var(--gray-500);
+}
+
 .utility-page {
   max-width: none;
   border: 1px solid var(--line-soft);

@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Camera, Package, ShoppingBag, TrendingUp } from "lucide-react"
 import type { Area } from "react-easy-crop"
 import { createClient } from "@/lib/supabase/client"
@@ -41,6 +41,12 @@ export default function PerfilPage() {
   const [inventoryCount, setInventoryCount] = useState(0)
   const [orders, setOrders]           = useState<Order[]>([])
   const [ecoLogs, setEcoLogs]         = useState<EcoLog[]>([])
+  const [discordId, setDiscordId]           = useState<string | null>(null)
+  const [discordUsername, setDiscordUsername] = useState<string | null>(null)
+  const [discordAvatar, setDiscordAvatar]     = useState<string | null>(null)
+  const [discordDisconnecting, setDiscordDisconnecting] = useState(false)
+  const [discordMsg, setDiscordMsg]           = useState("")
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const supabase = createClient()
@@ -50,7 +56,7 @@ export default function PerfilPage() {
       if (!user) return
 
       const [profileRes, inventoryRes, ordersRes, ecoRes] = await Promise.all([
-        supabase.from("profiles").select("points, avatar_url, game_id, cpf, total_spent, total_orders, created_at").eq("id", user.id).single(),
+        supabase.from("profiles").select("points, avatar_url, game_id, cpf, total_spent, total_orders, created_at, discord_id, discord_username, discord_avatar").eq("id", user.id).single(),
         supabase.from("user_inventory").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("orders").select("id, created_at, status, total, payment_method, items").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         supabase.from("economy_logs").select("id, action, value, currency, source, created_at").eq("player_id", user.id).order("created_at", { ascending: false }).limit(20),
@@ -64,7 +70,16 @@ export default function PerfilPage() {
         setTotalSpent(Number(profileRes.data.total_spent ?? 0))
         setTotalOrders(profileRes.data.total_orders ?? 0)
         setMemberSince(profileRes.data.created_at ?? null)
+        setDiscordId(profileRes.data.discord_id ?? null)
+        setDiscordUsername(profileRes.data.discord_username ?? null)
+        setDiscordAvatar(profileRes.data.discord_avatar ?? null)
       }
+
+      // Toast baseado no retorno do OAuth Discord
+      const discordParam = searchParams.get("discord")
+      if (discordParam === "connected")  setDiscordMsg("connected")
+      if (discordParam === "error")      setDiscordMsg("error")
+      if (discordParam === "cancelled")  setDiscordMsg("cancelled")
       setInventoryCount(inventoryRes.count ?? 0)
       setOrders((ordersRes.data ?? []) as unknown as Order[])
       setEcoLogs((ecoRes.data ?? []) as unknown as EcoLog[])
@@ -111,6 +126,21 @@ export default function PerfilPage() {
       setTimeout(() => setGameIdMsg(""), 3500)
       setGameId(original) // reverte se falhou
     }
+  }
+
+  async function handleDiscordDisconnect() {
+    setDiscordDisconnecting(true)
+    const res = await fetch("/api/auth/discord/disconnect", { method: "POST" })
+    setDiscordDisconnecting(false)
+    if (res.ok) {
+      setDiscordId(null)
+      setDiscordUsername(null)
+      setDiscordAvatar(null)
+      setDiscordMsg("disconnected")
+    } else {
+      setDiscordMsg("error")
+    }
+    setTimeout(() => setDiscordMsg(""), 4000)
   }
 
   async function handleLogout() {
@@ -358,6 +388,53 @@ export default function PerfilPage() {
         </div>
       </section>
 
+      {/* Discord */}
+      {user && (
+        <section aria-label="Discord">
+          <p className="home-section-label">Discord</p>
+          <div className="profile-card profile-discord-card">
+            <div className="profile-discord-icon">
+              <svg width="22" height="16" viewBox="0 0 24 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20.317 1.492a19.825 19.825 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 1.492a.07.07 0 0 0-.032.027C.533 6.093-.32 10.555.099 14.961a.08.08 0 0 0 .031.055 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.442a.061.061 0 0 0-.031-.03zM8.02 12.278c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" fill="currentColor"/>
+              </svg>
+            </div>
+
+            {discordId ? (
+              <div className="profile-discord-connected">
+                <div className="profile-discord-user">
+                  {discordAvatar
+                    ? <img src={discordAvatar} alt={discordUsername ?? "Discord"} className="profile-discord-avatar" />
+                    : <div className="profile-discord-avatar profile-discord-avatar-placeholder">#</div>
+                  }
+                  <div>
+                    <p className="profile-discord-username">{discordUsername}</p>
+                    <p className="profile-discord-status">Conta conectada</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="profile-discord-btn profile-discord-btn-disconnect"
+                  onClick={handleDiscordDisconnect}
+                  disabled={discordDisconnecting}
+                >
+                  {discordDisconnecting ? "Desconectando..." : "Desconectar"}
+                </button>
+              </div>
+            ) : (
+              <div className="profile-discord-disconnected">
+                <div>
+                  <p className="profile-discord-label">Conta Discord não vinculada</p>
+                  <p className="profile-discord-hint">Vincule para receber notificações de pedidos e entregas direto no seu Discord.</p>
+                </div>
+                <a href="/api/auth/discord" className="profile-discord-btn profile-discord-btn-connect">
+                  Conectar Discord
+                </a>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* Histórico de pedidos */}
       <section aria-label="Histórico de pedidos">
         <p className="home-section-label">Últimos Pedidos</p>
@@ -435,6 +512,15 @@ export default function PerfilPage() {
       <div className="app-toast" data-tone={cpfMsg === "ok" ? "success" : "error"} role="status" aria-live="polite">
         {cpfMsg === "ok" ? "✓ CPF salvo com sucesso!" : "✗ Erro ao salvar o CPF."}
       </div>
+    )}
+    {discordMsg === "connected" && (
+      <div className="app-toast" data-tone="success" role="status" aria-live="polite">✓ Discord conectado com sucesso!</div>
+    )}
+    {discordMsg === "disconnected" && (
+      <div className="app-toast" data-tone="success" role="status" aria-live="polite">✓ Discord desconectado.</div>
+    )}
+    {discordMsg === "error" && (
+      <div className="app-toast" data-tone="error" role="status" aria-live="polite">✗ Erro ao conectar o Discord. Tente novamente.</div>
     )}
     </>
   )
