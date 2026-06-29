@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchMercadoPagoPayment, verifyMercadoPagoWebhookSignature } from "@/lib/mercadopago"
+import { alertPedidoPago } from "@/lib/discord-webhook"
 
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
@@ -63,17 +64,39 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", orderId)
         .neq("payment_status", "paid")
-        .select("id, user_id, pass_group_id")
+        .select("id, user_id, pass_group_id, items, total")
 
       // Ativa passe se for uma compra de passe via PIX
       if (updatedOrders?.length) {
-        const ord = updatedOrders[0] as { id: string; user_id: string; pass_group_id?: string | null }
+        const ord = updatedOrders[0] as {
+          id: string
+          user_id: string
+          pass_group_id?: string | null
+          items?: Array<{ name: string; quantity: number }>
+          total?: number
+        }
+
         if (ord.pass_group_id) {
           await supabase.from("user_contract_group_purchases").upsert({
             user_id: ord.user_id, group_id: ord.pass_group_id,
             payment_method: "pix", order_id: ord.id,
           }, { onConflict: "user_id,group_id" })
         }
+
+        // Alerta Discord — PIX confirmado
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("username, game_id")
+          .eq("id", ord.user_id)
+          .single()
+
+        alertPedidoPago({
+          orderId: ord.id,
+          userName: profile?.username ?? "Desconhecido",
+          gameId: profile?.game_id ?? "—",
+          items: (ord.items ?? []).map((i) => ({ name: i.name, quantity: i.quantity })),
+          total: ord.total ?? 0,
+        }).catch(() => {})
       }
     } else if (status === "pending" || status === "in_process") {
       await supabase

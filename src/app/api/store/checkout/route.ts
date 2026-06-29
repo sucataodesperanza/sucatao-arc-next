@@ -5,6 +5,7 @@ import { createMercadoPagoPixPayment } from "@/lib/mercadopago"
 import { isValidCpf } from "@/lib/cpf"
 import { addItemsToInventory } from "@/lib/inventory"
 import { logEconomy } from "@/lib/economy"
+import { alertPedidoPontos, alertPedidoPix } from "@/lib/discord-webhook"
 
 type CheckoutItem = {
   itemId: string
@@ -164,6 +165,15 @@ export async function POST(request: NextRequest) {
     // Adiciona itens ao inventário do usuário (compra com pontos é imediata)
     await addItemsToInventory(user.id, pointsItems, "points")
 
+    // Alerta Discord — fire-and-forget
+    alertPedidoPontos({
+      orderId: order.id,
+      userName: (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido",
+      gameId: profile.game_id ?? "—",
+      items: pointsItems.map(i => ({ name: i.name, quantity: i.quantity })),
+      pointsCost: pointsItems.reduce((s, i) => s + (Math.round(i.value * 24) * i.quantity), 0),
+    }).catch(() => {})
+
     // Registra no economy_logs
     for (const item of pointsItems) {
       await logEconomy({ player_id: user.id, action: "buy", value: Math.round(item.value * 24) * item.quantity, currency: "points", item_id: item.itemId, item_qty: item.quantity, source: "shop", source_id: order?.id })
@@ -212,6 +222,17 @@ export async function POST(request: NextRequest) {
     }
 
     result.cashOrderId = order.id
+
+    // Alerta Discord — fire-and-forget
+    alertPedidoPix({
+      orderId: order.id,
+      userName: (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido",
+      gameId: profile.game_id ?? "—",
+      items: cashItems.map(i => ({ name: i.name, quantity: i.quantity })),
+      total,
+      couponCode: couponCode ?? null,
+      discountAmount: discountAmount > 0 ? discountAmount : undefined,
+    }).catch(() => {})
 
     // Atualiza uso do cupom
     if (validatedCoupon) {
