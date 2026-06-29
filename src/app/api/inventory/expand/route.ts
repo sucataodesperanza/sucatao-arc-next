@@ -2,8 +2,6 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { INITIAL_CAPACITY, PACK_SIZE, nextPackPointsPrice, nextPackBrlPrice } from "@/lib/inventory-pricing"
 
-export { nextPackPointsPrice, nextPackBrlPrice } // re-exporta para compatibilidade
-
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
