@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createMercadoPagoPixPayment } from "@/lib/mercadopago"
 import { isValidCpf } from "@/lib/cpf"
 import { addItemsToInventory } from "@/lib/inventory"
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json()
   const items: CheckoutItem[] = Array.isArray(body.items) ? body.items : []
+  const couponCode = typeof body.couponCode === "string" ? body.couponCode.trim().toUpperCase() : null
 
   if (items.length === 0) {
     return NextResponse.json({ error: "Carrinho vazio." }, { status: 400 })
@@ -59,6 +61,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Complete seu cadastro com um CPF válido para pagar com PIX.", code: "cadastro_incompleto" }, { status: 409 })
   }
 
+  // Valida cupom server-side (só aplica a itens em dinheiro)
+  type CouponRow = { id: string; discount: number; discount_type: string; usage_count: number; total_discounted: number }
+  let validatedCoupon: CouponRow | null = null
+  if (couponCode && cashItems.length > 0) {
+    const admin = createAdminClient()
+    const { data: coupon } = await admin
+      .from("coupons")
+      .select("id, discount, discount_type, usage_count, usage_limit, expiration_date, status, total_discounted")
+      .eq("code", couponCode)
+      .eq("status", "active")
+      .single()
+
+    const isExpired = coupon?.expiration_date && new Date(coupon.expiration_date) < new Date()
+    const isOverLimit = coupon?.usage_limit != null && (coupon.usage_count ?? 0) >= coupon.usage_limit
+
+    if (coupon && !isExpired && !isOverLimit) {
+      validatedCoupon = coupon as CouponRow
+    }
+  }
+
   function groupByItem(list: CheckoutItem[]) {
     const map = new Map<string, number>()
     for (const i of list) map.set(i.itemId, (map.get(i.itemId) ?? 0) + i.quantity)
@@ -68,7 +90,12 @@ export async function POST(request: NextRequest) {
   const stockPayload = groupByItem(items)
   const { error: stockError } = await supabase.rpc("decrement_stock", { p_items: stockPayload })
   if (stockError) {
-    return NextResponse.json({ error: "Um ou mais itens estão sem estoque suficiente." }, { status: 409 })
+    // stockError.message contém o item_id quando é 'Estoque insuficiente para o item X'
+    const detail = stockError.message?.includes("Estoque insuficiente")
+      ? stockError.message
+      : "Um ou mais itens estão sem estoque suficiente."
+    console.error("store/checkout decrement_stock error:", stockError.message)
+    return NextResponse.json({ error: detail }, { status: 409 })
   }
 
   async function restoreStock(list: CheckoutItem[]) {
@@ -144,7 +171,13 @@ export async function POST(request: NextRequest) {
   }
 
   if (cashItems.length > 0) {
-    const total = cashItems.reduce((sum, i) => sum + ((i as any).priceCash ?? i.value) * i.quantity, 0)
+    const subtotal = cashItems.reduce((sum, i) => sum + ((i as any).priceCash ?? i.value) * i.quantity, 0)
+    const discountAmount = validatedCoupon
+      ? validatedCoupon.discount_type === "percentage"
+        ? subtotal * validatedCoupon.discount / 100
+        : Math.min(subtotal, validatedCoupon.discount)
+      : 0
+    const total = Math.max(0, subtotal - discountAmount)
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -154,6 +187,7 @@ export async function POST(request: NextRequest) {
         status: "pending",
         payment_method: "loja_oficial",
         payment_status: "pending",
+        ...(validatedCoupon ? { coupon_code: couponCode, discount_amount: discountAmount } : {}),
         items: cashItems.map(i => ({
           source: "catalog",
           itemId: i.itemId,
@@ -178,6 +212,15 @@ export async function POST(request: NextRequest) {
     }
 
     result.cashOrderId = order.id
+
+    // Atualiza uso do cupom
+    if (validatedCoupon) {
+      const admin = createAdminClient()
+      await admin.from("coupons").update({
+        usage_count: validatedCoupon.usage_count + 1,
+        total_discounted: (validatedCoupon.total_discounted ?? 0) + discountAmount,
+      }).eq("id", validatedCoupon.id)
+    }
 
     const fullName = ((user.user_metadata?.name as string | undefined) ?? "").trim()
     const [firstName, ...rest] = fullName ? fullName.split(/\s+/) : ["Comprador"]

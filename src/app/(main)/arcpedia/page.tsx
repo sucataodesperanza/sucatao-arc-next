@@ -15,7 +15,8 @@ function normalizeText(s: string) { return s.normalize("NFD").replace(/[̀-ͯ]/g
 function itemNameForId(id: string) { return localItems.find(i => i.id === id)?.name ?? id }
 function resolveImage(image?: string) {
   if (!image) return undefined
-  return image.startsWith("http") ? image : `/${image}`
+  if (image.startsWith("http") || image.startsWith("/")) return image
+  return `/${image}`
 }
 
 const PANEL_KEY = "arcpedia-panel-open"
