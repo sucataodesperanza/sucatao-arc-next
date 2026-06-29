@@ -25,6 +25,60 @@ const copy = {
   },
 } as const
 
+function ResendForm({ type }: { type: "recovery" | "signup" }) {
+  const [email, setEmail] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState("")
+
+  async function handleResend(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    setError("")
+    const supabase = createClient()
+
+    if (type === "recovery") {
+      const { error: err } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/confirmar-email`,
+      })
+      setLoading(false)
+      if (err) { setError("Não foi possível reenviar. Tente novamente."); return }
+    } else {
+      const { error: err } = await supabase.auth.resend({ type: "signup", email,
+        options: { emailRedirectTo: `${window.location.origin}/confirmar-email` },
+      })
+      setLoading(false)
+      if (err) { setError("Não foi possível reenviar. Tente novamente."); return }
+    }
+
+    setSent(true)
+  }
+
+  if (sent) {
+    return <p className="auth-status">Novo link enviado! Verifique sua caixa de entrada (e o spam).</p>
+  }
+
+  return (
+    <form onSubmit={handleResend} style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 8 }}>
+      <label>
+        <span className={email ? "auth-field-label-hidden" : ""}>Seu e-mail</span>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+          maxLength={80}
+        />
+      </label>
+      {error && <p className="auth-status" style={{ color: "var(--red)" }}>{error}</p>}
+      <button type="submit" className="auth-submit" disabled={loading}>
+        {loading ? "Enviando..." : "Reenviar link"}
+      </button>
+    </form>
+  )
+}
+
 function ConfirmForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -32,9 +86,7 @@ function ConfirmForm() {
   const type = searchParams.get("type") === "recovery" ? "recovery" : "signup"
   const texts = copy[type]
 
-  const [status, setStatus] = useState(
-    tokenHash ? texts.intro : "Link inválido ou incompleto. Solicite um novo e-mail."
-  )
+  const [status, setStatus] = useState(tokenHash ? texts.intro : "")
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -49,7 +101,7 @@ function ConfirmForm() {
     setLoading(false)
 
     if (error) {
-      setStatus("Link inválido ou expirado. Solicite um novo e-mail.")
+      setStatus("Link inválido ou expirado. Solicite um novo e-mail abaixo.")
     } else {
       setDone(true)
       setStatus(texts.success)
@@ -58,6 +110,26 @@ function ConfirmForm() {
         router.refresh()
       }, 1500)
     }
+  }
+
+  // Link chegou sem token — mostra formulário de reenvio diretamente
+  if (!tokenHash) {
+    return (
+      <AuthShell>
+        <div className="auth-form" aria-labelledby="confirmEmailTitle">
+          <div>
+            <p className="auth-shell-kicker">Conta Sucatão</p>
+            <h1 id="confirmEmailTitle" className="auth-shell-title">Link inválido</h1>
+          </div>
+          <div className="auth-actions">
+            <p className="auth-status">
+              O link expirou ou chegou incompleto. Informe seu e-mail para receber um novo.
+            </p>
+            <ResendForm type={type} />
+          </div>
+        </div>
+      </AuthShell>
+    )
   }
 
   return (
@@ -69,20 +141,18 @@ function ConfirmForm() {
         </div>
 
         <div className="auth-actions">
-          <p className="auth-status">{status}</p>
+          {status && <p className="auth-status">{status}</p>}
           {done ? (
             <button type="button" className="auth-submit" disabled>
               <Loader2 size={18} className="auth-spinner" />
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={loading || !tokenHash}
-              className="auth-submit"
-            >
-              {loading ? "Confirmando..." : texts.confirmLabel}
-            </button>
+            <>
+              <button type="button" onClick={handleConfirm} disabled={loading} className="auth-submit">
+                {loading ? "Confirmando..." : texts.confirmLabel}
+              </button>
+              {status.includes("expirado") && <ResendForm type={type} />}
+            </>
           )}
         </div>
       </div>
