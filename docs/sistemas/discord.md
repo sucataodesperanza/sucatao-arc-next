@@ -23,7 +23,7 @@ DISCORD_ADMIN_ROLE_ID=        # Role do admin (acesso automático aos canais)
 DISCORD_ALERT_CHANNEL_ID=     # Canal onde chegam os alertas do bot
 ```
 
-> **Status atual:** Nenhuma variável configurada. Configurar no painel do Vercel + criar aplicação em discord.com/developers antes de iniciar a Fase 1.
+> **Status atual:** `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_WEBHOOK_URL` e `DISCORD_BOT_TOKEN` configurados (Fases 1, 2 e 3 implementadas). Fase 4 (canais privados de entrega) está implementada no código, mas **falta configurar `DISCORD_GUILD_ID`, `DISCORD_ORDERS_CATEGORY_ID` e `DISCORD_ADMIN_ROLE_ID`** no `.env.local` e na Vercel — sem essas variáveis, `createPrivateChannel` retorna `null` silenciosamente (no-op) e o fluxo de pagamento PIX continua funcionando normalmente, só sem o canal.
 
 ---
 
@@ -96,61 +96,75 @@ DISCORD_WEBHOOK_URL=   # URL do webhook do canal de alertas (gerar no Discord)
 
 ---
 
-### Fase 3 — DMs automáticas ao usuário _(requer Fase 1 + bot token)_
+### Fase 3 — DMs automáticas ao usuário _(requer Fase 1 + bot token)_ ✅ Implementado
 
-**O que faz:** O bot envia DM privada ao usuário quando algo acontece com a conta dele.
+**O que faz:** O bot envia DM privada ao usuário quando algo acontece com a conta dele. Só dispara se o usuário tiver `discord_id` vinculado (Fase 1) — caso contrário, `sendDiscordDM` é um no-op silencioso.
 
-**DMs planejadas:**
+**Arquivo:** `src/lib/discord-bot.ts`
 
-| Evento | Mensagem enviada |
-|---|---|
-| Pedido confirmado (pontos) | "Seu pedido foi confirmado! Os itens serão entregues no jogo em breve." |
-| Pedido PIX confirmado | "Pagamento recebido! O admin vai entrar em contato para combinar a entrega." |
-| Item entregue | "Entrega confirmada. Obrigado por usar o Sucatão! ✓" |
-| Contrato aceito | "Seu contrato foi aceito. Verifique os detalhes na plataforma." |
-| Contrato rejeitado | "Seu contrato não foi aprovado. Veja o motivo na plataforma." |
-| Bônus de pontos recebido | "Você recebeu {N} pontos! Confira seu saldo no perfil." |
+Funções:
+- `sendDiscordDM(discordId, content)` — abre/reusa canal de DM via bot e envia a mensagem. Não faz nada se `discordId` ou `DISCORD_BOT_TOKEN` ausentes.
+- `dmPedidoConfirmado(userName, items)` — pedido de pontos resgatado (itens já no inventário)
+- `dmPedidoPago(userName, items, total)` — PIX confirmado, aguardando combinar entrega
+- `dmRecompensaCreditada(userName, contextLabel, { points, itemName })` — genérica para qualquer recompensa creditada (pontos e/ou item)
 
-**Arquivo a criar:**
-```
-src/lib/discord-bot.ts
-```
+**Pontos de disparo reais (mapeados a partir do código existente):**
 
-Funções principais (baseadas no DropBay):
-- `sendDiscordDM(discordId, content)` — envia DM via bot
-- `dmPedidoConfirmado(discordId, items)` — pedido de pontos
-- `dmPedidoPago(discordId, items, total)` — PIX confirmado
-- `dmItemEntregue(discordId)` — entrega confirmada
-- `dmContratoAceito(discordId, contrato)` — contrato aceito
-- `dmContratoRejeitado(discordId, motivo)` — contrato rejeitado
+| Evento | Arquivo | Mensagem |
+|---|---|---|
+| Pedido de pontos finalizado | `src/app/api/store/checkout/route.ts` | `dmPedidoConfirmado` |
+| Pagamento PIX aprovado | `src/app/api/store/webhooks/mercadopago/route.ts` | `dmPedidoPago` |
+| Contrato concluído (admin) | `src/app/api/admin/contratos/acceptances/[id]/complete/route.ts` | `dmRecompensaCreditada` (pontos do contrato) |
+| Troca concluída (admin) | `src/app/api/admin/trades/acceptances/[id]/complete/route.ts` | `dmRecompensaCreditada` (pontos da troca) |
+| Missão de contrato confirmada (admin) | `src/app/api/admin/contratos/schedules/[id]/confirm/route.ts` | `dmRecompensaCreditada` (pontos e/ou item da missão) |
+
+**Não implementado — sem fluxo correspondente no código ainda:**
+- "Contrato rejeitado" — não existe um fluxo de aprovação/rejeição de contrato distinto da conclusão.
+- "Bônus de lançamento (25k pts/24h)" — mencionado em commit antigo mas não há cron/trigger no código atual.
+
+Quando esses fluxos forem construídos, plugar `sendDiscordDM` com `dmRecompensaCreditada` ou uma mensagem nova, seguindo o mesmo padrão fire-and-forget.
 
 ---
 
-### Fase 4 — Canal privado de entrega _(requer todas as fases anteriores)_
+### Fase 4 — Canal privado de entrega _(requer todas as fases anteriores)_ ✅ Implementado
 
-**O que faz:** Para cada pedido PIX pago, cria um canal privado temporário no Discord onde admin e comprador podem combinar a entrega em jogo. Canal é deletado após entrega confirmada.
+**O que faz:** Para cada pedido PIX (`payment_method = "loja_oficial"`) aprovado, cria um canal privado temporário no Discord onde admin e comprador podem combinar a entrega em jogo. Canal é deletado quando o comprador confirma o recebimento. Só dispara se o comprador tiver `discord_id` vinculado (Fase 1) e as três variáveis de estrutura (`DISCORD_GUILD_ID`, `DISCORD_ORDERS_CATEGORY_ID`, `DISCORD_ADMIN_ROLE_ID`) estiverem configuradas — caso contrário, `createPrivateChannel` é um no-op silencioso.
 
 **Lifecycle do canal:**
 ```
-Pagamento PIX confirmado
-  → Cria canal #entrega-{slug}-{orderId}
+Pagamento PIX confirmado (webhook Mercado Pago)
+  → Cria canal #entrega-{8 primeiros chars do orderId}
   → Adiciona: comprador + role admin
-  → Embed de abertura com detalhes do pedido
+  → Embed de abertura com detalhes do pedido (embedCanalEntrega)
+  → discord_channel_id salvo em orders
   → Admin combina entrega via canal
-Comprador confirma recebimento
-  → Canal deletado automaticamente
+Comprador clica "Confirmar recebimento" no perfil (/perfil → Últimos Pedidos)
+  → POST /api/store/orders/[id]/confirm-delivery
+  → orders.delivered_at preenchido, discord_channel_id limpo
+  → Canal deletado automaticamente (deleteDiscordChannel)
+  → Alerta admin via webhook (alertItemEntregue)
 ```
 
-**Banco de dados — migração necessária:**
+**Banco de dados — migração aplicada:** `supabase/migrations/20260630_orders_delivery.sql`
 ```sql
 alter table public.orders
-  add column if not exists discord_channel_id text null;
+  add column if not exists discord_channel_id text null,
+  add column if not exists delivered_at timestamptz null;
 ```
 
-**Funções a criar em `discord-bot.ts`:**
-- `createDeliveryChannel(orderId, buyerDiscordId, items)` — cria canal privado
-- `deleteDeliveryChannel(channelId)` — deleta após entrega
-- `embedCanalEntrega(order)` — embed de abertura do canal
+**Funções em `discord-bot.ts`:**
+- `createPrivateChannel({ name, topic, buyerDiscordId, embed })` — cria canal privado no `DISCORD_GUILD_ID`/`DISCORD_ORDERS_CATEGORY_ID`, com permissão para comprador + `DISCORD_ADMIN_ROLE_ID`, e envia o embed de abertura mencionando o comprador
+- `deleteDiscordChannel(channelId)` — deleta o canal (best-effort, fire-and-forget)
+- `embedCanalEntrega({ orderId, buyerName, items, total })` — embed de abertura do canal
+
+**Pontos de disparo reais:**
+
+| Evento | Arquivo |
+|---|---|
+| Pagamento PIX aprovado → cria canal | `src/app/api/store/webhooks/mercadopago/route.ts` |
+| Comprador confirma recebimento → deleta canal | `src/app/api/store/orders/[id]/confirm-delivery/route.ts` |
+
+**UI:** botão "Confirmar recebimento" aparece em `/perfil` → seção "Últimos Pedidos", apenas para pedidos com `payment_method = "loja_oficial"`, `payment_status = "paid"` e `delivered_at` ainda nulo.
 
 **Permissões no canal criado:**
 ```
@@ -159,7 +173,9 @@ Admin Role  → ALLOW view + send + history
 Comprador   → ALLOW view + send + history
 ```
 
-> Canais de pontos (sem pagamento financeiro) **não precisam de canal** — entrega é feita automaticamente pelo sistema.
+> Pedidos de pontos (`payment_method = "pontos"`, sem pagamento financeiro) **não criam canal** — entrega é feita automaticamente pelo sistema (ver `dmPedidoConfirmado` na Fase 3).
+
+**Pendente:** não existe rota/UI de override para admin confirmar a entrega manualmente caso o comprador não confirme — só o próprio comprador pode confirmar hoje.
 
 ---
 
@@ -196,12 +212,12 @@ Comprador   → ALLOW view + send + history
 ## Ordem de implementação recomendada
 
 ```
-[ ] 1. Criar aplicação no discord.com/developers
-[ ] 2. Criar bot, convidar para o servidor, copiar tokens
-[ ] 3. Criar webhook no canal de alertas
-[ ] 4. Adicionar variáveis de ambiente no Vercel
-[ ] 5. Fase 1 — OAuth (vinculação de conta)
-[ ] 6. Fase 2 — Alertas webhook (sem bot, mais simples)
-[ ] 7. Fase 3 — DMs automáticas
-[ ] 8. Fase 4 — Canais de entrega (opcional, só se escala)
+[x] 1. Criar aplicação no discord.com/developers
+[x] 2. Criar bot, convidar para o servidor, copiar tokens
+[x] 3. Criar webhook no canal de alertas
+[x] 4. Adicionar variáveis de ambiente no Vercel
+[x] 5. Fase 1 — OAuth (vinculação de conta)
+[x] 6. Fase 2 — Alertas webhook (sem bot, mais simples)
+[x] 7. Fase 3 — DMs automáticas
+[x] 8. Fase 4 — Canais de entrega (código pronto, falta configurar DISCORD_GUILD_ID/DISCORD_ORDERS_CATEGORY_ID/DISCORD_ADMIN_ROLE_ID)
 ```

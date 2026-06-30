@@ -13,7 +13,7 @@ import "../../../styles/perfil.css"
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024
 const ALLOWED_AVATAR_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
-type Order = { id: string; created_at: string; status: string; total: number; payment_method: string | null; items: { name: string; qty?: number }[] }
+type Order = { id: string; created_at: string; status: string; payment_status: string | null; total: number; payment_method: string | null; items: { name: string; qty?: number }[]; delivered_at: string | null }
 type EcoLog = { id: string; action: string; value: number; currency: string; source: string; created_at: string }
 
 function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }
@@ -46,6 +46,8 @@ export default function PerfilPage() {
   const [discordAvatar, setDiscordAvatar]     = useState<string | null>(null)
   const [discordDisconnecting, setDiscordDisconnecting] = useState(false)
   const [discordMsg, setDiscordMsg]           = useState("")
+  const [confirmingDeliveryId, setConfirmingDeliveryId] = useState<string | null>(null)
+  const [deliveryMsg, setDeliveryMsg]         = useState("")
 
   useEffect(() => {
     const supabase = createClient()
@@ -57,7 +59,7 @@ export default function PerfilPage() {
       const [profileRes, inventoryRes, ordersRes, ecoRes] = await Promise.all([
         supabase.from("profiles").select("points, avatar_url, game_id, cpf, total_spent, total_orders, created_at, discord_id, discord_username, discord_avatar").eq("id", user.id).single(),
         supabase.from("user_inventory").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("orders").select("id, created_at, status, total, payment_method, items").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
+        supabase.from("orders").select("id, created_at, status, payment_status, total, payment_method, items, delivered_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(10),
         supabase.from("economy_logs").select("id, action, value, currency, source, created_at").eq("player_id", user.id).order("created_at", { ascending: false }).limit(20),
       ])
 
@@ -146,6 +148,19 @@ export default function PerfilPage() {
       setDiscordMsg("error")
     }
     setTimeout(() => setDiscordMsg(""), 4000)
+  }
+
+  async function handleConfirmDelivery(orderId: string) {
+    setConfirmingDeliveryId(orderId)
+    const res = await fetch(`/api/store/orders/${orderId}/confirm-delivery`, { method: "POST" })
+    setConfirmingDeliveryId(null)
+    if (res.ok) {
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, delivered_at: new Date().toISOString() } : o))
+      setDeliveryMsg("ok")
+    } else {
+      setDeliveryMsg("error")
+    }
+    setTimeout(() => setDeliveryMsg(""), 3500)
   }
 
   async function handleLogout() {
@@ -452,21 +467,39 @@ export default function PerfilPage() {
                 const statusColor: Record<string, string> = { paid: "var(--green)", pending: "var(--yellow)", cancelled: "var(--red)", failed: "var(--red)" }
                 const statusLabel: Record<string, string> = { paid: "Pago", pending: "Pendente", cancelled: "Cancelado", failed: "Falhou" }
                 const itemNames = Array.isArray(order.items) ? order.items.map((i: any) => i.name ?? i.itemId ?? "Item").slice(0, 3).join(", ") : "—"
+                const awaitingDelivery = order.payment_method === "loja_oficial" && order.payment_status === "paid" && !order.delivered_at
                 return (
-                  <div key={order.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 13 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.05)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                      <ShoppingBag size={14} style={{ color: "var(--cyan)" }} />
+                  <div key={order.id} style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: 13 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.05)", display: "grid", placeItems: "center", flexShrink: 0 }}>
+                        <ShoppingBag size={14} style={{ color: "var(--cyan)" }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{itemNames}{Array.isArray(order.items) && order.items.length > 3 ? ` +${order.items.length - 3}` : ""}</p>
+                        <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{formatDate(order.created_at)} · {order.payment_method === "pontos" ? "Pontos" : "PIX"}</p>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 950, color: order.payment_method === "pontos" ? "var(--yellow)" : "var(--green)" }}>
+                          {order.payment_method === "pontos" ? `${formatNumber(order.total)} pts` : `R$ ${Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+                        </p>
+                        <p style={{ margin: "2px 0 0", fontSize: 11, fontWeight: 950, color: statusColor[order.status] ?? "var(--muted)" }}>{statusLabel[order.status] ?? order.status}</p>
+                      </div>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 800, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{itemNames}{Array.isArray(order.items) && order.items.length > 3 ? ` +${order.items.length - 3}` : ""}</p>
-                      <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{formatDate(order.created_at)} · {order.payment_method === "points" ? "Pontos" : "PIX"}</p>
-                    </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <p style={{ margin: 0, fontWeight: 950, color: order.payment_method === "points" ? "var(--yellow)" : "var(--green)" }}>
-                        {order.payment_method === "points" ? `${formatNumber(order.total)} pts` : `R$ ${Number(order.total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
-                      </p>
-                      <p style={{ margin: "2px 0 0", fontSize: 11, fontWeight: 950, color: statusColor[order.status] ?? "var(--muted)" }}>{statusLabel[order.status] ?? order.status}</p>
-                    </div>
+                    {awaitingDelivery && (
+                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <button
+                          type="button"
+                          className="profile-discord-btn profile-discord-btn-connect"
+                          onClick={() => handleConfirmDelivery(order.id)}
+                          disabled={confirmingDeliveryId === order.id}
+                        >
+                          {confirmingDeliveryId === order.id ? "Confirmando..." : "Confirmar recebimento"}
+                        </button>
+                      </div>
+                    )}
+                    {order.delivered_at && (
+                      <p style={{ margin: 0, fontSize: 11, color: "var(--green)", textAlign: "right" }}>✓ Entrega confirmada</p>
+                    )}
                   </div>
                 )
               })}
@@ -526,6 +559,12 @@ export default function PerfilPage() {
     )}
     {discordMsg === "error" && (
       <div className="app-toast" data-tone="error" role="status" aria-live="polite">✗ Erro ao conectar o Discord. Tente novamente.</div>
+    )}
+    {deliveryMsg === "ok" && (
+      <div className="app-toast" data-tone="success" role="status" aria-live="polite">✓ Entrega confirmada! Obrigado.</div>
+    )}
+    {deliveryMsg === "error" && (
+      <div className="app-toast" data-tone="error" role="status" aria-live="polite">✗ Não foi possível confirmar a entrega. Tente novamente.</div>
     )}
     </>
   )
