@@ -60,3 +60,92 @@ export function dmRecompensaCreditada(userName: string, contextLabel: string, pa
   const reward = parts.length > 0 ? parts.join(" e ") : "sua recompensa"
   return `🎁 Olá, **${userName}**!\n\n${contextLabel} foi concluído(a) e você recebeu ${reward}! Confira seu perfil no Sucatão.`
 }
+
+// ── Canais privados de entrega (Fase 4) ─────────────────────────────────────
+
+type EmbedField = { name: string; value: string; inline?: boolean }
+type Embed = {
+  title?: string
+  description?: string
+  color?: number
+  fields?: EmbedField[]
+  footer?: { text: string }
+  timestamp?: string
+}
+
+// VIEW_CHANNEL + SEND_MESSAGES + READ_MESSAGE_HISTORY
+const CHANNEL_PERMS = "68608"
+
+export function embedCanalEntrega(params: {
+  orderId: string
+  buyerName: string
+  items: { name: string; quantity: number }[]
+  total: number
+}): Embed {
+  return {
+    color: 0x22c55e,
+    title: `📦 Entrega — Pedido #${params.orderId.slice(0, 8)}`,
+    description:
+      "Canal criado para vocês combinarem a entrega in-game.\n\n" +
+      "> ⚠️ Não compartilhem dados pessoais aqui. Qualquer problema, acionem um admin.",
+    fields: [
+      { name: "Comprador", value: params.buyerName, inline: true },
+      { name: "Total pago", value: brl(params.total), inline: true },
+      { name: "Itens", value: formatItems(params.items) },
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: "Sucatão de Speranza · Canal removido automaticamente após a entrega" },
+  }
+}
+
+export async function createPrivateChannel(params: {
+  name: string
+  topic: string
+  buyerDiscordId: string
+  embed: Embed
+}): Promise<string | null> {
+  const guildId    = process.env.DISCORD_GUILD_ID
+  const categoryId = process.env.DISCORD_ORDERS_CATEGORY_ID
+  const adminRole  = process.env.DISCORD_ADMIN_ROLE_ID
+  if (!guildId || !categoryId || !adminRole || !BOT_TOKEN) return null
+
+  const permission_overwrites = [
+    { id: guildId, type: 0, deny: "1024" },                      // @everyone sem acesso
+    { id: adminRole, type: 0, allow: CHANNEL_PERMS },             // role admin
+    { id: params.buyerDiscordId, type: 1, allow: CHANNEL_PERMS }, // comprador
+  ]
+
+  try {
+    const res = await fetch(`${DISCORD_API}/guilds/${guildId}/channels`, {
+      method: "POST",
+      headers: botHeaders(),
+      body: JSON.stringify({
+        name: params.name,
+        type: 0,
+        parent_id: categoryId,
+        topic: params.topic,
+        permission_overwrites,
+      }),
+    })
+    if (!res.ok) return null
+    const channel = await res.json()
+
+    await fetch(`${DISCORD_API}/channels/${channel.id}/messages`, {
+      method: "POST",
+      headers: botHeaders(),
+      body: JSON.stringify({ content: `<@${params.buyerDiscordId}>`, embeds: [params.embed] }),
+    }).catch(() => {})
+
+    return channel.id as string
+  } catch {
+    return null
+  }
+}
+
+export async function deleteDiscordChannel(channelId: string | null | undefined): Promise<void> {
+  if (!channelId || !BOT_TOKEN) return
+  await fetch(`${DISCORD_API}/channels/${channelId}`, {
+    method: "DELETE",
+    headers: botHeaders(),
+  }).catch(() => {})
+}

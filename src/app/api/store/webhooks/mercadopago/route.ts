@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchMercadoPagoPayment, verifyMercadoPagoWebhookSignature } from "@/lib/mercadopago"
 import { alertPedidoPago } from "@/lib/discord-webhook"
-import { sendDiscordDM, dmPedidoPago } from "@/lib/discord-bot"
+import { sendDiscordDM, dmPedidoPago, createPrivateChannel, embedCanalEntrega } from "@/lib/discord-bot"
 
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
@@ -106,6 +106,24 @@ export async function POST(request: NextRequest) {
           profile?.discord_id,
           dmPedidoPago(profile?.username ?? "Desconhecido", pixItems, ord.total ?? 0),
         )
+
+        // Canal privado de entrega — só se o comprador tiver Discord vinculado
+        if (profile?.discord_id) {
+          const channelId = await createPrivateChannel({
+            name: `entrega-${ord.id.slice(0, 8)}`,
+            topic: `Pedido #${ord.id}`,
+            buyerDiscordId: profile.discord_id,
+            embed: embedCanalEntrega({
+              orderId: ord.id,
+              buyerName: profile?.username ?? "Comprador",
+              items: pixItems,
+              total: ord.total ?? 0,
+            }),
+          })
+          if (channelId) {
+            await supabase.from("orders").update({ discord_channel_id: channelId }).eq("id", ord.id)
+          }
+        }
       }
     } else if (status === "pending" || status === "in_process") {
       await supabase
