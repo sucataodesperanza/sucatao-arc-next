@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchMercadoPagoPayment, verifyMercadoPagoWebhookSignature } from "@/lib/mercadopago"
 import { alertPedidoPago } from "@/lib/discord-webhook"
+import { sendDiscordDM, dmPedidoPago } from "@/lib/discord-bot"
 
 export async function POST(request: NextRequest) {
   const supabase = createAdminClient()
@@ -86,17 +87,25 @@ export async function POST(request: NextRequest) {
         // Alerta Discord — PIX confirmado
         const { data: profile } = await supabase
           .from("profiles")
-          .select("username, game_id")
+          .select("username, game_id, discord_id")
           .eq("id", ord.user_id)
           .single()
+
+        const pixItems = (ord.items ?? []).map((i) => ({ name: i.name, quantity: i.quantity }))
 
         alertPedidoPago({
           orderId: ord.id,
           userName: profile?.username ?? "Desconhecido",
           gameId: profile?.game_id ?? "—",
-          items: (ord.items ?? []).map((i) => ({ name: i.name, quantity: i.quantity })),
+          items: pixItems,
           total: ord.total ?? 0,
         }).catch(() => {})
+
+        // DM Discord ao comprador — fire-and-forget
+        sendDiscordDM(
+          profile?.discord_id,
+          dmPedidoPago(profile?.username ?? "Desconhecido", pixItems, ord.total ?? 0),
+        )
       }
     } else if (status === "pending" || status === "in_process") {
       await supabase

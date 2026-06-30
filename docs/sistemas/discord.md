@@ -23,7 +23,7 @@ DISCORD_ADMIN_ROLE_ID=        # Role do admin (acesso automático aos canais)
 DISCORD_ALERT_CHANNEL_ID=     # Canal onde chegam os alertas do bot
 ```
 
-> **Status atual:** Nenhuma variável configurada. Configurar no painel do Vercel + criar aplicação em discord.com/developers antes de iniciar a Fase 1.
+> **Status atual:** `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` e `DISCORD_WEBHOOK_URL` configurados (Fases 1 e 2 em produção). Bot criado e convidado ao servidor — falta adicionar `DISCORD_BOT_TOKEN` no `.env.local` e na Vercel para ativar a Fase 3. `DISCORD_GUILD_ID` e as demais variáveis de estrutura (categoria, role admin) só são necessárias na Fase 4 (canais privados).
 
 ---
 
@@ -96,33 +96,34 @@ DISCORD_WEBHOOK_URL=   # URL do webhook do canal de alertas (gerar no Discord)
 
 ---
 
-### Fase 3 — DMs automáticas ao usuário _(requer Fase 1 + bot token)_
+### Fase 3 — DMs automáticas ao usuário _(requer Fase 1 + bot token)_ ✅ Implementado
 
-**O que faz:** O bot envia DM privada ao usuário quando algo acontece com a conta dele.
+**O que faz:** O bot envia DM privada ao usuário quando algo acontece com a conta dele. Só dispara se o usuário tiver `discord_id` vinculado (Fase 1) — caso contrário, `sendDiscordDM` é um no-op silencioso.
 
-**DMs planejadas:**
+**Arquivo:** `src/lib/discord-bot.ts`
 
-| Evento | Mensagem enviada |
-|---|---|
-| Pedido confirmado (pontos) | "Seu pedido foi confirmado! Os itens serão entregues no jogo em breve." |
-| Pedido PIX confirmado | "Pagamento recebido! O admin vai entrar em contato para combinar a entrega." |
-| Item entregue | "Entrega confirmada. Obrigado por usar o Sucatão! ✓" |
-| Contrato aceito | "Seu contrato foi aceito. Verifique os detalhes na plataforma." |
-| Contrato rejeitado | "Seu contrato não foi aprovado. Veja o motivo na plataforma." |
-| Bônus de pontos recebido | "Você recebeu {N} pontos! Confira seu saldo no perfil." |
+Funções:
+- `sendDiscordDM(discordId, content)` — abre/reusa canal de DM via bot e envia a mensagem. Não faz nada se `discordId` ou `DISCORD_BOT_TOKEN` ausentes.
+- `dmPedidoConfirmado(userName, items)` — pedido de pontos resgatado (itens já no inventário)
+- `dmPedidoPago(userName, items, total)` — PIX confirmado, aguardando combinar entrega
+- `dmRecompensaCreditada(userName, contextLabel, { points, itemName })` — genérica para qualquer recompensa creditada (pontos e/ou item)
 
-**Arquivo a criar:**
-```
-src/lib/discord-bot.ts
-```
+**Pontos de disparo reais (mapeados a partir do código existente):**
 
-Funções principais (baseadas no DropBay):
-- `sendDiscordDM(discordId, content)` — envia DM via bot
-- `dmPedidoConfirmado(discordId, items)` — pedido de pontos
-- `dmPedidoPago(discordId, items, total)` — PIX confirmado
-- `dmItemEntregue(discordId)` — entrega confirmada
-- `dmContratoAceito(discordId, contrato)` — contrato aceito
-- `dmContratoRejeitado(discordId, motivo)` — contrato rejeitado
+| Evento | Arquivo | Mensagem |
+|---|---|---|
+| Pedido de pontos finalizado | `src/app/api/store/checkout/route.ts` | `dmPedidoConfirmado` |
+| Pagamento PIX aprovado | `src/app/api/store/webhooks/mercadopago/route.ts` | `dmPedidoPago` |
+| Contrato concluído (admin) | `src/app/api/admin/contratos/acceptances/[id]/complete/route.ts` | `dmRecompensaCreditada` (pontos do contrato) |
+| Troca concluída (admin) | `src/app/api/admin/trades/acceptances/[id]/complete/route.ts` | `dmRecompensaCreditada` (pontos da troca) |
+| Missão de contrato confirmada (admin) | `src/app/api/admin/contratos/schedules/[id]/confirm/route.ts` | `dmRecompensaCreditada` (pontos e/ou item da missão) |
+
+**Não implementado — sem fluxo correspondente no código ainda:**
+- "Item entregue" (confirmação de entrega pelo comprador) — não existe rota de confirmação de entrega no momento; `alertItemEntregue` em `discord-webhook.ts` já existe mas está sem chamador.
+- "Contrato rejeitado" — não existe um fluxo de aprovação/rejeição de contrato distinto da conclusão.
+- "Bônus de lançamento (25k pts/24h)" — mencionado em commit antigo mas não há cron/trigger no código atual.
+
+Quando esses fluxos forem construídos, plugar `sendDiscordDM` com `dmRecompensaCreditada` ou uma mensagem nova, seguindo o mesmo padrão fire-and-forget.
 
 ---
 
@@ -196,12 +197,12 @@ Comprador   → ALLOW view + send + history
 ## Ordem de implementação recomendada
 
 ```
-[ ] 1. Criar aplicação no discord.com/developers
-[ ] 2. Criar bot, convidar para o servidor, copiar tokens
-[ ] 3. Criar webhook no canal de alertas
-[ ] 4. Adicionar variáveis de ambiente no Vercel
-[ ] 5. Fase 1 — OAuth (vinculação de conta)
-[ ] 6. Fase 2 — Alertas webhook (sem bot, mais simples)
-[ ] 7. Fase 3 — DMs automáticas
+[x] 1. Criar aplicação no discord.com/developers
+[x] 2. Criar bot, convidar para o servidor, copiar tokens
+[x] 3. Criar webhook no canal de alertas
+[x] 4. Adicionar variáveis de ambiente no Vercel
+[x] 5. Fase 1 — OAuth (vinculação de conta)
+[x] 6. Fase 2 — Alertas webhook (sem bot, mais simples)
+[x] 7. Fase 3 — DMs automáticas
 [ ] 8. Fase 4 — Canais de entrega (opcional, só se escala)
 ```

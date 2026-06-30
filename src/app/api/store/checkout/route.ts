@@ -6,6 +6,7 @@ import { isValidCpf } from "@/lib/cpf"
 import { addItemsToInventory } from "@/lib/inventory"
 import { logEconomy } from "@/lib/economy"
 import { alertPedidoPontos, alertPedidoPix } from "@/lib/discord-webhook"
+import { sendDiscordDM, dmPedidoConfirmado } from "@/lib/discord-bot"
 
 type CheckoutItem = {
   itemId: string
@@ -46,7 +47,7 @@ export async function POST(request: NextRequest) {
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("points, cpf, game_id")
+    .select("points, cpf, game_id, discord_id")
     .eq("id", user.id)
     .single()
 
@@ -166,13 +167,20 @@ export async function POST(request: NextRequest) {
     await addItemsToInventory(user.id, pointsItems, "points")
 
     // Alerta Discord — fire-and-forget
+    const pointsUserName = (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido"
     alertPedidoPontos({
       orderId: order.id,
-      userName: (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido",
+      userName: pointsUserName,
       gameId: profile.game_id ?? "—",
       items: pointsItems.map(i => ({ name: i.name, quantity: i.quantity })),
       pointsCost: pointsItems.reduce((s, i) => s + (Math.round(i.value * 24) * i.quantity), 0),
     }).catch(() => {})
+
+    // DM Discord ao comprador — fire-and-forget
+    sendDiscordDM(
+      (profile as { discord_id?: string | null }).discord_id,
+      dmPedidoConfirmado(pointsUserName, pointsItems.map(i => ({ name: i.name, quantity: i.quantity }))),
+    )
 
     // Registra no economy_logs
     for (const item of pointsItems) {
