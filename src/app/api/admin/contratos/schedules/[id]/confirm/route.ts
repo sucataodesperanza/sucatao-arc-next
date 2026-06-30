@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { addItemsToInventory } from "@/lib/inventory"
+import { sendDiscordDM, dmRecompensaCreditada } from "@/lib/discord-bot"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin()
@@ -48,8 +49,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   }
 
   // Credita pontos
+  const { data: profile } = await admin.from("profiles").select("points, username, discord_id").eq("id", schedule.user_id).single()
   if ((mission.points_reward ?? 0) > 0) {
-    const { data: profile } = await admin.from("profiles").select("points").eq("id", schedule.user_id).single()
     const current = (profile as { points: number } | null)?.points ?? 0
     await admin.from("profiles").update({ points: current + (mission.points_reward ?? 0) }).eq("id", schedule.user_id)
   }
@@ -78,6 +79,17 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     .from("contract_mission_schedules")
     .update({ status: "confirmed", confirmed_at: new Date().toISOString() })
     .eq("id", scheduleId)
+
+  // DM Discord ao jogador — fire-and-forget
+  if ((mission.points_reward ?? 0) > 0 || itemReward) {
+    sendDiscordDM(
+      (profile as { discord_id?: string | null } | null)?.discord_id,
+      dmRecompensaCreditada((profile as { username?: string } | null)?.username ?? "Jogador", "Sua missão", {
+        points: mission.points_reward ?? 0,
+        itemName: itemReward?.item_name ?? null,
+      }),
+    )
+  }
 
   return NextResponse.json({
     ok: true,
