@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from("orders")
-    .select("id, user_id, total, status, payment_method, payment_status, items, created_at, paid_at, cancelled_at", { count: "exact" })
+    .select("id, user_id, total, status, payment_method, payment_status, items, created_at, paid_at, cancelled_at, discord_channel_id, delivered_at", { count: "exact" })
     .order("created_at", { ascending: false })
 
   if (status !== "all") query = query.eq("status", status)
