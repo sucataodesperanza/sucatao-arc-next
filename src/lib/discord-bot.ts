@@ -98,14 +98,41 @@ export function embedCanalEntrega(params: {
   }
 }
 
+export function embedTradeTicket(params: {
+  acceptanceId: string
+  playerName: string
+  itemName: string
+  itemQty: number
+  offerPoints: number
+  gameId?: string | null
+}): Embed {
+  const fields: EmbedField[] = [
+    { name: "Jogador",          value: params.playerName,                            inline: true },
+    { name: "Pontos a receber", value: `${params.offerPoints.toLocaleString("pt-BR")} pts`, inline: true },
+    { name: "Item a entregar",  value: `${params.itemQty}× ${params.itemName}` },
+  ]
+  if (params.gameId) fields.push({ name: "Game ID", value: params.gameId })
+  return {
+    color: 0x5865f2,
+    title: `🔄 Trade — #${params.acceptanceId.slice(0, 8).toUpperCase()}`,
+    description:
+      "Canal criado para combinarem a entrega do item in-game.\n\n" +
+      "> ⚠️ Não compartilhem dados pessoais aqui. Qualquer problema, acionem um admin.",
+    fields,
+    timestamp: new Date().toISOString(),
+    footer: { text: "Sucatão de Speranza · Canal removido automaticamente após conclusão" },
+  }
+}
+
 export async function createPrivateChannel(params: {
   name: string
   topic: string
   buyerDiscordId: string
   embed: Embed
+  categoryId?: string
 }): Promise<string | null> {
   const guildId    = process.env.DISCORD_GUILD_ID
-  const categoryId = process.env.DISCORD_ORDERS_CATEGORY_ID
+  const categoryId = params.categoryId ?? process.env.DISCORD_ORDERS_CATEGORY_ID
   const adminRole  = process.env.DISCORD_ADMIN_ROLE_ID
   if (!guildId || !categoryId || !adminRole || !BOT_TOKEN) return null
 

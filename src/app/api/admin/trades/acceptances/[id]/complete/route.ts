@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendDiscordDM, dmRecompensaCreditada } from "@/lib/discord-bot"
+import { sendDiscordDM, dmRecompensaCreditada, deleteDiscordChannel } from "@/lib/discord-bot"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin()
@@ -13,7 +13,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   // Busca aceitação com trade (para saber os pontos)
   const { data: acceptance, error: fetchError } = await supabase
     .from("trade_acceptances")
-    .select("id, user_id, status, trades(offer_points)")
+    .select("id, user_id, status, discord_channel_id, trades(offer_points)")
     .eq("id", id)
     .single()
 
@@ -56,6 +56,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     (profile as { discord_id?: string | null } | null)?.discord_id,
     dmRecompensaCreditada((profile as { username?: string } | null)?.username ?? "Jogador", "Sua troca", { points }),
   )
+
+  // Encerra canal Discord do trade — fire-and-forget
+  deleteDiscordChannel((acceptance as { discord_channel_id?: string | null }).discord_channel_id)
 
   return NextResponse.json({ ok: true, points_credited: points })
 }
