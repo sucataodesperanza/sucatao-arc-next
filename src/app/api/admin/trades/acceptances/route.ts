@@ -23,7 +23,7 @@ export async function GET() {
   const { data, error } = await supabase
     .from("trade_acceptances")
     .select(`
-      id, status, game_id, created_at, scheduled_at, user_id,
+      id, status, game_id, created_at, scheduled_at, user_id, discord_channel_id,
       trades(id, offer_points, want_item_name, want_item_qty)
     `)
     .neq("status", "cancelled")

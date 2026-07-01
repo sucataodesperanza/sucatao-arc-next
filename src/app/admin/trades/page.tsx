@@ -404,6 +404,7 @@ function OperatingHoursSection() {
 type Acceptance = {
   id: string; status: string; game_id: string | null; created_at: string
   scheduled_at: string | null
+  discord_channel_id: string | null
   trades: { id: string; offer_points: number; want_item_name: string; want_item_qty: number } | null
   user_id: string
   profiles: { name: string | null } | null
@@ -482,9 +483,14 @@ function AcceptancesSection() {
                       : <em style={{ opacity: 0.4, color: "var(--muted)" }}>Aguardando agendamento</em>}
                   </td>
                   <td style={{ padding: "8px" }}>
-                    <span style={{ color: a.status === "completed" ? "var(--green)" : a.status === "scheduled" ? "var(--yellow)" : "var(--gray-500)", fontWeight: 950 }}>
-                      {ACCEPTANCE_STATUS[a.status] ?? a.status}
-                    </span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                      <span style={{ color: a.status === "completed" ? "var(--green)" : a.status === "scheduled" ? "var(--yellow)" : "var(--gray-500)", fontWeight: 950 }}>
+                        {ACCEPTANCE_STATUS[a.status] ?? a.status}
+                      </span>
+                      {a.discord_channel_id && a.status !== "completed" && (
+                        <span style={{ fontSize: 10, color: "#a5b4fc" }}>Discord ativo</span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ padding: "8px" }}>
                     {a.status === "scheduled" && (
@@ -534,6 +540,14 @@ function AcceptancesSection() {
                   <span style={{ color: accent ?? "var(--paper)", fontWeight: 950, fontFamily: mono ? "monospace" : undefined }}>{value}</span>
                 </div>
               ))}
+              {confirmModal.discord_channel_id && (
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 2 }}>
+                  <span style={{ color: "var(--gray-500)", fontWeight: 800 }}>Canal Discord</span>
+                  <span style={{ color: "#a5b4fc", fontWeight: 950, fontFamily: "monospace", fontSize: 11 }}>
+                    #{confirmModal.discord_channel_id}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
