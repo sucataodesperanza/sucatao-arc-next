@@ -87,15 +87,16 @@ export async function POST(request: NextRequest) {
         // Alerta Discord — PIX confirmado
         const { data: profile } = await supabase
           .from("profiles")
-          .select("username, game_id, discord_id")
+          .select("username, game_id, discord_id, discord_username")
           .eq("id", ord.user_id)
           .single()
 
         const pixItems = (ord.items ?? []).map((i) => ({ name: i.name, quantity: i.quantity }))
+        const buyerName = profile?.username ?? profile?.discord_username ?? "Comprador"
 
         alertPedidoPago({
           orderId: ord.id,
-          userName: profile?.username ?? "Desconhecido",
+          userName: buyerName,
           gameId: profile?.game_id ?? "—",
           items: pixItems,
           total: ord.total ?? 0,
@@ -104,7 +105,7 @@ export async function POST(request: NextRequest) {
         // DM Discord ao comprador — fire-and-forget
         sendDiscordDM(
           profile?.discord_id,
-          dmPedidoPago(profile?.username ?? "Desconhecido", pixItems, ord.total ?? 0),
+          dmPedidoPago(buyerName, pixItems, ord.total ?? 0),
         )
 
         // Canal privado de entrega — só se o comprador tiver Discord vinculado
@@ -115,7 +116,7 @@ export async function POST(request: NextRequest) {
             buyerDiscordId: profile.discord_id,
             embed: embedCanalEntrega({
               orderId: ord.id,
-              buyerName: profile?.username ?? "Comprador",
+              buyerName,
               items: pixItems,
               total: ord.total ?? 0,
             }),
