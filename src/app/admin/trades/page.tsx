@@ -466,7 +466,7 @@ function AcceptancesSection() {
             </thead>
             <tbody>
               {items.map(a => (
-                <tr key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: a.status === "completed" ? 0.5 : 1 }}>
+                <tr key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: a.status === "completed" ? 0.5 : 1, cursor: "pointer" }} onClick={() => setConfirmModal(a)}>
                   <td style={{ padding: "8px", fontWeight: 800 }}>{a.profiles?.name ?? a.user_id.slice(0, 8)}</td>
                   <td style={{ padding: "8px", color: "var(--cyan)", fontFamily: "monospace" }}>
                     {a.game_id ?? <em style={{ opacity: 0.4 }}>—</em>}
@@ -493,7 +493,7 @@ function AcceptancesSection() {
                     </div>
                   </td>
                   <td style={{ padding: "8px" }}>
-                    {a.status === "scheduled" && (
+                    {(a.status === "scheduled" || a.status === "pending") && (
                       <button type="button" onClick={() => setConfirmModal(a)} disabled={completing === a.id}
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "6px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: completing === a.id ? 0.6 : 1 }}>
                         <CheckCircle size={12} /> {completing === a.id ? "..." : "Concluir"}
@@ -553,12 +553,14 @@ function AcceptancesSection() {
             <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
               <button type="button" onClick={() => setConfirmModal(null)}
                 style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper-dim)", padding: "9px 16px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit" }}>
-                Cancelar
+                Fechar
               </button>
-              <button type="button" onClick={() => completeTrade(confirmModal.id)} disabled={completing === confirmModal.id}
-                style={{ border: "1px solid rgba(61,242,139,0.5)", background: "rgba(61,242,139,0.12)", color: "var(--green)", padding: "9px 16px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit", opacity: completing === confirmModal.id ? 0.6 : 1 }}>
-                {completing === confirmModal.id ? "Concluindo..." : "✓ Confirmar e Creditar"}
-              </button>
+              {(confirmModal.status === "scheduled" || confirmModal.status === "pending") && (
+                <button type="button" onClick={() => completeTrade(confirmModal.id)} disabled={completing === confirmModal.id}
+                  style={{ border: "1px solid rgba(61,242,139,0.5)", background: "rgba(61,242,139,0.12)", color: "var(--green)", padding: "9px 16px", fontSize: 12, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 8, font: "inherit", opacity: completing === confirmModal.id ? 0.6 : 1 }}>
+                  {completing === confirmModal.id ? "Concluindo..." : "✓ Confirmar e Creditar"}
+                </button>
+              )}
             </div>
           </div>
         </div>

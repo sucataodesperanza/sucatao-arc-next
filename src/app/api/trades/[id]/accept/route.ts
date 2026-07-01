@@ -3,12 +3,27 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createPrivateChannel, embedTradeTicket } from "@/lib/discord-bot"
 
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
+
+  // Lê slot_id + game_id do body
+  const body = await req.json().catch(() => ({}))
+  const { slot_id, game_id } = body as { slot_id?: string; game_id?: string }
+  if (!slot_id) return NextResponse.json({ error: "Selecione um horário." }, { status: 400 })
+  if (!game_id?.trim()) return NextResponse.json({ error: "Informe seu Game ID." }, { status: 400 })
+
+  // Valida slot
+  const { data: slot } = await supabase
+    .from("trade_slots")
+    .select("id, scheduled_for, label")
+    .eq("id", slot_id)
+    .eq("active", true)
+    .single()
+  if (!slot) return NextResponse.json({ error: "Horário não encontrado." }, { status: 400 })
 
   // Verifica se o trade existe e está ativo
   const { data: trade } = await supabase
@@ -37,7 +52,14 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   const { data: inserted, error } = await supabase
     .from("trade_acceptances")
-    .insert({ trade_id: id, user_id: user.id, status: "pending" })
+    .insert({
+      trade_id:     id,
+      user_id:      user.id,
+      status:       "scheduled",
+      slot_id,
+      game_id:      game_id.trim(),
+      scheduled_at: slot.scheduled_for,
+    })
     .select("id")
     .single()
 
@@ -64,16 +86,18 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         const embed = embedTradeTicket({
           acceptanceId: inserted.id,
           playerName,
-          itemName:    trade.want_item_name,
-          itemQty:     trade.want_item_qty,
-          offerPoints: trade.offer_points,
+          itemName:     trade.want_item_name,
+          itemQty:      trade.want_item_qty,
+          offerPoints:  trade.offer_points,
+          gameId:       game_id.trim(),
+          scheduledAt:  slot.scheduled_for,
         })
         const channelId = await createPrivateChannel({
-          name: `trade-${inserted.id.slice(0, 8)}`,
-          topic: `Trade com ${playerName} — ${trade.want_item_qty}× ${trade.want_item_name}`,
+          name:           `trade-${inserted.id.slice(0, 8)}`,
+          topic:          `Trade com ${playerName} — ${trade.want_item_qty}× ${trade.want_item_name}`,
           buyerDiscordId: discordId,
           embed,
-          categoryId: process.env.DISCORD_TRADES_CATEGORY_ID ?? process.env.DISCORD_ORDERS_CATEGORY_ID,
+          categoryId:     process.env.DISCORD_TRADES_CATEGORY_ID ?? process.env.DISCORD_ORDERS_CATEGORY_ID,
         })
         if (channelId) {
           await adminSb
