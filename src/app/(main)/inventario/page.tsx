@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Archive, ChevronLeft, ChevronRight, Coins, HelpCircle, Package, Plus, Search, ShoppingBag, Star, Truck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -92,7 +91,6 @@ function DonutChart({ entries }: { entries: InventoryEntry[] }) {
 // ── Página ─────────────────────────────────────────────────────────────────
 
 export default function InventarioPage() {
-  const router = useRouter()
   const [userId, setUserId] = useState<string | null | undefined>(undefined)
   const [points, setPoints]   = useState<number | null>(null)
   const [entries, setEntries]       = useState<InventoryEntry[]>([])
@@ -115,12 +113,12 @@ export default function InventarioPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) { router.push("/login?next=/inventario"); return }
+      if (!user) { setUserId(null); setLoading(false); return }
       setUserId(user.id)
       supabase.from("profiles").select("points").eq("id", user.id).single()
         .then(({ data }) => { if (data) setPoints(data.points ?? 0) })
     })
-  }, [router])
+  }, [])
 
   const [reconciling, setReconciling] = useState(false)
 
@@ -269,7 +267,15 @@ export default function InventarioPage() {
             ))}
           </div>
 
-          {activeTab === "historico" ? (
+          {userId === null ? (
+            <div style={{ marginTop: 48, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+              <Package size={40} style={{ opacity: 0.2 }} />
+              <p className="catalog-empty">Faça login para ver seu inventário.</p>
+              <Link href="/login?next=/inventario" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 20px", border: "1px solid rgba(95,168,255,0.35)", borderRadius: 8, background: "rgba(95,168,255,0.08)", color: "var(--blue)", textDecoration: "none", fontSize: 12, fontWeight: 950, textTransform: "uppercase" }}>
+                Fazer login
+              </Link>
+            </div>
+          ) : activeTab === "historico" ? (
             /* ── Aba Histórico ── */
             loadingHistory ? (
               <p className="catalog-empty" style={{ marginTop: 48 }}>Carregando histórico...</p>
