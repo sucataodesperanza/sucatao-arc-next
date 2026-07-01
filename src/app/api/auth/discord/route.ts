@@ -9,6 +9,8 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.DISCORD_CLIENT_ID
   if (!clientId) return NextResponse.json({ error: "Discord não configurado." }, { status: 503 })
 
+  const returnTo = request.nextUrl.searchParams.get("return_to") ?? "/perfil"
+
   const redirectUri = new URL("/api/auth/discord/callback", request.url).toString()
   const params = new URLSearchParams({
     client_id:     clientId,
@@ -17,5 +19,7 @@ export async function GET(request: NextRequest) {
     scope:         "identify",
   })
 
-  return NextResponse.redirect(`https://discord.com/oauth2/authorize?${params}`)
+  const response = NextResponse.redirect(`https://discord.com/oauth2/authorize?${params}`)
+  response.cookies.set("discord_return_to", returnTo, { maxAge: 300, httpOnly: true, sameSite: "lax", path: "/" })
+  return response
 }
