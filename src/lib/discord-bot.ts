@@ -105,6 +105,7 @@ export function embedTradeTicket(params: {
   itemQty: number
   offerPoints: number
   gameId?: string | null
+  scheduledAt?: string | null
 }): Embed {
   const fields: EmbedField[] = [
     { name: "Jogador",          value: params.playerName,                            inline: true },
@@ -112,6 +113,10 @@ export function embedTradeTicket(params: {
     { name: "Item a entregar",  value: `${params.itemQty}× ${params.itemName}` },
   ]
   if (params.gameId) fields.push({ name: "Game ID", value: params.gameId })
+  if (params.scheduledAt) {
+    const dt = new Date(params.scheduledAt)
+    fields.push({ name: "Agendado para", value: dt.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" }) })
+  }
   return {
     color: 0x5865f2,
     title: `🔄 Trade — #${params.acceptanceId.slice(0, 8).toUpperCase()}`,
