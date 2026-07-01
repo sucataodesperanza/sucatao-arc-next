@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Archive, ChevronLeft, ChevronRight, Coins, HelpCircle, Package, Plus, Search, ShoppingBag, Star, Truck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -91,6 +92,8 @@ function DonutChart({ entries }: { entries: InventoryEntry[] }) {
 // ── Página ─────────────────────────────────────────────────────────────────
 
 export default function InventarioPage() {
+  const router = useRouter()
+  const [userId, setUserId] = useState<string | null | undefined>(undefined)
   const [points, setPoints]   = useState<number | null>(null)
   const [entries, setEntries]       = useState<InventoryEntry[]>([])
   const [history, setHistory]       = useState<HistoryEntry[]>([])
@@ -112,11 +115,12 @@ export default function InventarioPage() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
+      if (!user) { router.push("/login?next=/inventario"); return }
+      setUserId(user.id)
       supabase.from("profiles").select("points").eq("id", user.id).single()
         .then(({ data }) => { if (data) setPoints(data.points ?? 0) })
     })
-  }, [])
+  }, [router])
 
   const [reconciling, setReconciling] = useState(false)
 
@@ -129,6 +133,7 @@ export default function InventarioPage() {
   }
 
   useEffect(() => {
+    if (userId === undefined || userId === null) return
     setLoading(true)
     loadInventory()
       .then(async items => {
@@ -141,7 +146,7 @@ export default function InventarioPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [userId])
 
   useEffect(() => {
     if (activeTab !== "historico") return

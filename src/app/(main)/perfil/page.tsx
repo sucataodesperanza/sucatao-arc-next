@@ -54,7 +54,7 @@ export default function PerfilPage() {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       setUser(user)
       setLoading(false)
-      if (!user) return
+      if (!user) { router.push("/login?next=/perfil"); return }
 
       const [profileRes, inventoryRes, ordersRes, ecoRes] = await Promise.all([
         supabase.from("profiles").select("points, avatar_url, game_id, cpf, total_spent, total_orders, created_at, discord_id, discord_username, discord_avatar").eq("id", user.id).single(),
