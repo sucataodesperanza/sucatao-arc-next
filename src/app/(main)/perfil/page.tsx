@@ -442,11 +442,18 @@ export default function PerfilPage() {
               </div>
             ) : (
               <div className="profile-discord-disconnected">
-                <div>
+                <div style={{ flex: 1 }}>
                   <p className="profile-discord-label">Conta Discord não vinculada</p>
-                  <p className="profile-discord-hint">Vincule para receber notificações de pedidos e entregas direto no seu Discord.</p>
+                  <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--gray-500)" }}>
+                    <li>📦 Canal privado para cada pedido PIX</li>
+                    <li>🔔 DM quando pagamento for confirmado</li>
+                    <li>🎁 Notificações de recompensas (contratos, missões)</li>
+                  </ul>
+                  {ecoLogs.some(l => l.action === "reward" || l.action === "earn") && (
+                    <p style={{ margin: "8px 0 0", fontSize: 11, color: "#a5b4fc" }}>Você já recebeu recompensas — conecte para ser avisado nas próximas.</p>
+                  )}
                 </div>
-                <a href="/api/auth/discord" className="profile-discord-btn profile-discord-btn-connect">
+                <a href="/api/auth/discord?return_to=/perfil" className="profile-discord-btn profile-discord-btn-connect" style={{ flexShrink: 0 }}>
                   Conectar Discord
                 </a>
               </div>
