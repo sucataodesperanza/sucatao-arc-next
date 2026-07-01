@@ -27,6 +27,8 @@ type Order = {
   created_at: string
   paid_at: string | null
   cancelled_at: string | null
+  delivered_at: string | null
+  discord_channel_id: string | null
   customer_name: string | null
   customer_email: string | null
   customer_game_id: string | null
@@ -114,6 +116,8 @@ export default function AdminPedidosPage() {
   const [paymentStatus, setPaymentStatus] = useState("all")
   const [loading, setLoading] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [confirmingDelivery, setConfirmingDelivery] = useState(false)
+  const [deliveryMsg, setDeliveryMsg] = useState("")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -254,6 +258,10 @@ export default function AdminPedidosPage() {
               <span>Criado em: {formatDateTime(selectedOrder.created_at)}</span>
               {selectedOrder.paid_at && <span>Pago em: {formatDateTime(selectedOrder.paid_at)}</span>}
               {selectedOrder.cancelled_at && <span>Cancelado em: {formatDateTime(selectedOrder.cancelled_at)}</span>}
+              {selectedOrder.delivered_at && <span style={{ color: "var(--green)" }}>Entrega confirmada em: {formatDateTime(selectedOrder.delivered_at)}</span>}
+              {selectedOrder.discord_channel_id && !selectedOrder.delivered_at && (
+                <span style={{ color: "#7289da" }}>Canal Discord aberto: #{selectedOrder.id.slice(0, 8)}</span>
+              )}
             </div>
 
             <div>
@@ -280,9 +288,47 @@ export default function AdminPedidosPage() {
               <span>{orderTotal(selectedOrder)}</span>
             </div>
 
+            {selectedOrder.payment_method === "loja_oficial" && selectedOrder.payment_status === "paid" && !selectedOrder.delivered_at && (
+              <div style={{ padding: "14px", borderRadius: "8px", background: "rgba(34,197,94,0.07)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                <p style={{ margin: "0 0 10px", fontSize: "12px", color: "var(--muted)" }}>
+                  {selectedOrder.discord_channel_id
+                    ? "Ao confirmar, o canal Discord do pedido será encerrado automaticamente."
+                    : "Confirme a entrega quando o item tiver sido entregue ao comprador."}
+                </p>
+                {deliveryMsg === "ok" ? (
+                  <p style={{ margin: 0, fontSize: "12px", color: "var(--green)", fontWeight: 800 }}>✓ Entrega confirmada com sucesso.</p>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={confirmingDelivery}
+                    onClick={async () => {
+                      setConfirmingDelivery(true)
+                      const res = await fetch(`/api/admin/orders/${selectedOrder.id}/confirm-delivery`, { method: "POST" })
+                      setConfirmingDelivery(false)
+                      if (res.ok) {
+                        const now = new Date().toISOString()
+                        setSelectedOrder(o => o ? { ...o, delivered_at: now, discord_channel_id: null } : o)
+                        setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, delivered_at: now, discord_channel_id: null } : o))
+                        setDeliveryMsg("ok")
+                      } else {
+                        setDeliveryMsg("error")
+                        setTimeout(() => setDeliveryMsg(""), 3000)
+                      }
+                    }}
+                    style={{ ...btnStyle, borderColor: "var(--green)", color: "var(--green)" }}
+                  >
+                    {confirmingDelivery ? "Confirmando..." : "Confirmar entrega"}
+                  </button>
+                )}
+                {deliveryMsg === "error" && (
+                  <p style={{ margin: "8px 0 0", fontSize: "11px", color: "var(--red)" }}>Erro ao confirmar. Tente novamente.</p>
+                )}
+              </div>
+            )}
+
             <div className="marker-form-meta">
               <span />
-              <button type="button" onClick={() => setSelectedOrder(null)} style={btnStyle}>Fechar</button>
+              <button type="button" onClick={() => { setSelectedOrder(null); setDeliveryMsg("") }} style={btnStyle}>Fechar</button>
             </div>
           </div>
         </div>
