@@ -493,7 +493,7 @@ function AcceptancesSection() {
                     </div>
                   </td>
                   <td style={{ padding: "8px" }}>
-                    {a.status === "scheduled" && (
+                    {(a.status === "scheduled" || a.status === "pending") && (
                       <button type="button" onClick={() => setConfirmModal(a)} disabled={completing === a.id}
                         style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "6px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: completing === a.id ? 0.6 : 1 }}>
                         <CheckCircle size={12} /> {completing === a.id ? "..." : "Concluir"}
