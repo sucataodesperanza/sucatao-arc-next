@@ -42,6 +42,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     orderId: order.id,
     userName,
     gameId: profile?.game_id ?? "—",
+    confirmedBy: "admin",
   }).catch(() => {})
 
   return NextResponse.json({ ok: true })

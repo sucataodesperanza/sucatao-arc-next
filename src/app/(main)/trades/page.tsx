@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowLeftRight, CheckCircle, ChevronLeft, Coins, Handshake, History, Search, Sparkles } from "lucide-react"
 import "../../../styles/trades.css"
 import "../../../styles/home.css"
@@ -42,6 +43,7 @@ const heroSlides = [
 ]
 
 export default function TradesPage() {
+  const router = useRouter()
   const [activeSlide, setActiveSlide] = useState(0)
   const [activeTab, setActiveTab]     = useState(TABS[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
@@ -148,7 +150,8 @@ export default function TradesPage() {
   }
 
   async function acceptTrade(id: string) {
-    if (!userId || navigatedRef.current) return
+    if (!userId) { router.push("/login?next=/trades"); return }
+    if (navigatedRef.current) return
     setAccepting(id)
     const res = await fetch(`/api/trades/${id}/accept`, { method: "POST" })
     setAccepting(null)
@@ -188,6 +191,7 @@ export default function TradesPage() {
   }
 
   async function scheduleMyTrade(acceptanceId: string) {
+    if (!userId) { router.push("/login?next=/trades"); return }
     if (!selectedDate || !selectedTime) return
     setScheduling(acceptanceId)
     setScheduleMsg("")

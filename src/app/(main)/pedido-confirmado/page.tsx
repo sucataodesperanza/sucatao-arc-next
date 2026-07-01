@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useRef, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { CheckCircle, Coins, CreditCard, RefreshCw, Package, ShoppingBag } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -117,6 +117,7 @@ function OrderCard({ order, onSync, syncing }: { order: Order; onSync: (id: stri
 }
 
 function PedidoConfirmadoContent() {
+  const router       = useRouter()
   const searchParams = useSearchParams()
   const ids          = (searchParams.get("ids") ?? "").split(",").filter(Boolean)
   const [orders, setOrders]       = useState<Order[]>([])
@@ -147,7 +148,7 @@ function PedidoConfirmadoContent() {
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
+      if (!user) { router.push("/login?next=/pedido-confirmado"); return }
       supabase.from("profiles").select("discord_id").eq("id", user.id).single().then(({ data }) => {
         setHasDiscord(Boolean(data?.discord_id))
       })
