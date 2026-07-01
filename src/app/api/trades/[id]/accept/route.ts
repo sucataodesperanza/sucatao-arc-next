@@ -50,12 +50,14 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   // Cria canal Discord — fire-and-forget
   if (inserted) {
-    const adminSb = createAdminClient()
-    adminSb.from("profiles")
-      .select("username, discord_id, discord_username")
-      .eq("id", user.id)
-      .single()
-      .then(async ({ data: profile }) => {
+    ;(async () => {
+      try {
+        const adminSb = createAdminClient()
+        const { data: profile } = await adminSb
+          .from("profiles")
+          .select("username, discord_id, discord_username")
+          .eq("id", user.id)
+          .single()
         const discordId = profile?.discord_id
         if (!discordId) return
         const playerName = profile?.username ?? profile?.discord_username ?? "Jogador"
@@ -79,8 +81,8 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
             .update({ discord_channel_id: channelId })
             .eq("id", inserted.id)
         }
-      })
-      .catch(() => {})
+      } catch {}
+    })()
   }
 
   return NextResponse.json({ ok: true })
