@@ -115,9 +115,11 @@ export async function alertItemEntregue(opts: {
   orderId: string
   userName: string
   gameId: string
+  confirmedBy?: "comprador" | "admin"
 }) {
+  const who = opts.confirmedBy === "admin" ? "pelo admin" : "pelo comprador"
   await send({
-    title: "✅ Entrega confirmada pelo comprador",
+    title: `✅ Entrega confirmada ${who}`,
     color: GREEN,
     fields: [
       { name: "Pedido", value: `\`${opts.orderId.slice(0, 8)}\``, inline: true },
