@@ -260,6 +260,40 @@
   vertical-align: middle;
 }
 
+/* ── Dashboard ──────────────────────────────────────────────────────────── */
+
+.admin-metric-card {
+  border: 1px solid var(--stroke);
+  border-radius: 10px;
+  background: rgba(5, 10, 16, 0.55);
+  padding: 18px 20px;
+  transition: border-color 0.15s;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+}
+
+.admin-metric-card:hover {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.admin-quick-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.15s, background 0.15s;
+  text-decoration: none;
+}
+
+.admin-quick-link:hover {
+  border-color: rgba(245, 158, 11, 0.25);
+  background: rgba(245, 158, 11, 0.04);
+}
+
 /* ── Responsivo ─────────────────────────────────────────────────────────── */
 
 @media (max-width: 900px) {
