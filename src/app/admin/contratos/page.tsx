@@ -1,19 +1,30 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { CheckCircle, Plus, Trash2, ChevronDown, ChevronUp, Upload } from "lucide-react"
+import { CheckCircle, Plus, Trash2, ChevronDown, ChevronUp, Upload, X } from "lucide-react"
 import { useToast, useConfirm } from "@/components/admin-notifications"
 
 type Contract = {
   id: string; type: string; tier: string; title: string; description: string
   objective: string; total: number; sucatas: number; xp: number; rep: number | null
   environmental_risk: string; expires_at: string | null; active: boolean
-  image_url: string | null; variant: string | null
+  image_url: string | null; variant: string | null; faction_id?: string | null
   location: string; estimated_time: string; best_time_of_day: string; climate: string
   story: string; bonus_condition: string; bonus_reward: string
   rewards: unknown[]; objectives: unknown[]; enemies: unknown[]
   success_rate: number; players_completed: number
   best_record_time: string; best_record_player: string
+}
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button type="button"
+      onClick={e => { e.stopPropagation(); onChange(!checked) }}
+      title={checked ? "Ativo — clique para desativar" : "Inativo — clique para ativar"}
+      style={{ width: 36, height: 20, borderRadius: 10, border: "none", cursor: "pointer", background: checked ? "rgba(61,242,139,0.75)" : "rgba(255,255,255,0.12)", position: "relative", transition: "background 0.2s", padding: 0, flexShrink: 0 }}>
+      <span style={{ display: "block", width: 14, height: 14, borderRadius: "50%", background: "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.35)", position: "absolute", top: 3, left: checked ? 19 : 3, transition: "left 0.2s" }} />
+    </button>
+  )
 }
 
 type Acceptance = {
@@ -45,12 +56,15 @@ function ContratosSection() {
   const [loading, setLoading]     = useState(true)
   const [showForm, setShowForm]   = useState(false)
   const [form, setForm]           = useState(emptyForm)
-  const [saving, setSaving]           = useState(false)
-  const [createdId, setCreatedId]     = useState<string | null>(null)
-  const [uploadingImg, setUploadingImg] = useState(false)
-  const [uploadingRowId, setUploadingRowId] = useState<string | null>(null)
-  const fileRef = useRef<HTMLInputElement>(null)
-  const rowFileRefs = useRef<Record<string, HTMLInputElement | null>>({})
+  const [saving, setSaving]       = useState(false)
+  const [createdId, setCreatedId] = useState<string | null>(null)
+  const [uploadingImg, setUploadingImg]   = useState(false)
+  const [editingContract, setEditingContract]   = useState<Contract | null>(null)
+  const [editForm, setEditForm] = useState({ ...emptyForm })
+  const [savingEdit, setSavingEdit] = useState(false)
+  const [uploadingEditImg, setUploadingEditImg] = useState(false)
+  const fileRef    = useRef<HTMLInputElement>(null)
+  const editImgRef = useRef<HTMLInputElement>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -87,14 +101,53 @@ function ContratosSection() {
     await load()
   }
 
-  async function uploadRowImage(id: string, file: File) {
-    setUploadingRowId(id)
-    const fd = new FormData()
-    fd.append("file", file)
-    const res = await fetch(`/api/admin/contratos/${id}/image`, { method: "POST", body: fd })
-    setUploadingRowId(null)
-    if (res.ok) { toast.success("Imagem atualizada!"); await load() }
-    else toast.error("Erro ao enviar imagem.")
+  function openEdit(c: Contract) {
+    setEditForm({
+      type: c.type, tier: c.tier, title: c.title, description: c.description, story: c.story ?? "",
+      objective: c.objective, total: c.total, sucatas: c.sucatas, xp: c.xp,
+      rep: c.rep != null ? String(c.rep) : "",
+      location: c.location ?? "", estimated_time: c.estimated_time ?? "",
+      best_time_of_day: c.best_time_of_day ?? "", climate: c.climate ?? "",
+      environmental_risk: c.environmental_risk ?? "Médio",
+      expires_at: c.expires_at ? c.expires_at.slice(0, 16) : "",
+      variant: c.variant ?? "", bonus_condition: c.bonus_condition ?? "",
+      bonus_reward: c.bonus_reward ?? "", image_url: c.image_url ?? "",
+      success_rate: c.success_rate ?? 50, active: c.active,
+      faction_id: c.faction_id ?? "",
+    })
+    setEditingContract(c)
+  }
+
+  async function saveEdit() {
+    if (!editingContract) return
+    setSavingEdit(true)
+    const body = {
+      ...editForm,
+      rep: editForm.rep === "" ? null : Number(editForm.rep),
+      expires_at: editForm.expires_at || null,
+      variant: editForm.variant || null,
+      faction_id: editForm.faction_id || null,
+      image_url: editForm.image_url || null,
+    }
+    const res = await fetch(`/api/admin/contratos/${editingContract.id}`, {
+      method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    })
+    setSavingEdit(false)
+    if (res.ok) { toast.success("Contrato salvo!"); setEditingContract(null); await load() }
+    else toast.error("Erro ao salvar contrato.")
+  }
+
+  async function uploadEditImage(file: File) {
+    if (!editingContract) return
+    setUploadingEditImg(true)
+    const fd = new FormData(); fd.append("file", file)
+    const res = await fetch(`/api/admin/contratos/${editingContract.id}/image`, { method: "POST", body: fd })
+    setUploadingEditImg(false)
+    if (res.ok) {
+      const { url } = await res.json()
+      setEditForm(p => ({ ...p, image_url: url }))
+      toast.success("Imagem atualizada!")
+    } else toast.error("Erro ao enviar imagem.")
   }
 
   async function uploadImage(id: string, file: File) {
@@ -215,81 +268,155 @@ function ContratosSection() {
       )}
 
       {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
-              {["Imagem","Tipo","Tier","Título","Facção","Recompensas","Expira","Ativo",""].map(h => (
-                <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {contracts.map(c => (
-              <tr key={c.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                {/* Imagem */}
-                <td style={{ padding: "6px 8px" }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", overflow: "hidden", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                      {(c as Contract & { image_url?: string | null }).image_url
-                        ? <img src={(c as Contract & { image_url?: string | null }).image_url!} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        : <Upload size={14} style={{ color: "var(--gray-500)" }} />}
-                    </div>
-                    <input ref={el => { rowFileRefs.current[c.id] = el }} type="file" accept="image/*" style={{ display: "none" }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) uploadRowImage(c.id, f) }} />
-                    <button type="button" onClick={() => rowFileRefs.current[c.id]?.click()} disabled={uploadingRowId === c.id}
-                      style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", color: "var(--cyan)", background: "none", border: "1px solid rgba(0,217,255,0.25)", borderRadius: 3, padding: "2px 5px", cursor: "pointer", font: "inherit", opacity: uploadingRowId === c.id ? 0.5 : 1, whiteSpace: "nowrap" }}>
-                      {uploadingRowId === c.id ? "..." : "Upload"}
-                    </button>
-                  </div>
-                </td>
-                <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950, opacity: 0.7 }}>{c.type}</span></td>
-                <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950 }}>{c.tier}</span></td>
-                <td style={{ padding: "8px", fontWeight: 800 }}>{c.title}</td>
-                <td style={{ padding: "8px" }}>
-                  <select
-                    value={(c as Contract & { faction_id?: string | null }).faction_id ?? ""}
-                    onChange={async e => {
-                      const val = e.target.value
-                      await fetch(`/api/admin/contratos/${c.id}`, {
-                        method: "PATCH",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ faction_id: val || null }),
-                      })
-                      await load()
-                    }}
-                    style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: (c as Contract & { faction_id?: string | null }).faction_id ? factions.find(f => f.id === (c as Contract & { faction_id?: string | null }).faction_id)?.color ?? "var(--paper)" : "var(--gray-500)", padding: "4px 8px", fontSize: 11, fontWeight: 800, borderRadius: 4, font: "inherit", cursor: "pointer" }}
-                  >
-                    <option value="">— Sem facção</option>
-                    {factions.map(f => (
-                      <option key={f.id} value={f.id} style={{ color: "var(--paper)" }}>{f.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
-                  <span style={{ color: "var(--yellow)" }}>{c.sucatas} pts</span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          {contracts.map(c => {
+            const fac = factions.find(f => f.id === c.faction_id)
+            return (
+              <div key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: "1px solid var(--stroke)", borderRadius: 8, cursor: "pointer", transition: "background 0.15s" }}
+                onClick={() => openEdit(c)}
+                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                {/* Thumbnail */}
+                {c.image_url
+                  ? <img src={c.image_url} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+                  : <div style={{ width: 36, height: 36, borderRadius: 6, background: "rgba(255,255,255,0.06)", flexShrink: 0 }} />}
+                {/* Badges tipo + tier */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 3, flexShrink: 0, width: 80 }}>
+                  <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{c.type}</span>
+                  <span style={{ fontSize: 10, fontWeight: 950, color: "var(--cyan)" }}>{c.tier}</span>
+                </div>
+                {/* Título */}
+                <p style={{ margin: 0, flex: 1, fontSize: 13, fontWeight: 950, color: "var(--paper)", minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.title}</p>
+                {/* Facção */}
+                {fac
+                  ? <span style={{ fontSize: 10, fontWeight: 950, color: fac.color, flexShrink: 0 }}>{fac.name}</span>
+                  : <span style={{ fontSize: 10, color: "var(--gray-500)", flexShrink: 0 }}>—</span>}
+                {/* Recompensas */}
+                <span style={{ fontSize: 11, whiteSpace: "nowrap", flexShrink: 0, color: "var(--yellow)" }}>{c.sucatas} pts
                   {c.xp > 0 && <span style={{ color: "var(--blue)", marginLeft: 6 }}>{c.xp} xp</span>}
-                  {c.rep && <span style={{ color: "var(--purple)", marginLeft: 6 }}>{c.rep} rep</span>}
-                </td>
-                <td style={{ padding: "8px", color: "var(--muted)", fontSize: 11 }}>
+                  {c.rep ? <span style={{ color: "#b477ff", marginLeft: 6 }}>{c.rep} rep</span> : null}
+                </span>
+                {/* Expira */}
+                <span style={{ fontSize: 11, color: "var(--gray-500)", flexShrink: 0, width: 70, textAlign: "right" }}>
                   {c.expires_at ? new Date(c.expires_at).toLocaleDateString("pt-BR") : "—"}
-                </td>
-                <td style={{ padding: "8px" }}>
-                  <input type="checkbox" checked={c.active} onChange={e => toggleActive(c.id, e.target.checked)} />
-                </td>
-                <td style={{ padding: "8px" }}>
+                </span>
+                {/* Toggle + delete */}
+                <div style={{ display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
+                  <ToggleSwitch checked={c.active} onChange={v => toggleActive(c.id, v)} />
                   <button type="button" onClick={() => del(c.id, c.title)}
-                    style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 4, display: "flex" }}>
+                    style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 4, display: "flex", opacity: 0.5, transition: "opacity 0.15s" }}
+                    onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
+                    onMouseLeave={e => (e.currentTarget.style.opacity = "0.5")}>
                     <Trash2 size={14} />
                   </button>
-                </td>
-              </tr>
-            ))}
-            {contracts.length === 0 && (
-              <tr><td colSpan={8} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum contrato cadastrado.</td></tr>
-            )}
-          </tbody>
-        </table>
+                </div>
+              </div>
+            )
+          })}
+          {contracts.length === 0 && <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhum contrato cadastrado.</p>}
+        </div>
       )}
+
+      {/* Modal de edição */}
+      {editingContract && (() => {
+        const ef = editForm
+        const set = (k: string, v: unknown) => setEditForm(p => ({ ...p, [k]: v }))
+        const i: React.CSSProperties = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "7px 10px", fontSize: 12, borderRadius: 6, font: "inherit", width: "100%", outline: "none" }
+        const l: React.CSSProperties = { fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", display: "block", marginBottom: 4 }
+        return (
+          <div onClick={() => setEditingContract(null)}
+            style={{ position: "fixed", inset: 0, zIndex: 1000, display: "grid", placeItems: "center", background: "rgba(0,0,0,0.75)", backdropFilter: "blur(2px)" }}>
+            <div onClick={e => e.stopPropagation()}
+              style={{ background: "#04090e", border: "1px solid var(--stroke)", borderRadius: 14, width: 640, maxHeight: "88vh", display: "flex", flexDirection: "column" }}>
+              {/* Header */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "16px 20px", borderBottom: "1px solid var(--stroke)", flexShrink: 0 }}>
+                {ef.image_url
+                  ? <img src={ef.image_url} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: "cover", flexShrink: 0 }} />
+                  : <div style={{ width: 36, height: 36, borderRadius: 6, background: "rgba(255,255,255,0.06)", flexShrink: 0 }} />}
+                <p style={{ margin: 0, flex: 1, fontSize: 13, fontWeight: 950, color: "var(--paper)" }}>{ef.title || editingContract.title}</p>
+                <button type="button" onClick={() => setEditingContract(null)}
+                  style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", padding: 4, display: "flex" }}>
+                  <X size={16} />
+                </button>
+              </div>
+              {/* Body */}
+              <div style={{ overflowY: "auto", padding: 20, display: "grid", gap: 10, flex: 1 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+                  <label><span style={l}>Tipo</span><select value={ef.type} onChange={e => set("type", e.target.value)} style={i}>{TYPES.map(t => <option key={t}>{t}</option>)}</select></label>
+                  <label><span style={l}>Tier</span><select value={ef.tier} onChange={e => set("tier", e.target.value)} style={i}>{TIERS.map(t => <option key={t}>{t}</option>)}</select></label>
+                  <label><span style={l}>Risco</span><select value={ef.environmental_risk} onChange={e => set("environmental_risk", e.target.value)} style={i}>{RISKS.map(r => <option key={r}>{r}</option>)}</select></label>
+                  <label><span style={l}>Variante</span><select value={ef.variant} onChange={e => set("variant", e.target.value)} style={i}><option value="">Nenhuma</option><option value="dourada">Dourada</option><option value="holografica">Holográfica</option><option value="corrompida">Corrompida</option></select></label>
+                </div>
+                <label><span style={l}>Facção</span>
+                  <select value={ef.faction_id} onChange={e => set("faction_id", e.target.value)} style={i}>
+                    <option value="">Sem facção — visível para todos</option>
+                    {factions.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+                  </select>
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10 }}>
+                  <label><span style={l}>Título *</span><input value={ef.title} onChange={e => set("title", e.target.value)} style={i} /></label>
+                  <label><span style={l}>Objetivo *</span><input value={ef.objective} onChange={e => set("objective", e.target.value)} style={i} /></label>
+                </div>
+                <label><span style={l}>Descrição</span><input value={ef.description} onChange={e => set("description", e.target.value)} style={i} /></label>
+                <label><span style={l}>História / briefing</span><textarea value={ef.story} onChange={e => set("story", e.target.value)} rows={2} style={{ ...i, resize: "vertical" }} /></label>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
+                  <label><span style={l}>Total</span><input type="number" min={1} value={ef.total} onChange={e => set("total", Number(e.target.value))} style={i} /></label>
+                  <label><span style={l}>Sucatas</span><input type="number" min={0} value={ef.sucatas} onChange={e => set("sucatas", Number(e.target.value))} style={i} /></label>
+                  <label><span style={l}>XP</span><input type="number" min={0} value={ef.xp} onChange={e => set("xp", Number(e.target.value))} style={i} /></label>
+                  <label><span style={l}>REP</span><input type="number" min={0} value={ef.rep} onChange={e => set("rep", e.target.value)} style={i} placeholder="—" /></label>
+                  <label><span style={l}>Sucesso %</span><input type="number" min={0} max={100} value={ef.success_rate} onChange={e => set("success_rate", Number(e.target.value))} style={i} /></label>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
+                  <label><span style={l}>Localização</span><input value={ef.location} onChange={e => set("location", e.target.value)} style={i} /></label>
+                  <label><span style={l}>Tempo est.</span><input value={ef.estimated_time} onChange={e => set("estimated_time", e.target.value)} style={i} placeholder="20-35 min" /></label>
+                  <label><span style={l}>Melhor horário</span><input value={ef.best_time_of_day} onChange={e => set("best_time_of_day", e.target.value)} style={i} /></label>
+                  <label><span style={l}>Clima</span><input value={ef.climate} onChange={e => set("climate", e.target.value)} style={i} /></label>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  <label><span style={l}>Bônus — condição</span><input value={ef.bonus_condition} onChange={e => set("bonus_condition", e.target.value)} style={i} /></label>
+                  <label><span style={l}>Bônus — recompensa</span><input value={ef.bonus_reward} onChange={e => set("bonus_reward", e.target.value)} style={i} /></label>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 10, alignItems: "end" }}>
+                  <label><span style={l}>Expira em</span><input type="datetime-local" value={ef.expires_at} onChange={e => set("expires_at", e.target.value)} style={i} /></label>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, paddingBottom: 2 }}>
+                    <ToggleSwitch checked={ef.active} onChange={v => set("active", v)} />
+                    <span style={{ fontSize: 12, color: ef.active ? "var(--green)" : "var(--gray-500)" }}>{ef.active ? "Ativo" : "Inativo"}</span>
+                  </div>
+                </div>
+                {/* Imagem */}
+                <div>
+                  <span style={l}>Imagem</span>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 6, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", overflow: "hidden", flexShrink: 0, display: "grid", placeItems: "center" }}>
+                      {ef.image_url ? <img src={ef.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Upload size={14} style={{ color: "var(--gray-500)" }} />}
+                    </div>
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+                      <input ref={editImgRef} type="file" accept="image/*" style={{ display: "none" }}
+                        onChange={e => { const f = e.target.files?.[0]; if (f) uploadEditImage(f) }} />
+                      <button type="button" onClick={() => editImgRef.current?.click()} disabled={uploadingEditImg}
+                        style={{ border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper)", fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "4px 8px", borderRadius: 4, cursor: "pointer", font: "inherit", opacity: uploadingEditImg ? 0.6 : 1 }}>
+                        {uploadingEditImg ? "Enviando..." : "Upload"}
+                      </button>
+                      <input value={ef.image_url} onChange={e => set("image_url", e.target.value)} placeholder="ou cole uma URL" style={i} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Footer */}
+              <div style={{ display: "flex", gap: 8, padding: "14px 20px", borderTop: "1px solid var(--stroke)", flexShrink: 0 }}>
+                <button type="button" onClick={() => setEditingContract(null)}
+                  style={{ border: "1px solid var(--stroke)", background: "transparent", color: "var(--gray-500)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit" }}>
+                  Cancelar
+                </button>
+                <button type="button" onClick={saveEdit} disabled={savingEdit}
+                  style={{ border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "8px 20px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", opacity: savingEdit ? 0.6 : 1 }}>
+                  {savingEdit ? "Salvando..." : "✓ Salvar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -675,7 +802,10 @@ function PassesSection() {
                   <span style={{ marginLeft: "auto", fontSize: 10, color: "var(--gray-500)" }}>
                     {new Date(p.starts_at).toLocaleDateString("pt-BR")} → {new Date(p.expires_at).toLocaleDateString("pt-BR")}
                   </span>
-                  <span style={{ fontSize: 10, fontWeight: 950, color: p.active ? "var(--green)" : "var(--gray-500)" }}>{p.active ? "ATIVO" : "INATIVO"}</span>
+                  <ToggleSwitch checked={p.active} onChange={async v => {
+                    await fetch(`/api/admin/faccoes/passes/${p.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ active: v }) })
+                    await load()
+                  }} />
                   <button type="button" onClick={e => { e.stopPropagation(); deletePass(p.id) }} style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: 4 }}><Trash2 size={14} /></button>
                   {isExpanded ? <ChevronUp size={14} style={{ color: "var(--gray-500)" }} /> : <ChevronDown size={14} style={{ color: "var(--gray-500)" }} />}
                 </div>
@@ -1004,10 +1134,6 @@ function SchedulesSection() {
 export default function AdminContratosPage() {
   return (
     <div>
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--cyan)", opacity: 0.7 }}>Painel Administrativo</p>
-        <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 950, textTransform: "uppercase" }}>CONTRATOS</h1>
-      </div>
       <SchedulesSection />
       <ContratosSection />
       <AcceitancesSection />
@@ -1156,14 +1282,13 @@ function RewardsSection() {
                       style={{ ...inp, width: 100, color: "var(--yellow)", fontWeight: 950 }} />
                   </td>
                   <td style={{ padding: "8px" }}>
-                    <input type="checkbox" checked={r.active}
-                      onChange={async e => {
-                        await fetch(`/api/admin/contratos/rewards/${r.id}`, {
-                          method: "PATCH", headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ active: e.target.checked }),
-                        })
-                        await load()
-                      }} />
+                    <ToggleSwitch checked={r.active} onChange={async v => {
+                      await fetch(`/api/admin/contratos/rewards/${r.id}`, {
+                        method: "PATCH", headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ active: v }),
+                      })
+                      await load()
+                    }} />
                   </td>
                   <td style={{ padding: "8px" }}>
                     <button type="button" onClick={() => deleteReward(r.id, item?.name ?? "—")}
