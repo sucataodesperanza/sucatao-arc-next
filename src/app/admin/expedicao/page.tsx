@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { Compass, Plus, X, Pencil, Trash2, Users, Package, Upload, Image as ImageIcon } from "lucide-react"
+import { Compass, Plus, X, Pencil, Trash2, Users, Package, Upload, Image as ImageIcon, Star } from "lucide-react"
 
 type Expedition = {
   id: string
@@ -15,6 +15,7 @@ type Expedition = {
   item_image_url: string | null
   price_points: number | null
   price_cash: number | null
+  featured: boolean
   created_at: string
   totalPacks: number
   totalSlots: number
@@ -292,6 +293,16 @@ export default function AdminExpedicaoPage() {
     }
   }
 
+  async function handleToggleFeatured(e: React.MouseEvent, id: string, current: boolean) {
+    e.stopPropagation()
+    setExpeditions(prev => prev.map(ex => ex.id === id ? { ...ex, featured: !current } : ex))
+    await fetch(`/api/admin/expedicao/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ featured: !current }),
+    })
+  }
+
   async function handleDelete(id: string, name: string) {
     if (!confirm(`Excluir a expedição "${name}"? Esta ação não pode ser desfeita.`)) return
     await fetch(`/api/admin/expedicao/${id}`, { method: "DELETE" })
@@ -386,6 +397,13 @@ export default function AdminExpedicaoPage() {
 
                 {/* Ações */}
                 <div style={{ flexShrink: 0, display: "flex", gap: 4 }} onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={e => handleToggleFeatured(e, exp.id, exp.featured)}
+                    title={exp.featured ? "Remover dos destaques" : "Colocar nos destaques"}
+                    style={{ background: exp.featured ? "rgba(245,158,11,0.15)" : "transparent", border: exp.featured ? "1px solid rgba(245,158,11,0.3)" : "1px solid transparent", color: exp.featured ? "#f59e0b" : "var(--gray-600)", cursor: "pointer", padding: 4, borderRadius: 6, display: "grid", placeItems: "center", transition: "all 0.15s" }}
+                  >
+                    <Star size={13} fill={exp.featured ? "#f59e0b" : "none"} />
+                  </button>
                   <button onClick={() => openEdit(exp)} style={{ background: "transparent", border: "none", color: "var(--gray-500)", cursor: "pointer", padding: 4, borderRadius: 4 }} title="Editar"><Pencil size={13} /></button>
                   <button onClick={() => handleDelete(exp.id, exp.name)} style={{ background: "transparent", border: "none", color: "#f87171", cursor: "pointer", padding: 4, borderRadius: 4 }} title="Excluir"><Trash2 size={13} /></button>
                 </div>

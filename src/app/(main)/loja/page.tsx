@@ -317,7 +317,7 @@ export default function LojaPage() {
   type ActiveExpedition = {
     id: string; name: string; description: string | null; ends_at: string
     slots_per_pack: number; item_name: string | null; item_image_url: string | null
-    price_points: number | null; price_cash: number | null
+    price_points: number | null; price_cash: number | null; featured: boolean
   }
   const [activeExpedition, setActiveExpedition] = useState<ActiveExpedition | null>(null)
   const [vaultQty, setVaultQty]       = useState(1)
@@ -483,6 +483,50 @@ export default function LojaPage() {
                   </Link>
                 </div>
                 <div className="store-highlight-grid">
+                  {/* Card da expedição ativa (se featured = true) */}
+                  {!loadingHighlights && activeExpedition?.featured && (
+                    <article
+                      key="expedition-vault"
+                      className="store-highlight-card"
+                      style={{ "--rarity-color": "#f59e0b" } as React.CSSProperties}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Comprar ${activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}`}
+                      onClick={() => setActiveTab("itens")}
+                      onKeyDown={e => { if (e.key === "Enter") setActiveTab("itens") }}
+                    >
+                      <div className="store-highlight-media">
+                        {activeExpedition.item_image_url
+                          ? <img src={activeExpedition.item_image_url} alt={activeExpedition.item_name ?? ""} loading="lazy" />
+                          : <div className="placeholder"><Package size={28} /></div>}
+                        <span className="store-highlight-badge">Expedição</span>
+                      </div>
+                      <div className="store-highlight-body">
+                        <p className="store-highlight-type">Cofre de Expedição</p>
+                        <h3>{activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}</h3>
+                        <div className="store-highlight-footer">
+                          <span className="store-highlight-price">
+                            {activeExpedition.price_points != null && (
+                              <span className="store-highlight-price-points">
+                                <Coins size={14} />
+                                {formatNumber(activeExpedition.price_points)}
+                              </span>
+                            )}
+                            {activeExpedition.price_cash != null && (
+                              <span className="store-highlight-price-cash">
+                                <Banknote size={14} />
+                                R$ {activeExpedition.price_cash.toFixed(2).replace(".", ",")}
+                              </span>
+                            )}
+                          </span>
+                          <button type="button" className="store-highlight-cart" tabIndex={-1} aria-hidden>
+                            <ShoppingCart size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  )}
+
                   {loadingHighlights ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <article key={i} className="store-highlight-card skeleton">

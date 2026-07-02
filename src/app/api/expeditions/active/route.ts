@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data } = await admin
     .from("expeditions")
-    .select("id, name, description, ends_at, slots_per_pack, item_name, item_image_url, price_points, price_cash")
+    .select("id, name, description, ends_at, slots_per_pack, item_name, item_image_url, price_points, price_cash, featured")
     .eq("status", "active")
     .lte("starts_at", now)
     .gte("ends_at", now)

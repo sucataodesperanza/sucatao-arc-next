@@ -10,7 +10,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const { id } = await params
   const body = await request.json().catch(() => ({}))
 
-  const allowed = ["name", "description", "starts_at", "ends_at", "status", "slots_per_pack", "item_name", "item_image_url", "price_points", "price_cash"] as const
+  const allowed = ["name", "description", "starts_at", "ends_at", "status", "slots_per_pack", "item_name", "item_image_url", "price_points", "price_cash", "featured"] as const
   const patch: Record<string, unknown> = {}
   for (const key of allowed) {
     if (key in body) patch[key] = body[key]
