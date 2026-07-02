@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { fetchMercadoPagoPayment, searchMercadoPagoPaymentByExternalReference } from "@/lib/mercadopago"
 import { addItemsToInventory } from "@/lib/inventory"
+import { creditExpeditionVaultPacks } from "@/lib/expedition-vault"
+import { alertCofresExpedicao } from "@/lib/discord-webhook"
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
@@ -77,11 +79,32 @@ export async function POST(request: NextRequest) {
           payment_method: "pix", order_id: orderId,
         }, { onConflict: "user_id,group_id" })
       } else if (Array.isArray(order.items)) {
-        const inventoryItems = (order.items as Array<{ itemId?: string; quantity?: number; source?: string }>)
-          .filter(i => i.itemId && i.source !== "pass")
+        type OrderItem = { itemId?: string; quantity?: number; source?: string; type?: string }
+        const allItems = order.items as OrderItem[]
+
+        const vaultPackItems = allItems.filter(i => i.itemId && i.type === "expedition_vault_pack")
+        const inventoryItems = allItems
+          .filter(i => i.itemId && i.source !== "pass" && i.type !== "expedition_vault_pack")
           .map(i => ({ itemId: i.itemId!, quantity: i.quantity ?? 1 }))
+
         if (inventoryItems.length > 0) {
           await addItemsToInventory(order.user_id as string, inventoryItems, "pix")
+        }
+
+        for (const vaultItem of vaultPackItems) {
+          const qty = vaultItem.quantity ?? 1
+          const result = await creditExpeditionVaultPacks(order.user_id as string, qty)
+          if (result.ok) {
+            alertCofresExpedicao({
+              orderId: orderId,
+              userName: "—",
+              gameId: "—",
+              packsCount: qty,
+              totalSlots: result.totalSlots,
+              expeditionName: result.expeditionName,
+              paymentMethod: "pix",
+            }).catch(() => {})
+          }
         }
       }
     }

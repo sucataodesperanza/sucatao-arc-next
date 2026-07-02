@@ -4,8 +4,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createMercadoPagoPixPayment } from "@/lib/mercadopago"
 import { isValidCpf } from "@/lib/cpf"
 import { addItemsToInventory } from "@/lib/inventory"
+import { creditExpeditionVaultPacks } from "@/lib/expedition-vault"
 import { logEconomy } from "@/lib/economy"
-import { alertPedidoPontos, alertPedidoPix } from "@/lib/discord-webhook"
+import { alertPedidoPontos, alertPedidoPix, alertCofresExpedicao } from "@/lib/discord-webhook"
 import { sendDiscordDM, dmPedidoConfirmado } from "@/lib/discord-bot"
 
 type CheckoutItem = {
@@ -163,11 +164,33 @@ export async function POST(request: NextRequest) {
     result.points = newPoints
     result.pointsOrderId = order.id
 
-    // Adiciona itens ao inventário do usuário (compra com pontos é imediata)
-    await addItemsToInventory(user.id, pointsItems, "points")
+    // Separa itens normais dos pacotes de cofre de expedição
+    const vaultPackItems  = pointsItems.filter(i => i.type === "expedition_vault_pack")
+    const regularItems    = pointsItems.filter(i => i.type !== "expedition_vault_pack")
+
+    // Adiciona itens normais ao inventário (imediato)
+    if (regularItems.length > 0) {
+      await addItemsToInventory(user.id, regularItems, "points")
+    }
+
+    // Credita slots de cofre de expedição (imediato)
+    const pointsUserName = (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido"
+    for (const vaultItem of vaultPackItems) {
+      const result = await creditExpeditionVaultPacks(user.id, vaultItem.quantity)
+      if (result.ok) {
+        alertCofresExpedicao({
+          orderId: order.id,
+          userName: pointsUserName,
+          gameId: profile.game_id ?? "—",
+          packsCount: vaultItem.quantity,
+          totalSlots: result.totalSlots,
+          expeditionName: result.expeditionName,
+          paymentMethod: "pontos",
+        }).catch(() => {})
+      }
+    }
 
     // Alerta Discord — fire-and-forget
-    const pointsUserName = (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido"
     alertPedidoPontos({
       orderId: order.id,
       userName: pointsUserName,

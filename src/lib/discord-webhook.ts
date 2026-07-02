@@ -111,6 +111,32 @@ export async function alertPedidoPago(opts: {
   })
 }
 
+export async function alertCofresExpedicao(opts: {
+  orderId: string
+  userName: string
+  gameId: string
+  packsCount: number
+  totalSlots: number
+  expeditionName: string
+  paymentMethod: "pontos" | "pix"
+}) {
+  const method = opts.paymentMethod === "pontos" ? "Pontos" : "PIX"
+  await send({
+    title: `📦 Cofre de Expedição — ${method}`,
+    color: opts.paymentMethod === "pontos" ? RED : GREEN,
+    fields: [
+      { name: "Pedido",      value: `\`${opts.orderId.slice(0, 8)}\``,                         inline: true },
+      { name: "Jogador",     value: opts.userName,                                               inline: true },
+      { name: "Game ID",     value: opts.gameId,                                                 inline: true },
+      { name: "Expedição",   value: opts.expeditionName,                                         inline: true },
+      { name: "Pacotes",     value: `${opts.packsCount}× pack (${opts.packsCount * 20} slots)`, inline: true },
+      { name: "Total slots", value: `${opts.totalSlots} slots acumulados`,                       inline: true },
+      { name: "Status",      value: "✅ Slots creditados no cofre",                              inline: true },
+    ],
+    footer: { text: "Sucatão de Speranza" },
+  })
+}
+
 export async function alertItemEntregue(opts: {
   orderId: string
   userName: string
