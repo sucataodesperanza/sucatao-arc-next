@@ -92,8 +92,9 @@ export async function POST(request: NextRequest) {
         }
 
         for (const vaultItem of vaultPackItems) {
-          const qty = vaultItem.quantity ?? 1
-          const result = await creditExpeditionVaultPacks(order.user_id as string, qty)
+          const qty          = vaultItem.quantity ?? 1
+          const expeditionId = vaultItem.itemId   // itemId armazena o expedition.id
+          const result = await creditExpeditionVaultPacks(order.user_id as string, qty, expeditionId)
           if (result.ok) {
             alertCofresExpedicao({
               orderId: orderId,

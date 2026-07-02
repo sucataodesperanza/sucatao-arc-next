@@ -6,27 +6,40 @@ export type CreditResult =
 
 /**
  * Credita pacotes de cofre de expedição ao usuário.
- * Busca a expedição ativa no momento e faz upsert em expedition_vault_packs.
- * Retorna erro se não houver expedição ativa.
+ * Se expeditionId for fornecido, usa essa expedição (caso de PIX confirmado depois).
+ * Caso contrário, busca a expedição ativa pelo horário atual.
  */
 export async function creditExpeditionVaultPacks(
   userId: string,
   packsCount: number,
+  expeditionId?: string,
 ): Promise<CreditResult> {
   const admin = createAdminClient()
-  const now = new Date().toISOString()
 
-  const { data: expedition } = await admin
-    .from("expeditions")
-    .select("id, name, slots_per_pack")
-    .lte("starts_at", now)
-    .gte("ends_at", now)
-    .order("starts_at", { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  let expedition: { id: string; name: string; slots_per_pack: number } | null = null
+
+  if (expeditionId) {
+    const { data } = await admin
+      .from("expeditions")
+      .select("id, name, slots_per_pack")
+      .eq("id", expeditionId)
+      .maybeSingle()
+    expedition = data
+  } else {
+    const now = new Date().toISOString()
+    const { data } = await admin
+      .from("expeditions")
+      .select("id, name, slots_per_pack")
+      .lte("starts_at", now)
+      .gte("ends_at", now)
+      .order("starts_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    expedition = data
+  }
 
   if (!expedition) {
-    return { ok: false, error: "Nenhuma expedição ativa no momento." }
+    return { ok: false, error: "Expedição não encontrada ou não está ativa no momento." }
   }
 
   const slotsToAdd = expedition.slots_per_pack * packsCount
