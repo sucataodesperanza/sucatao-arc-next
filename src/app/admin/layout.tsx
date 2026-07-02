@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { SidebarNav } from "@/components/sidebar-nav"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { AdminNotificationsProvider } from "@/components/admin-notifications"
 import { AdminBreadcrumb } from "@/components/admin-breadcrumb"
 import "../../styles/admin-layout.css"
@@ -12,16 +12,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("is_admin, avatar_url")
+    .select("is_admin")
     .eq("id", user.id)
     .single()
   if (!profile?.is_admin) redirect("/")
 
   return (
     <AdminNotificationsProvider>
-      <div className="app-shell-layout">
-        <SidebarNav isLoggedIn={true} isAdmin={true} avatarUrl={profile.avatar_url ?? null} />
-        <main className="content admin-content">
+      <div className="admin-shell">
+        <AdminSidebar />
+        <main className="admin-main">
           <AdminBreadcrumb />
           {children}
         </main>
