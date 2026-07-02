@@ -36,6 +36,8 @@ export default function AdminPrecosPage() {
   const [filterVei, setFilterVei]       = useState("")
   const [search, setSearch]             = useState("")
   const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set())
+  const [page, setPage]                 = useState(1)
+  const [pageSize, setPageSize]         = useState(50)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -134,6 +136,12 @@ export default function AdminPrecosPage() {
     if (filterVei === "high" && (i.vei ?? 0) < 70)  return false
     return true
   })
+
+  // Resetar página ao mudar filtros ou page size
+  useEffect(() => setPage(1), [filterRarity, filterType, filterVei, search, pageSize])
+
+  const totalPages  = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const pagedItems  = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   const priceDiff = (curr: number, sug: number) => sug > 0 ? Math.round(((curr - sug) / sug) * 100) : 0
 
@@ -308,7 +316,9 @@ export default function AdminPrecosPage() {
 
       {/* Tabela de preços */}
       <div className="utility-panel">
-        <div className="utility-panel-head"><strong>Itens no Estoque — {filtered.length} de {items.length}</strong></div>
+        <div className="utility-panel-head">
+          <strong>Itens no Estoque — {filtered.length} de {items.length}</strong>
+        </div>
 
         {/* Filtros */}
         <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
@@ -340,8 +350,12 @@ export default function AdminPrecosPage() {
                 <tr style={{ borderBottom: "1px solid var(--stroke)" }}>
                   <th style={{ padding: "8px 4px", width: 28 }}>
                     <input type="checkbox"
-                      checked={selectedIds.size === filtered.length && filtered.length > 0}
-                      onChange={e => setSelectedIds(e.target.checked ? new Set(filtered.map(i => i.catalog_item_id)) : new Set())} />
+                      checked={pagedItems.length > 0 && pagedItems.every(i => selectedIds.has(i.catalog_item_id))}
+                      onChange={e => {
+                        const s = new Set(selectedIds)
+                        pagedItems.forEach(i => e.target.checked ? s.add(i.catalog_item_id) : s.delete(i.catalog_item_id))
+                        setSelectedIds(s)
+                      }} />
                   </th>
                   {["Item", "Raridade", "Tipo", "VEI", "Pts Atual", "Pts Sugerido", "Δ Pts", "R$ Atual", "R$ Sugerido", "Qtd"].map(h => (
                     <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", textAlign: "left", whiteSpace: "nowrap" }}>{h}</th>
@@ -349,7 +363,7 @@ export default function AdminPrecosPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(item => {
+                {pagedItems.map(item => {
                   const diffPts  = priceDiff(item.price_points, item.suggested_points ?? 0)
                   const diffCash = priceDiff(item.price_cash,   item.suggested_cash   ?? 0)
                   const rarColor = RARITY_COLORS[item.catalog_items?.rarity ?? "Unknown"] ?? "var(--gray-500)"
@@ -397,9 +411,36 @@ export default function AdminPrecosPage() {
                     </tr>
                   )
                 })}
-                {filtered.length === 0 && <tr><td colSpan={10} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum item encontrado.</td></tr>}
+                {pagedItems.length === 0 && <tr><td colSpan={10} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum item encontrado.</td></tr>}
               </tbody>
             </table>
+
+            {/* Paginação */}
+            {filtered.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                  {filtered.length === 0 ? "0 itens" : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, filtered.length)} de ${filtered.length} itens`}
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))} style={{ ...sel, fontSize: 11 }}>
+                    <option value={25}>25 / página</option>
+                    <option value={50}>50 / página</option>
+                    <option value={100}>100 / página</option>
+                  </select>
+                  <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    style={{ border: "1px solid var(--stroke)", background: "none", color: page === 1 ? "var(--gray-500)" : "var(--paper)", padding: "5px 12px", fontSize: 11, cursor: page === 1 ? "default" : "pointer", borderRadius: 4, font: "inherit", opacity: page === 1 ? 0.4 : 1 }}>
+                    ← Anterior
+                  </button>
+                  <span style={{ fontSize: 11, color: "var(--paper-dim)", whiteSpace: "nowrap", padding: "0 4px" }}>
+                    {page} / {totalPages}
+                  </span>
+                  <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                    style={{ border: "1px solid var(--stroke)", background: "none", color: page === totalPages ? "var(--gray-500)" : "var(--paper)", padding: "5px 12px", fontSize: 11, cursor: page === totalPages ? "default" : "pointer", borderRadius: 4, font: "inherit", opacity: page === totalPages ? 0.4 : 1 }}>
+                    Próxima →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

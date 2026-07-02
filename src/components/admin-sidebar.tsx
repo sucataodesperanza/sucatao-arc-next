@@ -2,25 +2,31 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { ArrowLeft, ArrowLeftRight, Bot, ClipboardList, DollarSign, Flag, Gift, Hammer, Home, Map, Package, Radio, ScrollText, Star, Ticket, TrendingUp, Warehouse } from "lucide-react"
+import {
+  ArrowLeft, ArrowLeftRight, Bot, ClipboardList, DollarSign, Flag, Gift,
+  Hammer, Home, Map, Package, Radio, ScrollText, Shield, Star, Ticket,
+  TrendingUp, Warehouse,
+} from "lucide-react"
+import { BrandMark } from "./brand-mark"
 
 const links = [
-  { href: "/admin/home",     label: "Home",     icon: Home       },
-  { href: "/admin/economia", label: "Economia",  icon: TrendingUp  },
-  { href: "/admin/precos",     label: "Preços",     icon: DollarSign },
-  { href: "/admin/streamers",  label: "Streamers",  icon: Radio      },
-  { href: "/admin/pedidos", label: "Pedidos", icon: ClipboardList },
-  { href: "/admin/catalogo", label: "Catálogo", icon: Package },
-  { href: "/admin/estoque", label: "Estoque", icon: Warehouse },
-  { href: "/admin/trades",      label: "Trades",      icon: ArrowLeftRight },
-  { href: "/admin/recompensas", label: "Recompensas", icon: Star },
-  { href: "/admin/cupons", label: "Cupons", icon: Ticket },
-  { href: "/admin/loot-boxes", label: "Loot Boxes", icon: Gift },
-  { href: "/admin/contratos", label: "Contratos", icon: ScrollText },
-  { href: "/admin/mapas",    label: "Mapas",     icon: Map        },
-  { href: "/admin/faccoes",  label: "Facções",  icon: Flag },
-  { href: "/admin/arcpedia", label: "Arcpedia", icon: Bot },
-  { href: "/admin/crafting", label: "Crafting", icon: Hammer },
+  { href: "/admin",           label: "Dashboard",  icon: Home,          exact: true  },
+  { href: "/admin/pedidos",   label: "Pedidos",    icon: ClipboardList, exact: false },
+  { href: "/admin/trades",    label: "Trades",     icon: ArrowLeftRight, exact: false },
+  { href: "/admin/estoque",   label: "Estoque",    icon: Warehouse,     exact: false },
+  { href: "/admin/catalogo",  label: "Catálogo",   icon: Package,       exact: false },
+  { href: "/admin/precos",    label: "Preços",     icon: DollarSign,    exact: false },
+  { href: "/admin/economia",  label: "Economia",   icon: TrendingUp,    exact: false },
+  { href: "/admin/recompensas", label: "Recompensas", icon: Star,       exact: false },
+  { href: "/admin/cupons",    label: "Cupons",     icon: Ticket,        exact: false },
+  { href: "/admin/loot-boxes", label: "Loot Boxes", icon: Gift,        exact: false },
+  { href: "/admin/contratos", label: "Contratos",  icon: ScrollText,    exact: false },
+  { href: "/admin/faccoes",   label: "Facções",    icon: Flag,          exact: false },
+  { href: "/admin/mapas",     label: "Mapas",      icon: Map,           exact: false },
+  { href: "/admin/streamers", label: "Streamers",  icon: Radio,         exact: false },
+  { href: "/admin/arcpedia",  label: "Arcpedia",   icon: Bot,           exact: false },
+  { href: "/admin/crafting",  label: "Crafting",   icon: Hammer,        exact: false },
+  { href: "/admin/home",      label: "Home page",  icon: Home,          exact: false },
 ]
 
 export function AdminSidebar() {
@@ -28,16 +34,21 @@ export function AdminSidebar() {
 
   return (
     <aside className="admin-rail">
+      {/* Marca + badge admin */}
       <div className="admin-rail-head">
-        <span className="admin-rail-badge">S</span>
-        <div>
-          <h3>Painel Admin</h3>
-          <p>Arc Raiders</p>
+        <Link href="/" className="admin-rail-brand" aria-label="Voltar ao site">
+          <BrandMark />
+        </Link>
+        <div className="admin-rail-tag">
+          <Shield size={10} />
+          <span>Admin</span>
         </div>
       </div>
+
+      {/* Navegação */}
       <nav className="admin-rail-nav">
-        {links.map(({ href, label, icon: Icon }) => {
-          const active = pathname?.startsWith(href)
+        {links.map(({ href, label, icon: Icon, exact }) => {
+          const active = exact ? pathname === href : pathname?.startsWith(href)
           return (
             <Link key={href} href={href} className={`admin-nav-link${active ? " active" : ""}`}>
               <span className="admin-nav-icon"><Icon size={14} /></span>
@@ -46,10 +57,14 @@ export function AdminSidebar() {
           )
         })}
       </nav>
-      <Link href="/" className="admin-nav-link" style={{ borderTop: "1px solid var(--line-soft)", paddingTop: "14px", marginTop: "4px" }}>
-        <span className="admin-nav-icon"><ArrowLeft size={14} /></span>
-        <span>Voltar ao site</span>
-      </Link>
+
+      {/* Voltar ao site */}
+      <div className="admin-rail-footer">
+        <Link href="/" className="admin-nav-link">
+          <span className="admin-nav-icon"><ArrowLeft size={14} /></span>
+          <span>Voltar ao site</span>
+        </Link>
+      </div>
     </aside>
   )
 }

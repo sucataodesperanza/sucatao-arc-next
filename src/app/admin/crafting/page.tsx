@@ -127,6 +127,8 @@ export default function AdminCraftingPage() {
   const [category, setCategory] = useState<"all" | "materials" | "craftable">("all")
   const [search, setSearch] = useState("")
 
+  const [page, setPage]         = useState(1)
+  const [pageSize, setPageSize] = useState(50)
   const [editing, setEditing] = useState<AdminCatalogItem | null>(null)
   const [recipe, setRecipe] = useState<ItemSource[]>([])
   const [obtainedFrom, setObtainedFrom] = useState<ItemSource[]>([])
@@ -162,6 +164,12 @@ export default function AdminCraftingPage() {
     const q = normalizeText(search)
     return items.filter(i => normalizeText(i.name).includes(q))
   }, [items, search])
+
+  // Resetar página ao mudar filtro, categoria ou page size
+  useEffect(() => setPage(1), [search, category, pageSize])
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const pagedItems = filtered.slice((page - 1) * pageSize, page * pageSize)
 
   function openEdit(item: AdminCatalogItem) {
     setEditing(item)
@@ -281,7 +289,7 @@ export default function AdminCraftingPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(item => {
+                {pagedItems.map(item => {
                   const fc = fieldCount(item)
                   return (
                     <tr
@@ -305,7 +313,7 @@ export default function AdminCraftingPage() {
                     </tr>
                   )
                 })}
-                {filtered.length === 0 && !loading && (
+                {pagedItems.length === 0 && !loading && (
                   <tr>
                     <td colSpan={5} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>
                       Nenhum item encontrado. Sincronize o catálogo principal para importar itens.
@@ -314,6 +322,34 @@ export default function AdminCraftingPage() {
                 )}
               </tbody>
             </table>
+
+            {/* Paginação */}
+            {filtered.length > 0 && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
+                  {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, filtered.length)} de {filtered.length} itens
+                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))}
+                    style={{ background: "rgba(0,0,0,0.3)", border: "1px solid var(--line)", color: "var(--paper)", padding: "5px 8px", fontSize: 11, borderRadius: 4, font: "inherit" }}>
+                    <option value={25}>25 / página</option>
+                    <option value={50}>50 / página</option>
+                    <option value={100}>100 / página</option>
+                  </select>
+                  <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
+                    style={{ border: "1px solid var(--line)", background: "none", color: page === 1 ? "var(--gray-500)" : "var(--paper)", padding: "5px 12px", fontSize: 11, cursor: page === 1 ? "default" : "pointer", borderRadius: 4, font: "inherit", opacity: page === 1 ? 0.4 : 1 }}>
+                    ← Anterior
+                  </button>
+                  <span style={{ fontSize: 11, color: "var(--paper-dim)", padding: "0 4px", whiteSpace: "nowrap" }}>
+                    {page} / {totalPages}
+                  </span>
+                  <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
+                    style={{ border: "1px solid var(--line)", background: "none", color: page === totalPages ? "var(--gray-500)" : "var(--paper)", padding: "5px 12px", fontSize: 11, cursor: page === totalPages ? "default" : "pointer", borderRadius: 4, font: "inherit", opacity: page === totalPages ? 0.4 : 1 }}>
+                    Próxima →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
