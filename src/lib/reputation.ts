@@ -30,17 +30,39 @@ export const REPUTATION_LEVELS = [
   { min: 20000, name: "Lenda da Sucatão",      icon: "Crown",       color: "#ff4d6a" },
 ] as const
 
-export type ReputationLevel = (typeof REPUTATION_LEVELS)[number]
+export type ReputationLevel = { min: number; name: string; icon: string; color: string }
 
-export function getReputationLevel(points: number): ReputationLevel {
-  for (let i = REPUTATION_LEVELS.length - 1; i >= 0; i--) {
-    if (points >= REPUTATION_LEVELS[i].min) return REPUTATION_LEVELS[i]
+// Busca níveis do banco, com fallback para os valores padrão
+export async function getRepLevelsFromDB(): Promise<ReputationLevel[]> {
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from("reputation_levels")
+      .select("name, min_points, position, color")
+      .order("position")
+    if (!data?.length) return [...REPUTATION_LEVELS]
+    // Preserva icon do array padrão usando name como chave
+    const iconMap = Object.fromEntries(REPUTATION_LEVELS.map(l => [l.name, l.icon]))
+    return data.map(r => ({
+      min:   r.min_points,
+      name:  r.name,
+      icon:  iconMap[r.name] ?? "Star",
+      color: r.color,
+    }))
+  } catch {
+    return [...REPUTATION_LEVELS]
   }
-  return REPUTATION_LEVELS[0]
 }
 
-export function getNextLevel(points: number): ReputationLevel | null {
-  for (const level of REPUTATION_LEVELS) {
+export function getReputationLevel(points: number, levels: ReputationLevel[] = [...REPUTATION_LEVELS]): ReputationLevel {
+  for (let i = levels.length - 1; i >= 0; i--) {
+    if (points >= levels[i].min) return levels[i]
+  }
+  return levels[0]
+}
+
+export function getNextLevel(points: number, levels: ReputationLevel[] = [...REPUTATION_LEVELS]): ReputationLevel | null {
+  for (const level of levels) {
     if (level.min > points) return level
   }
   return null

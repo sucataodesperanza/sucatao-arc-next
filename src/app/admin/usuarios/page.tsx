@@ -32,6 +32,7 @@ type RepEntry = {
 }
 
 type RepSetting = { source: string; points: number; label: string }
+type RepLevel  = { name: string; min_points: number; position: number; color: string }
 
 // ─── estilos comuns ────────────────────────────────────────────────────────────
 
@@ -97,11 +98,17 @@ export default function AdminUsuariosPage() {
   const [adjSaving, setAdjSaving] = useState(false)
   const [adjMsg, setAdjMsg]       = useState("")
 
-  // configurações
+  // configurações de ganho
   const [settings, setSettings]       = useState<RepSetting[]>([])
   const [editingSettings, setEditingSettings] = useState<Record<string, number>>({})
   const [settingsSaving, setSettingsSaving]   = useState<string | null>(null)
   const [settingsMsg, setSettingsMsg]         = useState("")
+
+  // configurações de níveis
+  const [levels, setLevels]           = useState<RepLevel[]>([])
+  const [editingLevels, setEditingLevels] = useState<Record<string, number>>({})
+  const [levelSaving, setLevelSaving]     = useState<string | null>(null)
+  const [levelsMsg, setLevelsMsg]         = useState("")
 
   // ── carrega lista ────────────────────────────────────────────────────────
 
@@ -126,7 +133,7 @@ export default function AdminUsuariosPage() {
     searchTimeout.current = setTimeout(() => loadUsers(q, 1), 350)
   }
 
-  // ── carrega settings ─────────────────────────────────────────────────────
+  // ── carrega settings e níveis ────────────────────────────────────────────
 
   useEffect(() => {
     fetch("/api/admin/reputation-settings")
@@ -138,7 +145,35 @@ export default function AdminUsuariosPage() {
         setEditingSettings(init)
       })
       .catch(() => {})
+
+    fetch("/api/admin/reputation-levels")
+      .then(r => r.json())
+      .then(d => {
+        setLevels(d.levels ?? [])
+        const init: Record<string, number> = {}
+        for (const l of (d.levels ?? [])) init[l.name] = l.min_points
+        setEditingLevels(init)
+      })
+      .catch(() => {})
   }, [])
+
+  async function saveLevel(name: string) {
+    setLevelSaving(name)
+    setLevelsMsg("")
+    const res = await fetch("/api/admin/reputation-levels", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, min_points: editingLevels[name] ?? 0 }),
+    })
+    setLevelSaving(null)
+    if (res.ok) {
+      setLevels(prev => prev.map(l => l.name === name ? { ...l, min_points: editingLevels[name] ?? 0 } : l))
+      setLevelsMsg("ok")
+    } else {
+      setLevelsMsg("error")
+    }
+    setTimeout(() => setLevelsMsg(""), 2500)
+  }
 
   async function saveSetting(source: string) {
     setSettingsSaving(source)
@@ -251,6 +286,49 @@ export default function AdminUsuariosPage() {
                 >
                   <Save size={11} />
                   {settingsSaving === s.source ? "…" : "Salvar"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Níveis de Reputação ──────────────────────────────────────────────── */}
+      <div style={{ ...card, marginBottom: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <Star size={14} style={{ color: "#b477ff" }} />
+          <span style={{ fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", color: "#b477ff" }}>
+            Limiares dos Níveis
+          </span>
+          <span style={{ fontSize: 11, color: "var(--gray-500)", fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>
+            (pontos mínimos para cada nível)
+          </span>
+          {levelsMsg === "ok"    && <span style={{ marginLeft: "auto", fontSize: 11, color: "#22c55e" }}>✓ Salvo!</span>}
+          {levelsMsg === "error" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#ef4444" }}>✗ Erro ao salvar.</span>}
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 10 }}>
+          {levels.map(l => (
+            <div key={l.name} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: l.color, display: "flex", alignItems: "center", gap: 5 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: l.color, display: "inline-block", flexShrink: 0 }} />
+                {l.name}
+              </label>
+              <div style={{ display: "flex", gap: 6 }}>
+                <input
+                  type="number"
+                  min={0}
+                  value={editingLevels[l.name] ?? l.min_points}
+                  onChange={e => setEditingLevels(prev => ({ ...prev, [l.name]: Number(e.target.value) }))}
+                  style={{ ...inputStyle, width: 100, flexShrink: 0 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => saveLevel(l.name)}
+                  disabled={levelSaving === l.name}
+                  style={{ ...btnPrimary, background: l.color }}
+                >
+                  <Save size={11} />
+                  {levelSaving === l.name ? "…" : "Salvar"}
                 </button>
               </div>
             </div>
