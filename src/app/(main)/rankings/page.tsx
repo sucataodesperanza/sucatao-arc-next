@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { REPUTATION_LEVELS } from "@/lib/reputation"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/rankings.css"
 
 type Player = {
@@ -396,38 +397,7 @@ export default function RankingsPage() {
 
         {/* Sidebar */}
         <aside className="store-side-panel" aria-label="Painel de rankings">
-          <div className="store-user-card">
-            <div className="store-user-avatar">
-              D
-              <span className="store-user-level">42</span>
-            </div>
-            <div className="store-user-info">
-              <strong>Draakaarrysss</strong>
-              <span className="store-user-online">
-                <span className="store-user-online-dot" />
-                Online
-              </span>
-            </div>
-          </div>
-
-          <div className="rankings-rep-widget">
-            <div className="rankings-rep-widget-row">
-              <div>
-                <span className="rankings-rep-widget-label">Reputação</span>
-                <strong className="rankings-rep-widget-value">5.250</strong>
-              </div>
-              <div className="rankings-faction-badge">
-                <span>Mercador</span>
-                <span>
-                  <Shield size={11} fill="currentColor" />
-                  Lendário
-                </span>
-              </div>
-            </div>
-            <div className="store-reputation-bar">
-              <span style={{ width: "52.5%" }} />
-            </div>
-          </div>
+          <SidePanelUserHeader />
 
           <div className="store-side-card">
             <h2>Minha Posição</h2>
