@@ -3,13 +3,13 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import Link from "next/link"
 import * as LucideIcons from "lucide-react"
-import { ArrowLeftRight, ArrowRight, CheckCircle, ChevronLeft, ChevronRight, Coins, Flag, Medal, Megaphone, ScrollText, Sparkles, TrendingUp } from "lucide-react"
+import { ArrowLeftRight, ArrowRight, CheckCircle, ChevronLeft, Coins, Megaphone } from "lucide-react"
 import type { HomeNews, HomeSlide } from "@/app/api/home/route"
-import { createClient } from "@/lib/supabase/client"
 import type { Trade } from "@/app/api/trades/route"
 import type { MyTrade } from "@/app/api/trades/my/route"
 import type { TradeSlot } from "@/app/api/trades/slots/route"
 import { BrandMark } from "@/components/brand-mark"
+import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../styles/home.css"
 
 const TRADES_OPEN_KEY = "trades-panel-open"
@@ -40,8 +40,6 @@ export default function HomePage() {
   const [heroSlides, setHeroSlides]   = useState<HomeSlide[]>([])
   const [tradesOpen, setTradesOpen] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
-  const [displayName, setDisplayName] = useState("Visitante")
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [trades, setTrades] = useState<Trade[]>([])
   const [myTrades, setMyTrades] = useState<MyTrade[]>([])
   const [activeTab, setActiveTab] = useState<"todos" | "meus">("todos")
@@ -55,8 +53,6 @@ export default function HomePage() {
   const [tradeTabIndicator, setTradeTabIndicator] = useState({ left: 0, width: 0 })
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
   const [accepting, setAccepting] = useState<string | null>(null)
-  const [reputation, setReputation] = useState<number | null>(null)
-  const [repLevel, setRepLevel] = useState<{ name: string; icon: string; color: string } | null>(null)
 
   useEffect(() => {
     if (heroSlides.length === 0) return
@@ -148,32 +144,11 @@ export default function HomePage() {
     }
   }
 
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return
-      setUserId(user.id)
-      setDisplayName(user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Visitante")
-      supabase.from("profiles").select("avatar_url, reputation").eq("id", user.id).single().then(({ data }) => {
-        if (data?.avatar_url) setAvatarUrl(data.avatar_url)
-        if (data && "reputation" in data) {
-          const rep = (data as { reputation: number }).reputation ?? 0
-          setReputation(rep)
-          fetch("/api/reputation").then(r => r.json()).then(d => {
-            if (d.level) setRepLevel(d.level)
-            if (typeof d.reputation === "number") setReputation(d.reputation)
-          }).catch(() => {})
-        }
-      })
-    })
-  }, [])
 
   function setOpen(val: boolean) {
     setTradesOpen(val)
     localStorage.setItem(TRADES_OPEN_KEY, String(val))
   }
-
-  const initial = displayName[0]?.toUpperCase() ?? "S"
 
   return (
     <div className={`home-page${tradesOpen ? "" : " home--trades-closed"}`}>
@@ -266,53 +241,7 @@ export default function HomePage() {
       </div>
 
       <aside className={`trades-panel${tradesOpen ? "" : " trades-panel--hidden"}`} aria-label="Trades">
-        <div className="store-user-card">
-          <div className="store-user-avatar">
-            {avatarUrl ? <img src={avatarUrl} alt={displayName} /> : initial}
-            <span className="store-user-level">1</span>
-          </div>
-          <div className="store-user-info">
-            <strong>{displayName}</strong>
-            <span className="store-user-online">
-              {userId && <span className="store-user-online-dot" />}
-              {userId ? "Online" : "Visitante"}
-            </span>
-          </div>
-          <button
-            type="button"
-            className="store-panel-close"
-            onClick={() => setOpen(false)}
-            aria-label="Fechar painel de trades"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-
-        <div className="store-user-stats">
-          <div className="store-stats-row">
-            <div className="store-reputation">
-              <span>Reputação</span>
-              <strong style={repLevel ? { color: repLevel.color } : undefined}>
-                {reputation !== null ? reputation.toLocaleString("pt-BR") : "—"}
-              </strong>
-            </div>
-            <div className="store-merchant-badge" style={repLevel ? { color: repLevel.color } : undefined}>
-              <span>{repLevel?.name ?? "Sem nível"}</span>
-              <Medal size={28} style={repLevel ? { color: repLevel.color } : undefined} />
-            </div>
-          </div>
-          {(() => {
-            if (reputation === null || !repLevel) return <div className="store-reputation-bar"><span style={{ width: "0%" }} /></div>
-            const LEVELS = [0, 200, 500, 1000, 2500, 5000, 10000, 20000]
-            const idx = LEVELS.findLastIndex(m => reputation >= m)
-            const nextMin = LEVELS[idx + 1]
-            const curMin  = LEVELS[idx] ?? 0
-            const pct = nextMin
-              ? Math.min(100, Math.round(((reputation - curMin) / (nextMin - curMin)) * 100))
-              : 100
-            return <div className="store-reputation-bar"><span style={{ width: `${pct}%`, background: repLevel.color }} /></div>
-          })()}
-        </div>
+        <SidePanelUserHeader onClose={() => setOpen(false)} onUserLoaded={setUserId} />
 
         <div className="trades-panel-head">
           <h2>Trades</h2>
