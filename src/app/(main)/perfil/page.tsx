@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, Package, ShoppingBag, TrendingUp } from "lucide-react"
+import { Camera, Package, ShoppingBag, TrendingUp, Star } from "lucide-react"
+import { REPUTATION_LEVELS, getReputationLevel, getNextLevel } from "@/lib/reputation"
 import type { Area } from "react-easy-crop"
 import { createClient } from "@/lib/supabase/client"
 import { getCroppedImageBlob } from "@/lib/crop-image"
@@ -48,6 +49,9 @@ export default function PerfilPage() {
   const [discordMsg, setDiscordMsg]           = useState("")
   const [confirmingDeliveryId, setConfirmingDeliveryId] = useState<string | null>(null)
   const [deliveryMsg, setDeliveryMsg]         = useState("")
+  const [reputation, setReputation]           = useState(0)
+  const [repStreak, setRepStreak]             = useState(0)
+  const [repHistory, setRepHistory]           = useState<{ id: string; amount: number; reason: string; source: string; created_at: string }[]>([])
 
   useEffect(() => {
     const supabase = createClient()
@@ -90,6 +94,13 @@ export default function PerfilPage() {
       setInventoryCount(inventoryRes.count ?? 0)
       setOrders((ordersRes.data ?? []) as unknown as Order[])
       setEcoLogs((ecoRes.data ?? []) as unknown as EcoLog[])
+
+      // Reputação
+      fetch("/api/reputation").then(r => r.json()).then(d => {
+        if (typeof d.reputation === "number") setReputation(d.reputation)
+        if (typeof d.streak === "number") setRepStreak(d.streak)
+        if (Array.isArray(d.history)) setRepHistory(d.history)
+      }).catch(() => {})
     })
   }, [])
 
@@ -407,6 +418,83 @@ export default function PerfilPage() {
           )}
         </div>
       </section>
+
+      {/* Reputação */}
+      {user && (
+        <section aria-label="Reputação">
+          <p className="home-section-label">Reputação</p>
+          {(() => {
+            const level   = getReputationLevel(reputation)
+            const next    = getNextLevel(reputation)
+            const pct     = next
+              ? Math.min(100, Math.round(((reputation - level.min) / (next.min - level.min)) * 100))
+              : 100
+            const SOURCE_REP: Record<string, string> = { trade: "Trade", contract: "Contrato", daily_streak: "Streak diário", admin: "Admin" }
+            return (
+              <div className="profile-card">
+                {/* Cabeçalho do nível */}
+                <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 12, background: `color-mix(in srgb, ${level.color} 15%, transparent)`, display: "grid", placeItems: "center", flexShrink: 0, border: `1px solid color-mix(in srgb, ${level.color} 30%, transparent)` }}>
+                    <Star size={22} style={{ color: level.color }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: level.color }}>{level.name}</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--gray-500)" }}>
+                      {reputation.toLocaleString("pt-BR")} pts de reputação
+                      {repStreak > 1 && <> · 🔥 {repStreak} dias seguidos</>}
+                    </p>
+                  </div>
+                  <p style={{ margin: 0, fontWeight: 950, fontSize: 20, color: level.color }}>{reputation.toLocaleString("pt-BR")}</p>
+                </div>
+
+                {/* Barra de progresso */}
+                <div style={{ height: 6, background: "rgba(255,255,255,0.07)", borderRadius: 99, marginBottom: 8, overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${pct}%`, background: level.color, borderRadius: 99, transition: "width 0.6s ease" }} />
+                </div>
+                <p style={{ margin: "0 0 16px", fontSize: 11, color: "var(--gray-500)", textAlign: "right" }}>
+                  {next ? `${(next.min - reputation).toLocaleString("pt-BR")} pts para "${next.name}"` : "Nível máximo atingido!"}
+                </p>
+
+                {/* Todos os níveis */}
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 16 }}>
+                  {REPUTATION_LEVELS.map(lvl => (
+                    <span key={lvl.min} style={{
+                      fontSize: 11, fontWeight: 800, padding: "3px 8px", borderRadius: 99,
+                      background: reputation >= lvl.min ? `color-mix(in srgb, ${lvl.color} 18%, transparent)` : "rgba(255,255,255,0.04)",
+                      color: reputation >= lvl.min ? lvl.color : "var(--gray-600)",
+                      border: `1px solid ${reputation >= lvl.min ? `color-mix(in srgb, ${lvl.color} 35%, transparent)` : "rgba(255,255,255,0.06)"}`,
+                    }}>
+                      {lvl.name}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Histórico */}
+                {repHistory.length > 0 && (
+                  <>
+                    <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 800, color: "var(--gray-400)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Histórico recente</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                      {repHistory.slice(0, 8).map(entry => (
+                        <div key={entry.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", fontSize: 13 }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ margin: 0, fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{entry.reason}</p>
+                            <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>
+                              {SOURCE_REP[entry.source] ?? entry.source} · {formatDateShort(entry.created_at)}
+                            </p>
+                          </div>
+                          <p style={{ margin: 0, fontWeight: 950, color: entry.amount >= 0 ? "var(--green)" : "var(--red)", flexShrink: 0 }}>
+                            {entry.amount >= 0 ? "+" : ""}{entry.amount.toLocaleString("pt-BR")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )
+          })()}
+        </section>
+      )}
 
       {/* Discord */}
       {user && (

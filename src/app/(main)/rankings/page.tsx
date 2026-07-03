@@ -1,12 +1,13 @@
 "use client"
 
-import { useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 import {
   Award, BarChart2, Calendar, ChevronDown, ChevronLeft, ChevronRight,
   Coins, Eye, Filter, HelpCircle, Package, Recycle,
   RefreshCw, Scale, Search, Shield, Skull, Star, Users,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { REPUTATION_LEVELS } from "@/lib/reputation"
 import "../../../styles/rankings.css"
 
 type Player = {
@@ -71,10 +72,14 @@ function getRankColor(rank: number) {
   return "#cd7f3a"
 }
 
+type RepPlayer = { rank: number; userId: string; name: string; avatar_url: string | null; reputation: number; level: { name: string; color: string } }
+
 export default function RankingsPage() {
   const [activeTab, setActiveTab] = useState(tabs[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+  const [repPlayers, setRepPlayers] = useState<RepPlayer[]>([])
+  const [repLoading, setRepLoading] = useState(false)
 
   useLayoutEffect(() => {
     function update() {
@@ -84,6 +89,16 @@ export default function RankingsPage() {
     update()
     window.addEventListener("resize", update)
     return () => window.removeEventListener("resize", update)
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== "Reputação") return
+    setRepLoading(true)
+    fetch("/api/rankings/reputation")
+      .then(r => r.json())
+      .then(d => setRepPlayers(d.players ?? []))
+      .catch(() => {})
+      .finally(() => setRepLoading(false))
   }, [activeTab])
 
   return (
@@ -317,7 +332,60 @@ export default function RankingsPage() {
             </>
           )}
 
-          {activeTab !== tabs[0] && (
+          {activeTab === "Reputação" && (
+            <div className="rankings-table-wrap">
+              {repLoading ? (
+                <div style={{ padding: "40px 0", textAlign: "center", color: "var(--gray-500)", fontSize: 14 }}>Carregando...</div>
+              ) : repPlayers.length === 0 ? (
+                <div style={{ padding: "40px 0", textAlign: "center", color: "var(--gray-500)", fontSize: 14 }}>Nenhum jogador com reputação ainda.</div>
+              ) : (
+                <table className="rankings-table">
+                  <thead>
+                    <tr className="rankings-thead-row">
+                      <th>Posição</th>
+                      <th>Raider</th>
+                      <th>Nível</th>
+                      <th>Reputação</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {repPlayers.map(p => (
+                      <tr key={p.userId} className="rankings-row">
+                        <td>
+                          {p.rank <= 3 ? (
+                            <div className={`rankings-rank-badge rankings-rank-badge-${p.rank}`}><span>{p.rank}</span></div>
+                          ) : (
+                            <div className="rankings-rank-num">{p.rank}</div>
+                          )}
+                        </td>
+                        <td>
+                          <div className="rankings-player-cell">
+                            <div className="rankings-player-avatar" style={{ background: `color-mix(in srgb, ${p.level.color} 12%, transparent)`, borderColor: p.level.color }}>
+                              {p.avatar_url
+                                ? <img src={p.avatar_url} alt={p.name} style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                                : p.name.charAt(0).toUpperCase()}
+                            </div>
+                            <strong className="rankings-player-name">{p.name}</strong>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ fontSize: 12, fontWeight: 800, color: p.level.color }}>{p.level.name}</span>
+                        </td>
+                        <td>
+                          <span className="rankings-rep-cell" style={{ color: p.level.color }}>
+                            <Star size={13} fill="currentColor" />
+                            {p.reputation.toLocaleString("pt-BR")} REP
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {activeTab !== tabs[0] && activeTab !== "Reputação" && (
             <div className="rankings-placeholder">
               <h2>Em breve</h2>
               <p>Esta seção estará disponível em breve.</p>

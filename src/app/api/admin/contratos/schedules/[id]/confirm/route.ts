@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { addItemsToInventory } from "@/lib/inventory"
 import { sendDiscordDM, dmRecompensaCreditada } from "@/lib/discord-bot"
+import { addReputation } from "@/lib/reputation"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin()
@@ -79,6 +80,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     .from("contract_mission_schedules")
     .update({ status: "confirmed", confirmed_at: new Date().toISOString() })
     .eq("id", scheduleId)
+
+  // Reputação — fire-and-forget
+  addReputation(schedule.user_id, 100, "contract", "Missão de contrato concluída", scheduleId).catch(() => {})
 
   // DM Discord ao jogador — fire-and-forget
   if ((mission.points_reward ?? 0) > 0 || itemReward) {

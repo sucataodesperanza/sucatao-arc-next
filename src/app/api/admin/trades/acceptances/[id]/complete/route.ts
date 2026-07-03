@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendDiscordDM, dmRecompensaCreditada, deleteDiscordChannel } from "@/lib/discord-bot"
+import { addReputation } from "@/lib/reputation"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin()
@@ -50,6 +51,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       .update({ points: currentPoints + points })
       .eq("id", acceptance.user_id)
   }
+
+  // Reputação — fire-and-forget
+  addReputation(acceptance.user_id, 50, "trade", "Trade concluído com Sucatão", id).catch(() => {})
 
   // DM Discord ao jogador — fire-and-forget
   sendDiscordDM(
