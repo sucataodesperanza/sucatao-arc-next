@@ -306,8 +306,8 @@ export default function AdminUsuariosPage() {
                         {u.avatar_url ? <img src={u.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (u.username ?? u.game_id ?? "?")[0]?.toUpperCase()}
                       </div>
                       <div>
-                        <p style={{ margin: 0, fontWeight: 700, color: "var(--paper)" }}>{u.username ?? "—"}</p>
-                        {u.game_id && <p style={{ margin: 0, fontSize: 11, color: "var(--gray-500)" }}>{u.game_id}</p>}
+                        <p style={{ margin: 0, fontWeight: 700, color: "var(--paper)" }}>{u.username ?? u.game_id ?? "Sem nome"}</p>
+                        {u.username && u.game_id && <p style={{ margin: 0, fontSize: 11, color: "var(--gray-500)" }}>{u.game_id}</p>}
                         {u.is_admin && <span style={{ fontSize: 9, fontWeight: 800, color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 3, padding: "1px 5px", textTransform: "uppercase" }}>Admin</span>}
                       </div>
                     </div>
@@ -361,8 +361,8 @@ export default function AdminUsuariosPage() {
                   : <User size={18} style={{ color: repLevel?.color }} />}
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontWeight: 950, fontSize: 16, color: "var(--paper)" }}>{selected.username ?? "Sem nome"}</p>
-                {selected.game_id && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--gray-500)" }}>{selected.game_id}</p>}
+                <p style={{ margin: 0, fontWeight: 950, fontSize: 16, color: "var(--paper)" }}>{selected.username ?? selected.game_id ?? "Sem nome"}</p>
+                {selected.username && selected.game_id && <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--gray-500)" }}>{selected.game_id}</p>}
                 <p style={{ margin: "4px 0 0", fontSize: 12, color: repLevel?.color, fontWeight: 700 }}>{repLevel?.name} · {selected.reputation.toLocaleString("pt-BR")} pts</p>
               </div>
               <button type="button" onClick={() => setSelected(null)} style={{ ...btnSecondary, padding: 6 }}>
