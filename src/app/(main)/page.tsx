@@ -57,11 +57,12 @@ export default function HomePage() {
   const [accepting, setAccepting] = useState<string | null>(null)
 
   useEffect(() => {
+    if (heroSlides.length === 0) return
     const timer = setInterval(() => {
       setActiveSlide(prev => (prev + 1) % heroSlides.length)
     }, 10000)
     return () => clearInterval(timer)
-  }, [])
+  }, [heroSlides.length])
 
   useEffect(() => {
     const stored = localStorage.getItem(TRADES_OPEN_KEY)
