@@ -55,6 +55,8 @@ export default function HomePage() {
   const [tradeTabIndicator, setTradeTabIndicator] = useState({ left: 0, width: 0 })
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set())
   const [accepting, setAccepting] = useState<string | null>(null)
+  const [reputation, setReputation] = useState<number | null>(null)
+  const [repLevel, setRepLevel] = useState<{ name: string; icon: string; color: string } | null>(null)
 
   useEffect(() => {
     if (heroSlides.length === 0) return
@@ -152,8 +154,16 @@ export default function HomePage() {
       if (!user) return
       setUserId(user.id)
       setDisplayName(user.user_metadata?.name ?? user.email?.split("@")[0] ?? "Visitante")
-      supabase.from("profiles").select("avatar_url").eq("id", user.id).single().then(({ data }) => {
+      supabase.from("profiles").select("avatar_url, reputation").eq("id", user.id).single().then(({ data }) => {
         if (data?.avatar_url) setAvatarUrl(data.avatar_url)
+        if (data && "reputation" in data) {
+          const rep = (data as { reputation: number }).reputation ?? 0
+          setReputation(rep)
+          fetch("/api/reputation").then(r => r.json()).then(d => {
+            if (d.level) setRepLevel(d.level)
+            if (typeof d.reputation === "number") setReputation(d.reputation)
+          }).catch(() => {})
+        }
       })
     })
   }, [])
@@ -282,16 +292,26 @@ export default function HomePage() {
           <div className="store-stats-row">
             <div className="store-reputation">
               <span>Reputação</span>
-              <strong>5.250</strong>
+              <strong style={repLevel ? { color: repLevel.color } : undefined}>
+                {reputation !== null ? reputation.toLocaleString("pt-BR") : "—"}
+              </strong>
             </div>
-            <div className="store-merchant-badge">
-              <span>Mercador</span>
-              <Medal size={28} />
+            <div className="store-merchant-badge" style={repLevel ? { color: repLevel.color } : undefined}>
+              <span>{repLevel?.name ?? "Sem nível"}</span>
+              <Medal size={28} style={repLevel ? { color: repLevel.color } : undefined} />
             </div>
           </div>
-          <div className="store-reputation-bar">
-            <span style={{ width: "90%" }} />
-          </div>
+          {(() => {
+            if (reputation === null || !repLevel) return <div className="store-reputation-bar"><span style={{ width: "0%" }} /></div>
+            const LEVELS = [0, 200, 500, 1000, 2500, 5000, 10000, 20000]
+            const idx = LEVELS.findLastIndex(m => reputation >= m)
+            const nextMin = LEVELS[idx + 1]
+            const curMin  = LEVELS[idx] ?? 0
+            const pct = nextMin
+              ? Math.min(100, Math.round(((reputation - curMin) / (nextMin - curMin)) * 100))
+              : 100
+            return <div className="store-reputation-bar"><span style={{ width: `${pct}%`, background: repLevel.color }} /></div>
+          })()}
         </div>
 
         <div className="trades-panel-head">
