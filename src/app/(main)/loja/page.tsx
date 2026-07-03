@@ -314,6 +314,17 @@ export default function LojaPage() {
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([])
   const [loadingHighlights, setLoadingHighlights] = useState(true)
 
+  type ActiveExpedition = {
+    id: string; name: string; description: string | null; ends_at: string
+    slots_per_pack: number; item_name: string | null; item_image_url: string | null
+    price_points: number | null; price_cash: number | null; featured: boolean
+  }
+  const [activeExpedition, setActiveExpedition] = useState<ActiveExpedition | null>(null)
+  const [vaultQty, setVaultQty]       = useState(1)
+  const [vaultMode, setVaultMode]     = useState<"points" | "cash">("points")
+  const [buyingVault, setBuyingVault] = useState(false)
+  const [vaultMsg, setVaultMsg]       = useState("")
+
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -330,6 +341,47 @@ export default function LojaPage() {
       .then(body => setCatalogItems(body.items ?? []))
       .finally(() => setLoadingHighlights(false))
   }, [])
+
+  useEffect(() => {
+    fetch("/api/expeditions/active")
+      .then(res => res.json())
+      .then(body => setActiveExpedition(body.expedition ?? null))
+      .catch(() => {})
+  }, [])
+
+  async function buyVaultPack() {
+    setBuyingVault(true); setVaultMsg("")
+    const res = await fetch("/api/store/expedition-vault", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ quantity: vaultQty, mode: vaultMode }),
+    })
+    const d = await res.json().catch(() => ({}))
+    setBuyingVault(false)
+    if (res.ok) {
+      if (vaultMode === "points") {
+        setPoints(d.pointsLeft ?? points)
+        setVaultMsg(`✅ ${vaultQty * (activeExpedition?.slots_per_pack ?? 20)} slots adicionados ao seu cofre!`)
+      } else {
+        setVaultMsg("⏳ PIX gerado! Acesse o pedido para pagar.")
+      }
+    } else {
+      setVaultMsg(`❌ ${d.error ?? "Erro ao comprar."}`)
+    }
+  }
+
+  const expeditionAsCatalogItem = useMemo(() => activeExpedition ? {
+    id: activeExpedition.id,
+    name: activeExpedition.item_name ?? "Pacote de Cofre de Expedição",
+    description: `Adiciona ${activeExpedition.slots_per_pack} slots ao cofre da expedição por compra. Acumula com múltiplos pacotes. Os slots expiram ao fim da expedição.`,
+    type: "expedition_vault_pack",
+    rarity: "Epic",
+    value: activeExpedition.price_cash ?? 0,
+    pricePoints: activeExpedition.price_points ?? undefined,
+    priceCash: activeExpedition.price_cash ?? undefined,
+    quantity: 999,
+    image: activeExpedition.item_image_url ?? undefined,
+  } : null, [activeExpedition])
 
   const highlightItems = useMemo(() => {
     const featured = catalogItems.filter(i => i.featured)
@@ -359,6 +411,7 @@ export default function LojaPage() {
     return () => clearInterval(id)
   }, [weeklyItems])
 
+  const vaultSectionRef = useRef<HTMLElement>(null)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 })
 
@@ -444,6 +497,50 @@ export default function LojaPage() {
                   </Link>
                 </div>
                 <div className="store-highlight-grid">
+                  {/* Card da expedição ativa (se featured = true) */}
+                  {!loadingHighlights && activeExpedition?.featured && expeditionAsCatalogItem && (
+                    <article
+                      key="expedition-vault"
+                      className="store-highlight-card"
+                      style={{ "--rarity-color": "#f59e0b" } as React.CSSProperties}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Ver detalhes de ${activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}`}
+                      onClick={() => catalog.setSelectedItem(expeditionAsCatalogItem)}
+                      onKeyDown={e => { if (e.key === "Enter") catalog.setSelectedItem(expeditionAsCatalogItem) }}
+                    >
+                      <div className="store-highlight-media">
+                        {activeExpedition.item_image_url
+                          ? <img src={activeExpedition.item_image_url} alt={activeExpedition.item_name ?? ""} loading="lazy" />
+                          : <div className="placeholder"><Package size={28} /></div>}
+                        <span className="store-highlight-badge">Expedição</span>
+                      </div>
+                      <div className="store-highlight-body">
+                        <p className="store-highlight-type">Cofre de Expedição</p>
+                        <h3>{activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}</h3>
+                        <div className="store-highlight-footer">
+                          <span className="store-highlight-price">
+                            {activeExpedition.price_points != null && (
+                              <span className="store-highlight-price-points">
+                                <Coins size={14} />
+                                {formatNumber(activeExpedition.price_points)}
+                              </span>
+                            )}
+                            {activeExpedition.price_cash != null && (
+                              <span className="store-highlight-price-cash">
+                                <Banknote size={14} />
+                                R$ {activeExpedition.price_cash.toFixed(2).replace(".", ",")}
+                              </span>
+                            )}
+                          </span>
+                          <button type="button" className="store-highlight-cart" tabIndex={-1} aria-hidden>
+                            <ShoppingCart size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  )}
+
                   {loadingHighlights ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <article key={i} className="store-highlight-card skeleton">
@@ -549,6 +646,82 @@ export default function LojaPage() {
                   </div>
                 </div>
               </section>
+
+              {/* Card de Cofre de Expedição (aparece apenas quando há expedição ativa) */}
+              {activeExpedition && (
+                <section ref={vaultSectionRef} aria-label="Cofre de Expedição" style={{ marginBottom: 8 }}>
+                  <div
+                    role={expeditionAsCatalogItem ? "button" : undefined}
+                    tabIndex={expeditionAsCatalogItem ? 0 : undefined}
+                    aria-label={expeditionAsCatalogItem ? `Ver detalhes de ${activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}` : undefined}
+                    onClick={() => expeditionAsCatalogItem && catalog.setSelectedItem(expeditionAsCatalogItem)}
+                    onKeyDown={e => { if (e.key === "Enter" && expeditionAsCatalogItem) catalog.setSelectedItem(expeditionAsCatalogItem) }}
+                    style={{
+                    background: "linear-gradient(135deg, rgba(245,158,11,0.10) 0%, rgba(245,158,11,0.04) 55%, rgba(14,21,32,0.0) 100%)",
+                    border: "1px solid rgba(245,158,11,0.30)",
+                    borderRadius: 12,
+                    padding: "18px 20px",
+                    display: "flex",
+                    gap: 18,
+                    alignItems: "flex-start",
+                    boxShadow: "0 0 40px rgba(245,158,11,0.10), 0 0 80px rgba(245,158,11,0.05), inset 0 1px 0 rgba(245,158,11,0.12)",
+                    cursor: expeditionAsCatalogItem ? "pointer" : "default",
+                  }}>
+                    {/* Imagem */}
+                    <div style={{ width: 80, height: 80, borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.20)", flexShrink: 0, overflow: "hidden", display: "grid", placeItems: "center" }}>
+                      {activeExpedition.item_image_url
+                        ? <img src={activeExpedition.item_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <Package size={28} style={{ color: "#f59e0b" }} />
+                      }
+                    </div>
+
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#f59e0b" }}>Expedição Ativa</span>
+                        <span style={{ fontSize: 10, color: "var(--gray-500)" }}>— {activeExpedition.name}</span>
+                      </div>
+                      <h3 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 900, color: "var(--paper)" }}>
+                        {activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}
+                      </h3>
+                      <p style={{ margin: "0 0 12px", fontSize: 12, color: "var(--gray-400)", lineHeight: 1.4 }}>
+                        Adiciona <strong style={{ color: "var(--paper)" }}>{activeExpedition.slots_per_pack} slots</strong> ao cofre da expedição por compra. Acumula com múltiplos pacotes. Os slots expiram ao fim da expedição.
+                      </p>
+
+                      {/* Compra */}
+                      <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: 10, flexWrap: "wrap" }} onClick={e => e.stopPropagation()}>
+                        {/* Modo de pagamento */}
+                        <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)" }}>
+                          {activeExpedition.price_points != null && (
+                            <button type="button" onClick={() => setVaultMode("points")} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", background: vaultMode === "points" ? "#f59e0b" : "rgba(255,255,255,0.05)", color: vaultMode === "points" ? "#000" : "var(--gray-400)" }}>
+                              <Coins size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />
+                              {(activeExpedition.price_points * vaultQty).toLocaleString("pt-BR")} pts
+                            </button>
+                          )}
+                          {activeExpedition.price_cash != null && (
+                            <button type="button" onClick={() => setVaultMode("cash")} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", background: vaultMode === "cash" ? "#22c55e" : "rgba(255,255,255,0.05)", color: vaultMode === "cash" ? "#000" : "var(--gray-400)" }}>
+                              <Banknote size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />
+                              R$ {(activeExpedition.price_cash * vaultQty).toFixed(2).replace(".", ",")}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Quantidade */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                          <button type="button" onClick={() => setVaultQty(q => Math.max(1, q - 1))} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "var(--paper)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>−</button>
+                          <span style={{ width: 24, textAlign: "center", fontSize: 13, fontWeight: 700, color: "var(--paper)" }}>{vaultQty}</span>
+                          <button type="button" onClick={() => setVaultQty(q => q + 1)} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "var(--paper)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>+</button>
+                        </div>
+
+                        <button type="button" onClick={() => expeditionAsCatalogItem && catalog.setSelectedItem(expeditionAsCatalogItem)} style={{ padding: "7px 16px", borderRadius: 6, border: "none", background: "#f59e0b", color: "#000", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                          Comprar
+                        </button>
+                      </div>
+
+                    </div>
+                  </div>
+                </section>
+              )}
 
               <section aria-label="Itens do catálogo">
                 <div className="store-section-head">

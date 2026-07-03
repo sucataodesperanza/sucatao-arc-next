@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   ArrowLeft, ArrowLeftRight, Bot, ClipboardList, DollarSign, Flag, Gift,
   Hammer, Home, Map, Package, Radio, ScrollText, Shield, Star, Ticket,
-  TrendingUp, Warehouse,
+  TrendingUp, Warehouse, Compass,
 } from "lucide-react"
 import { BrandMark } from "./brand-mark"
 
@@ -21,6 +21,7 @@ const links = [
   { href: "/admin/cupons",    label: "Cupons",     icon: Ticket,        exact: false },
   { href: "/admin/loot-boxes", label: "Loot Boxes", icon: Gift,        exact: false },
   { href: "/admin/contratos", label: "Contratos",  icon: ScrollText,    exact: false },
+  { href: "/admin/expedicao", label: "Expedição",  icon: Compass,       exact: false },
   { href: "/admin/faccoes",   label: "Facções",    icon: Flag,          exact: false },
   { href: "/admin/mapas",     label: "Mapas",      icon: Map,           exact: false },
   { href: "/admin/streamers", label: "Streamers",  icon: Radio,         exact: false },

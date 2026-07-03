@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { deleteDiscordChannel } from "@/lib/discord-bot"
 import { alertItemEntregue } from "@/lib/discord-webhook"
+import { removeItemsFromInventory } from "@/lib/inventory"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin()
@@ -13,7 +14,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   const { data: order } = await admin
     .from("orders")
-    .select("id, user_id, payment_method, payment_status, delivered_at, discord_channel_id")
+    .select("id, user_id, payment_method, payment_status, delivered_at, discord_channel_id, items")
     .eq("id", id)
     .single()
 
@@ -34,6 +35,13 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   if (order.discord_channel_id) {
     deleteDiscordChannel(order.discord_channel_id)
+  }
+
+  // Remove itens do inventário (exceto pacotes de cofre de expedição, que não são físicos)
+  const orderItems: { itemId: string; quantity: number; type?: string }[] = Array.isArray(order.items) ? order.items : []
+  const removableItems = orderItems.filter(i => i.type !== "expedition_vault_pack" && i.itemId)
+  if (removableItems.length > 0) {
+    await removeItemsFromInventory(order.user_id, removableItems)
   }
 
   const { data: profile } = await admin.from("profiles").select("username, discord_username, game_id").eq("id", order.user_id).single()
