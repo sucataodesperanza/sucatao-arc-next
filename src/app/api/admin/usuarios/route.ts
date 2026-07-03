@@ -24,7 +24,31 @@ export async function GET(req: NextRequest) {
     query = query.or(`username.ilike.%${search}%,game_id.ilike.%${search}%`)
   }
 
-  const { data, count } = await query
+  const [{ data, count }, authRes] = await Promise.all([
+    query,
+    supabase.auth.admin.listUsers({ perPage: 1000 }),
+  ])
 
-  return NextResponse.json({ users: data ?? [], total: count ?? 0, page, limit })
+  // Mapa de display_name vindo do metadata do auth (ex: nome do Google/Discord)
+  const nameMap: Record<string, string | null> = {}
+  for (const u of authRes.data?.users ?? []) {
+    const meta = u.user_metadata ?? {}
+    nameMap[u.id] = meta.name ?? meta.full_name ?? meta.preferred_username ?? null
+  }
+
+  const users = (data ?? []).map(p => ({
+    ...p,
+    display_name: nameMap[p.id] ?? null,
+  }))
+
+  // Se houver busca por nome, filtra também pelo display_name
+  const filtered = search.trim()
+    ? users.filter(u =>
+        (u.display_name?.toLowerCase().includes(search.toLowerCase())) ||
+        (u.username?.toLowerCase().includes(search.toLowerCase())) ||
+        (u.game_id?.toLowerCase().includes(search.toLowerCase()))
+      )
+    : users
+
+  return NextResponse.json({ users: filtered, total: count ?? 0, page, limit })
 }
