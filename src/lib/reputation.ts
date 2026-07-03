@@ -2,6 +2,23 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 export type ReputationSource = "trade" | "contract" | "daily_streak" | "admin"
 
+const DEFAULT_POINTS: Record<string, number> = { trade: 50, contract: 100, daily_streak: 10 }
+
+export async function getRepPoints(source: ReputationSource): Promise<number> {
+  if (source === "admin") return 0
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from("reputation_settings")
+      .select("points")
+      .eq("source", source)
+      .single()
+    return (data as { points: number } | null)?.points ?? DEFAULT_POINTS[source] ?? 0
+  } catch {
+    return DEFAULT_POINTS[source] ?? 0
+  }
+}
+
 export const REPUTATION_LEVELS = [
   { min: 0,     name: "Sucateiro de Fundo",   icon: "Trash2",      color: "#566171" },
   { min: 200,   name: "Mascate Novato",        icon: "ShoppingBag", color: "#8b99aa" },
