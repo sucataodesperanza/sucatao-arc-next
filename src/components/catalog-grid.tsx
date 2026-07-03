@@ -4,19 +4,20 @@ import { Banknote, Coins, Heart, ShoppingCart } from "lucide-react"
 import { getItemTypeLabel } from "@/lib/catalog"
 import { formatNumber, getRarity, getType, rarityColors, rarityMetaLabels, resolveImage, type ItemsCatalog } from "@/lib/use-items-catalog"
 
-export function CatalogGrid({ catalog, className }: { catalog: ItemsCatalog; className?: string }) {
+export function CatalogGrid({ catalog, className, pinnedFirst }: { catalog: ItemsCatalog; className?: string; pinnedFirst?: React.ReactNode }) {
   const { filteredItems, loadingCatalog, favorites, toggleFavorite, setSelectedItem } = catalog
 
   if (loadingCatalog) {
     return <p className="catalog-empty">Carregando catálogo...</p>
   }
 
-  if (filteredItems.length === 0) {
+  if (filteredItems.length === 0 && !pinnedFirst) {
     return <p className="catalog-empty">Nenhum item encontrado. Ajuste a busca ou os filtros.</p>
   }
 
   return (
     <div className={`store-highlight-grid${className ? ` ${className}` : ""}`}>
+      {pinnedFirst}
       {filteredItems.map(item => {
         const r = getRarity(item)
         const isFavorite = favorites.has(item.id)

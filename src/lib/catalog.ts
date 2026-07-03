@@ -22,6 +22,7 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   "Topside Material": "Material de Superfície",
   "Trinket": "Bugiganga",
   "Weapon": "Arma",
+  "expedition_vault_pack": "Cofre de Expedição",
 }
 
 export const RARITY_LABELS: Record<string, string> = {
