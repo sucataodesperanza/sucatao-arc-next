@@ -105,9 +105,10 @@ export default function AdminUsuariosPage() {
   const [settingsMsg, setSettingsMsg]         = useState("")
 
   // configurações de níveis
-  const [levels, setLevels]           = useState<RepLevel[]>([])
-  const [editingLevels, setEditingLevels] = useState<Record<string, number>>({})
-  const [levelSaving, setLevelSaving]     = useState<string | null>(null)
+  const [levels, setLevels]               = useState<RepLevel[]>([])
+  const [editingLevelPts, setEditingLevelPts]   = useState<Record<number, number>>({})
+  const [editingLevelNames, setEditingLevelNames] = useState<Record<number, string>>({})
+  const [levelSaving, setLevelSaving]     = useState<number | null>(null)
   const [levelsMsg, setLevelsMsg]         = useState("")
 
   // ── carrega lista ────────────────────────────────────────────────────────
@@ -150,24 +151,36 @@ export default function AdminUsuariosPage() {
       .then(r => r.json())
       .then(d => {
         setLevels(d.levels ?? [])
-        const init: Record<string, number> = {}
-        for (const l of (d.levels ?? [])) init[l.name] = l.min_points
-        setEditingLevels(init)
+        const initPts:  Record<number, number> = {}
+        const initNames: Record<number, string> = {}
+        for (const l of (d.levels ?? [])) {
+          initPts[l.position]   = l.min_points
+          initNames[l.position] = l.name
+        }
+        setEditingLevelPts(initPts)
+        setEditingLevelNames(initNames)
       })
       .catch(() => {})
   }, [])
 
-  async function saveLevel(name: string) {
-    setLevelSaving(name)
+  async function saveLevel(position: number) {
+    setLevelSaving(position)
     setLevelsMsg("")
     const res = await fetch("/api/admin/reputation-levels", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, min_points: editingLevels[name] ?? 0 }),
+      body: JSON.stringify({
+        position,
+        name:       editingLevelNames[position],
+        min_points: editingLevelPts[position] ?? 0,
+      }),
     })
     setLevelSaving(null)
     if (res.ok) {
-      setLevels(prev => prev.map(l => l.name === name ? { ...l, min_points: editingLevels[name] ?? 0 } : l))
+      setLevels(prev => prev.map(l => l.position === position
+        ? { ...l, name: editingLevelNames[position] ?? l.name, min_points: editingLevelPts[position] ?? 0 }
+        : l
+      ))
       setLevelsMsg("ok")
     } else {
       setLevelsMsg("error")
@@ -306,29 +319,39 @@ export default function AdminUsuariosPage() {
           {levelsMsg === "ok"    && <span style={{ marginLeft: "auto", fontSize: 11, color: "#22c55e" }}>✓ Salvo!</span>}
           {levelsMsg === "error" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#ef4444" }}>✗ Erro ao salvar.</span>}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
           {levels.map(l => (
-            <div key={l.name} style={{ display: "flex", flexDirection: "column", gap: 5 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: l.color, display: "flex", alignItems: "center", gap: 5 }}>
-                <span style={{ width: 8, height: 8, borderRadius: "50%", background: l.color, display: "inline-block", flexShrink: 0 }} />
-                {l.name}
-              </label>
+            <div key={l.position} style={{ display: "flex", flexDirection: "column", gap: 6, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, padding: "10px 12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: l.color, flexShrink: 0 }} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Nível {l.position}</span>
+              </div>
+
+              <label style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)" }}>Nome</label>
+              <input
+                type="text"
+                value={editingLevelNames[l.position] ?? l.name}
+                onChange={e => setEditingLevelNames(prev => ({ ...prev, [l.position]: e.target.value }))}
+                style={{ ...inputStyle }}
+              />
+
+              <label style={{ fontSize: 11, fontWeight: 700, color: "var(--gray-400)", marginTop: 2 }}>Pontos mínimos</label>
               <div style={{ display: "flex", gap: 6 }}>
                 <input
                   type="number"
                   min={0}
-                  value={editingLevels[l.name] ?? l.min_points}
-                  onChange={e => setEditingLevels(prev => ({ ...prev, [l.name]: Number(e.target.value) }))}
-                  style={{ ...inputStyle, width: 100, flexShrink: 0 }}
+                  value={editingLevelPts[l.position] ?? l.min_points}
+                  onChange={e => setEditingLevelPts(prev => ({ ...prev, [l.position]: Number(e.target.value) }))}
+                  style={{ ...inputStyle, flex: 1 }}
                 />
                 <button
                   type="button"
-                  onClick={() => saveLevel(l.name)}
-                  disabled={levelSaving === l.name}
-                  style={{ ...btnPrimary, background: l.color }}
+                  onClick={() => saveLevel(l.position)}
+                  disabled={levelSaving === l.position}
+                  style={{ ...btnPrimary, background: l.color, flexShrink: 0 }}
                 >
                   <Save size={11} />
-                  {levelSaving === l.name ? "…" : "Salvar"}
+                  {levelSaving === l.position ? "…" : "Salvar"}
                 </button>
               </div>
             </div>

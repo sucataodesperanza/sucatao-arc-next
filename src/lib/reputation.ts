@@ -41,12 +41,11 @@ export async function getRepLevelsFromDB(): Promise<ReputationLevel[]> {
       .select("name, min_points, position, color")
       .order("position")
     if (!data?.length) return [...REPUTATION_LEVELS]
-    // Preserva icon do array padrão usando name como chave
-    const iconMap = Object.fromEntries(REPUTATION_LEVELS.map(l => [l.name, l.icon]))
+    // Preserva icon do array padrão usando position como chave estável
     return data.map(r => ({
       min:   r.min_points,
       name:  r.name,
-      icon:  iconMap[r.name] ?? "Star",
+      icon:  REPUTATION_LEVELS[r.position]?.icon ?? "Star",
       color: r.color,
     }))
   } catch {

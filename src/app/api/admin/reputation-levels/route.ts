@@ -20,17 +20,31 @@ export async function PATCH(req: NextRequest) {
   if (guard.error) return guard.error
 
   const body = await req.json().catch(() => ({}))
-  const { name, min_points } = body as { name?: string; min_points?: number }
+  const { position, name, min_points } = body as { position?: number; name?: string; min_points?: number }
 
-  if (!name || typeof min_points !== "number" || min_points < 0) {
-    return NextResponse.json({ error: "name e min_points (≥ 0) são obrigatórios." }, { status: 400 })
+  if (typeof position !== "number") {
+    return NextResponse.json({ error: "position é obrigatório." }, { status: 400 })
+  }
+  if (name !== undefined && !name.trim()) {
+    return NextResponse.json({ error: "name não pode ser vazio." }, { status: 400 })
+  }
+  if (min_points !== undefined && (typeof min_points !== "number" || min_points < 0)) {
+    return NextResponse.json({ error: "min_points deve ser ≥ 0." }, { status: 400 })
+  }
+
+  const update: Record<string, unknown> = {}
+  if (name      !== undefined) update.name       = name.trim()
+  if (min_points !== undefined) update.min_points = min_points
+
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: "Nenhum campo para atualizar." }, { status: 400 })
   }
 
   const supabase = createAdminClient()
   const { error } = await supabase
     .from("reputation_levels")
-    .update({ min_points })
-    .eq("name", name)
+    .update(update)
+    .eq("position", position)
 
   if (error) return NextResponse.json({ error: "Erro ao salvar nível." }, { status: 500 })
 
