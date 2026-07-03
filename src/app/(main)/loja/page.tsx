@@ -370,6 +370,19 @@ export default function LojaPage() {
     }
   }
 
+  const expeditionAsCatalogItem = useMemo(() => activeExpedition ? {
+    id: activeExpedition.id,
+    name: activeExpedition.item_name ?? "Pacote de Cofre de Expedição",
+    description: `Adiciona ${activeExpedition.slots_per_pack} slots ao cofre da expedição por compra. Acumula com múltiplos pacotes. Os slots expiram ao fim da expedição.`,
+    type: "expedition_vault_pack",
+    rarity: "Epic",
+    value: activeExpedition.price_cash ?? 0,
+    pricePoints: activeExpedition.price_points ?? undefined,
+    priceCash: activeExpedition.price_cash ?? undefined,
+    quantity: 999,
+    image: activeExpedition.item_image_url ?? undefined,
+  } : null, [activeExpedition])
+
   const highlightItems = useMemo(() => {
     const featured = catalogItems.filter(i => i.featured)
     const rest = catalogItems.filter(i => !i.featured).sort((a, b) => (b.value ?? 0) - (a.value ?? 0))
@@ -398,6 +411,7 @@ export default function LojaPage() {
     return () => clearInterval(id)
   }, [weeklyItems])
 
+  const vaultSectionRef = useRef<HTMLElement>(null)
   const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({})
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0 })
 
@@ -484,16 +498,16 @@ export default function LojaPage() {
                 </div>
                 <div className="store-highlight-grid">
                   {/* Card da expedição ativa (se featured = true) */}
-                  {!loadingHighlights && activeExpedition?.featured && (
+                  {!loadingHighlights && activeExpedition?.featured && expeditionAsCatalogItem && (
                     <article
                       key="expedition-vault"
                       className="store-highlight-card"
                       style={{ "--rarity-color": "#f59e0b" } as React.CSSProperties}
                       tabIndex={0}
                       role="button"
-                      aria-label={`Comprar ${activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}`}
-                      onClick={() => setActiveTab("itens")}
-                      onKeyDown={e => { if (e.key === "Enter") setActiveTab("itens") }}
+                      aria-label={`Ver detalhes de ${activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}`}
+                      onClick={() => catalog.setSelectedItem(expeditionAsCatalogItem)}
+                      onKeyDown={e => { if (e.key === "Enter") catalog.setSelectedItem(expeditionAsCatalogItem) }}
                     >
                       <div className="store-highlight-media">
                         {activeExpedition.item_image_url
@@ -635,10 +649,26 @@ export default function LojaPage() {
 
               {/* Card de Cofre de Expedição (aparece apenas quando há expedição ativa) */}
               {activeExpedition && (
-                <section aria-label="Cofre de Expedição">
-                  <div style={{ background: "linear-gradient(135deg, color-mix(in srgb, #f59e0b 8%, var(--surface-1)) 0%, var(--surface-1) 100%)", border: "1px solid color-mix(in srgb, #f59e0b 25%, var(--border-dim))", borderRadius: 12, padding: 20, marginBottom: 8, display: "flex", gap: 20, alignItems: "flex-start" }}>
+                <section ref={vaultSectionRef} aria-label="Cofre de Expedição" style={{ marginBottom: 8 }}>
+                  <div
+                    role={expeditionAsCatalogItem ? "button" : undefined}
+                    tabIndex={expeditionAsCatalogItem ? 0 : undefined}
+                    aria-label={expeditionAsCatalogItem ? `Ver detalhes de ${activeExpedition.item_name ?? "Pacote de Cofre de Expedição"}` : undefined}
+                    onClick={() => expeditionAsCatalogItem && catalog.setSelectedItem(expeditionAsCatalogItem)}
+                    onKeyDown={e => { if (e.key === "Enter" && expeditionAsCatalogItem) catalog.setSelectedItem(expeditionAsCatalogItem) }}
+                    style={{
+                    background: "linear-gradient(135deg, rgba(245,158,11,0.10) 0%, rgba(245,158,11,0.04) 55%, rgba(14,21,32,0.0) 100%)",
+                    border: "1px solid rgba(245,158,11,0.30)",
+                    borderRadius: 12,
+                    padding: "18px 20px",
+                    display: "flex",
+                    gap: 18,
+                    alignItems: "flex-start",
+                    boxShadow: "0 0 40px rgba(245,158,11,0.10), 0 0 80px rgba(245,158,11,0.05), inset 0 1px 0 rgba(245,158,11,0.12)",
+                    cursor: expeditionAsCatalogItem ? "pointer" : "default",
+                  }}>
                     {/* Imagem */}
-                    <div style={{ width: 80, height: 80, borderRadius: 10, background: "var(--surface-2)", border: "1px solid var(--border-dim)", flexShrink: 0, overflow: "hidden", display: "grid", placeItems: "center" }}>
+                    <div style={{ width: 80, height: 80, borderRadius: 10, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.20)", flexShrink: 0, overflow: "hidden", display: "grid", placeItems: "center" }}>
                       {activeExpedition.item_image_url
                         ? <img src={activeExpedition.item_image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                         : <Package size={28} style={{ color: "#f59e0b" }} />
@@ -646,7 +676,7 @@ export default function LojaPage() {
                     </div>
 
                     {/* Info */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
                         <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: "0.1em", textTransform: "uppercase", color: "#f59e0b" }}>Expedição Ativa</span>
                         <span style={{ fontSize: 10, color: "var(--gray-500)" }}>— {activeExpedition.name}</span>
@@ -659,17 +689,17 @@ export default function LojaPage() {
                       </p>
 
                       {/* Compra */}
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", justifyContent: "flex-start", alignItems: "center", gap: 10, flexWrap: "wrap" }} onClick={e => e.stopPropagation()}>
                         {/* Modo de pagamento */}
-                        <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid var(--border-dim)" }}>
+                        <div style={{ display: "flex", borderRadius: 6, overflow: "hidden", border: "1px solid rgba(255,255,255,0.10)" }}>
                           {activeExpedition.price_points != null && (
-                            <button type="button" onClick={() => setVaultMode("points")} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", background: vaultMode === "points" ? "#f59e0b" : "var(--surface-2)", color: vaultMode === "points" ? "#000" : "var(--gray-400)" }}>
+                            <button type="button" onClick={() => setVaultMode("points")} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", background: vaultMode === "points" ? "#f59e0b" : "rgba(255,255,255,0.05)", color: vaultMode === "points" ? "#000" : "var(--gray-400)" }}>
                               <Coins size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />
                               {(activeExpedition.price_points * vaultQty).toLocaleString("pt-BR")} pts
                             </button>
                           )}
                           {activeExpedition.price_cash != null && (
-                            <button type="button" onClick={() => setVaultMode("cash")} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", background: vaultMode === "cash" ? "#22c55e" : "var(--surface-2)", color: vaultMode === "cash" ? "#000" : "var(--gray-400)" }}>
+                            <button type="button" onClick={() => setVaultMode("cash")} style={{ padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", border: "none", background: vaultMode === "cash" ? "#22c55e" : "rgba(255,255,255,0.05)", color: vaultMode === "cash" ? "#000" : "var(--gray-400)" }}>
                               <Banknote size={11} style={{ verticalAlign: "middle", marginRight: 3 }} />
                               R$ {(activeExpedition.price_cash * vaultQty).toFixed(2).replace(".", ",")}
                             </button>
@@ -678,17 +708,16 @@ export default function LojaPage() {
 
                         {/* Quantidade */}
                         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                          <button type="button" onClick={() => setVaultQty(q => Math.max(1, q - 1))} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid var(--border-dim)", background: "var(--surface-2)", color: "var(--paper)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>−</button>
+                          <button type="button" onClick={() => setVaultQty(q => Math.max(1, q - 1))} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "var(--paper)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>−</button>
                           <span style={{ width: 24, textAlign: "center", fontSize: 13, fontWeight: 700, color: "var(--paper)" }}>{vaultQty}</span>
-                          <button type="button" onClick={() => setVaultQty(q => q + 1)} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid var(--border-dim)", background: "var(--surface-2)", color: "var(--paper)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>+</button>
+                          <button type="button" onClick={() => setVaultQty(q => q + 1)} style={{ width: 26, height: 26, borderRadius: 6, border: "1px solid rgba(255,255,255,0.10)", background: "rgba(255,255,255,0.05)", color: "var(--paper)", cursor: "pointer", fontSize: 14, display: "grid", placeItems: "center" }}>+</button>
                         </div>
 
-                        <button type="button" onClick={buyVaultPack} disabled={buyingVault} style={{ padding: "7px 16px", borderRadius: 6, border: "none", background: "#f59e0b", color: "#000", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
-                          {buyingVault ? "Comprando…" : `Comprar ${vaultQty > 1 ? `×${vaultQty}` : ""}`}
+                        <button type="button" onClick={() => expeditionAsCatalogItem && catalog.setSelectedItem(expeditionAsCatalogItem)} style={{ padding: "7px 16px", borderRadius: 6, border: "none", background: "#f59e0b", color: "#000", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                          Comprar
                         </button>
                       </div>
 
-                      {vaultMsg && <p style={{ margin: "8px 0 0", fontSize: 12, color: vaultMsg.startsWith("✅") ? "#22c55e" : vaultMsg.startsWith("⏳") ? "#f59e0b" : "var(--red)" }}>{vaultMsg}</p>}
                     </div>
                   </div>
                 </section>

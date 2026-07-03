@@ -155,3 +155,36 @@ export async function alertItemEntregue(opts: {
     footer: { text: "Sucatão de Speranza" },
   })
 }
+
+export async function alertAgendamentoCofre(opts: {
+  depositId: string
+  userName: string
+  gameId: string
+  expeditionName: string
+  type: "deposit" | "pickup"
+  items: { name: string; rarity: string; quantity: number }[]
+  slotsUsed: number
+  preferredAt: string | null
+  notes: string | null
+}) {
+  const typeLabel = opts.type === "deposit" ? "Entrega ao Cofre" : "Retirada do Cofre"
+  const itemLines = opts.items.map(i => `• **${i.name}** × ${i.quantity} (${i.rarity})`).join("\n") || "—"
+  const when = opts.preferredAt
+    ? new Date(opts.preferredAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+    : "A combinar"
+  await send({
+    title: `🧳 Cofre — ${typeLabel}`,
+    color: opts.type === "deposit" ? YELLOW : GREEN,
+    fields: [
+      { name: "ID",          value: `\`${opts.depositId.slice(0, 8)}\``, inline: true },
+      { name: "Jogador",     value: opts.userName,                        inline: true },
+      { name: "Game ID",     value: opts.gameId,                          inline: true },
+      { name: "Expedição",   value: opts.expeditionName,                  inline: true },
+      { name: "Slots",       value: `${opts.slotsUsed} slots`,            inline: true },
+      { name: "Horário",     value: when,                                  inline: true },
+      { name: "Itens",       value: itemLines },
+      ...(opts.notes ? [{ name: "Obs.", value: opts.notes }] : []),
+    ],
+    footer: { text: "Sucatão de Speranza — /admin/expedicao para gerenciar" },
+  })
+}

@@ -90,20 +90,23 @@ export async function POST(request: NextRequest) {
     return [...map.entries()].map(([itemId, quantity]) => ({ itemId, quantity }))
   }
 
-  const stockPayload = groupByItem(items)
-  const { error: stockError } = await supabase.rpc("decrement_stock", { p_items: stockPayload })
-  if (stockError) {
-    // stockError.message contém o item_id quando é 'Estoque insuficiente para o item X'
-    const detail = stockError.message?.includes("Estoque insuficiente")
-      ? stockError.message
-      : "Um ou mais itens estão sem estoque suficiente."
-    console.error("store/checkout decrement_stock error:", stockError.message)
-    return NextResponse.json({ error: detail }, { status: 409 })
+  const stockableItems = items.filter(i => i.type !== "expedition_vault_pack")
+  if (stockableItems.length > 0) {
+    const stockPayload = groupByItem(stockableItems)
+    const { error: stockError } = await supabase.rpc("decrement_stock", { p_items: stockPayload })
+    if (stockError) {
+      const detail = stockError.message?.includes("Estoque insuficiente")
+        ? stockError.message
+        : "Um ou mais itens estão sem estoque suficiente."
+      console.error("store/checkout decrement_stock error:", stockError.message)
+      return NextResponse.json({ error: detail }, { status: 409 })
+    }
   }
 
   async function restoreStock(list: CheckoutItem[]) {
-    if (list.length === 0) return
-    await supabase.rpc("restore_stock", { p_items: groupByItem(list) })
+    const stockList = list.filter(i => i.type !== "expedition_vault_pack")
+    if (stockList.length === 0) return
+    await supabase.rpc("restore_stock", { p_items: groupByItem(stockList) })
   }
 
   const result: { points?: number; pointsOrderId?: string; cashOrderId?: string } = {}
@@ -176,7 +179,7 @@ export async function POST(request: NextRequest) {
     // Credita slots de cofre de expedição (imediato)
     const pointsUserName = (user.user_metadata?.name as string | undefined) ?? user.email ?? "Desconhecido"
     for (const vaultItem of vaultPackItems) {
-      const result = await creditExpeditionVaultPacks(user.id, vaultItem.quantity)
+      const result = await creditExpeditionVaultPacks(user.id, vaultItem.quantity, vaultItem.itemId)
       if (result.ok) {
         alertCofresExpedicao({
           orderId: order.id,

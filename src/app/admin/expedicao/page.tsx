@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState, useCallback, useRef } from "react"
-import { Compass, Plus, X, Pencil, Trash2, Users, Package, Upload, Image as ImageIcon, Star } from "lucide-react"
+import { Archive, CalendarClock, Compass, Plus, X, Pencil, Trash2, Users, Package, Upload, Image as ImageIcon, Star, Truck } from "lucide-react"
 
 type Expedition = {
   id: string
@@ -36,6 +36,32 @@ type ExpeditionForm = {
 
 const STATUS_LABEL: Record<string, string> = { scheduled: "Agendada", active: "Ativa", ended: "Encerrada" }
 const STATUS_COLOR: Record<string, string>  = { scheduled: "#f59e0b", active: "#22c55e", ended: "#6b7280" }
+
+type DepositAdminItem = { name: string; rarity: string; quantity: number }
+type DepositAdmin = {
+  id: string; user_id: string; type: "deposit" | "pickup"
+  items: DepositAdminItem[]; slots_used: number
+  preferred_at: string | null; notes: string | null
+  status: "scheduled" | "in_storage" | "returned" | "cancelled"
+  admin_notes: string | null; created_at: string
+  userName: string; gameId: string
+}
+const DEP_STATUS: Record<string, { label: string; color: string }> = {
+  scheduled:  { label: "Agendado",   color: "#f59e0b" },
+  in_storage: { label: "Em guarda",  color: "#5fa8ff" },
+  returned:   { label: "Devolvido",  color: "#22c55e" },
+  cancelled:  { label: "Cancelado",  color: "#6b7280" },
+}
+const DEP_NEXT: Record<string, string | null> = {
+  scheduled:  "in_storage",
+  in_storage: "returned",
+  returned:   null,
+  cancelled:  null,
+}
+const DEP_NEXT_LABEL: Record<string, string> = {
+  scheduled:  "Marcar Em guarda",
+  in_storage: "Marcar Devolvido",
+}
 
 const CARD_STYLE: React.CSSProperties = {
   background: "rgba(255,255,255,0.04)",
@@ -176,6 +202,7 @@ function formToPayload(f: ExpeditionForm) {
 }
 
 export default function AdminExpedicaoPage() {
+  const [adminTab, setAdminTab]       = useState<"expeditions" | "deposits">("expeditions")
   const [expeditions, setExpeditions] = useState<Expedition[]>([])
   const [loading, setLoading]         = useState(true)
   const [showCreate, setShowCreate]   = useState(false)
@@ -193,6 +220,39 @@ export default function AdminExpedicaoPage() {
   const [uploadingImg, setUploadingImg] = useState(false)
   const [editImgUrl, setEditImgUrl] = useState<string | null>(null)
   const editImgRef = useRef<HTMLInputElement>(null)
+
+  const [deposits, setDeposits]       = useState<DepositAdmin[]>([])
+  const [depExpedition, setDepExp]    = useState<{ id: string; name: string } | null>(null)
+  const [loadingDeps, setLoadingDeps] = useState(false)
+  const [depAdminNotes, setDepAdminNotes] = useState<Record<string, string>>({})
+  const [updatingDep, setUpdatingDep] = useState<string | null>(null)
+
+  async function loadDeposits() {
+    setLoadingDeps(true)
+    const res = await fetch("/api/admin/expedicao/deposits")
+    if (res.ok) {
+      const d = await res.json()
+      setDeposits(d.deposits ?? [])
+      setDepExp(d.expedition ?? null)
+    }
+    setLoadingDeps(false)
+  }
+
+  async function advanceDepositStatus(id: string, nextStatus: string) {
+    setUpdatingDep(id)
+    await fetch(`/api/admin/expedicao/deposits/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: nextStatus, admin_notes: depAdminNotes[id] ?? undefined }),
+    })
+    setUpdatingDep(null)
+    loadDeposits()
+  }
+
+  useEffect(() => {
+    if (adminTab === "deposits") loadDeposits()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adminTab])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -311,6 +371,112 @@ export default function AdminExpedicaoPage() {
 
   return (
     <div>
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+        {[
+          { key: "expeditions", icon: <Compass size={13} />, label: "Expedições" },
+          { key: "deposits",    icon: <Archive size={13} />,  label: "Depósitos do Cofre" },
+        ].map(tab => (
+          <button key={tab.key} type="button"
+            onClick={() => setAdminTab(tab.key as typeof adminTab)}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "7px 16px", borderRadius: 8, border: adminTab === tab.key ? "1px solid rgba(245,158,11,0.40)" : "1px solid rgba(255,255,255,0.09)", background: adminTab === tab.key ? "rgba(245,158,11,0.10)" : "rgba(255,255,255,0.04)", color: adminTab === tab.key ? "#f59e0b" : "var(--gray-400)", fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "all 0.15s" }}>
+            {tab.icon}{tab.label}
+          </button>
+        ))}
+      </div>
+
+      {adminTab === "deposits" ? (
+        /* ── Depósitos do Cofre ─────────────────────────────────────────────── */
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--paper)" }}>
+                {depExpedition ? `Expedição: ${depExpedition.name}` : "Nenhuma expedição ativa"}
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{deposits.length} agendamentos</p>
+            </div>
+            <button type="button" onClick={loadDeposits} style={btnSecondary} disabled={loadingDeps}>
+              {loadingDeps ? "Carregando…" : "↻ Atualizar"}
+            </button>
+          </div>
+
+          {loadingDeps ? (
+            <p style={{ color: "var(--gray-500)", fontSize: 13 }}>Carregando…</p>
+          ) : deposits.length === 0 ? (
+            <p style={{ color: "var(--gray-500)", fontSize: 13 }}>Nenhum agendamento encontrado.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {deposits.map(dep => {
+                const st   = DEP_STATUS[dep.status] ?? { label: dep.status, color: "#6b7280" }
+                const next = DEP_NEXT[dep.status]
+                const when = dep.preferred_at
+                  ? new Date(dep.preferred_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })
+                  : "A combinar"
+                return (
+                  <div key={dep.id} style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 14 }}>
+                    {/* Linha 1: status + tipo + jogador */}
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+                      <span style={{ padding: "3px 9px", borderRadius: 20, fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.05em", background: `color-mix(in srgb, ${st.color} 14%, transparent)`, color: st.color, border: `1px solid color-mix(in srgb, ${st.color} 28%, transparent)` }}>
+                        {st.label}
+                      </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: dep.type === "deposit" ? "#f59e0b" : "#5fa8ff" }}>
+                        {dep.type === "deposit" ? <Truck size={11} /> : <Archive size={11} />}
+                        {dep.type === "deposit" ? "Entrega" : "Retirada"}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: "var(--paper)" }}>{dep.userName}</span>
+                      <span style={{ fontSize: 11, color: "var(--gray-500)" }}>ID: {dep.gameId}</span>
+                      <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, fontSize: 10, color: "var(--gray-500)" }}>
+                        <CalendarClock size={10} />{when}
+                      </div>
+                    </div>
+
+                    {/* Linha 2: itens + slots */}
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: dep.type === "deposit" ? 6 : 0 }}>
+                      {dep.items.map((it, idx) => (
+                        <span key={idx} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.09)", color: "var(--paper)" }}>
+                          {it.name} ×{it.quantity} <span style={{ color: "var(--gray-500)" }}>({it.rarity})</span>
+                        </span>
+                      ))}
+                      {dep.type === "deposit" && (
+                        <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.18)", color: "#f59e0b", fontWeight: 700 }}>
+                          {dep.slots_used} slot{dep.slots_used !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+
+                    {dep.notes && (
+                      <p style={{ margin: "6px 0", fontSize: 11, color: "var(--gray-400)", fontStyle: "italic" }}>"{dep.notes}"</p>
+                    )}
+
+                    {/* Admin notes + ação */}
+                    {next && (
+                      <div style={{ display: "flex", gap: 8, marginTop: 10, alignItems: "center" }}>
+                        <input
+                          type="text" placeholder="Nota interna (opcional)"
+                          value={depAdminNotes[dep.id] ?? dep.admin_notes ?? ""}
+                          onChange={e => setDepAdminNotes(prev => ({ ...prev, [dep.id]: e.target.value }))}
+                          style={{ flex: 1, ...inputStyle, fontSize: 12 }}
+                        />
+                        <button type="button"
+                          disabled={updatingDep === dep.id}
+                          onClick={() => advanceDepositStatus(dep.id, next)}
+                          style={{ ...btnPrimary, padding: "6px 14px", whiteSpace: "nowrap", background: next === "returned" ? "#22c55e" : "#f59e0b", color: next === "returned" ? "#000" : "#000" }}>
+                          {updatingDep === dep.id ? "…" : DEP_NEXT_LABEL[dep.status] ?? "Avançar"}
+                        </button>
+                      </div>
+                    )}
+                    {dep.admin_notes && !next && (
+                      <p style={{ margin: "8px 0 0", fontSize: 11, color: "var(--gray-500)" }}>Nota: {dep.admin_notes}</p>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+      /* ── Expedições ───────────────────────────────────────────────────────── */
+      <>
       {/* Cabeçalho + formulário de criação */}
       <div className="utility-panel" style={{ marginBottom: 16 }}>
         <div className="utility-panel-head">
@@ -414,7 +580,7 @@ export default function AdminExpedicaoPage() {
       )}
 
       {/* Modal de edição */}
-      {editingId && (() => {
+      {editingId && (adminTab === "expeditions") && (() => {
         const exp = expeditions.find(e => e.id === editingId)!
         return (
           <div
@@ -464,6 +630,8 @@ export default function AdminExpedicaoPage() {
           </div>
         )
       })()}
+      </>
+      )}
     </div>
   )
 }

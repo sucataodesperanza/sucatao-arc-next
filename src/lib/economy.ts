@@ -13,7 +13,8 @@ export type EconomySource =
   | "lottery"    // sorteio
   | "inventory"  // adição ao inventário
   | "reward"     // recompensa diversa
-  | "admin"      // ação manual do admin
+  | "admin"            // ação manual do admin
+  | "expedition_vault" // compra de pacote de cofre de expedição
 
 export type EconomyAction =
   | "buy"        // comprou item
