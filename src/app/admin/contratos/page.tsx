@@ -13,7 +13,7 @@ type Contract = {
   environmental_risk: string; expires_at: string | null; active: boolean
   image_url: string | null; variant: string | null; faction_id?: string | null
   location: string; estimated_time: string; best_time_of_day: string; climate: string
-  story: string; bonus_condition: string; bonus_reward: string
+  story: string
   rewards: unknown[]; objectives: unknown[]; enemies: unknown[]
   success_rate: number; players_completed: number
   best_record_time: string; best_record_player: string
@@ -58,7 +58,7 @@ const emptyForm = {
   tier: "Básico", title: "", description: "", story: "",
   objective: "", total: 1, sucatas: 0, xp: 0, rep: "", location: "",
   estimated_time: "", best_time_of_day: "", climate: "", environmental_risk: "Médio",
-  expires_at: "", variant: "", bonus_condition: "", bonus_reward: "",
+  expires_at: "", variant: "",
   image_url: "", success_rate: 50, active: true, faction_id: "",
 }
 
@@ -81,10 +81,14 @@ function ContratosSection() {
   const newImgRef  = useRef<HTMLInputElement>(null)
   const editImgRef = useRef<HTMLInputElement>(null)
 
-  type ObjRow = { text: string; desc: string; total: number; item_id: string; item_name: string; item_icon: string }
+  type ObjItem = { item_id: string; item_name: string; item_icon: string; qty: number }
+  type ObjRewards = { sucatas: number; rep: number; items: ObjItem[] }
+  type ObjRow = { text: string; desc: string; total: number; items: ObjItem[]; rewards: ObjRewards }
+  const emptyObjRow = (): ObjRow => ({ text: "", desc: "", total: 1, items: [], rewards: { sucatas: 0, rep: 0, items: [] } })
   const [newObjectives, setNewObjectives]     = useState<ObjRow[]>([])
   const [editObjectives, setEditObjectives]   = useState<ObjRow[]>([])
-  const [objPickerIdx, setObjPickerIdx]       = useState<number | null>(null)
+  type PickerCtx = { objIdx: number; section: "deliver" | "reward" } | null
+  const [objPickerCtx, setObjPickerCtx]       = useState<PickerCtx>(null)
   const [objItemQuery, setObjItemQuery]       = useState("")
   const [objItemResults, setObjItemResults]   = useState<any[]>([])
   const [objSearching, setObjSearching]       = useState(false)
@@ -136,6 +140,8 @@ function ContratosSection() {
     }
     const emptyObj = newObjectives.find(o => !o.text.trim())
     if (emptyObj) { setCreateTab("Objetivos"); return toast.error("Todos os objetivos precisam ter o campo Texto preenchido.") }
+    const objSemItens = newObjectives.find(o => o.items.length === 0)
+    if (objSemItens) { setCreateTab("Objetivos"); return toast.error("Cada objetivo precisa ter pelo menos 1 item para entregar.") }
     setSaving(true)
     const body = {
       ...form,
@@ -167,10 +173,13 @@ function ContratosSection() {
   function openEdit(c: Contract) {
     const objs = (c.objectives as any[]) ?? []
     setEditObjectives(objs.map(o => ({
-      text: o.text ?? "", desc: o.desc ?? "", total: o.total ?? 1,
-      item_id: o.item_id ?? "", item_name: o.item_name ?? "", item_icon: o.item_icon ?? "",
+      text: o.text ?? "",
+      desc: o.desc ?? "",
+      total: o.total ?? 1,
+      items: o.items ?? (o.item_id ? [{ item_id: o.item_id, item_name: o.item_name ?? "", item_icon: o.item_icon ?? "", qty: o.total ?? 1 }] : []),
+      rewards: o.rewards ?? { sucatas: 0, rep: 0, items: [] },
     })))
-    setObjPickerIdx(null)
+    setObjPickerCtx(null)
     setEditTab("Básico")
     setContractAcceptances([])
     setEditForm({
@@ -185,8 +194,7 @@ function ContratosSection() {
       best_time_of_day: c.best_time_of_day ?? "", climate: c.climate ?? "",
       environmental_risk: c.environmental_risk ?? "Médio",
       expires_at: c.expires_at ? c.expires_at.slice(0, 16) : "",
-      variant: c.variant ?? "", bonus_condition: c.bonus_condition ?? "",
-      bonus_reward: c.bonus_reward ?? "", image_url: c.image_url ?? "",
+      variant: c.variant ?? "", image_url: c.image_url ?? "",
       success_rate: c.success_rate ?? 50, active: c.active,
       faction_id: c.faction_id ?? "",
     })
@@ -431,11 +439,7 @@ function ContratosSection() {
                 </div>
                 <label><span style={l}>Descrição curta</span><input value={form.description} onChange={e => field("description", e.target.value)} style={i} /></label>
                 <label><span style={l}>História / briefing</span><textarea value={form.story} onChange={e => field("story", e.target.value)} rows={3} style={{ ...i, resize: "vertical" }} /></label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                  <label><span style={l}>Sucatas</span><input type="number" min={0} value={form.sucatas} onChange={e => field("sucatas", Number(e.target.value))} style={i} /></label>
-                  <label><span style={l}>REP (opcional)</span><input type="number" min={0} value={form.rep} onChange={e => field("rep", e.target.value)} style={i} placeholder="—" /></label>
-                  <label><span style={l}>Sucesso %</span><input type="number" min={0} max={100} value={form.success_rate} onChange={e => field("success_rate", Number(e.target.value))} style={i} /></label>
-                </div>
+                <label style={{ width: "fit-content" }}><span style={l}>Sucesso %</span><input type="number" min={0} max={100} value={form.success_rate} onChange={e => field("success_rate", Number(e.target.value))} style={{ ...i, width: 120 }} /></label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
                   <label><span style={l}>Localização</span><input value={form.location} onChange={e => field("location", e.target.value)} style={i} /></label>
                   <label><span style={l}>Tempo est.</span><input value={form.estimated_time} onChange={e => field("estimated_time", e.target.value)} style={i} placeholder="20-35 min" /></label>
@@ -443,8 +447,6 @@ function ContratosSection() {
                   <label><span style={l}>Clima</span><input value={form.climate} onChange={e => field("climate", e.target.value)} style={i} /></label>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <label><span style={l}>Bônus — condição</span><input value={form.bonus_condition} onChange={e => field("bonus_condition", e.target.value)} style={i} /></label>
-                  <label><span style={l}>Bônus — recompensa</span><input value={form.bonus_reward} onChange={e => field("bonus_reward", e.target.value)} style={i} /></label>
                 </div>
                 <label><span style={l}>Expira em</span><input type="datetime-local" value={form.expires_at} onChange={e => field("expires_at", e.target.value)} style={{ ...i, width: "auto" }} /></label>
               </div>
@@ -468,67 +470,125 @@ function ContratosSection() {
                 {newObjectives.length === 0 && (
                   <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo. Adicione abaixo.</p>
                 )}
-                {newObjectives.map((obj, idx) => (
-                  <div key={idx} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 10, display: "grid", gap: 8 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 70px", gap: 8 }}>
-                      <label><span style={{ ...l, fontSize: 9 }}>Texto</span>
-                        <input value={obj.text} onChange={e => setNewObjectives(p => p.map((o, k) => k === idx ? { ...o, text: e.target.value } : o))} style={i} placeholder="Entregar 5 Sucatas de Metal" />
-                      </label>
-                      <label><span style={{ ...l, fontSize: 9 }}>Descrição</span>
-                        <input value={obj.desc} onChange={e => setNewObjectives(p => p.map((o, k) => k === idx ? { ...o, desc: e.target.value } : o))} style={i} placeholder="Colete e entregue..." />
-                      </label>
-                      <label><span style={{ ...l, fontSize: 9 }}>Qtd</span>
-                        <input type="number" min={1} value={obj.total} onChange={e => setNewObjectives(p => p.map((o, k) => k === idx ? { ...o, total: Number(e.target.value) } : o))} style={i} />
-                      </label>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      {obj.item_id ? (
-                        <>
-                          {obj.item_icon && <img src={obj.item_icon} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
-                          <span style={{ flex: 1, fontSize: 11, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{obj.item_name || obj.item_id}</span>
-                          <button type="button" onClick={() => { setObjPickerIdx(idx); setObjItemQuery(""); setObjItemResults([]) }}
-                            style={{ fontSize: 10, border: "1px solid var(--stroke)", background: "transparent", color: "var(--paper-dim)", padding: "3px 8px", borderRadius: 4, cursor: "pointer", font: "inherit", flexShrink: 0 }}>Trocar</button>
-                          <button type="button" onClick={() => setNewObjectives(p => p.map((o, k) => k === idx ? { ...o, item_id: "", item_name: "", item_icon: "" } : o))}
-                            style={{ fontSize: 12, border: "none", background: "none", color: "var(--red)", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>✕</button>
-                        </>
-                      ) : (
-                        <button type="button" onClick={() => { setObjPickerIdx(idx); setObjItemQuery(""); setObjItemResults([]) }}
-                          style={{ fontSize: 11, border: "1px dashed rgba(255,255,255,0.18)", background: "transparent", color: "var(--gray-500)", padding: "4px 10px", borderRadius: 4, cursor: "pointer", font: "inherit" }}>
-                          + Selecionar item (opcional)
+                {newObjectives.map((obj, idx) => {
+                  const isPickingDeliver = objPickerCtx?.objIdx === idx && objPickerCtx?.section === "deliver"
+                  const isPickingReward  = objPickerCtx?.objIdx === idx && objPickerCtx?.section === "reward"
+                  const updObj = (fn: (o: ObjRow) => ObjRow) => setNewObjectives(p => p.map((o, k) => k === idx ? fn(o) : o))
+                  return (
+                    <div key={idx} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 12, display: "grid", gap: 10 }}>
+                      {/* Cabeçalho: texto + desc + delete */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, alignItems: "end" }}>
+                        <label><span style={{ ...l, fontSize: 9 }}>Texto</span>
+                          <input value={obj.text} onChange={e => updObj(o => ({ ...o, text: e.target.value }))} style={i} placeholder="Dia 1 — Entrega de materiais" />
+                        </label>
+                        <label><span style={{ ...l, fontSize: 9 }}>Descrição</span>
+                          <input value={obj.desc} onChange={e => updObj(o => ({ ...o, desc: e.target.value }))} style={i} placeholder="Colete e entregue..." />
+                        </label>
+                        <button type="button" onClick={() => { setNewObjectives(p => p.filter((_, k) => k !== idx)); if (objPickerCtx?.objIdx === idx) setObjPickerCtx(null) }}
+                          style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: "4px 6px", opacity: 0.7, alignSelf: "flex-end", marginBottom: 1 }}>
+                          <Trash2 size={13} />
                         </button>
-                      )}
-                      <button type="button" onClick={() => { setNewObjectives(p => p.filter((_, k) => k !== idx)); if (objPickerIdx === idx) setObjPickerIdx(null) }}
-                        style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: "2px 6px", opacity: 0.65, flexShrink: 0 }}>
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                    {objPickerIdx === idx && (
-                      <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--stroke)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
-                        <input autoFocus value={objItemQuery}
-                          onChange={async e => { setObjItemQuery(e.target.value); await searchObjItem(e.target.value) }}
-                          placeholder="Buscar item do catálogo..." style={{ ...i, fontSize: 11 }} />
-                        {objSearching && <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Buscando...</span>}
-                        {objItemResults.map((item: any) => (
-                          <button key={item.id} type="button"
-                            onClick={() => {
-                              setNewObjectives(p => p.map((o, k) => k === idx ? { ...o, item_id: item.id, item_name: item.name, item_icon: item.icon_url ?? "" } : o))
-                              setObjPickerIdx(null); setObjItemQuery(""); setObjItemResults([])
-                            }}
-                            style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 4, padding: "6px 10px", cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
-                            {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
-                            <span style={{ flex: 1, fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
-                            <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>
-                          </button>
-                        ))}
-                        <button type="button" onClick={() => setObjPickerIdx(null)}
-                          style={{ fontSize: 10, border: "none", background: "none", color: "var(--gray-500)", cursor: "pointer", alignSelf: "flex-start", font: "inherit" }}>Cancelar</button>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* Itens para entregar */}
+                      <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                        <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, color: "var(--cyan)", letterSpacing: 1 }}>Itens para entregar</span>
+                        {obj.items.map((item, ii) => (
+                          <div key={ii} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            {item.item_icon && <img src={item.item_icon} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+                            <span style={{ flex: 1, fontSize: 11, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{item.item_name}</span>
+                            <input type="number" min={1} value={item.qty}
+                              onChange={e => updObj(o => ({ ...o, items: o.items.map((it, ij) => ij === ii ? { ...it, qty: Number(e.target.value) } : it) }))}
+                              style={{ ...i, width: 65 }} />
+                            <button type="button" onClick={() => updObj(o => ({ ...o, items: o.items.filter((_, ij) => ij !== ii) }))}
+                              style={{ fontSize: 12, border: "none", background: "none", color: "var(--red)", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>✕</button>
+                          </div>
+                        ))}
+                        {isPickingDeliver && (
+                          <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--stroke)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                            <input autoFocus value={objItemQuery}
+                              onChange={async e => { setObjItemQuery(e.target.value); await searchObjItem(e.target.value) }}
+                              placeholder="Buscar item do catálogo..." style={{ ...i, fontSize: 11 }} />
+                            {objSearching && <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Buscando...</span>}
+                            {objItemResults.map((item: any) => (
+                              <button key={item.id} type="button"
+                                onClick={() => {
+                                  updObj(o => ({ ...o, items: [...o.items, { item_id: item.id, item_name: item.name, item_icon: item.icon_url ?? "", qty: 1 }] }))
+                                  setObjPickerCtx(null); setObjItemQuery(""); setObjItemResults([])
+                                }}
+                                style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 4, padding: "6px 10px", cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                                {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
+                                <span style={{ flex: 1, fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
+                                <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>
+                              </button>
+                            ))}
+                            <button type="button" onClick={() => setObjPickerCtx(null)}
+                              style={{ fontSize: 10, border: "none", background: "none", color: "var(--gray-500)", cursor: "pointer", alignSelf: "flex-start", font: "inherit" }}>Cancelar</button>
+                          </div>
+                        )}
+                        <button type="button" onClick={() => { setObjPickerCtx({ objIdx: idx, section: "deliver" }); setObjItemQuery(""); setObjItemResults([]) }}
+                          style={{ fontSize: 11, border: "1px dashed rgba(0,217,255,0.3)", background: "transparent", color: "var(--cyan)", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                          + Adicionar item
+                        </button>
+                      </div>
+
+                      {/* Recompensa ao concluir */}
+                      <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                        <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, color: "var(--green)", letterSpacing: 1 }}>Recompensa ao concluir</span>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                          <label><span style={{ ...l, fontSize: 9, color: "var(--yellow)" }}>Sucatas</span>
+                            <input type="number" min={0} value={obj.rewards.sucatas}
+                              onChange={e => updObj(o => ({ ...o, rewards: { ...o.rewards, sucatas: Number(e.target.value) } }))} style={i} />
+                          </label>
+                          <label><span style={{ ...l, fontSize: 9, color: "#b477ff" }}>Reputação</span>
+                            <input type="number" min={0} value={obj.rewards.rep}
+                              onChange={e => updObj(o => ({ ...o, rewards: { ...o.rewards, rep: Number(e.target.value) } }))} style={i} />
+                          </label>
+                        </div>
+                        {obj.rewards.items.map((item, ii) => (
+                          <div key={ii} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            {item.item_icon && <img src={item.item_icon} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+                            <span style={{ flex: 1, fontSize: 11, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{item.item_name}</span>
+                            <input type="number" min={1} value={item.qty}
+                              onChange={e => updObj(o => ({ ...o, rewards: { ...o.rewards, items: o.rewards.items.map((it, ij) => ij === ii ? { ...it, qty: Number(e.target.value) } : it) } }))}
+                              style={{ ...i, width: 65 }} />
+                            <button type="button" onClick={() => updObj(o => ({ ...o, rewards: { ...o.rewards, items: o.rewards.items.filter((_, ij) => ij !== ii) } }))}
+                              style={{ fontSize: 12, border: "none", background: "none", color: "var(--red)", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>✕</button>
+                          </div>
+                        ))}
+                        {isPickingReward && (
+                          <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--stroke)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                            <input autoFocus value={objItemQuery}
+                              onChange={async e => { setObjItemQuery(e.target.value); await searchObjItem(e.target.value) }}
+                              placeholder="Buscar item do catálogo..." style={{ ...i, fontSize: 11 }} />
+                            {objSearching && <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Buscando...</span>}
+                            {objItemResults.map((item: any) => (
+                              <button key={item.id} type="button"
+                                onClick={() => {
+                                  updObj(o => ({ ...o, rewards: { ...o.rewards, items: [...o.rewards.items, { item_id: item.id, item_name: item.name, item_icon: item.icon_url ?? "", qty: 1 }] } }))
+                                  setObjPickerCtx(null); setObjItemQuery(""); setObjItemResults([])
+                                }}
+                                style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 4, padding: "6px 10px", cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                                {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
+                                <span style={{ flex: 1, fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
+                                <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>
+                              </button>
+                            ))}
+                            <button type="button" onClick={() => setObjPickerCtx(null)}
+                              style={{ fontSize: 10, border: "none", background: "none", color: "var(--gray-500)", cursor: "pointer", alignSelf: "flex-start", font: "inherit" }}>Cancelar</button>
+                          </div>
+                        )}
+                        <button type="button" onClick={() => { setObjPickerCtx({ objIdx: idx, section: "reward" }); setObjItemQuery(""); setObjItemResults([]) }}
+                          style={{ fontSize: 11, border: "1px dashed rgba(61,242,139,0.3)", background: "transparent", color: "var(--green)", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                          + Adicionar item como recompensa
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
                 {!atLimit && (
                   <button type="button"
-                    onClick={() => setNewObjectives(p => [...p, { text: "", desc: "", total: 1, item_id: "", item_name: "", item_icon: "" }])}
+                    onClick={() => setNewObjectives(p => [...p, emptyObjRow()])}
                     style={{ fontSize: 11, border: "1px dashed rgba(255,255,255,0.18)", background: "transparent", color: "var(--gray-500)", padding: "6px 12px", borderRadius: 6, cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
                     + Adicionar objetivo
                   </button>
@@ -675,13 +735,7 @@ function ContratosSection() {
                 </div>
                 <label><span style={l}>Descrição</span><input value={ef.description} onChange={e => set("description", e.target.value)} style={i} /></label>
                 <label><span style={l}>História / briefing</span><textarea value={ef.story} onChange={e => set("story", e.target.value)} rows={3} style={{ ...i, resize: "vertical" }} /></label>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 10 }}>
-                  <label><span style={l}>Total</span><input type="number" min={1} value={ef.total} onChange={e => set("total", Number(e.target.value))} style={i} /></label>
-                  <label><span style={l}>Sucatas</span><input type="number" min={0} value={ef.sucatas} onChange={e => set("sucatas", Number(e.target.value))} style={i} /></label>
-                  <label><span style={l}>XP</span><input type="number" min={0} value={ef.xp} onChange={e => set("xp", Number(e.target.value))} style={i} /></label>
-                  <label><span style={l}>REP</span><input type="number" min={0} value={ef.rep} onChange={e => set("rep", e.target.value)} style={i} placeholder="—" /></label>
-                  <label><span style={l}>Sucesso %</span><input type="number" min={0} max={100} value={ef.success_rate} onChange={e => set("success_rate", Number(e.target.value))} style={i} /></label>
-                </div>
+                <label style={{ width: "fit-content" }}><span style={l}>Sucesso %</span><input type="number" min={0} max={100} value={ef.success_rate} onChange={e => set("success_rate", Number(e.target.value))} style={{ ...i, width: 120 }} /></label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 10 }}>
                   <label><span style={l}>Localização</span><input value={ef.location} onChange={e => set("location", e.target.value)} style={i} /></label>
                   <label><span style={l}>Tempo est.</span><input value={ef.estimated_time} onChange={e => set("estimated_time", e.target.value)} style={i} placeholder="20-35 min" /></label>
@@ -689,8 +743,6 @@ function ContratosSection() {
                   <label><span style={l}>Clima</span><input value={ef.climate} onChange={e => set("climate", e.target.value)} style={i} /></label>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <label><span style={l}>Bônus — condição</span><input value={ef.bonus_condition} onChange={e => set("bonus_condition", e.target.value)} style={i} /></label>
-                  <label><span style={l}>Bônus — recompensa</span><input value={ef.bonus_reward} onChange={e => set("bonus_reward", e.target.value)} style={i} /></label>
                 </div>
                 <label><span style={l}>Expira em</span><input type="datetime-local" value={ef.expires_at} onChange={e => set("expires_at", e.target.value)} style={{ ...i, width: "auto" }} /></label>
               </div>
@@ -714,67 +766,125 @@ function ContratosSection() {
                 {editObjectives.length === 0 && (
                   <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo. Adicione abaixo.</p>
                 )}
-                {editObjectives.map((obj, idx) => (
-                  <div key={idx} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 10, display: "grid", gap: 8 }}>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 70px", gap: 8 }}>
-                      <label><span style={{ ...l, fontSize: 9 }}>Texto</span>
-                        <input value={obj.text} onChange={e => setEditObjectives(p => p.map((o, k) => k === idx ? { ...o, text: e.target.value } : o))} style={i} placeholder="Entregar 5 Sucatas de Metal" />
-                      </label>
-                      <label><span style={{ ...l, fontSize: 9 }}>Descrição</span>
-                        <input value={obj.desc} onChange={e => setEditObjectives(p => p.map((o, k) => k === idx ? { ...o, desc: e.target.value } : o))} style={i} placeholder="Colete e entregue..." />
-                      </label>
-                      <label><span style={{ ...l, fontSize: 9 }}>Qtd</span>
-                        <input type="number" min={1} value={obj.total} onChange={e => setEditObjectives(p => p.map((o, k) => k === idx ? { ...o, total: Number(e.target.value) } : o))} style={i} />
-                      </label>
-                    </div>
-                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                      {obj.item_id ? (
-                        <>
-                          {obj.item_icon && <img src={obj.item_icon} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
-                          <span style={{ flex: 1, fontSize: 11, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{obj.item_name || obj.item_id}</span>
-                          <button type="button" onClick={() => { setObjPickerIdx(idx); setObjItemQuery(""); setObjItemResults([]) }}
-                            style={{ fontSize: 10, border: "1px solid var(--stroke)", background: "transparent", color: "var(--paper-dim)", padding: "3px 8px", borderRadius: 4, cursor: "pointer", font: "inherit", flexShrink: 0 }}>Trocar</button>
-                          <button type="button" onClick={() => setEditObjectives(p => p.map((o, k) => k === idx ? { ...o, item_id: "", item_name: "", item_icon: "" } : o))}
-                            style={{ fontSize: 12, border: "none", background: "none", color: "var(--red)", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>✕</button>
-                        </>
-                      ) : (
-                        <button type="button" onClick={() => { setObjPickerIdx(idx); setObjItemQuery(""); setObjItemResults([]) }}
-                          style={{ fontSize: 11, border: "1px dashed rgba(255,255,255,0.18)", background: "transparent", color: "var(--gray-500)", padding: "4px 10px", borderRadius: 4, cursor: "pointer", font: "inherit" }}>
-                          + Selecionar item (opcional)
+                {editObjectives.map((obj, idx) => {
+                  const isPickingDeliver = objPickerCtx?.objIdx === idx && objPickerCtx?.section === "deliver"
+                  const isPickingReward  = objPickerCtx?.objIdx === idx && objPickerCtx?.section === "reward"
+                  const updObj = (fn: (o: ObjRow) => ObjRow) => setEditObjectives(p => p.map((o, k) => k === idx ? fn(o) : o))
+                  return (
+                    <div key={idx} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 12, display: "grid", gap: 10 }}>
+                      {/* Cabeçalho: texto + desc + delete */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, alignItems: "end" }}>
+                        <label><span style={{ ...l, fontSize: 9 }}>Texto</span>
+                          <input value={obj.text} onChange={e => updObj(o => ({ ...o, text: e.target.value }))} style={i} placeholder="Dia 1 — Entrega de materiais" />
+                        </label>
+                        <label><span style={{ ...l, fontSize: 9 }}>Descrição</span>
+                          <input value={obj.desc} onChange={e => updObj(o => ({ ...o, desc: e.target.value }))} style={i} placeholder="Colete e entregue..." />
+                        </label>
+                        <button type="button" onClick={() => { setEditObjectives(p => p.filter((_, k) => k !== idx)); if (objPickerCtx?.objIdx === idx) setObjPickerCtx(null) }}
+                          style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: "4px 6px", opacity: 0.7, alignSelf: "flex-end", marginBottom: 1 }}>
+                          <Trash2 size={13} />
                         </button>
-                      )}
-                      <button type="button" onClick={() => { setEditObjectives(p => p.filter((_, k) => k !== idx)); if (objPickerIdx === idx) setObjPickerIdx(null) }}
-                        style={{ background: "none", border: "none", color: "var(--red)", cursor: "pointer", padding: "2px 6px", opacity: 0.65, flexShrink: 0 }}>
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                    {objPickerIdx === idx && (
-                      <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--stroke)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
-                        <input autoFocus value={objItemQuery}
-                          onChange={async e => { setObjItemQuery(e.target.value); await searchObjItem(e.target.value) }}
-                          placeholder="Buscar item do catálogo..." style={{ ...i, fontSize: 11 }} />
-                        {objSearching && <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Buscando...</span>}
-                        {objItemResults.map((item: any) => (
-                          <button key={item.id} type="button"
-                            onClick={() => {
-                              setEditObjectives(p => p.map((o, k) => k === idx ? { ...o, item_id: item.id, item_name: item.name, item_icon: item.icon_url ?? "" } : o))
-                              setObjPickerIdx(null); setObjItemQuery(""); setObjItemResults([])
-                            }}
-                            style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 4, padding: "6px 10px", cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
-                            {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
-                            <span style={{ flex: 1, fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
-                            <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>
-                          </button>
-                        ))}
-                        <button type="button" onClick={() => setObjPickerIdx(null)}
-                          style={{ fontSize: 10, border: "none", background: "none", color: "var(--gray-500)", cursor: "pointer", alignSelf: "flex-start", font: "inherit" }}>Cancelar</button>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* Itens para entregar */}
+                      <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                        <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, color: "var(--cyan)", letterSpacing: 1 }}>Itens para entregar</span>
+                        {obj.items.map((item, ii) => (
+                          <div key={ii} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            {item.item_icon && <img src={item.item_icon} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+                            <span style={{ flex: 1, fontSize: 11, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{item.item_name}</span>
+                            <input type="number" min={1} value={item.qty}
+                              onChange={e => updObj(o => ({ ...o, items: o.items.map((it, ij) => ij === ii ? { ...it, qty: Number(e.target.value) } : it) }))}
+                              style={{ ...i, width: 65 }} />
+                            <button type="button" onClick={() => updObj(o => ({ ...o, items: o.items.filter((_, ij) => ij !== ii) }))}
+                              style={{ fontSize: 12, border: "none", background: "none", color: "var(--red)", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>✕</button>
+                          </div>
+                        ))}
+                        {isPickingDeliver && (
+                          <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--stroke)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                            <input autoFocus value={objItemQuery}
+                              onChange={async e => { setObjItemQuery(e.target.value); await searchObjItem(e.target.value) }}
+                              placeholder="Buscar item do catálogo..." style={{ ...i, fontSize: 11 }} />
+                            {objSearching && <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Buscando...</span>}
+                            {objItemResults.map((item: any) => (
+                              <button key={item.id} type="button"
+                                onClick={() => {
+                                  updObj(o => ({ ...o, items: [...o.items, { item_id: item.id, item_name: item.name, item_icon: item.icon_url ?? "", qty: 1 }] }))
+                                  setObjPickerCtx(null); setObjItemQuery(""); setObjItemResults([])
+                                }}
+                                style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 4, padding: "6px 10px", cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                                {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
+                                <span style={{ flex: 1, fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
+                                <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>
+                              </button>
+                            ))}
+                            <button type="button" onClick={() => setObjPickerCtx(null)}
+                              style={{ fontSize: 10, border: "none", background: "none", color: "var(--gray-500)", cursor: "pointer", alignSelf: "flex-start", font: "inherit" }}>Cancelar</button>
+                          </div>
+                        )}
+                        <button type="button" onClick={() => { setObjPickerCtx({ objIdx: idx, section: "deliver" }); setObjItemQuery(""); setObjItemResults([]) }}
+                          style={{ fontSize: 11, border: "1px dashed rgba(0,217,255,0.3)", background: "transparent", color: "var(--cyan)", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                          + Adicionar item
+                        </button>
+                      </div>
+
+                      {/* Recompensa ao concluir */}
+                      <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                        <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, color: "var(--green)", letterSpacing: 1 }}>Recompensa ao concluir</span>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                          <label><span style={{ ...l, fontSize: 9, color: "var(--yellow)" }}>Sucatas</span>
+                            <input type="number" min={0} value={obj.rewards.sucatas}
+                              onChange={e => updObj(o => ({ ...o, rewards: { ...o.rewards, sucatas: Number(e.target.value) } }))} style={i} />
+                          </label>
+                          <label><span style={{ ...l, fontSize: 9, color: "#b477ff" }}>Reputação</span>
+                            <input type="number" min={0} value={obj.rewards.rep}
+                              onChange={e => updObj(o => ({ ...o, rewards: { ...o.rewards, rep: Number(e.target.value) } }))} style={i} />
+                          </label>
+                        </div>
+                        {obj.rewards.items.map((item, ii) => (
+                          <div key={ii} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            {item.item_icon && <img src={item.item_icon} alt="" style={{ width: 22, height: 22, objectFit: "contain", flexShrink: 0 }} />}
+                            <span style={{ flex: 1, fontSize: 11, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{item.item_name}</span>
+                            <input type="number" min={1} value={item.qty}
+                              onChange={e => updObj(o => ({ ...o, rewards: { ...o.rewards, items: o.rewards.items.map((it, ij) => ij === ii ? { ...it, qty: Number(e.target.value) } : it) } }))}
+                              style={{ ...i, width: 65 }} />
+                            <button type="button" onClick={() => updObj(o => ({ ...o, rewards: { ...o.rewards, items: o.rewards.items.filter((_, ij) => ij !== ii) } }))}
+                              style={{ fontSize: 12, border: "none", background: "none", color: "var(--red)", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>✕</button>
+                          </div>
+                        ))}
+                        {isPickingReward && (
+                          <div style={{ background: "rgba(0,0,0,0.5)", border: "1px solid var(--stroke)", borderRadius: 6, padding: 10, display: "grid", gap: 6 }}>
+                            <input autoFocus value={objItemQuery}
+                              onChange={async e => { setObjItemQuery(e.target.value); await searchObjItem(e.target.value) }}
+                              placeholder="Buscar item do catálogo..." style={{ ...i, fontSize: 11 }} />
+                            {objSearching && <span style={{ fontSize: 11, color: "var(--gray-500)" }}>Buscando...</span>}
+                            {objItemResults.map((item: any) => (
+                              <button key={item.id} type="button"
+                                onClick={() => {
+                                  updObj(o => ({ ...o, rewards: { ...o.rewards, items: [...o.rewards.items, { item_id: item.id, item_name: item.name, item_icon: item.icon_url ?? "", qty: 1 }] } }))
+                                  setObjPickerCtx(null); setObjItemQuery(""); setObjItemResults([])
+                                }}
+                                style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 4, padding: "6px 10px", cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                                {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
+                                <span style={{ flex: 1, fontSize: 11, color: "var(--paper)" }}>{item.name}</span>
+                                <span style={{ fontSize: 10, color: "var(--gray-500)" }}>{item.rarity}</span>
+                              </button>
+                            ))}
+                            <button type="button" onClick={() => setObjPickerCtx(null)}
+                              style={{ fontSize: 10, border: "none", background: "none", color: "var(--gray-500)", cursor: "pointer", alignSelf: "flex-start", font: "inherit" }}>Cancelar</button>
+                          </div>
+                        )}
+                        <button type="button" onClick={() => { setObjPickerCtx({ objIdx: idx, section: "reward" }); setObjItemQuery(""); setObjItemResults([]) }}
+                          style={{ fontSize: 11, border: "1px dashed rgba(61,242,139,0.3)", background: "transparent", color: "var(--green)", padding: "5px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
+                          + Adicionar item como recompensa
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
                 {!atLimit && (
                   <button type="button"
-                    onClick={() => setEditObjectives(p => [...p, { text: "", desc: "", total: 1, item_id: "", item_name: "", item_icon: "" }])}
+                    onClick={() => setEditObjectives(p => [...p, emptyObjRow()])}
                     style={{ fontSize: 11, border: "1px dashed rgba(255,255,255,0.18)", background: "transparent", color: "var(--gray-500)", padding: "6px 12px", borderRadius: 6, cursor: "pointer", font: "inherit", textAlign: "left" as const }}>
                     + Adicionar objetivo
                   </button>
