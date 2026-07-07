@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createPrivateChannel, embedCanalContrato, dmAgendamentoContrato, sendDiscordDM } from "@/lib/discord-bot"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: contractId } = await params
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const admin = createAdminClient()
 
-  const { error } = await admin
+  const { data: scheduleData, error } = await admin
     .from("contract_schedules")
     .upsert({
       user_id:         user.id,
@@ -85,8 +86,57 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       game_id:         game_id || null,
       status:          "scheduled",
     }, { onConflict: "user_id,contract_id,objective_index" })
+    .select("id")
+    .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  // Cria canal privado Discord para a entrega (fire-and-forget)
+  ;(async () => {
+    try {
+      const [profileRes, contractFullRes] = await Promise.all([
+        admin.from("profiles").select("username, discord_id, discord_username").eq("id", user.id).single(),
+        admin.from("contracts").select("title, objectives").eq("id", contractId).single(),
+      ])
+
+      const profile  = profileRes.data
+      const contract = contractFullRes.data
+      if (!profile?.discord_id || !contract || !scheduleData?.id) return
+
+      const objIdx   = Number(objective_index)
+      const obj      = (contract.objectives as any[])?.[objIdx]
+      const objText  = obj?.text ?? `Objetivo ${objIdx + 1}`
+      const objItems = (obj?.items as Array<{ item_name: string; qty: number }>) ?? []
+      const playerName = profile.username ?? profile.discord_username ?? "Jogador"
+
+      const channelId = await createPrivateChannel({
+        name:           `contrato-${scheduleData.id.slice(0, 8)}`,
+        topic:          `Contrato: ${contract.title} | Objetivo: ${objText}`,
+        buyerDiscordId: profile.discord_id,
+        embed: embedCanalContrato({
+          scheduleId:    scheduleData.id,
+          contractTitle: contract.title,
+          objText,
+          objItems,
+          playerName,
+          gameId:      game_id || null,
+          scheduledAt: scheduled_at || null,
+        }),
+      })
+
+      if (channelId) {
+        await admin.from("contract_schedules").update({ discord_channel_id: channelId }).eq("id", scheduleData.id)
+      }
+
+      sendDiscordDM(
+        profile.discord_id,
+        dmAgendamentoContrato(playerName, contract.title, objText, scheduled_at || null),
+      ).catch(() => {})
+    } catch {
+      // best-effort
+    }
+  })()
+
   return NextResponse.json({ ok: true })
 }
 
