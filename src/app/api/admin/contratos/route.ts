@@ -47,8 +47,6 @@ export async function POST(request: NextRequest) {
       environmental_risk: body.environmental_risk ?? "Médio",
       expires_at:         body.expires_at         ?? null,
       variant:            body.variant            ?? null,
-      bonus_condition:    body.bonus_condition    ?? "",
-      bonus_reward:       body.bonus_reward       ?? "",
       rewards:            body.rewards            ?? [],
       objectives:         body.objectives         ?? [],
       enemies:            body.enemies            ?? [],

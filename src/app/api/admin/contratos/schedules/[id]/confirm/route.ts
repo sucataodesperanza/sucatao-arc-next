@@ -59,12 +59,42 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       })
       .eq("id", uc.id)
 
-    // Se concluiu tudo: credita recompensas
+    // Recompensas por objetivo (novo sistema) ou por contrato ao final (legado)
     let sucatasCredited = 0
-    if (allDone) {
-      const currentPoints = profile?.points ?? 0
+    const objRewards = obj.rewards as { sucatas?: number; rep?: number; items?: Array<{ item_id: string; qty: number; item_name?: string }> } | undefined
+
+    if (objRewards != null) {
+      // Novo: credita recompensas configuradas no próprio objetivo
+      sucatasCredited = objRewards.sucatas ?? 0
+      if (sucatasCredited > 0) {
+        const currentPoints = profile?.points ?? 0
+        await admin.from("profiles").update({ points: currentPoints + sucatasCredited }).eq("id", cs.user_id)
+      }
+
+      if ((objRewards.rep ?? 0) > 0) {
+        addReputation(cs.user_id, objRewards.rep!, "contract", "Objetivo de contrato concluído", scheduleId).catch(() => {})
+      }
+
+      for (const rewardItem of objRewards.items ?? []) {
+        if (rewardItem.item_id) {
+          await addItemsToInventory(cs.user_id, [{ itemId: rewardItem.item_id, quantity: rewardItem.qty ?? 1 }], "admin")
+        }
+      }
+
+      if (sucatasCredited > 0 || (objRewards.items?.length ?? 0) > 0) {
+        sendDiscordDM(
+          profile?.discord_id,
+          dmRecompensaCreditada(profile?.username ?? "Jogador", obj.text ?? "Objetivo", {
+            points: sucatasCredited,
+            itemName: objRewards.items?.[0]?.item_name ?? null,
+          }),
+        ).catch(() => {})
+      }
+    } else if (allDone) {
+      // Legado: credita sucatas do contrato apenas quando tudo concluído
       sucatasCredited = contract.sucatas ?? 0
       if (sucatasCredited > 0) {
+        const currentPoints = profile?.points ?? 0
         await admin.from("profiles").update({ points: currentPoints + sucatasCredited }).eq("id", cs.user_id)
       }
 
@@ -75,7 +105,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       if (sucatasCredited > 0) {
         sendDiscordDM(
           profile?.discord_id,
-          dmRecompensaCreditada(profile?.username ?? "Jogador", contract.objectives?.[0] ?? "Contrato", {
+          dmRecompensaCreditada(profile?.username ?? "Jogador", obj.text ?? "Contrato", {
             points: sucatasCredited,
             itemName: null,
           }),
