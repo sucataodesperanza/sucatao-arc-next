@@ -61,6 +61,13 @@ export function dmRecompensaCreditada(userName: string, contextLabel: string, pa
   return `🎁 Olá, **${userName}**!\n\n${contextLabel} foi concluído(a) e você recebeu ${reward}! Confira seu perfil no Sucatão.`
 }
 
+export function dmAgendamentoContrato(userName: string, contractTitle: string, objText: string, scheduledAt: string | null): string {
+  const quando = scheduledAt
+    ? new Date(scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
+    : "a combinar"
+  return `📋 Olá, **${userName}**!\n\nSeu agendamento de entrega para o contrato **${contractTitle}** foi confirmado.\n\n**Objetivo:** ${objText}\n**Horário:** ${quando}\n\nUm canal privado foi criado para combinar os detalhes com nossa equipe!`
+}
+
 // ── Canais privados de entrega (Fase 4) ─────────────────────────────────────
 
 type EmbedField = { name: string; value: string; inline?: boolean }
@@ -75,6 +82,40 @@ type Embed = {
 
 // VIEW_CHANNEL + SEND_MESSAGES + READ_MESSAGE_HISTORY
 const CHANNEL_PERMS = "68608"
+
+export function embedCanalContrato(params: {
+  scheduleId: string
+  contractTitle: string
+  objText: string
+  objItems: { item_name: string; qty: number }[]
+  playerName: string
+  gameId: string | null
+  scheduledAt: string | null
+}): Embed {
+  const quando = params.scheduledAt
+    ? new Date(params.scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
+    : "A combinar"
+  const itensList = params.objItems.length > 0
+    ? params.objItems.map(it => `${it.qty}× ${it.item_name}`).join("\n")
+    : "—"
+  const fields: EmbedField[] = [
+    { name: "Jogador",    value: params.playerName,          inline: true },
+    { name: "Horário",    value: quando,                     inline: true },
+    { name: "Objetivo",   value: params.objText },
+    { name: "Itens a entregar", value: itensList },
+  ]
+  if (params.gameId) fields.push({ name: "Game ID", value: params.gameId })
+  return {
+    color: 0x00d9ff,
+    title: `📋 Contrato — ${params.contractTitle}`,
+    description:
+      "Canal criado para combinarem a entrega dos itens in-game.\n\n" +
+      "> ⚠️ Não compartilhem dados pessoais aqui. Qualquer problema, acionem um admin.",
+    fields,
+    timestamp: new Date().toISOString(),
+    footer: { text: "Sucatão de Speranza · Canal removido automaticamente após a entrega" },
+  }
+}
 
 export function embedCanalEntrega(params: {
   orderId: string

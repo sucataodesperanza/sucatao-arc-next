@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { addItemsToInventory } from "@/lib/inventory"
-import { sendDiscordDM, dmRecompensaCreditada } from "@/lib/discord-bot"
+import { sendDiscordDM, dmRecompensaCreditada, deleteDiscordChannel } from "@/lib/discord-bot"
 import { addReputation, getRepPoints } from "@/lib/reputation"
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -15,7 +15,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
   // ── Tenta o sistema unificado (contract_schedules) primeiro ──
   const { data: cs } = await admin
     .from("contract_schedules")
-    .select("id, user_id, contract_id, objective_index, status")
+    .select("id, user_id, contract_id, objective_index, status, discord_channel_id")
     .eq("id", scheduleId)
     .maybeSingle()
 
@@ -113,8 +113,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    // Marca agendamento como confirmado
+    // Marca agendamento como confirmado e remove canal Discord
     await admin.from("contract_schedules").update({ status: "confirmed" }).eq("id", scheduleId)
+    deleteDiscordChannel((cs as any).discord_channel_id).catch(() => {})
 
     return NextResponse.json({
       ok: true,
