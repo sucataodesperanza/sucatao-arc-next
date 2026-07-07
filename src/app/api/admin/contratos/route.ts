@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       total:              body.total              ?? 1,
       sucatas:            body.sucatas            ?? 0,
       xp:                 body.xp                ?? 0,
-      rep:                body.rep               ?? null,
+      rep:                body.rep               ?? 0,
       location:           body.location           ?? "",
       estimated_time:     body.estimated_time     ?? "",
       best_time_of_day:   body.best_time_of_day   ?? "",
