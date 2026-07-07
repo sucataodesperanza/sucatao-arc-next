@@ -36,8 +36,6 @@ export type Contract = {
   environmental_risk: string
   expires_at: string | null
   variant: string | null
-  bonus_condition: string
-  bonus_reward: string
   faction_id: string | null
   rewards: ContractReward[]
   objectives: ContractObjective[]

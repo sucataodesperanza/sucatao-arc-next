@@ -12,7 +12,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const allowed = ["type","tier","title","description","story","image_url","objective","total",
     "sucatas","xp","rep","location","estimated_time","best_time_of_day","climate",
-    "environmental_risk","expires_at","variant","bonus_condition","bonus_reward",
+    "environmental_risk","expires_at","variant",
     "rewards","objectives","enemies","success_rate","players_completed",
     "best_record_time","best_record_player","active","faction_id"]
 
