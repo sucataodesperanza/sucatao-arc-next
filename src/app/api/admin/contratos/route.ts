@@ -25,6 +25,10 @@ export async function POST(request: NextRequest) {
   const { data, error } = await admin
     .from("contracts")
     .insert({
+      contract_type:      body.contract_type      ?? "comum",
+      mission_type:       body.mission_type       ?? "diario",
+      price_points:       body.price_points       ?? 0,
+      price_real:         body.price_real         ?? 0,
       type:               body.type               ?? "Principal",
       tier:               body.tier               ?? "Básico",
       title:              body.title              ?? "",

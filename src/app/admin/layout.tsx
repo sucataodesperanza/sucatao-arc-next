@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { AdminNotificationsProvider } from "@/components/admin-notifications"
 import { AdminBreadcrumb } from "@/components/admin-breadcrumb"
+import { AdminSubpageProvider } from "@/components/admin-subpage-context"
 import "../../styles/admin-layout.css"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -19,13 +20,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <AdminNotificationsProvider>
-      <div className="admin-shell">
-        <AdminSidebar />
-        <main className="admin-main">
-          <AdminBreadcrumb />
-          {children}
-        </main>
-      </div>
+      <AdminSubpageProvider>
+        <div className="admin-shell">
+          <AdminSidebar />
+          <main className="admin-main">
+            <AdminBreadcrumb />
+            {children}
+          </main>
+        </div>
+      </AdminSubpageProvider>
     </AdminNotificationsProvider>
   )
 }
