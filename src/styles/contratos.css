@@ -1750,3 +1750,97 @@
   background: var(--surface-2);
   color: var(--paper);
 }
+
+/* ── Botão Agendar Entrega ─────────────────────────────────────────── */
+
+@keyframes agendar-glow {
+  0%, 100% { box-shadow: 0 0 14px var(--btn-glow, rgba(61,242,139,0.25)), 0 2px 8px rgba(0,0,0,0.45); }
+  50%       { box-shadow: 0 0 30px var(--btn-glow, rgba(61,242,139,0.45)), 0 4px 14px rgba(0,0,0,0.55); }
+}
+
+.btn-agendar {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--btn-border, rgba(61,242,139,0.35));
+  background: var(--btn-bg, rgba(61,242,139,0.07));
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  overflow: hidden;
+  animation: agendar-glow 3.2s ease-in-out infinite;
+  transition: filter 0.2s ease, transform 0.15s ease;
+  margin-top: 4px;
+}
+
+.btn-agendar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.05) 50%, transparent 70%);
+  pointer-events: none;
+}
+
+.btn-agendar:hover {
+  filter: brightness(1.14);
+  transform: translateY(-2px);
+}
+
+.btn-agendar:active {
+  transform: translateY(0);
+  filter: brightness(0.9);
+}
+
+.btn-agendar-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--btn-icon-bg, rgba(61,242,139,0.14));
+  border: 2px solid var(--btn-border, rgba(61,242,139,0.35));
+  color: var(--btn-color, #3df28b);
+}
+
+.btn-agendar-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.btn-agendar-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--paper);
+}
+
+.btn-agendar-sub {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255,255,255,0.38);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.btn-agendar-arrow {
+  flex-shrink: 0;
+  color: var(--btn-color, #3df28b);
+  opacity: 0.6;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.btn-agendar:hover .btn-agendar-arrow {
+  transform: translateX(4px);
+  opacity: 1;
+}
