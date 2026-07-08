@@ -94,6 +94,19 @@ function ActiveContractCard({ raw, onAgendar }: {
     useCarousel && activeIdx >= 0 ? Math.floor(activeIdx / OBJ_PAGE_SIZE) : 0
   )
   const dragStartX = useRef<number | null>(null)
+  const wheelRef   = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = wheelRef.current
+    if (!el || !useCarousel) return
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault()
+      if (e.deltaY > 0) setObjPage(p => Math.min(p + 1, totalPages - 1))
+      else              setObjPage(p => Math.max(p - 1, 0))
+    }
+    el.addEventListener("wheel", handleWheel, { passive: false })
+    return () => el.removeEventListener("wheel", handleWheel)
+  }, [useCarousel, totalPages])
 
   function onDragStart(x: number) { dragStartX.current = x }
   function onDragEnd(x: number) {
@@ -200,7 +213,7 @@ function ActiveContractCard({ raw, onAgendar }: {
           ) : useCarousel ? (
             /* Carrossel horizontal — semanal e mensal */
             <div>
-              <div style={{ overflow: "hidden", userSelect: "none", cursor: "grab" }}
+              <div ref={wheelRef} style={{ overflow: "hidden", userSelect: "none", cursor: "grab" }}
                 onMouseDown={e => onDragStart(e.clientX)}
                 onMouseUp={e => onDragEnd(e.clientX)}
                 onMouseLeave={() => { dragStartX.current = null }}
