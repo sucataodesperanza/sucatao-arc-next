@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
   const start    = settings?.operating_hours_start ?? "09:00"
   const end      = settings?.operating_hours_end   ?? "00:00"
-  const duration = settings?.slot_duration_minutes ?? 60
+  const duration = settings?.slot_duration_minutes ?? 5
 
   let startMin = timeToMinutes(start)
   let endMin   = timeToMinutes(end)
@@ -50,13 +50,17 @@ export async function GET(request: NextRequest) {
     (booked ?? []).map(b => b.scheduled_at?.slice(11, 16))
   )
 
-  const now    = new Date()
+  // Hora atual em BRT (UTC-3) — Brasil não tem horário de verão desde 2019
+  const nowUtc    = new Date()
+  const nowBrt    = new Date(nowUtc.getTime() - 3 * 60 * 60 * 1000)
+  const todayBrt  = nowBrt.toISOString().slice(0, 10)
+  const nowMinBrt = nowBrt.getUTCHours() * 60 + nowBrt.getUTCMinutes()
+
   const times: string[] = []
 
   for (let m = startMin; m < endMin; m += duration) {
-    const time   = minutesToTime(m)
-    const slotDt = new Date(`${date}T${time}:00`)
-    if (slotDt <= now) continue
+    const time = minutesToTime(m)
+    if (date === todayBrt && m <= nowMinBrt) continue // passado (hora local BR)
     if (bookedTimes.has(time)) continue
     times.push(time)
   }
