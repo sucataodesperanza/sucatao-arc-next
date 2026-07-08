@@ -30,11 +30,6 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
   )
 }
 
-type Acceptance = {
-  id: string; progress: number; status: string; accepted_at: string; user_id: string
-  user_name: string; contract_id: string
-  contracts: { title: string; total: number; sucatas: number; type: string; tier: string } | null
-}
 
 const CONTRACT_TYPES = [
   { value: "comum",  label: "Comum — visível para todos" },
@@ -99,12 +94,9 @@ function ContratosSection() {
   type CreateTab = typeof CREATE_TABS[number]
   const [createTab, setCreateTab] = useState<CreateTab>("Básico")
 
-  const EDIT_TABS = ["Básico", "Objetivos", "Imagem", "Aceitações"] as const
+  const EDIT_TABS = ["Básico", "Objetivos", "Imagem"] as const
   type EditTab = typeof EDIT_TABS[number]
-  const [editTab, setEditTab]                         = useState<EditTab>("Básico")
-  const [contractAcceptances, setContractAcceptances] = useState<any[]>([])
-  const [loadingAcceptances, setLoadingAcceptances]   = useState(false)
-  const [completing, setCompleting]                   = useState<string | null>(null)
+  const [editTab, setEditTab] = useState<EditTab>("Básico")
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -181,7 +173,6 @@ function ContratosSection() {
     })))
     setObjPickerCtx(null)
     setEditTab("Básico")
-    setContractAcceptances([])
     setEditForm({
       contract_type: c.contract_type ?? "comum",
       mission_type:  c.mission_type  ?? "diario",
@@ -224,25 +215,6 @@ function ContratosSection() {
       subpage.clear()
       await load()
     } else toast.error("Erro ao salvar contrato.")
-  }
-
-  async function loadContractAcceptances(contractId: string) {
-    setLoadingAcceptances(true)
-    const res = await fetch(`/api/admin/contratos/acceptances?contract_id=${contractId}`)
-    const body = await res.json().catch(() => ({}))
-    setContractAcceptances(body.acceptances ?? [])
-    setLoadingAcceptances(false)
-  }
-
-  async function completeAcceptance(id: string) {
-    setCompleting(id)
-    const res = await fetch(`/api/admin/contratos/acceptances/${id}/complete`, { method: "POST" })
-    setCompleting(null)
-    if (res.ok) {
-      const body = await res.json()
-      toast.success(`✓ Concluído! ${body.sucatas_credited ?? 0} sucatas creditadas.`)
-      if (editingContract) loadContractAcceptances(editingContract.id)
-    } else toast.error("Erro ao concluir aceitação.")
   }
 
   async function searchObjItem(q: string) {
@@ -673,7 +645,7 @@ function ContratosSection() {
             <div style={{ display: "flex", gap: 2, borderBottom: "1px solid var(--stroke)", marginBottom: 20 }}>
               {EDIT_TABS.map(tab => (
                 <button key={tab} type="button"
-                  onClick={() => { setEditTab(tab); if (tab === "Aceitações" && contractAcceptances.length === 0) loadContractAcceptances(editingContract.id) }}
+                  onClick={() => setEditTab(tab)}
                   style={{ padding: "8px 16px", fontSize: 12, fontWeight: 950, border: "none", borderBottom: `2px solid ${editTab === tab ? "var(--cyan)" : "transparent"}`, background: "transparent", color: editTab === tab ? "var(--cyan)" : "var(--gray-500)", cursor: "pointer", font: "inherit" }}>
                   {tab}
                 </button>
@@ -910,71 +882,8 @@ function ContratosSection() {
               </div>
             )}
 
-            {/* Aba: Aceitações */}
-            {editTab === "Aceitações" && (() => {
-              const STATUS_COLOR: Record<string, string> = { active: "var(--yellow)", completed: "var(--green)", failed: "var(--red)", expired: "var(--gray-500)" }
-              return (
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                    <span style={{ fontSize: 12, color: "var(--gray-500)" }}>{contractAcceptances.length} aceitação(ões)</span>
-                    <button type="button" onClick={() => loadContractAcceptances(editingContract.id)}
-                      style={{ fontSize: 11, border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper-dim)", padding: "4px 10px", borderRadius: 4, cursor: "pointer", font: "inherit" }}>
-                      ↻ Atualizar
-                    </button>
-                  </div>
-                  {loadingAcceptances ? (
-                    <p style={{ color: "var(--gray-500)", fontSize: 13 }}>Carregando...</p>
-                  ) : contractAcceptances.length === 0 ? (
-                    <p style={{ color: "var(--gray-500)", fontSize: 13 }}>Nenhuma aceitação ainda.</p>
-                  ) : (
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                      <thead>
-                        <tr style={{ borderBottom: "1px solid var(--stroke)" }}>
-                          {["Usuário", "Progresso", "Status", "Aceito em", "Ação"].map(h => (
-                            <th key={h} style={{ padding: "6px 8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase" as const, color: "var(--gray-500)", textAlign: "left" as const }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {contractAcceptances.map((a: any) => {
-                          const total = a.contracts?.total ?? 1
-                          const pct   = Math.min(100, Math.round((a.progress / total) * 100))
-                          return (
-                            <tr key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                              <td style={{ padding: "8px", fontWeight: 800 }}>{a.user_name}</td>
-                              <td style={{ padding: "8px", minWidth: 140 }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                                    <div style={{ height: "100%", width: `${pct}%`, background: "var(--cyan)", borderRadius: 2 }} />
-                                  </div>
-                                  <span style={{ fontSize: 10, color: "var(--muted)", whiteSpace: "nowrap" as const }}>{a.progress}/{total}</span>
-                                </div>
-                              </td>
-                              <td style={{ padding: "8px" }}>
-                                <span style={{ fontSize: 10, fontWeight: 950, color: STATUS_COLOR[a.status] ?? "var(--muted)" }}>{a.status.toUpperCase()}</span>
-                              </td>
-                              <td style={{ padding: "8px", color: "var(--muted)", fontSize: 11 }}>{new Date(a.accepted_at).toLocaleDateString("pt-BR")}</td>
-                              <td style={{ padding: "8px" }}>
-                                {a.status === "active" && (
-                                  <button type="button" onClick={() => completeAcceptance(a.id)} disabled={completing === a.id}
-                                    style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "5px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase" as const, cursor: "pointer", borderRadius: 4, font: "inherit", opacity: completing === a.id ? 0.6 : 1 }}>
-                                    <CheckCircle size={11} /> {completing === a.id ? "..." : "Concluir"}
-                                  </button>
-                                )}
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )
-            })()}
-
-            {/* Botões — só nas abas de edição */}
-            {editTab !== "Aceitações" && (
-              <div style={{ display: "flex", gap: 8, marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
+            {/* Botões */}
+            <div style={{ display: "flex", gap: 8, marginTop: 24, paddingTop: 16, borderTop: "1px solid var(--stroke)" }}>
                 <button type="button" onClick={() => { setEditingContract(null); subpage.clear() }}
                   style={{ border: "1px solid var(--stroke)", background: "transparent", color: "var(--gray-500)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase" as const, cursor: "pointer", borderRadius: 6, font: "inherit" }}>
                   Cancelar
@@ -984,7 +893,6 @@ function ContratosSection() {
                   {savingEdit ? "Salvando..." : "✓ Salvar"}
                 </button>
               </div>
-            )}
           </>
         )
       })()}
@@ -992,134 +900,35 @@ function ContratosSection() {
   )
 }
 
-/* ── Seção de aceitações globais ── */
-function AcceitancesSection() {
-  const toast = useToast()
-  const [items, setItems]       = useState<Acceptance[]>([])
-  const [loading, setLoading]   = useState(true)
-  const [completing, setCompleting] = useState<string | null>(null)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    const res = await fetch("/api/admin/contratos/acceptances")
-    const body = await res.json().catch(() => ({}))
-    setItems(body.acceptances ?? [])
-    setLoading(false)
-  }, [])
-
-  useEffect(() => { load() }, [load])
-
-  async function updateProgress(id: string, progress: number) {
-    await fetch(`/api/admin/contratos/acceptances/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ progress }) })
-    await load()
-  }
-
-  async function complete(id: string) {
-    setCompleting(id)
-    const res = await fetch(`/api/admin/contratos/acceptances/${id}/complete`, { method: "POST" })
-    setCompleting(null)
-    if (res.ok) {
-      const body = await res.json()
-      toast.success(`✓ Concluído! ${body.sucatas_credited} pts creditados.`)
-      await load()
-    } else toast.error("Erro ao concluir.")
-  }
-
-  const STATUS_COLOR: Record<string, string> = {
-    active: "var(--yellow)", completed: "var(--green)", failed: "var(--red)", expired: "var(--gray-500)"
-  }
-
-  return (
-    <div className="utility-panel" style={{ marginTop: 16 }}>
-      <div className="utility-panel-head">
-        <strong>Aceitações de Contratos</strong>
-        <small>Progresso global dos usuários — atualize e conclua para creditar recompensas</small>
-      </div>
-      {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
-              {["Usuário","Contrato","Tipo","Progresso","Status","Aceito em","Ação"].map(h => (
-                <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {items.map(a => {
-              const contract = a.contracts
-              const total    = contract?.total ?? 1
-              const pct      = Math.min(100, Math.round((a.progress / total) * 100))
-              return (
-                <tr key={a.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <td style={{ padding: "8px", fontWeight: 800 }}>{a.user_name}</td>
-                  <td style={{ padding: "8px" }}>{contract?.title ?? "—"}</td>
-                  <td style={{ padding: "8px" }}><span style={{ fontSize: 10, fontWeight: 950, opacity: 0.7 }}>{contract?.type ?? "—"}</span></td>
-                  <td style={{ padding: "8px", minWidth: 160 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <input type="number" min={0} max={total} value={a.progress}
-                        onChange={e => updateProgress(a.id, Number(e.target.value))}
-                        style={{ width: 52, background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "4px 6px", fontSize: 11, borderRadius: 4, font: "inherit" }} />
-                      <span style={{ color: "var(--muted)", fontSize: 11 }}>/ {total}</span>
-                      <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                        <div style={{ height: "100%", width: `${pct}%`, background: "var(--cyan)", borderRadius: 2 }} />
-                      </div>
-                      <span style={{ fontSize: 10, color: "var(--muted)" }}>{pct}%</span>
-                    </div>
-                  </td>
-                  <td style={{ padding: "8px" }}>
-                    <span style={{ fontSize: 10, fontWeight: 950, color: STATUS_COLOR[a.status] ?? "var(--muted)" }}>
-                      {a.status.toUpperCase()}
-                    </span>
-                  </td>
-                  <td style={{ padding: "8px", color: "var(--muted)", fontSize: 11 }}>
-                    {new Date(a.accepted_at).toLocaleDateString("pt-BR")}
-                  </td>
-                  <td style={{ padding: "8px" }}>
-                    {a.status === "active" && (
-                      <button type="button" onClick={() => complete(a.id)} disabled={completing === a.id}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "5px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: completing === a.id ? 0.6 : 1 }}>
-                        <CheckCircle size={11} /> {completing === a.id ? "..." : "Concluir"}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-            {items.length === 0 && (
-              <tr><td colSpan={7} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhuma aceitação registrada.</td></tr>
-            )}
-          </tbody>
-        </table>
-      )}
-    </div>
-  )
-}
-
-/* ── Seção de agendamentos de entrega ── */
-function SchedulesSection() {
-  const toast = useToast()
-  const [schedules, setSchedules]   = useState<any[]>([])
-  const [loading, setLoading]       = useState(true)
+/* ── Seção unificada: contratos em andamento ── */
+function ContratosAtivosSection() {
+  const toast    = useToast()
+  const { confirm } = useConfirm()
+  const [data, setData]           = useState<any[]>([])
+  const [loading, setLoading]     = useState(true)
   const [confirming, setConfirming] = useState<string | null>(null)
+  const [cancelling, setCancelling] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const res = await fetch("/api/admin/contratos/schedules")
+    const res = await fetch("/api/admin/contratos/active-players")
     const body = await res.json().catch(() => ({}))
-    setSchedules(body.schedules ?? [])
+    setData(body.contracts ?? [])
     setLoading(false)
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  async function confirm(id: string) {
-    setConfirming(id)
-    const res = await fetch(`/api/admin/contratos/schedules/${id}/confirm`, { method: "POST" })
+  const MTYPE: Record<string, string> = { diario: "Diário", semanal: "Semanal", mensal: "Mensal" }
+
+  async function confirmSchedule(scheduleId: string) {
+    setConfirming(scheduleId)
+    const res = await fetch(`/api/admin/contratos/schedules/${scheduleId}/confirm`, { method: "POST" })
     setConfirming(null)
     if (res.ok) {
       const body = await res.json()
-      const pts  = body.sucatas_credited ?? body.points_credited ?? 0
-      toast.success(`✓ Entrega confirmada!${pts > 0 ? ` ${pts} pts creditados.` : ""}${body.all_done ? " Contrato concluído!" : ""}${body.item_credited ? ` Item "${body.item_credited}" adicionado.` : ""}`)
+      const pts  = body.sucatas_credited ?? 0
+      toast.success(`✓ Entrega confirmada!${pts > 0 ? ` ${pts} pts creditados.` : ""}${body.all_done ? " Contrato concluído!" : ""}`)
       await load()
     } else {
       const body = await res.json().catch(() => ({}))
@@ -1127,99 +936,130 @@ function SchedulesSection() {
     }
   }
 
-  const STATUS_COLOR: Record<string, string> = { scheduled: "var(--cyan)", pending: "var(--yellow)", confirmed: "var(--green)", expired: "var(--gray-500)", cancelled: "var(--red)" }
-  const MISSION_TYPE_LABEL: Record<string, string> = { diario: "Diário", semanal: "Semanal", mensal: "Mensal", daily: "Diário", weekly: "Semanal", monthly: "Mensal" }
+  async function cancelContract(ucId: string, userName: string, contractTitle: string) {
+    const ok = await confirm(`Cancelar contrato "${contractTitle}" de ${userName}? O canal Discord será removido.`)
+    if (!ok) return
+    setCancelling(ucId)
+    const res = await fetch(`/api/admin/contratos/acceptances/${ucId}/cancel`, { method: "POST" })
+    setCancelling(null)
+    if (res.ok) { toast.success("Contrato cancelado."); await load() }
+    else toast.error("Erro ao cancelar contrato.")
+  }
 
   return (
     <div className="utility-panel" style={{ marginBottom: 16 }}>
-      <div className="utility-panel-head">
-        <strong>Agendamentos de Entrega</strong>
-        <small>Contratos com entrega presencial aguardando confirmação</small>
+      <div className="utility-panel-head" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <strong>Contratos em Andamento</strong>
+          <small>Usuários com contratos ativos — agendamentos e confirmações de entrega</small>
+        </div>
+        <button type="button" onClick={load}
+          style={{ fontSize: 11, border: "1px solid var(--stroke)", background: "rgba(255,255,255,0.04)", color: "var(--paper-dim)", padding: "4px 10px", borderRadius: 4, cursor: "pointer", font: "inherit" }}>
+          ↻ Atualizar
+        </button>
       </div>
-      {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid var(--stroke)", textAlign: "left" }}>
-              {["Usuário", "Game ID", "Contrato", "Objetivo", "Horário", "Status", "Ação"].map(h => (
-                <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {schedules.map(s => {
-              const isOverdue = s.scheduled_at && new Date(s.scheduled_at) < new Date()
-              const isNewSystem = s._source === "contract"
 
-              // Sistema unificado
-              if (isNewSystem) {
-                const contract = s.contracts as { title: string; mission_type: string } | null
-                return (
-                  <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <td style={{ padding: "8px", fontWeight: 800 }}>{s.user_name}</td>
-                    <td style={{ padding: "8px", fontFamily: "monospace", fontSize: 11, color: "var(--cyan)" }}>{s.game_id ?? "—"}</td>
-                    <td style={{ padding: "8px" }}>
-                      <span style={{ fontSize: 10, opacity: 0.7 }}>{MISSION_TYPE_LABEL[contract?.mission_type ?? ""] ?? "—"}</span><br />
-                      {contract?.title ?? "—"}
-                    </td>
-                    <td style={{ padding: "8px", color: "var(--paper-dim)" }}>
-                      {s.objective_title ?? `Objetivo ${(s.objective_index ?? 0) + 1}`}
-                    </td>
-                    <td style={{ padding: "8px", color: isOverdue ? "var(--red)" : "var(--paper)", fontSize: 11, whiteSpace: "nowrap" }}>
-                      {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : <em style={{ color: "var(--gray-500)" }}>Não agendado</em>}
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      <span style={{ fontSize: 10, fontWeight: 950, color: STATUS_COLOR[s.status] ?? "var(--muted)" }}>{s.status.toUpperCase()}</span>
-                    </td>
-                    <td style={{ padding: "8px" }}>
-                      {s.status === "scheduled" && (
-                        <button type="button" onClick={() => confirm(s.id)} disabled={confirming === s.id}
-                          style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "5px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: confirming === s.id ? 0.6 : 1 }}>
-                          <CheckCircle size={11} /> {confirming === s.id ? "..." : "Confirmar"}
+      {loading ? (
+        <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p>
+      ) : data.length === 0 ? (
+        <p style={{ color: "var(--muted)", fontSize: 13 }}>Nenhum contrato ativo no momento.</p>
+      ) : (
+        <div style={{ display: "grid", gap: 12 }}>
+          {data.map((contract: any) => (
+            <div key={contract.id} style={{ border: "1px solid var(--stroke)", borderRadius: 10, overflow: "hidden" }}>
+              {/* Cabeçalho do contrato */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", background: "rgba(255,255,255,0.03)", borderBottom: "1px solid var(--stroke)" }}>
+                {contract.image_url && <img src={contract.image_url} alt="" style={{ width: 30, height: 30, borderRadius: 5, objectFit: "cover", flexShrink: 0 }} />}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 950, color: "var(--paper)", whiteSpace: "nowrap" as const, overflow: "hidden", textOverflow: "ellipsis" }}>{contract.title}</p>
+                  <span style={{ fontSize: 10, color: "var(--cyan)", fontWeight: 950 }}>{MTYPE[contract.mission_type] ?? contract.mission_type}</span>
+                  <span style={{ fontSize: 10, color: "var(--gray-500)", marginLeft: 8 }}>{contract.tier}</span>
+                </div>
+                <span style={{ fontSize: 11, color: "var(--gray-500)", flexShrink: 0 }}>{contract.players.length} jogador(es)</span>
+              </div>
+
+              {/* Jogadores */}
+              <div style={{ display: "grid", gap: 0 }}>
+                {contract.players.map((player: any, pi: number) => {
+                  const objProg   = (player.objectives_progress as Record<string, number>) ?? {}
+                  const objectives = (contract.objectives as any[]) ?? []
+                  const pendingScheds = (player.schedules as any[]).filter((s: any) => s.status === "scheduled")
+                  const hasAction = pendingScheds.length > 0
+
+                  return (
+                    <div key={player.uc_id} style={{ padding: "12px 14px", borderBottom: pi < contract.players.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", display: "grid", gap: 8 }}>
+                      {/* Linha do jogador */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 12, fontWeight: 950, color: "var(--paper)" }}>{player.user_name}</span>
+                          <span style={{ fontSize: 10, color: "var(--gray-500)", marginLeft: 8 }}>
+                            aceito em {new Date(player.accepted_at).toLocaleDateString("pt-BR")}
+                          </span>
+                          {player.discord_id && (
+                            <span style={{ fontSize: 9, background: "rgba(88,101,242,0.2)", color: "#7289da", borderRadius: 3, padding: "1px 5px", marginLeft: 6, fontWeight: 950 }}>Discord</span>
+                          )}
+                        </div>
+                        {/* Botão cancelar */}
+                        <button type="button" onClick={() => cancelContract(player.uc_id, player.user_name, contract.title)}
+                          disabled={cancelling === player.uc_id}
+                          style={{ fontSize: 10, border: "1px solid rgba(255,80,80,0.35)", background: "rgba(255,80,80,0.06)", color: "var(--red)", padding: "4px 10px", borderRadius: 4, cursor: "pointer", font: "inherit", opacity: cancelling === player.uc_id ? 0.5 : 1, flexShrink: 0 }}>
+                          {cancelling === player.uc_id ? "..." : "Cancelar"}
                         </button>
-                      )}
-                    </td>
-                  </tr>
-                )
-              }
+                      </div>
 
-              // Sistema antigo (passes)
-              const mission = s.contract_group_missions as { position: number; title: string; points_reward: number; item_reward: any } | null
-              const group   = s.contract_groups as { title: string; type: string } | null
-              return (
-                <tr key={s.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                  <td style={{ padding: "8px", fontWeight: 800 }}>{s.user_name}</td>
-                  <td style={{ padding: "8px", fontFamily: "monospace", fontSize: 11, color: "var(--cyan)" }}>{s.game_id ?? "—"}</td>
-                  <td style={{ padding: "8px" }}>
-                    <span style={{ fontSize: 10, opacity: 0.7 }}>{MISSION_TYPE_LABEL[group?.type ?? ""] ?? group?.type?.toUpperCase()}</span><br />
-                    {group?.title ?? "—"}
-                  </td>
-                  <td style={{ padding: "8px" }}>
-                    Dia {mission?.position} — {mission?.title ?? "—"}<br />
-                    {mission?.points_reward ? <span style={{ color: "var(--yellow)", fontSize: 10 }}>{mission.points_reward} pts</span> : null}
-                    {mission?.item_reward ? <span style={{ color: "var(--cyan)", fontSize: 10 }}> 🎁 {mission.item_reward.item_name}</span> : null}
-                  </td>
-                  <td style={{ padding: "8px", color: isOverdue ? "var(--red)" : "var(--paper)", fontSize: 11, whiteSpace: "nowrap" }}>
-                    {s.scheduled_at ? new Date(s.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : <em style={{ color: "var(--gray-500)" }}>Não agendado</em>}
-                  </td>
-                  <td style={{ padding: "8px" }}>
-                    <span style={{ fontSize: 10, fontWeight: 950, color: STATUS_COLOR[s.status] ?? "var(--muted)" }}>{s.status.toUpperCase()}</span>
-                  </td>
-                  <td style={{ padding: "8px" }}>
-                    {s.status === "scheduled" && (
-                      <button type="button" onClick={() => confirm(s.id)} disabled={confirming === s.id}
-                        style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "5px 10px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: confirming === s.id ? 0.6 : 1 }}>
-                        <CheckCircle size={11} /> {confirming === s.id ? "..." : "Confirmar"}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-            {schedules.length === 0 && (
-              <tr><td colSpan={7} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum agendamento pendente.</td></tr>
-            )}
-          </tbody>
-        </table>
+                      {/* Mini track de nodes */}
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        {objectives.map((_: any, i: number) => {
+                          const isDone  = (objProg[String(i)] ?? 0) >= 1
+                          const sched   = (player.schedules as any[]).find((s: any) => s.objective_index === i && s.status === "scheduled")
+                          const nodeCol = isDone ? "var(--green)" : sched ? "var(--yellow)" : "rgba(255,255,255,0.1)"
+                          const lineCol = isDone && (objProg[String(i - 1)] ?? 0) >= 1 ? "var(--green)" : "rgba(255,255,255,0.08)"
+                          return (
+                            <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                              {i > 0 && <div style={{ width: objectives.length > 15 ? 6 : 10, height: 1.5, background: lineCol, flexShrink: 0 }} />}
+                              <div title={`Step ${i + 1}${isDone ? " ✓ concluído" : sched ? " ⏳ agendado" : " pendente"}`}
+                                style={{ width: objectives.length > 15 ? 9 : 12, height: objectives.length > 15 ? 9 : 12, borderRadius: "50%", background: nodeCol, border: `1.5px solid ${isDone ? "transparent" : sched ? "var(--yellow)" : "rgba(255,255,255,0.15)"}`, flexShrink: 0, transition: "background 0.2s" }} />
+                            </div>
+                          )
+                        })}
+                        <span style={{ marginLeft: 10, fontSize: 10, color: "var(--gray-500)" }}>
+                          {Object.values(objProg).filter(v => v >= 1).length}/{objectives.length} steps
+                        </span>
+                      </div>
+
+                      {/* Ações: confirmação dos agendamentos pendentes */}
+                      {hasAction && (
+                        <div style={{ display: "grid", gap: 5 }}>
+                          {pendingScheds.map((sched: any) => {
+                            const obj = objectives[sched.objective_index]
+                            const isOverdue = sched.scheduled_at && new Date(sched.scheduled_at) < new Date()
+                            const horario   = sched.scheduled_at
+                              ? new Date(sched.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })
+                              : "Sem horário"
+                            return (
+                              <div key={sched.id} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,212,0,0.06)", border: "1px solid rgba(255,212,0,0.2)", borderRadius: 6, padding: "6px 10px" }}>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <span style={{ fontSize: 11, color: "var(--yellow)", fontWeight: 950 }}>Step {sched.objective_index + 1}</span>
+                                  {obj?.text && <span style={{ fontSize: 11, color: "var(--paper-dim)", marginLeft: 6 }}>{obj.text}</span>}
+                                  <span style={{ fontSize: 10, color: isOverdue ? "var(--red)" : "var(--gray-500)", marginLeft: 8 }}>{horario}</span>
+                                  {sched.game_id && <span style={{ fontSize: 10, fontFamily: "monospace", color: "var(--cyan)", marginLeft: 8 }}>{sched.game_id}</span>}
+                                </div>
+                                <button type="button" onClick={() => confirmSchedule(sched.id)} disabled={confirming === sched.id}
+                                  style={{ display: "inline-flex", alignItems: "center", gap: 5, border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.08)", color: "var(--green)", padding: "5px 12px", fontSize: 10, fontWeight: 950, textTransform: "uppercase" as const, cursor: "pointer", borderRadius: 4, font: "inherit", opacity: confirming === sched.id ? 0.6 : 1, flexShrink: 0 }}>
+                                  <CheckCircle size={11} /> {confirming === sched.id ? "..." : "Confirmar entrega"}
+                                </button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -1230,9 +1070,8 @@ export default function AdminContratosPage() {
   const editing   = title !== null
   return (
     <div>
-      {!editing && <SchedulesSection />}
+      {!editing && <ContratosAtivosSection />}
       <ContratosSection />
-      {!editing && <AcceitancesSection />}
       {!editing && <RewardsSection />}
     </div>
   )
