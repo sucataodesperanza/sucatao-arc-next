@@ -61,6 +61,33 @@ export function dmRecompensaCreditada(userName: string, contextLabel: string, pa
   return `🎁 Olá, **${userName}**!\n\n${contextLabel} foi concluído(a) e você recebeu ${reward}! Confira seu perfil no Sucatão.`
 }
 
+export function dmContratoAceito(playerName: string, contractTitle: string): string {
+  return `✅ Olá, **${playerName}**!\n\nVocê aceitou o contrato **${contractTitle}**!\n\nUm canal privado foi criado para combinarmos as entregas. Fique de olho por lá!`
+}
+
+export function embedCanalContratoAceito(params: {
+  contractTitle: string
+  missionType: string
+  stepsCount: number
+  playerName: string
+}): Embed {
+  const tipo: Record<string, string> = { diario: "Diário", semanal: "Semanal", mensal: "Mensal" }
+  return {
+    color: 0xb477ff,
+    title: `📋 Contrato — ${params.contractTitle}`,
+    description:
+      "Canal criado para comunicação durante o contrato. Use este canal para combinar as entregas com o admin.\n\n" +
+      "> ⚠️ Não compartilhem dados pessoais aqui. Qualquer problema, acionem um admin.",
+    fields: [
+      { name: "Jogador", value: params.playerName,                                      inline: true },
+      { name: "Tipo",    value: tipo[params.missionType] ?? params.missionType,          inline: true },
+      { name: "Steps",   value: `${params.stepsCount} entrega(s)`,                      inline: true },
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: "Sucatão de Speranza · Canal removido ao concluir ou cancelar o contrato" },
+  }
+}
+
 export function dmAgendamentoContrato(userName: string, contractTitle: string, objText: string, scheduledAt: string | null): string {
   const quando = scheduledAt
     ? new Date(scheduledAt).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" })
