@@ -940,7 +940,7 @@ export default function ContratosPage() {
                   onChange={async e => {
                     setSchedDate(e.target.value); setSchedTime("")
                     if (!e.target.value) return
-                    const res  = await fetch(`/api/trades/available-times?date=${e.target.value}`)
+                    const res  = await fetch(`/api/contratos/available-times?date=${e.target.value}`)
                     const body = await res.json().catch(() => ({}))
                     setSchedTimes(body.times ?? [])
                   }}
