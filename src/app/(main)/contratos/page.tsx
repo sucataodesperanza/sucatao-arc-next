@@ -60,6 +60,7 @@ export default function ContratosPage() {
   const [buyModal, setBuyModal]               = useState<BuyModal | null>(null)
   const [userPoints, setUserPoints]           = useState<number | null>(null)
   const [buyingId, setBuyingId]               = useState<string | null>(null)
+  const [detailModal, setDetailModal]         = useState<ApiContract | null>(null)
 
   // Histórico
   const [history, setHistory]                 = useState<HistoryItem[]>([])
@@ -185,7 +186,7 @@ export default function ContratosPage() {
   }
 
   /* ── Contrato Ativo: card detalhado ── */
-  function ActiveContractCard({ raw }: { raw: ApiContract }) {
+  function ActiveContractCard({ raw, onAgendar }: { raw: ApiContract; onAgendar?: (id: string, idx: number, title: string, obj: string) => void }) {
     const mColor     = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
     const tierCol    = TIER_COLORS[raw.tier]             ?? "var(--gray-500)"
     const riskCol    = RISK_COLORS[raw.environmental_risk] ?? "var(--gray-500)"
@@ -430,7 +431,9 @@ export default function ContratosPage() {
                   <button type="button" className="btn-aceitar"
                     onClick={() => {
                       const obj = objectives[activeIdx]
-                      openScheduleModal(raw.id, activeIdx, raw.title, obj?.text ?? `Objetivo ${activeIdx + 1}`)
+                      const label = obj?.text ?? `Objetivo ${activeIdx + 1}`
+                      if (onAgendar) onAgendar(raw.id, activeIdx, raw.title, label)
+                      else openScheduleModal(raw.id, activeIdx, raw.title, label)
                     }}>
                     <Zap size={14} fill="currentColor" /> Agendar Entrega
                   </button>
@@ -593,7 +596,7 @@ export default function ContratosPage() {
 
           {/* ── Aba: Contratos Ativos ── */}
           {activeTab === "Contratos Ativos" && (
-            <div style={{ display: "grid", gap: 24 }}>
+            <>
               {loadingContracts ? (
                 <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Carregando...</p>
               ) : activeContracts.length === 0 ? (
@@ -602,9 +605,58 @@ export default function ContratosPage() {
                   <p>Vá para <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para aceitar um contrato.</p>
                 </div>
               ) : (
-                activeContracts.map(raw => <ActiveContractCard key={raw.id} raw={raw} />)
+                <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
+                  {activeContracts.map(raw => {
+                    const mColor  = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
+                    const mLabel  = MISSION_LABELS[raw.mission_type] ?? raw.mission_type
+                    const tierCol = TIER_COLORS[raw.tier] ?? "var(--gray-500)"
+                    const doneCnt = ((raw.objectives ?? []) as any[]).filter((_: any, i: number) => (raw.objectives_progress?.[String(i)] ?? 0) >= ((_ as any).total ?? 1)).length
+                    const total   = (raw.objectives ?? []).length || raw.total
+                    const pct     = total > 0 ? Math.round((doneCnt / total) * 100) : 0
+
+                    return (
+                      <div key={raw.id} className={`cv-card${raw.variant ? ` cv-card--${raw.variant}` : ""}`}>
+                        {raw.variant && <div className="cv-card-frame" />}
+                        <div className="cv-card-bg">
+                          <div className="cv-card-bg-img" style={{ backgroundImage: `url(${raw.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
+                        </div>
+                        <div className="cv-card-badges">
+                          <span className="cv-card-type" style={{ color: mColor }}>{mLabel}</span>
+                          <span className="cv-card-tier" style={{ color: tierCol, borderColor: `color-mix(in srgb, ${tierCol} 40%, transparent)` }}>{raw.tier}</span>
+                          {raw.contract_type === "faccao" && (
+                            <span style={{ fontSize: 9, fontWeight: 950, color: "#b477ff", textTransform: "uppercase" }}>Facção</span>
+                          )}
+                        </div>
+                        <div className="cv-card-body">
+                          <strong className="cv-card-name">{raw.title}</strong>
+                          <p className="cv-card-desc">{raw.description}</p>
+                          <div className="cv-card-section-label">Recompensas</div>
+                          <RewardBadge sucatas={raw.sucatas} xp={raw.xp} rep={raw.rep} />
+                          <div className="cv-card-section-label">Progresso</div>
+                          <div className="ca-progress-wrap">
+                            <div className="ca-progress-bar"><span style={{ width: `${pct}%`, background: mColor }} /></div>
+                            <span className="ca-progress-label">{doneCnt}/{total}</span>
+                          </div>
+                          <div className="cv-card-footer-meta">
+                            <span className="cv-card-players"><Clock size={11} />{expiresInStr(raw.expires_at)}</span>
+                          </div>
+                          <div className="cv-card-actions">
+                            <button type="button" className="btn-aceitar" onClick={() => setDetailModal(raw)}>
+                              <Zap size={14} fill="currentColor" /> Acompanhar Contrato
+                            </button>
+                          </div>
+                        </div>
+                        {raw.variant && (
+                          <div className="cv-card-variant-footer">
+                            ‹ {raw.variant === "dourada" ? "Versão Dourada" : raw.variant === "holografica" ? "Versão Holográfica" : "Versão Corrompida"} ›
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {/* ── Aba: Histórico ── */}
@@ -916,6 +968,20 @@ export default function ContratosPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de detalhe do contrato ativo ── */}
+      {detailModal && (
+        <div className="cdm-overlay" onClick={() => setDetailModal(null)}
+          style={{ zIndex: 200, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(7,9,15,0.75)", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 920, maxHeight: "90vh", overflowY: "auto", borderRadius: 14, position: "relative" }}>
+            <button type="button" onClick={() => setDetailModal(null)}
+              style={{ position: "sticky", top: 0, float: "right", zIndex: 10, margin: "0 0 -36px auto", display: "flex", width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.15)", background: "rgba(12,16,24,0.9)", color: "var(--paper-dim)", cursor: "pointer", fontSize: 15, alignItems: "center", justifyContent: "center", font: "inherit" }}>
+              ✕
+            </button>
+            <ActiveContractCard raw={detailModal} onAgendar={(id, idx, title, obj) => { setDetailModal(null); openScheduleModal(id, idx, title, obj) }} />
           </div>
         </div>
       )}
