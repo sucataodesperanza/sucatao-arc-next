@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
   const start    = settings?.operating_hours_start ?? "09:00"
   const end      = settings?.operating_hours_end   ?? "00:00"
-  const duration = settings?.slot_duration_minutes ?? 5
+  const duration = 5 // slots de 5 em 5 minutos (fixo para contratos)
 
   let startMin = timeToMinutes(start)
   let endMin   = timeToMinutes(end)
