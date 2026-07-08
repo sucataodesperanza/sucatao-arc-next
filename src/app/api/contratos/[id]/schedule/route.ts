@@ -57,7 +57,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .from("contract_schedules")
       .select("id")
       .eq("scheduled_at", scheduled_at)
-      .neq("status", "cancelled")
+      .eq("status", "scheduled")
       .maybeSingle()
 
     // Também verifica na tabela antiga
@@ -65,8 +65,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       .from("contract_mission_schedules")
       .select("id")
       .eq("scheduled_at", scheduled_at)
-      .neq("status", "cancelled")
-      .neq("status", "expired")
+      .eq("status", "scheduled")
       .maybeSingle()
 
     if (conflict || oldConflict) {
