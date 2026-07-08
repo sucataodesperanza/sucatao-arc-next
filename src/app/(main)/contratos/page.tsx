@@ -2,8 +2,8 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import {
-  BarChart2, CalendarCheck, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair,
-  HelpCircle, Package, ScrollText, Shield, Star, Target, Trophy, Users, Wallet, XCircle, Zap,
+  BarChart2, Check, ChevronLeft, ChevronRight, Clock, Coins, Crosshair,
+  HelpCircle, ScrollText, Shield, Star, Target, Trophy, Users, Wallet, XCircle, Zap,
 } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
@@ -45,14 +45,323 @@ function RewardBadge({ sucatas, xp, rep }: { sucatas: number; xp: number; rep: n
   )
 }
 
-const PANEL_KEY = "contratos-panel-open"
+const PANEL_KEY  = "contratos-panel-open"
+const OBJ_PAGE_SIZE = 3
+
+type ObjType = { text?: string; desc?: string; total: number; item_icon?: string; item_name?: string }
+type EnemyType = { name: string; type: string; dots: number; color: string; image: string }
+
+function ActiveContractCard({ raw, onAgendar }: {
+  raw: ApiContract
+  onAgendar: (id: string, idx: number, title: string, obj: string) => void
+}) {
+  const mColor     = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
+  const tierCol    = TIER_COLORS[raw.tier]              ?? "var(--gray-500)"
+  const riskCol    = RISK_COLORS[raw.environmental_risk] ?? "var(--gray-500)"
+  const objectives = (raw.objectives ?? []) as ObjType[]
+  const enemies    = (raw.enemies    ?? []) as EnemyType[]
+  const objProg    = raw.objectives_progress ?? {}
+  const sched      = raw.active_schedule
+  const expiresIn  = expiresInStr(raw.expires_at)
+
+  const doneCnt   = objectives.filter((o, i) => (objProg[String(i)] ?? 0) >= o.total).length
+  const activeIdx = objectives.findIndex((o, i) => (objProg[String(i)] ?? 0) < o.total)
+  const bonusCondition = (raw as any).bonus_condition as string | undefined
+  const bonusReward    = (raw as any).bonus_reward    as string | undefined
+
+  let badgeLabel = "MISSÃO",  badgeColor = "#8b99aa"
+  if (raw.contract_type === "faccao")  { badgeLabel = "FACÇÃO";   badgeColor = "#b477ff" }
+  else if (raw.tier === "Épico")       { badgeLabel = "ESPECIAL"; badgeColor = "#ff8c42" }
+  else if (raw.tier === "Lendário")    { badgeLabel = "ESPECIAL"; badgeColor = "#F5090D" }
+
+  const metaItems = [
+    { label: "DIFICULDADE", value: raw.environmental_risk || "—", color: riskCol },
+    { label: "TIER",        value: raw.tier || "—",               color: tierCol },
+    { label: "JOGADORES",   value: raw.players_completed.toLocaleString("pt-BR") },
+    { label: "EXPIRA EM",   value: expiresIn },
+  ]
+  const opDetails = [
+    raw.estimated_time   && { icon: "⏱",  label: "Tempo Estimado",  value: raw.estimated_time },
+    raw.best_time_of_day && { icon: "🌤", label: "Melhor Horário",  value: raw.best_time_of_day },
+    raw.climate          && { icon: "🌥", label: "Clima",           value: raw.climate },
+    raw.environmental_risk && { icon: "⚠️", label: "Risco Ambiental", value: raw.environmental_risk, color: riskCol },
+  ].filter(Boolean) as { icon: string; label: string; value: string; color?: string }[]
+
+  /* ── Carrossel de objetivos ── */
+  const useCarousel = objectives.length > OBJ_PAGE_SIZE
+  const totalPages  = useCarousel ? Math.ceil(objectives.length / OBJ_PAGE_SIZE) : 1
+  const [objPage, setObjPage] = useState(() =>
+    useCarousel && activeIdx >= 0 ? Math.floor(activeIdx / OBJ_PAGE_SIZE) : 0
+  )
+  const dragStartX = useRef<number | null>(null)
+  const wheelRef   = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const el = wheelRef.current
+    if (!el || !useCarousel) return
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault()
+      if (e.deltaY > 0) setObjPage(p => Math.min(p + 1, totalPages - 1))
+      else              setObjPage(p => Math.max(p - 1, 0))
+    }
+    el.addEventListener("wheel", handleWheel, { passive: false })
+    return () => el.removeEventListener("wheel", handleWheel)
+  }, [useCarousel, totalPages])
+
+  function onDragStart(x: number) { dragStartX.current = x }
+  function onDragEnd(x: number) {
+    if (dragStartX.current === null) return
+    const delta = x - dragStartX.current
+    if (delta < -40 && objPage < totalPages - 1) setObjPage(p => p + 1)
+    if (delta >  40 && objPage > 0)              setObjPage(p => p - 1)
+    dragStartX.current = null
+  }
+
+  function ObjRow({ obj, i }: { obj: ObjType; i: number }) {
+    const prog     = objProg[String(i)] ?? 0
+    const done     = prog >= obj.total
+    const isActive = i === activeIdx
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", border: `1px solid ${done ? "rgba(61,242,139,0.25)" : isActive ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.05)"}`, borderRadius: 8, background: done ? "rgba(61,242,139,0.05)" : isActive ? "rgba(255,255,255,0.03)" : "transparent" }}>
+        <div style={{ width: 22, height: 22, borderRadius: "50%", border: `2px solid ${done ? "var(--green)" : isActive ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.12)"}`, background: done ? "rgba(61,242,139,0.15)" : "transparent", display: "grid", placeItems: "center", flexShrink: 0 }}>
+          {done ? <Check size={12} style={{ color: "var(--green)" }} /> : <span style={{ fontSize: 10, fontWeight: 950, color: isActive ? "var(--paper)" : "rgba(255,255,255,0.25)" }}>{i + 1}</span>}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 950, color: done ? "var(--green)" : isActive ? "var(--paper)" : "rgba(255,255,255,0.3)" }}>{obj.text || `Objetivo ${i + 1}`}</p>
+          {obj.desc && <p style={{ margin: "1px 0 0", fontSize: 10, color: "rgba(255,255,255,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{obj.desc}</p>}
+        </div>
+        {!done && obj.total > 1 && (
+          <span style={{ fontSize: 11, fontWeight: 950, color: isActive ? mColor : "rgba(255,255,255,0.25)", flexShrink: 0 }}>{prog} / {obj.total}</span>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "minmax(280px,320px) 1fr", borderRadius: 14, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "#0c1018" }}>
+
+      {/* ── PAINEL ESQUERDO ── */}
+      <div style={{ display: "flex", flexDirection: "column", borderRight: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ position: "relative", height: 210, flexShrink: 0, overflow: "hidden" }}>
+          {raw.image_url
+            ? <img src={raw.image_url} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+            : <div style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.03)" }} />}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(12,16,24,0.2) 0%, rgba(12,16,24,0.9) 100%)" }} />
+          <div style={{ position: "absolute", bottom: 14, left: 16, right: 16 }}>
+            <span style={{ display: "inline-block", fontSize: 9, fontWeight: 950, letterSpacing: "0.1em", padding: "2px 8px", borderRadius: 3, background: `${badgeColor}22`, color: badgeColor, border: `1px solid ${badgeColor}55`, marginBottom: 6, textTransform: "uppercase" as const }}>{badgeLabel}</span>
+            <h3 style={{ margin: 0, fontSize: 17, fontWeight: 950, color: "var(--paper)", lineHeight: 1.1, textTransform: "uppercase" as const }}>{raw.title}</h3>
+            {raw.location && <p style={{ margin: "5px 0 0", fontSize: 11, color: "rgba(255,255,255,0.45)" }}>📍 {raw.location}</p>}
+          </div>
+        </div>
+
+        <div style={{ padding: 16, flex: 1, display: "flex", flexDirection: "column", gap: 14, overflowY: "auto" }}>
+          {raw.description && <p style={{ margin: 0, fontSize: 12, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>{raw.description}</p>}
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            {metaItems.map(item => (
+              <div key={item.label} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 7, padding: "8px 10px" }}>
+                <p style={{ margin: 0, fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(255,255,255,0.3)" }}>{item.label}</p>
+                <p style={{ margin: "3px 0 0", fontSize: 12, fontWeight: 950, color: item.color ?? "var(--paper)" }}>{item.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {raw.story && (
+            <div>
+              <p style={{ margin: "0 0 5px", fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(255,255,255,0.3)" }}>Sobre a Operação</p>
+              <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>{raw.story}</p>
+            </div>
+          )}
+
+          {opDetails.length > 0 && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 5 }}>
+              {opDetails.map(d => (
+                <div key={d.label} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 6, padding: "6px 8px", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 13, flexShrink: 0 }}>{d.icon}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 8, color: "rgba(255,255,255,0.28)", fontWeight: 950, textTransform: "uppercase" as const }}>{d.label}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: d.color ?? "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const }}>{d.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {raw.location && (
+            <div>
+              <p style={{ margin: "0 0 5px", fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, letterSpacing: "0.06em", color: "rgba(255,255,255,0.3)" }}>Local da Operação</p>
+              <div style={{ border: "1px solid rgba(255,255,255,0.07)", borderRadius: 8, overflow: "hidden" }}>
+                {raw.image_url && <div style={{ height: 52, backgroundImage: `url(${raw.image_url})`, backgroundSize: "cover", backgroundPosition: "center", filter: "brightness(0.35) saturate(0.4)" }} />}
+                <div style={{ padding: "8px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <p style={{ margin: 0, fontSize: 11, fontWeight: 950, color: "var(--paper)" }}>{raw.location}</p>
+                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Setor Leste</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── PAINEL DIREITO ── */}
+      <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16, overflowY: "auto", maxHeight: 680 }}>
+
+        {/* Objetivos */}
+        <div>
+          <p style={{ margin: "0 0 8px", fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)" }}>Objetivos</p>
+          {objectives.length === 0 ? (
+            <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo cadastrado.</p>
+          ) : useCarousel ? (
+            /* Carrossel horizontal — semanal e mensal */
+            <div>
+              <div ref={wheelRef} style={{ overflow: "hidden", userSelect: "none", cursor: "grab" }}
+                onMouseDown={e => onDragStart(e.clientX)}
+                onMouseUp={e => onDragEnd(e.clientX)}
+                onMouseLeave={() => { dragStartX.current = null }}
+                onTouchStart={e => onDragStart(e.touches[0].clientX)}
+                onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}>
+                <div style={{ display: "flex", transition: "transform 0.3s ease", transform: `translateX(-${objPage * 100}%)` }}>
+                  {Array.from({ length: totalPages }).map((_, pi) => (
+                    <div key={pi} style={{ minWidth: "100%", display: "grid", gap: 5 }}>
+                      {objectives.slice(pi * OBJ_PAGE_SIZE, (pi + 1) * OBJ_PAGE_SIZE).map((obj, _i) => (
+                        <ObjRow key={pi * OBJ_PAGE_SIZE + _i} obj={obj} i={pi * OBJ_PAGE_SIZE + _i} />
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Dots de navegação */}
+              <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 10 }}>
+                {Array.from({ length: totalPages }).map((_, pi) => (
+                  <button key={pi} type="button" onClick={() => setObjPage(pi)}
+                    style={{ width: pi === objPage ? 16 : 6, height: 6, borderRadius: 3, background: pi === objPage ? mColor : "rgba(255,255,255,0.18)", border: "none", cursor: "pointer", padding: 0, transition: "all 0.2s ease", flexShrink: 0 }} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            /* Lista simples — diário */
+            <div style={{ display: "grid", gap: 5 }}>
+              {objectives.map((obj, i) => <ObjRow key={i} obj={obj} i={i} />)}
+            </div>
+          )}
+        </div>
+
+        {/* Recompensas */}
+        <div>
+          <p style={{ margin: "0 0 8px", fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)" }}>Recompensas Estimadas</p>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+            {raw.sucatas > 0 && (
+              <div style={{ flex: 1, minWidth: 70, background: "rgba(255,212,0,0.07)", border: "1px solid rgba(255,212,0,0.18)", borderRadius: 8, padding: "10px 12px", textAlign: "center" as const }}>
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 950, color: "#ffd400" }}>{raw.sucatas.toLocaleString("pt-BR")}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(255,212,0,0.55)", textTransform: "uppercase" as const, fontWeight: 950 }}>Sucatas</p>
+              </div>
+            )}
+            {raw.xp > 0 && (
+              <div style={{ flex: 1, minWidth: 70, background: "rgba(95,168,255,0.07)", border: "1px solid rgba(95,168,255,0.18)", borderRadius: 8, padding: "10px 12px", textAlign: "center" as const }}>
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 950, color: "#5fa8ff" }}>{raw.xp.toLocaleString("pt-BR")}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(95,168,255,0.55)", textTransform: "uppercase" as const, fontWeight: 950 }}>XP</p>
+              </div>
+            )}
+            {(raw.rep ?? 0) > 0 && (
+              <div style={{ flex: 1, minWidth: 70, background: "rgba(180,119,255,0.07)", border: "1px solid rgba(180,119,255,0.18)", borderRadius: 8, padding: "10px 12px", textAlign: "center" as const }}>
+                <p style={{ margin: 0, fontSize: 20, fontWeight: 950, color: "#b477ff" }}>{raw.rep}</p>
+                <p style={{ margin: "2px 0 0", fontSize: 9, color: "rgba(180,119,255,0.55)", textTransform: "uppercase" as const, fontWeight: 950 }}>REP</p>
+              </div>
+            )}
+            {bonusCondition && (
+              <div style={{ flex: 2, minWidth: 140, background: "rgba(61,242,139,0.05)", border: "1px solid rgba(61,242,139,0.18)", borderRadius: 8, padding: "10px 12px" }}>
+                <p style={{ margin: "0 0 2px", fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, color: "rgba(61,242,139,0.55)" }}>Bônus de Sucesso</p>
+                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.45)" }}>{bonusCondition}</p>
+                {bonusReward && <p style={{ margin: "3px 0 0", fontSize: 12, fontWeight: 950, color: "var(--green)" }}>+{bonusReward}</p>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Inimigos */}
+        {enemies.length > 0 && (
+          <div>
+            <p style={{ margin: "0 0 8px", fontSize: 9, fontWeight: 950, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: "rgba(255,255,255,0.3)" }}>Inimigos Principais</p>
+            <div style={{ display: "flex", gap: 8, overflowX: "auto" as const, paddingBottom: 4 }}>
+              {enemies.map((enemy, i) => (
+                <div key={i} style={{ flexShrink: 0, width: 82, border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, overflow: "hidden", background: "rgba(255,255,255,0.02)" }}>
+                  {enemy.image
+                    ? <img src={enemy.image} alt={enemy.name} style={{ width: "100%", height: 60, objectFit: "cover" }} />
+                    : <div style={{ height: 60, background: "rgba(255,255,255,0.04)", display: "grid", placeItems: "center" }}><Crosshair size={18} style={{ color: "rgba(255,255,255,0.15)" }} /></div>}
+                  <div style={{ padding: "6px 8px" }}>
+                    <p style={{ margin: 0, fontSize: 10, fontWeight: 950, color: "var(--paper)", lineHeight: 1.2 }}>{enemy.name}</p>
+                    <p style={{ margin: "1px 0 4px", fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const }}>{enemy.type}</p>
+                    <div style={{ display: "flex", gap: 2 }}>
+                      {Array.from({ length: 5 }).map((_, di) => (
+                        <div key={di} style={{ width: 6, height: 6, borderRadius: "50%", background: di < (enemy.dots ?? 0) ? (enemy.color || "#3df28b") : "rgba(255,255,255,0.08)" }} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Stats globais */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 950, color: "var(--paper)" }}>{raw.players_completed.toLocaleString("pt-BR")}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 8, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, fontWeight: 950, lineHeight: 1.3 }}>Jogadores que completaram</p>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 950, color: raw.success_rate < 50 ? "var(--red)" : raw.success_rate < 75 ? "#ffd400" : "var(--green)" }}>{raw.success_rate}%</p>
+            <p style={{ margin: "2px 0 0", fontSize: 8, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, fontWeight: 950 }}>Taxa de Sucesso</p>
+          </div>
+          <div>
+            <p style={{ margin: 0, fontSize: 18, fontWeight: 950, color: "var(--paper)" }}>{raw.best_record_time || "—"}</p>
+            <p style={{ margin: "2px 0 0", fontSize: 8, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, fontWeight: 950 }}>Melhor Tempo</p>
+            {raw.best_record_player && <p style={{ margin: "1px 0 0", fontSize: 8, color: "rgba(255,255,255,0.25)" }}>POR {raw.best_record_player.toUpperCase()}</p>}
+          </div>
+        </div>
+
+        {/* Progresso + Ação */}
+        <div style={{ marginTop: "auto", paddingTop: 14, borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 9, color: "rgba(255,255,255,0.35)", textTransform: "uppercase" as const, fontWeight: 950 }}>Progresso Atual</p>
+              <p style={{ margin: "2px 0 0", fontSize: 20, fontWeight: 950, color: mColor }}>{doneCnt} / {objectives.length}</p>
+            </div>
+            {activeIdx >= 0 && (
+              sched?.status === "scheduled" ? (
+                <div style={{ flex: 1, background: "rgba(61,242,139,0.05)", border: "1px solid rgba(61,242,139,0.2)", borderRadius: 8, padding: "8px 12px" }}>
+                  <p style={{ margin: 0, fontSize: 11, fontWeight: 950, color: "var(--green)" }}>✓ Entrega agendada</p>
+                  {sched.scheduled_at && <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.4)" }}>{new Date(sched.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>}
+                  {sched.game_id && <p style={{ margin: "2px 0 0", fontSize: 10, color: "var(--cyan)", fontFamily: "monospace" }}>{sched.game_id}</p>}
+                </div>
+              ) : (
+                <button type="button" className="btn-aceitar"
+                  onClick={() => {
+                    const obj   = objectives[activeIdx]
+                    const label = obj?.text ?? `Objetivo ${activeIdx + 1}`
+                    onAgendar(raw.id, activeIdx, raw.title, label)
+                  }}>
+                  <Zap size={14} fill="currentColor" /> Agendar Entrega
+                </button>
+              )
+            )}
+            {activeIdx === -1 && objectives.length > 0 && (
+              <span style={{ fontSize: 13, fontWeight: 950, color: "var(--green)" }}>🏆 Todos os objetivos concluídos!</span>
+            )}
+          </div>
+          <p style={{ margin: "8px 0 0", fontSize: 11, color: "rgba(255,255,255,0.25)", fontStyle: "italic" as const }}>
+            Contrato ativo — progresso salvo automaticamente.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ContratosPage() {
   const [panelOpen, setPanelOpen]     = useState(true)
   const [activeTab, setActiveTab]     = useState<Tab>("Contratos à Venda")
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
-  const trackRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Contratos
   const [apiContracts, setApiContracts]       = useState<ApiContract[]>([])
@@ -61,6 +370,7 @@ export default function ContratosPage() {
   const [buyModal, setBuyModal]               = useState<BuyModal | null>(null)
   const [userPoints, setUserPoints]           = useState<number | null>(null)
   const [buyingId, setBuyingId]               = useState<string | null>(null)
+  const [detailModal, setDetailModal]         = useState<ApiContract | null>(null)
 
   // Histórico
   const [history, setHistory]                 = useState<HistoryItem[]>([])
@@ -183,273 +493,6 @@ export default function ContratosPage() {
       const b = await res.json().catch(() => ({}))
       setSchedMsg(b.error ?? "Erro ao agendar.")
     }
-  }
-
-  /* ── Contratos Ativos: trilha visual ── */
-  function TrackView({ raw }: { raw: ApiContract }) {
-    const passColor    = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
-    const objectives   = (raw.objectives ?? []) as Array<{ text?: string; desc?: string; total: number; item_icon?: string }>
-    const objProg      = raw.objectives_progress ?? {}
-    const pct          = objectives.length > 0
-      ? Math.round((objectives.filter((o, i) => (objProg[String(i)] ?? 0) >= o.total).length / objectives.length) * 100)
-      : 0
-    const activeIdx    = objectives.findIndex((o, i) => (objProg[String(i)] ?? 0) < o.total)
-    const expiresIn    = expiresInStr(raw.expires_at)
-    const TYPE_LABEL   = MISSION_LABELS[raw.mission_type] ?? raw.mission_type
-
-    return (
-      <div className="ca-pass-wrap">
-        {/* Header */}
-        <div className="ca-pass-header">
-          {raw.image_url && <div className="ca-pass-header-bg" style={{ backgroundImage: `url(${raw.image_url})` }} />}
-          <div className="ca-pass-header-overlay" />
-          <div className="ca-pass-header-content">
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, alignSelf: "flex-start" }}>
-                {TYPE_LABEL}
-                {raw.contract_type === "faccao" && " · Facção"}
-              </span>
-              <h2 className="ca-pass-title">{raw.title}</h2>
-            </div>
-            <div className="ca-pass-meta">
-              <div style={{ textAlign: "right" }}>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Progresso</p>
-                <p style={{ margin: "2px 0 0", fontSize: 18, fontWeight: 950, color: passColor }}>
-                  {objectives.filter((o, i) => (objProg[String(i)] ?? 0) >= o.total).length}
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>/{objectives.length}</span>
-                </p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Expira em</p>
-                <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 950, color: "var(--paper)" }}>{expiresIn}</p>
-              </div>
-            </div>
-          </div>
-          <div style={{ position: "relative", zIndex: 1, marginTop: 12, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: passColor, borderRadius: 2, transition: "width 0.5s ease" }} />
-          </div>
-        </div>
-
-        {/* Trilha de objetivos */}
-        <div
-          ref={el => { trackRefs.current[raw.id] = el }}
-          className="ca-track-wrap"
-          style={raw.mission_type === "mensal" ? { overflowX: "auto", cursor: "grab", userSelect: "none" } : {}}
-          onMouseDown={raw.mission_type === "mensal" ? e => {
-            const el = trackRefs.current[raw.id]
-            if (!el) return
-            el.style.cursor = "grabbing"
-            const startX = e.pageX - el.offsetLeft
-            const startScroll = el.scrollLeft
-            const onMove = (ev: MouseEvent) => { el.scrollLeft = startScroll - (ev.pageX - el.offsetLeft - startX) }
-            const onUp = () => { el.style.cursor = "grab"; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
-            window.addEventListener("mousemove", onMove)
-            window.addEventListener("mouseup", onUp)
-          } : undefined}
-        >
-          <div className="ca-track" style={raw.mission_type === "mensal" ? { minWidth: "max-content", width: "auto" } : { width: "100%", alignItems: "flex-start" }}>
-            {objectives.map((obj, i) => {
-              const done       = (objProg[String(i)] ?? 0) >= obj.total
-              const isActive   = i === activeIdx
-              const isLocked   = !done && !isActive
-              const nodeColor  = isLocked ? "rgba(255,255,255,0.12)" : passColor
-              const nodeBg     = done    ? `color-mix(in srgb, ${passColor} 30%, transparent)`
-                               : isActive ? `color-mix(in srgb, ${passColor} 12%, #0a0e16)`
-                               : "rgba(255,255,255,0.03)"
-              const isNext     = i < objectives.length - 1
-              const nextActive = isNext && (!(objectives[i+1] && (objProg[String(i+1)] ?? 0) < objectives[i+1].total) || i+1 === activeIdx)
-              const nodeSize   = 76
-
-              return (
-                <React.Fragment key={i}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0, width: raw.mission_type === "mensal" ? 64 : undefined }}>
-                    <div
-                      className={`ca-track-node${isActive ? " active" : ""}`}
-                      style={{
-                        width: nodeSize, height: nodeSize,
-                        background: nodeBg,
-                        borderColor: nodeColor,
-                        borderWidth: isActive ? 3 : 2,
-                        boxShadow: isActive ? `0 0 20px color-mix(in srgb, ${passColor} 50%, transparent)` : "none",
-                        ["--node-color-alpha" as string]: `color-mix(in srgb, ${passColor} 25%, transparent)`,
-                        ["--node-color-mid" as string]:   `color-mix(in srgb, ${passColor} 45%, transparent)`,
-                        flexDirection: "column" as const, gap: 1,
-                      }}>
-                      {done ? (
-                        <span style={{ fontSize: 28, color: nodeColor, fontWeight: 950 }}>✓</span>
-                      ) : obj.item_icon ? (
-                        <img src={obj.item_icon} alt="" style={{ width: 54, height: 54, objectFit: "contain", opacity: isLocked ? 0.25 : 1, filter: isLocked ? "grayscale(1)" : `drop-shadow(0 0 6px ${nodeColor})` }} />
-                      ) : (
-                        <span style={{ fontSize: 13, fontWeight: 950, color: isLocked ? "rgba(255,255,255,0.2)" : passColor, textAlign: "center" as const, padding: "0 4px" }}>
-                          {obj.text ? obj.text.slice(0, 20) : `Obj ${i + 1}`}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 9, color: isLocked ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", textAlign: "center" as const }}>
-                      Dia {i + 1}
-                    </span>
-                  </div>
-                  {isNext && (
-                    <div style={{
-                      ...(raw.mission_type === "mensal" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
-                      height: 6, borderRadius: 3, marginTop: 36, marginLeft: 24, marginRight: 24,
-                      background: (done || isActive) && nextActive ? `color-mix(in srgb, ${passColor} 55%, transparent)` : "rgba(255,255,255,0.07)",
-                      transition: "background 0.3s",
-                    }} />
-                  )}
-                </React.Fragment>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Card da missão ativa */}
-        {objectives.length === 0 ? (
-          <div style={{ padding: "12px 24px 20px", fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo cadastrado.</div>
-        ) : activeIdx === -1 ? (
-          <div style={{ padding: "16px 24px 20px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 22 }}>🏆</span>
-            <span style={{ fontSize: 14, fontWeight: 950, color: "#3df28b" }}>Todos os objetivos concluídos!</span>
-          </div>
-        ) : (() => {
-          const obj     = objectives[activeIdx]
-          const prog    = objProg[String(activeIdx)] ?? 0
-          const objPct  = obj.total > 0 ? Math.min(100, Math.round((prog / obj.total) * 100)) : 0
-          const sched   = raw.active_schedule
-
-          return (
-            <div className="ca-mission-card" style={{ margin: "0 20px 20px" }}>
-              <div className="ca-mission-card-inner" style={{ background: `color-mix(in srgb, ${passColor} 7%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${passColor} 22%, transparent)` }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, letterSpacing: "0.07em" }}>
-                    {TYPE_LABEL} · Objetivo {activeIdx + 1}/{objectives.length}
-                  </span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginLeft: "auto" }}>Expira em {expiresIn}</span>
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: 9, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}>Objetivo Atual</p>
-                  <p style={{ margin: "4px 0 0", fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{obj.text || `Objetivo ${activeIdx + 1}`}</p>
-                  {obj.desc && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{obj.desc}</p>}
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 11 }}>
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Progresso</span>
-                    <span style={{ color: passColor, fontWeight: 950 }}>{prog} / {obj.total}</span>
-                  </div>
-                  <div className="ca-mission-progress-bar">
-                    <div className="ca-mission-progress-fill" style={{ width: `${objPct}%`, background: passColor }} />
-                  </div>
-                </div>
-                {/* Recompensa final */}
-                {raw.sucatas > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                    <Coins size={13} style={{ color: "#ffd400" }} />
-                    <span style={{ color: "#ffd400", fontWeight: 950 }}>+{raw.sucatas.toLocaleString("pt-BR")} pts</span>
-                    <span style={{ color: "rgba(255,255,255,0.3)" }}>ao completar tudo</span>
-                  </div>
-                )}
-                {/* Status do agendamento */}
-                {sched?.status === "scheduled" ? (
-                  <div style={{ background: `color-mix(in srgb, ${passColor} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${passColor} 25%, transparent)`, borderRadius: 8, padding: "10px 12px", fontSize: 12 }}>
-                    <p style={{ margin: 0, fontWeight: 950, color: passColor }}>✓ Entrega agendada</p>
-                    {sched.scheduled_at && (
-                      <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.5)" }}>
-                        {new Date(sched.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    )}
-                    {sched.game_id && <p style={{ margin: "3px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{sched.game_id}</strong></p>}
-                  </div>
-                ) : (
-                  <button type="button" className="btn-agendar"
-                    style={{ "--btn-color": passColor, "--btn-bg": `color-mix(in srgb, ${passColor} 9%, #07090f)`, "--btn-border": `color-mix(in srgb, ${passColor} 38%, transparent)`, "--btn-glow": `color-mix(in srgb, ${passColor} 38%, transparent)`, "--btn-icon-bg": `color-mix(in srgb, ${passColor} 15%, transparent)` } as React.CSSProperties}
-                    onClick={() => openScheduleModal(raw.id, activeIdx, raw.title, obj.text ?? `Objetivo ${activeIdx + 1}`)}>
-                    <div className="btn-agendar-icon"><CalendarCheck size={22} /></div>
-                    <div className="btn-agendar-body">
-                      <p className="btn-agendar-title">Agendar Entrega</p>
-                      <p className="btn-agendar-sub">Confirme sua sessão com um administrador</p>
-                    </div>
-                    <ChevronRight className="btn-agendar-arrow" size={18} />
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })()}
-      </div>
-    )
-  }
-
-  /* ── Contrato simples (diário) ativo ── */
-  function SimpleActiveView({ raw }: { raw: ApiContract }) {
-    const objectives = (raw.objectives ?? []) as Array<{ text?: string; desc?: string; total: number; item_id?: string; item_name?: string; item_icon?: string }>
-    const objProg    = raw.objectives_progress ?? {}
-    const mColor     = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
-    const sched      = raw.active_schedule
-
-    return (
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12 }}>
-          {raw.image_url && <img src={raw.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 950, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{raw.title}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>
-              <span style={{ color: mColor }}>{MISSION_LABELS[raw.mission_type]}</span>
-              {raw.tier && ` · ${raw.tier}`}
-            </p>
-          </div>
-          <RewardBadge sucatas={raw.sucatas} xp={raw.xp} rep={raw.rep} />
-        </div>
-        <div style={{ padding: "12px 18px", display: "grid", gap: 10 }}>
-          {objectives.length === 0 && (
-            <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo cadastrado neste contrato.</p>
-          )}
-          {objectives.map((obj, i) => {
-            const delivered = objProg[String(i)] ?? 0
-            const done      = delivered >= obj.total
-            const pct       = obj.total > 0 ? Math.min(100, Math.round((delivered / obj.total) * 100)) : 0
-            return (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "center", padding: "10px 14px", background: done ? "rgba(61,242,139,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${done ? "rgba(61,242,139,0.2)" : "rgba(255,255,255,0.06)"}`, borderRadius: 8 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.05)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                  {obj.item_icon
-                    ? <img src={obj.item_icon} alt={obj.item_name} style={{ width: 36, height: 36, objectFit: "contain" }} />
-                    : <Package size={18} style={{ color: "var(--gray-500)" }} />}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 950, color: done ? "var(--green)" : "var(--paper)" }}>{obj.text || obj.item_name || "Objetivo"}</p>
-                  {obj.desc && <p style={{ margin: "1px 0 4px", fontSize: 11, color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{obj.desc}</p>}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: done ? "var(--green)" : "var(--cyan)", borderRadius: 2, transition: "width 0.4s" }} />
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 950, color: done ? "var(--green)" : "var(--paper-dim)", whiteSpace: "nowrap" }}>{delivered}/{obj.total}</span>
-                  </div>
-                </div>
-                {done ? (
-                  <span style={{ fontSize: 20 }}>✓</span>
-                ) : null}
-              </div>
-            )
-          })}
-          {/* Agendamento */}
-          {sched?.status === "scheduled" ? (
-            <div style={{ padding: "10px 14px", background: "rgba(61,242,139,0.04)", border: "1px solid rgba(61,242,139,0.2)", borderRadius: 8, fontSize: 12 }}>
-              <p style={{ margin: 0, fontWeight: 950, color: "var(--green)" }}>✓ Entrega agendada</p>
-              {sched.scheduled_at && <p style={{ margin: "3px 0 0", color: "var(--gray-500)" }}>{new Date(sched.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>}
-            </div>
-          ) : (
-            <button type="button" className="carrinho-checkout-btn" style={{ marginTop: 4 }}
-              onClick={() => {
-                const firstIncomplete = objectives.findIndex((o, i) => (objProg[String(i)] ?? 0) < o.total)
-                const idx = firstIncomplete >= 0 ? firstIncomplete : 0
-                const obj = objectives[idx]
-                openScheduleModal(raw.id, idx, raw.title, obj?.text ?? `Objetivo ${idx + 1}`)
-              }}>
-              <Zap size={14} fill="currentColor" /> Agendar Entrega
-            </button>
-          )}
-        </div>
-      </div>
-    )
   }
 
   /* ── Dados computados ── */
@@ -596,7 +639,7 @@ export default function ContratosPage() {
 
           {/* ── Aba: Contratos Ativos ── */}
           {activeTab === "Contratos Ativos" && (
-            <div style={{ display: "grid", gap: 24 }}>
+            <>
               {loadingContracts ? (
                 <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Carregando...</p>
               ) : activeContracts.length === 0 ? (
@@ -605,9 +648,58 @@ export default function ContratosPage() {
                   <p>Vá para <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para aceitar um contrato.</p>
                 </div>
               ) : (
-                activeContracts.map(raw => <TrackView key={raw.id} raw={raw} />)
+                <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
+                  {activeContracts.map(raw => {
+                    const mColor  = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
+                    const mLabel  = MISSION_LABELS[raw.mission_type] ?? raw.mission_type
+                    const tierCol = TIER_COLORS[raw.tier] ?? "var(--gray-500)"
+                    const doneCnt = ((raw.objectives ?? []) as any[]).filter((_: any, i: number) => (raw.objectives_progress?.[String(i)] ?? 0) >= ((_ as any).total ?? 1)).length
+                    const total   = (raw.objectives ?? []).length || raw.total
+                    const pct     = total > 0 ? Math.round((doneCnt / total) * 100) : 0
+
+                    return (
+                      <div key={raw.id} className={`cv-card${raw.variant ? ` cv-card--${raw.variant}` : ""}`}>
+                        {raw.variant && <div className="cv-card-frame" />}
+                        <div className="cv-card-bg">
+                          <div className="cv-card-bg-img" style={{ backgroundImage: `url(${raw.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
+                        </div>
+                        <div className="cv-card-badges">
+                          <span className="cv-card-type" style={{ color: mColor }}>{mLabel}</span>
+                          <span className="cv-card-tier" style={{ color: tierCol, borderColor: `color-mix(in srgb, ${tierCol} 40%, transparent)` }}>{raw.tier}</span>
+                          {raw.contract_type === "faccao" && (
+                            <span style={{ fontSize: 9, fontWeight: 950, color: "#b477ff", textTransform: "uppercase" }}>Facção</span>
+                          )}
+                        </div>
+                        <div className="cv-card-body">
+                          <strong className="cv-card-name">{raw.title}</strong>
+                          <p className="cv-card-desc">{raw.description}</p>
+                          <div className="cv-card-section-label">Recompensas</div>
+                          <RewardBadge sucatas={raw.sucatas} xp={raw.xp} rep={raw.rep} />
+                          <div className="cv-card-section-label">Progresso</div>
+                          <div className="ca-progress-wrap">
+                            <div className="ca-progress-bar"><span style={{ width: `${pct}%`, background: mColor }} /></div>
+                            <span className="ca-progress-label">{doneCnt}/{total}</span>
+                          </div>
+                          <div className="cv-card-footer-meta">
+                            <span className="cv-card-players"><Clock size={11} />{expiresInStr(raw.expires_at)}</span>
+                          </div>
+                          <div className="cv-card-actions">
+                            <button type="button" className="btn-aceitar" onClick={() => setDetailModal(raw)}>
+                              <Zap size={14} fill="currentColor" /> Acompanhar Contrato
+                            </button>
+                          </div>
+                        </div>
+                        {raw.variant && (
+                          <div className="cv-card-variant-footer">
+                            ‹ {raw.variant === "dourada" ? "Versão Dourada" : raw.variant === "holografica" ? "Versão Holográfica" : "Versão Corrompida"} ›
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {/* ── Aba: Histórico ── */}
@@ -919,6 +1011,20 @@ export default function ContratosPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de detalhe do contrato ativo ── */}
+      {detailModal && (
+        <div className="cdm-overlay" onClick={() => setDetailModal(null)}
+          style={{ zIndex: 200, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(7,9,15,0.75)", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 920, maxHeight: "90vh", overflowY: "auto", borderRadius: 14, position: "relative" }}>
+            <button type="button" onClick={() => setDetailModal(null)}
+              style={{ position: "sticky", top: 0, float: "right", zIndex: 10, margin: "0 0 -36px auto", display: "flex", width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.15)", background: "rgba(12,16,24,0.9)", color: "var(--paper-dim)", cursor: "pointer", fontSize: 15, alignItems: "center", justifyContent: "center", font: "inherit" }}>
+              ✕
+            </button>
+            <ActiveContractCard raw={detailModal} onAgendar={(id, idx, title, obj) => { setDetailModal(null); openScheduleModal(id, idx, title, obj) }} />
           </div>
         </div>
       )}
