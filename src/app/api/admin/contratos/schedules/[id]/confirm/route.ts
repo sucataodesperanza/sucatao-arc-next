@@ -25,7 +25,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     // Busca contrato e progresso do usuário
     const [contractRes, ucRes, profileRes] = await Promise.all([
       admin.from("contracts").select("id, sucatas, xp, rep, objectives").eq("id", cs.contract_id).single(),
-      admin.from("user_contracts").select("id, objectives_progress, status").eq("user_id", cs.user_id).eq("contract_id", cs.contract_id).single(),
+      admin.from("user_contracts").select("id, objectives_progress, status, discord_channel_id").eq("user_id", cs.user_id).eq("contract_id", cs.contract_id).single(),
       admin.from("profiles").select("points, username, discord_id").eq("id", cs.user_id).single(),
     ])
 
@@ -113,9 +113,14 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
       }
     }
 
-    // Marca agendamento como confirmado e remove canal Discord
+    // Marca agendamento como confirmado e remove canal de entrega
     await admin.from("contract_schedules").update({ status: "confirmed" }).eq("id", scheduleId)
     deleteDiscordChannel((cs as any).discord_channel_id).catch(() => {})
+
+    // Se contrato concluído: remove canal de aceitação
+    if (allDone) {
+      deleteDiscordChannel((uc as any).discord_channel_id).catch(() => {})
+    }
 
     return NextResponse.json({
       ok: true,

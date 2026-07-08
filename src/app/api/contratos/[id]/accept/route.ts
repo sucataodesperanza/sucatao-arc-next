@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createMercadoPagoPixPayment } from "@/lib/mercadopago"
 import { isValidCpf } from "@/lib/cpf"
+import { createPrivateChannel, embedCanalContratoAceito, dmContratoAceito, sendDiscordDM } from "@/lib/discord-bot"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   // Busca o contrato
   const { data: contract } = await supabase
     .from("contracts")
-    .select("id, title, price_points, price_real, active, expires_at, contract_type, faction_id")
+    .select("id, title, price_points, price_real, active, expires_at, contract_type, faction_id, mission_type, objectives")
     .eq("id", id)
     .eq("active", true)
     .single()
@@ -36,7 +37,40 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ error: "Você já aceitou este contrato.", code: "already_accepted" }, { status: 409 })
   }
 
-  const admin = createAdminClient()
+  const admin  = createAdminClient()
+  const userId  = user.id
+  const contractTitle     = contract.title
+  const contractObjectives = (contract.objectives as unknown[]) ?? []
+  const contractMissionType = contract.mission_type ?? "diario"
+
+  async function openAcceptanceChannel(ucId: string) {
+    try {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("username, discord_id, discord_username")
+        .eq("id", userId)
+        .single()
+      if (!profile?.discord_id) return
+
+      const playerName  = profile.username ?? profile.discord_username ?? "Jogador"
+      const stepsCount  = contractObjectives.length
+
+      const channelId = await createPrivateChannel({
+        name:           `contrato-${id.slice(0, 8)}-${userId.slice(0, 4)}`,
+        topic:          `Contrato: ${contractTitle} | Jogador: ${playerName}`,
+        buyerDiscordId: profile.discord_id,
+        embed: embedCanalContratoAceito({ contractTitle, missionType: contractMissionType, stepsCount, playerName }),
+      })
+
+      if (channelId) {
+        await admin.from("user_contracts").update({ discord_channel_id: channelId }).eq("id", ucId)
+      }
+
+      sendDiscordDM(profile.discord_id, dmContratoAceito(playerName, contractTitle)).catch(() => {})
+    } catch {
+      // best-effort
+    }
+  }
 
   // ── Pagamento com pontos ──
   if (mode === "points") {
@@ -56,15 +90,17 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     await admin.from("profiles").update({ points: currentPoints - contract.price_points }).eq("id", user.id)
 
-    const { error } = await admin
+    const { data: ucData, error } = await admin
       .from("user_contracts")
       .insert({ user_id: user.id, contract_id: id, progress: 0, status: "active" })
+      .select("id").single()
 
     if (error) {
       await admin.from("profiles").update({ points: currentPoints }).eq("id", user.id)
       return NextResponse.json({ error: "Erro ao ativar contrato." }, { status: 500 })
     }
 
+    if (ucData?.id) openAcceptanceChannel(ucData.id).catch(() => {})
     return NextResponse.json({ ok: true, mode: "points" })
   }
 
@@ -132,10 +168,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   // ── Aceite gratuito ──
-  const { error } = await admin
+  const { data: ucFree, error } = await admin
     .from("user_contracts")
     .insert({ user_id: user.id, contract_id: id, progress: 0, status: "active" })
+    .select("id").single()
 
   if (error) return NextResponse.json({ error: "Erro ao aceitar contrato." }, { status: 500 })
+  if (ucFree?.id) openAcceptanceChannel(ucFree.id).catch(() => {})
   return NextResponse.json({ ok: true })
 }
