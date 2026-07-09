@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, Package, ShoppingBag, TrendingUp, Star } from "lucide-react"
+import { Camera, Package, ShoppingBag, TrendingUp, Star, Copy, Check, Users2, Clock, CheckCircle2, Gift } from "lucide-react"
+import type { ReferralSummary } from "@/app/api/referral/my/route"
 import { REPUTATION_LEVELS, getReputationLevel, getNextLevel } from "@/lib/reputation"
 import type { Area } from "react-easy-crop"
 import { createClient } from "@/lib/supabase/client"
@@ -52,6 +53,10 @@ export default function PerfilPage() {
   const [reputation, setReputation]           = useState(0)
   const [repStreak, setRepStreak]             = useState(0)
   const [repHistory, setRepHistory]           = useState<{ id: string; amount: number; reason: string; source: string; created_at: string }[]>([])
+  const [activeTab, setActiveTab]             = useState<"perfil" | "indicacoes">("perfil")
+  const [referral, setReferral]               = useState<ReferralSummary | null>(null)
+  const [referralLoading, setReferralLoading] = useState(false)
+  const [linkCopied, setLinkCopied]           = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -103,6 +108,42 @@ export default function PerfilPage() {
       }).catch(() => {})
     })
   }, [])
+
+  function loadReferral() {
+    if (referralLoading || referral) return
+    setReferralLoading(true)
+    Promise.all([
+      fetch("/api/referral/code").then(r => r.json()),
+      fetch("/api/referral/my").then(r => r.json()),
+    ]).then(([codeData, myData]) => {
+      const code = myData.code ?? codeData.code ?? null
+      setReferral({ ...myData, code })
+    }).catch(() => {}).finally(() => setReferralLoading(false))
+  }
+
+  function copyLink() {
+    if (!referral?.code) return
+    const link = `${window.location.origin}/r/${referral.code}`
+    navigator.clipboard.writeText(link).then(() => {
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 2500)
+    })
+  }
+
+  const STATUS_LABEL: Record<string, string> = {
+    registered:           "Cadastro Realizado",
+    pending_requirements: "Requisitos Pendentes",
+    confirmed:            "Confirmada",
+    reward_delivered:     "Recompensa Entregue",
+    cancelled:            "Cancelada",
+  }
+  const STATUS_COLOR: Record<string, string> = {
+    registered:           "var(--yellow)",
+    pending_requirements: "var(--cyan)",
+    confirmed:            "var(--green)",
+    reward_delivered:     "var(--purple)",
+    cancelled:            "var(--gray-500)",
+  }
 
   function formatCpf(value: string) {
     return value.replace(/\D/g, "").slice(0, 11)
@@ -279,6 +320,94 @@ export default function PerfilPage() {
     <div className="profile-page-bg">
     <div className="profile-page">
       <h1 className="page-title">Perfil</h1>
+
+      {/* Navegação de abas */}
+      <div style={{ display: "flex", gap: 4, borderBottom: "1px solid var(--stroke)", marginBottom: 24 }}>
+        {(["perfil", "indicacoes"] as const).map(tab => (
+          <button key={tab} type="button"
+            onClick={() => { setActiveTab(tab); if (tab === "indicacoes") loadReferral() }}
+            style={{ padding: "8px 18px", background: "none", border: "none", borderBottom: activeTab === tab ? "2px solid var(--yellow)" : "2px solid transparent", color: activeTab === tab ? "var(--paper)" : "var(--gray-500)", fontWeight: 950, fontSize: 12, letterSpacing: "0.05em", textTransform: "uppercase", cursor: "pointer", marginBottom: -1 }}>
+            {tab === "perfil" ? "Meu Perfil" : "Indicações"}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === "indicacoes" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {referralLoading ? (
+            <p style={{ color: "var(--gray-500)", fontSize: 13 }}>Carregando...</p>
+          ) : (
+            <>
+              {/* Link de indicação */}
+              <section aria-label="Seu link de indicação">
+                <p className="home-section-label">Seu Link de Indicação</p>
+                <div className="profile-card" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                  {referral?.code ? (
+                    <>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, background: "var(--surface-3)", borderRadius: 8, padding: "10px 14px", border: "1px solid var(--stroke)" }}>
+                        <span style={{ flex: 1, fontSize: 13, color: "var(--paper)", wordBreak: "break-all" }}>
+                          {typeof window !== "undefined" ? `${window.location.origin}/r/${referral.code}` : `/r/${referral.code}`}
+                        </span>
+                        <button type="button" onClick={copyLink}
+                          style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 6, border: "1px solid var(--stroke)", background: linkCopied ? "var(--green)" : "var(--surface-2)", color: linkCopied ? "#fff" : "var(--paper)", fontSize: 12, fontWeight: 950, cursor: "pointer", flexShrink: 0, transition: "background 0.2s" }}>
+                          {linkCopied ? <><Check size={13} /> Copiado!</> : <><Copy size={13} /> Copiar</>}
+                        </button>
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: "var(--gray-500)" }}>Código: <strong style={{ color: "var(--paper)" }}>{referral.code}</strong></p>
+                    </>
+                  ) : (
+                    <p style={{ fontSize: 13, color: "var(--gray-500)", margin: 0 }}>Nenhum código gerado ainda.</p>
+                  )}
+                </div>
+              </section>
+
+              {/* Estatísticas */}
+              <section aria-label="Estatísticas de indicação">
+                <p className="home-section-label">Resumo</p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 12 }}>
+                  {[
+                    { label: "Total Indicados",  value: referral?.total ?? 0,            icon: Users2,       color: "var(--cyan)"   },
+                    { label: "Pendentes",         value: referral?.pending ?? 0,          icon: Clock,        color: "var(--yellow)" },
+                    { label: "Confirmadas",       value: referral?.confirmed ?? 0,        icon: CheckCircle2, color: "var(--green)"  },
+                    { label: "Recompensas",       value: referral?.reward_delivered ?? 0, icon: Gift,         color: "var(--purple)" },
+                  ].map(s => (
+                    <div key={s.label} className="profile-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "16px 12px", textAlign: "center" }}>
+                      <s.icon size={20} style={{ color: s.color }} />
+                      <strong style={{ fontSize: 22, fontWeight: 950, color: "var(--paper)" }}>{s.value}</strong>
+                      <span style={{ fontSize: 10, color: "var(--gray-500)", textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* Lista de indicações */}
+              <section aria-label="Lista de indicações">
+                <p className="home-section-label">Suas Indicações</p>
+                <div className="profile-card" style={{ padding: 0, overflow: "hidden" }}>
+                  {!referral?.referrals?.length ? (
+                    <p style={{ padding: 20, fontSize: 13, color: "var(--gray-500)", margin: 0 }}>Você ainda não indicou ninguém. Compartilhe seu link!</p>
+                  ) : referral.referrals.map((r, i) => (
+                    <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 16px", borderBottom: i < referral.referrals.length - 1 ? "1px solid var(--stroke)" : "none" }}>
+                      <div style={{ width: 36, height: 36, borderRadius: "50%", background: "var(--surface-3)", display: "grid", placeItems: "center", flexShrink: 0, overflow: "hidden" }}>
+                        {r.referred_avatar ? <img src={r.referred_avatar} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <Users2 size={16} style={{ color: "var(--gray-500)" }} />}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 800, fontSize: 13, color: "var(--paper)" }}>{r.referred_name ?? "Usuário"}</p>
+                        <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>{r.registered_at ? formatDate(r.registered_at) : "—"}</p>
+                      </div>
+                      <span style={{ fontSize: 10, fontWeight: 950, padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${STATUS_COLOR[r.status] ?? "var(--gray-500)"} 12%, transparent)`, color: STATUS_COLOR[r.status] ?? "var(--gray-500)", border: `1px solid color-mix(in srgb, ${STATUS_COLOR[r.status] ?? "var(--gray-500)"} 25%, transparent)`, whiteSpace: "nowrap" }}>
+                        {STATUS_LABEL[r.status] ?? r.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </>
+          )}
+        </div>
+      )}
+
+      {activeTab === "perfil" && (<>
 
       {cropImage && (
         <AvatarCropModal
@@ -632,6 +761,8 @@ export default function PerfilPage() {
           )}
         </div>
       </section>
+    </div>
+    </>)}
     </div>
     </div>
 

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   ArrowLeft, ArrowLeftRight, Bot, ClipboardList, DollarSign, Flag, Gift,
   Hammer, Home, Map, Package, Radio, ScrollText, Shield, Star, Ticket,
-  TrendingUp, Warehouse, Compass, Users,
+  TrendingUp, Warehouse, Compass, Users, UserPlus,
 } from "lucide-react"
 import { BrandMark } from "./brand-mark"
 
@@ -28,7 +28,8 @@ const links = [
   { href: "/admin/arcpedia",  label: "Arcpedia",   icon: Bot,           exact: false },
   { href: "/admin/crafting",  label: "Crafting",   icon: Hammer,        exact: false },
   { href: "/admin/home",      label: "Home page",  icon: Home,          exact: false },
-  { href: "/admin/usuarios",  label: "Usuários",   icon: Users,         exact: false },
+  { href: "/admin/usuarios",    label: "Usuários",   icon: Users,    exact: false },
+  { href: "/admin/indicacoes",  label: "Indicações", icon: UserPlus, exact: false },
 ]
 
 export function AdminSidebar() {
