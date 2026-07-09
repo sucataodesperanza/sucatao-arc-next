@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
+export type RepLevel = { name: string; min_points: number; color: string; position: number }
+
 export type DashboardData = {
   faction: {
     id: string; slug: string; name: string; tagline: string
@@ -9,6 +11,8 @@ export type DashboardData = {
   } | null
   joined_at: string | null
   member_counts: { faction_id: string; count: number }[]
+  faction_influence: number
+  user_rank_in_faction: number | null
   faction_feed: {
     id: string; display_name: string; text: string
     points: number | null; event_type: string; created_at: string
@@ -18,8 +22,9 @@ export type DashboardData = {
     event_type: string; created_at: string
   }[]
   user_profile: {
-    name: string | null; avatar_url: string | null; points: number | null
+    name: string | null; avatar_url: string | null; points: number | null; reputation: number | null
   } | null
+  rep_levels: RepLevel[]
 }
 
 export async function GET() {
@@ -28,7 +33,7 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
 
-  const [ufRes, profileRes, countsRes] = await Promise.all([
+  const [ufRes, profileRes, countsRes, levelsRes] = await Promise.all([
     // Facção do usuário
     supabase
       .from("user_factions")
@@ -38,17 +43,50 @@ export async function GET() {
     // Perfil
     supabase
       .from("profiles")
-      .select("name, avatar_url, points")
+      .select("name, avatar_url, points, reputation")
       .eq("id", user.id)
       .single(),
     // Contagem de membros por facção
     supabase
       .from("user_factions")
       .select("faction_id"),
+    // Níveis de reputação
+    supabase
+      .from("reputation_levels")
+      .select("name, min_points, color, position")
+      .order("position"),
   ])
 
   const factionData = (Array.isArray(ufRes.data?.factions) ? ufRes.data?.factions[0] : ufRes.data?.factions) as DashboardData["faction"] | null
   const factionId   = factionData?.id ?? null
+
+  // Reputação de todos os membros da facção (para influência e rank)
+  let factionInfluence     = 0
+  let userRankInFaction: number | null = null
+
+  if (factionId) {
+    const { data: membersRep } = await supabase
+      .from("user_factions")
+      .select("user_id")
+      .eq("faction_id", factionId)
+
+    if (membersRep && membersRep.length > 0) {
+      const userIds = membersRep.map(m => m.user_id)
+      const { data: memberProfiles } = await supabase
+        .from("profiles")
+        .select("id, reputation")
+        .in("id", userIds)
+
+      if (memberProfiles && memberProfiles.length > 0) {
+        const repList = memberProfiles.map(p => (p.reputation ?? 0) as number)
+        factionInfluence = repList.reduce((a, b) => a + b, 0)
+
+        const userRep = (profileRes.data?.reputation ?? 0) as number
+        const sorted  = [...repList].sort((a, b) => b - a)
+        userRankInFaction = sorted.findIndex(r => r <= userRep) + 1
+      }
+    }
+  }
 
   const memberCounts: { faction_id: string; count: number }[] = []
   if (countsRes.data) {
@@ -85,12 +123,15 @@ export async function GET() {
   }
 
   const result: DashboardData = {
-    faction:       factionData ?? null,
-    joined_at:     ufRes.data?.joined_at ?? null,
-    member_counts: memberCounts,
-    faction_feed:  factionFeed,
-    my_activity:   myActivity,
-    user_profile:  profileRes.data ?? null,
+    faction:              factionData ?? null,
+    joined_at:            ufRes.data?.joined_at ?? null,
+    member_counts:        memberCounts,
+    faction_influence:    factionInfluence,
+    user_rank_in_faction: userRankInFaction,
+    faction_feed:         factionFeed,
+    my_activity:          myActivity,
+    user_profile:         profileRes.data ?? null,
+    rep_levels:           (levelsRes.data ?? []) as RepLevel[],
   }
 
   return NextResponse.json(result)

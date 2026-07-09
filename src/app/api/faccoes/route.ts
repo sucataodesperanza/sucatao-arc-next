@@ -15,6 +15,7 @@ export type Faction = {
   name: string
   tagline: string
   description: string
+  story: string
   color: string
   icon_url: string | null
   bonuses: string[]

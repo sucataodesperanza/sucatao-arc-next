@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server"
 export type UserFaction = {
   id: string
   joined_at: string
+  reputation: number
+  faction_level: number
   factions: {
     id: string
     slug: string
@@ -20,7 +22,7 @@ export async function GET() {
 
   const { data } = await supabase
     .from("user_factions")
-    .select("id, joined_at, factions(id, slug, name, color, icon_url)")
+    .select("id, joined_at, reputation, faction_level, factions(id, slug, name, color, icon_url)")
     .eq("user_id", user.id)
     .single()
 

@@ -33,7 +33,7 @@ export default function StreamersPage() {
 
   const [streamers, setStreamers]   = useState<Streamer[]>([])
   const [live, setLive]             = useState<Record<string, LiveData>>({})
-  const [panelOpen, setPanelOpen]   = useState(true)
+  const [panelOpen, setPanelOpen]   = useState(false)
   const [loading, setLoading]       = useState(true)
   const [applyOpen, setApplyOpen]   = useState(false)
 

@@ -48,7 +48,7 @@ export default function TradesPage() {
   const [activeTab, setActiveTab]     = useState(TABS[0])
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
-  const [panelOpen, setPanelOpen]     = useState(true)
+  const [panelOpen, setPanelOpen]     = useState(false)
 
   // Dados reais
   const [trades, setTrades]           = useState<Trade[]>([])

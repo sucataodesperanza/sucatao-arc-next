@@ -102,7 +102,7 @@ export default function InventarioPage() {
   const [loading, setLoading]   = useState(true)
   const [expanding, setExpanding] = useState(false)
   const [expandMsg, setExpandMsg] = useState("")
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [activeTab, setActiveTab]   = useState("geral")
   const [activeCat, setActiveCat]   = useState("Todos")
   const [page, setPage]             = useState(1)

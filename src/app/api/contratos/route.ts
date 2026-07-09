@@ -51,6 +51,8 @@ export type Contract = {
   objectives_progress: Record<string, number>
   // agendamento ativo (null se não há)
   active_schedule: { id: string; scheduled_at: string | null; game_id: string | null; status: string } | null
+  // cor da facção do usuário (preenchida só para contratos de facção)
+  faction_color: string | null
 }
 
 export async function GET() {
@@ -66,23 +68,42 @@ export async function GET() {
   if (error) return NextResponse.json({ contracts: [] })
 
   // Fação do usuário (para filtrar contratos de facção)
-  let userFactionId: string | null = null
+  let userFactionId:    string | null = null
+  let userFactionColor: string | null = null
   let userContracts: { contract_id: string; progress: number; status: string; id: string; objectives_progress: Record<string, number> }[] = []
   let scheduleMap: Record<string, { id: string; scheduled_at: string | null; game_id: string | null; status: string; objective_index: number }[]> = {}
 
   if (user) {
     const [ufRes, ucRes, schedRes] = await Promise.all([
-      supabase.from("user_factions").select("faction_id").eq("user_id", user.id).eq("status", "active").maybeSingle(),
+      supabase.from("user_factions").select("faction_id, factions(color)").eq("user_id", user.id).eq("status", "active").maybeSingle(),
       supabase.from("user_contracts").select("id, contract_id, progress, status, objectives_progress").eq("user_id", user.id),
       supabase.from("contract_schedules").select("id, contract_id, objective_index, scheduled_at, game_id, status").eq("user_id", user.id).neq("status", "cancelled"),
     ])
 
-    userFactionId = ufRes.data?.faction_id ?? null
-    userContracts = ucRes.data ?? []
+    userFactionId    = ufRes.data?.faction_id ?? null
+    userFactionColor = (ufRes.data as any)?.factions?.color ?? null
+    userContracts    = ucRes.data ?? []
 
     for (const s of (schedRes.data ?? [])) {
       if (!scheduleMap[s.contract_id]) scheduleMap[s.contract_id] = []
       scheduleMap[s.contract_id].push(s)
+    }
+
+    // Marca como expirados os contratos ativos cujo prazo já passou
+    const now = new Date().toISOString()
+    const expiredIds = userContracts
+      .filter(uc => uc.status === "active")
+      .filter(uc => {
+        const c = (contracts ?? []).find(c => c.id === uc.contract_id)
+        return c?.expires_at && c.expires_at < now
+      })
+      .map(uc => uc.id)
+
+    if (expiredIds.length > 0) {
+      await supabase.from("user_contracts").update({ status: "expired" }).in("id", expiredIds)
+      for (const uc of userContracts) {
+        if (expiredIds.includes(uc.id)) uc.status = "expired"
+      }
     }
   }
 
@@ -115,6 +136,7 @@ export async function GET() {
         active_schedule:     activeSchedule
           ? { id: activeSchedule.id, scheduled_at: activeSchedule.scheduled_at, game_id: activeSchedule.game_id, status: activeSchedule.status }
           : null,
+        faction_color: c.contract_type === "faccao" ? (userFactionColor ?? null) : null,
       }
     })
 

@@ -45,7 +45,7 @@ export const getCachedFactions = unstable_cache(
   async () => {
     const db = createAdminClient()
     const { data } = await db.from("factions")
-      .select("id,slug,name,tagline,description,color,icon_url,bonuses,attributes,active,position")
+      .select("id,slug,name,tagline,description,story,color,icon_url,bonuses,attributes,active,position")
       .eq("active", true).order("position")
     return data ?? []
   },
