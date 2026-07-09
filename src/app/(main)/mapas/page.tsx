@@ -25,7 +25,7 @@ export default function MapasPage() {
   const [selectedMapId, setSelectedMapId]       = useState("")
   const [activeMarkerId, setActiveMarkerId]     = useState<string | null>(null)
   const [hoveredMarkerId, setHoveredMarkerId]   = useState<string | null>(null)
-  const [panelOpen, setPanelOpen]               = useState(true)
+  const [panelOpen, setPanelOpen]               = useState(false)
   const imgRef                                  = useRef<HTMLImageElement>(null)
 
   useEffect(() => {

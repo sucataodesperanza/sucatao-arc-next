@@ -20,6 +20,22 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ history: [] })
 
+  // Marca como expirados os contratos ativos cujo prazo já passou
+  const now = new Date().toISOString()
+  const { data: stillActive } = await supabase
+    .from("user_contracts")
+    .select("id, contracts!inner(expires_at)")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .not("contracts.expires_at", "is", null)
+    .lt("contracts.expires_at", now)
+
+  if (stillActive && stillActive.length > 0) {
+    await supabase.from("user_contracts")
+      .update({ status: "expired" })
+      .in("id", stillActive.map(r => r.id))
+  }
+
   const { data } = await supabase
     .from("user_contracts")
     .select(`

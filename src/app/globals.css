@@ -1502,7 +1502,7 @@ select {
   border-right: none;
   border-radius: 8px 0 0 8px;
   background: #03090d;
-  color: var(--gray-500);
+  color: var(--yellow);
   cursor: pointer;
   padding: 14px 8px;
   font-size: 9px;

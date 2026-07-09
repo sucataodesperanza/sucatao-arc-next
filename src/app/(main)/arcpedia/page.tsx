@@ -27,7 +27,7 @@ export default function ArcpediaPage() {
   const [query, setQuery] = useState("")
   const [threat, setThreat] = useState("all")
   const [selected, setSelected] = useState<ArcEntry | null>(null)
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)

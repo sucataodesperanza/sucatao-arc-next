@@ -264,6 +264,31 @@
   line-height: 1.6;
 }
 
+.faction-story {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--faction-color, rgba(255,255,255,0.15));
+  background: color-mix(in srgb, var(--faction-color, #fff) 5%, transparent);
+  border-radius: 0 6px 6px 0;
+}
+.faction-story-label {
+  font-size: 9px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--faction-color, rgba(255,255,255,0.4));
+  opacity: 0.7;
+}
+.faction-story p {
+  margin: 0;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.6;
+  font-style: italic;
+}
+
 .faction-bonus {
   display: flex;
   flex-direction: column;
