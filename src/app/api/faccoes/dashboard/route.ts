@@ -20,7 +20,7 @@ export type DashboardData = {
     event_type: string; created_at: string
   }[]
   user_profile: {
-    name: string | null; avatar_url: string | null; points: number | null; rep: number | null
+    name: string | null; avatar_url: string | null; points: number | null; reputation: number | null
   } | null
   rep_levels: RepLevel[]
 }
@@ -41,7 +41,7 @@ export async function GET() {
     // Perfil
     supabase
       .from("profiles")
-      .select("name, avatar_url, points, rep")
+      .select("name, avatar_url, points, reputation")
       .eq("id", user.id)
       .single(),
     // Contagem de membros por facção

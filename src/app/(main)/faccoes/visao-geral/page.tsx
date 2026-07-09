@@ -106,7 +106,7 @@ export default function FaccoesHubPage() {
   if (!data?.faction) return null
 
   const { faction, joined_at, member_counts, faction_feed, my_activity, user_profile, rep_levels } = data
-  const userRep = user_profile?.rep ?? 0
+  const userRep = user_profile?.reputation ?? 0
   const { current: repLevel, next: nextLevel, pct: repPct } = getRepLevel(userRep, rep_levels)
   const totalMembers = memberCount(member_counts, faction.id)
   const userName     = user_profile?.name ?? "Raider"
