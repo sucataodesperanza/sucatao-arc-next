@@ -151,15 +151,16 @@ export default function FaccoesHubPage() {
               <div className="faccoes-hub-split-row">
                 {/* Banner de informações da facção */}
                 <div className="faction-info-banner" style={{ "--faction-color": faction.color } as React.CSSProperties}>
-                  {/* Glow decorativo no lado direito (onde ficaria a imagem cinematográfica) */}
                   <div className="faction-info-banner-glow" />
+
+                  {/* Logo grande à direita */}
+                  {faction.icon_url && (
+                    <img src={faction.icon_url} alt={faction.name} className="faction-info-banner-logo-right" />
+                  )}
 
                   {/* Conteúdo esquerdo */}
                   <div className="faction-info-banner-left">
                     <div className="faction-info-banner-identity">
-                      {faction.icon_url
-                        ? <img src={faction.icon_url} alt={faction.name} className="faction-info-banner-icon" />
-                        : <ImageOff size={40} style={{ color: faction.color, opacity: 0.6 }} />}
                       <div>
                         <h2 className="faction-info-banner-name">{faction.name}</h2>
                         <p className="faction-info-banner-tagline">{faction.tagline}</p>
