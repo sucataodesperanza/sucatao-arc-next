@@ -213,7 +213,7 @@ export default function FaccoesHubPage() {
                     <div><span>PONTOS CONTRIBUÍDOS</span><strong>—</strong></div>
                     <div><span>CONTRATOS CONCLUÍDOS</span><strong>—</strong></div>
                   </div>
-                  <button type="button" className="faction-hub-btn" style={{ width: "100%", marginTop: 12, justifyContent: "center" }}>VER MINHA JORNADA</button>
+                  <button type="button" className="faction-hub-btn" style={{ width: "100%", marginTop: 12, justifyContent: "center" }} onClick={() => router.push("/perfil")}>VER MINHA JORNADA</button>
                 </div>
               </div>
 
