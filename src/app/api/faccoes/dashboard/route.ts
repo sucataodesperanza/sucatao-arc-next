@@ -11,6 +11,8 @@ export type DashboardData = {
   } | null
   joined_at: string | null
   member_counts: { faction_id: string; count: number }[]
+  faction_influence: number
+  user_rank_in_faction: number | null
   faction_feed: {
     id: string; display_name: string; text: string
     points: number | null; event_type: string; created_at: string
@@ -58,6 +60,34 @@ export async function GET() {
   const factionData = (Array.isArray(ufRes.data?.factions) ? ufRes.data?.factions[0] : ufRes.data?.factions) as DashboardData["faction"] | null
   const factionId   = factionData?.id ?? null
 
+  // Reputação de todos os membros da facção (para influência e rank)
+  let factionInfluence     = 0
+  let userRankInFaction: number | null = null
+
+  if (factionId) {
+    const { data: membersRep } = await supabase
+      .from("user_factions")
+      .select("user_id")
+      .eq("faction_id", factionId)
+
+    if (membersRep && membersRep.length > 0) {
+      const userIds = membersRep.map(m => m.user_id)
+      const { data: memberProfiles } = await supabase
+        .from("profiles")
+        .select("id, reputation")
+        .in("id", userIds)
+
+      if (memberProfiles && memberProfiles.length > 0) {
+        const repList = memberProfiles.map(p => (p.reputation ?? 0) as number)
+        factionInfluence = repList.reduce((a, b) => a + b, 0)
+
+        const userRep = (profileRes.data?.reputation ?? 0) as number
+        const sorted  = [...repList].sort((a, b) => b - a)
+        userRankInFaction = sorted.findIndex(r => r <= userRep) + 1
+      }
+    }
+  }
+
   const memberCounts: { faction_id: string; count: number }[] = []
   if (countsRes.data) {
     const map: Record<string, number> = {}
@@ -93,13 +123,15 @@ export async function GET() {
   }
 
   const result: DashboardData = {
-    faction:       factionData ?? null,
-    joined_at:     ufRes.data?.joined_at ?? null,
-    member_counts: memberCounts,
-    faction_feed:  factionFeed,
-    my_activity:   myActivity,
-    user_profile:  profileRes.data ?? null,
-    rep_levels:    (levelsRes.data ?? []) as RepLevel[],
+    faction:              factionData ?? null,
+    joined_at:            ufRes.data?.joined_at ?? null,
+    member_counts:        memberCounts,
+    faction_influence:    factionInfluence,
+    user_rank_in_faction: userRankInFaction,
+    faction_feed:         factionFeed,
+    my_activity:          myActivity,
+    user_profile:         profileRes.data ?? null,
+    rep_levels:           (levelsRes.data ?? []) as RepLevel[],
   }
 
   return NextResponse.json(result)
