@@ -113,7 +113,6 @@ export default function FaccoesHubPage() {
 
   return (
     <div className="faccoes-hub-page" style={{ position: "relative" }}>
-      {overlay}
       <div className={`faccoes-hub-layout${panelOpen ? "" : " faccoes-hub-layout--no-panel"}`}>
         <div className="faccoes-hub-main">
 
