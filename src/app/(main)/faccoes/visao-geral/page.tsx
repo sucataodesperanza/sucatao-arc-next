@@ -10,13 +10,24 @@ import {
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../../styles/faccoes-hub.css"
 import "../../../../styles/contratos-venda.css"
-import type { DashboardData } from "@/app/api/faccoes/dashboard/route"
+import type { DashboardData, RepLevel } from "@/app/api/faccoes/dashboard/route"
 import type { Contract } from "@/app/api/contratos/route"
 import type { Pass } from "@/app/api/faccoes/recompensas/route"
 
 const PANEL_KEY = "faccoes-hub-panel-open"
 
 /* ── helpers ── */
+function getRepLevel(rep: number, levels: RepLevel[]) {
+  const sorted  = [...levels].sort((a, b) => a.min_points - b.min_points)
+  const current = [...sorted].reverse().find(l => rep >= l.min_points) ?? sorted[0]
+  const nextIdx = sorted.findIndex(l => l.name === current?.name) + 1
+  const next    = sorted[nextIdx] ?? null
+  const pct     = next
+    ? Math.min(100, Math.round((rep - current.min_points) / (next.min_points - current.min_points) * 100))
+    : 100
+  return { current, next, pct }
+}
+
 function timeAgo(iso: string) {
   const m = Math.floor((Date.now() - new Date(iso).getTime()) / 60000)
   if (m < 1)  return "Agora"
@@ -94,7 +105,9 @@ export default function FaccoesHubPage() {
   if (loading) return <div style={{ padding: 64, textAlign: "center", color: "var(--gray-500)" }}>Carregando...</div>
   if (!data?.faction) return null
 
-  const { faction, joined_at, member_counts, faction_feed, my_activity, user_profile } = data
+  const { faction, joined_at, member_counts, faction_feed, my_activity, user_profile, rep_levels } = data
+  const userRep = user_profile?.rep ?? 0
+  const { current: repLevel, next: nextLevel, pct: repPct } = getRepLevel(userRep, rep_levels)
   const totalMembers = memberCount(member_counts, faction.id)
   const userName     = user_profile?.name ?? "Raider"
   const avatarUrl    = user_profile?.avatar_url
@@ -164,12 +177,14 @@ export default function FaccoesHubPage() {
                   <div className="faction-info-banner-stats">
                     <div className="faction-info-stat-card">
                       <span className="faction-info-stat-label">SUA REPUTAÇÃO</span>
-                      <span className="faction-info-stat-value">18</span>
-                      <span className="faction-info-stat-badge" style={{ color: faction.color }}>ESPECIALISTA</span>
+                      <span className="faction-info-stat-value">{userRep.toLocaleString("pt-BR")}</span>
+                      <span className="faction-info-stat-badge" style={{ color: repLevel?.color ?? faction.color }}>{repLevel?.name?.toUpperCase() ?? "—"}</span>
                       <div className="faction-info-stat-bar">
-                        <div style={{ width: "81%", background: faction.color }} />
+                        <div style={{ width: `${repPct}%`, background: repLevel?.color ?? faction.color }} />
                       </div>
-                      <span className="faction-info-stat-bar-label">3.240 / 4.000</span>
+                      <span className="faction-info-stat-bar-label">
+                        {userRep.toLocaleString("pt-BR")} / {nextLevel ? nextLevel.min_points.toLocaleString("pt-BR") : "MAX"}
+                      </span>
                     </div>
 
                     <div className="faction-info-stat-card">
