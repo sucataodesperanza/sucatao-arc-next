@@ -51,11 +51,6 @@ const WAR_REWARD_ITEMS = [
   { label: "+10% REP por 7 dias",      icon: Zap    },
 ]
 
-const EVENTS = [
-  { label: "Evento de Double XP",       time: "Começa em 08h 34m" },
-  { label: "Comboio de Suprimentos",    time: "Começa em 12h 10m" },
-  { label: "Extração Especial",         time: "Começa em 1d 02h"  },
-]
 
 const tabs = ["Visão Geral", "Recompensas", "Guerra de Facções", "Ranking de Facções", "Minha Facção"]
 
@@ -141,7 +136,7 @@ export default function FaccoesHubPage() {
   if (loading) return <div style={{ padding: 64, textAlign: "center", color: "var(--gray-500)" }}>Carregando...</div>
   if (!data?.faction) return null
 
-  const { faction, joined_at, member_counts, faction_feed, my_activity, user_profile, rep_levels, faction_influence, user_rank_in_faction } = data
+  const { faction, joined_at, member_counts, faction_feed, my_activity, user_profile, rep_levels, faction_influence, user_global_rank, completed_contracts } = data
   const userRep = user_profile?.reputation ?? 0
   const { current: repLevel, next: nextLevel, pct: repPct } = getRepLevel(userRep, rep_levels)
   const totalMembers = memberCount(member_counts, faction.id)
@@ -152,7 +147,7 @@ export default function FaccoesHubPage() {
   const vantagens = (faction.bonuses ?? []).filter(b => b.startsWith("+"))
 
   return (
-    <div className="faccoes-hub-page" style={{ position: "relative" }}>
+    <div className={`faccoes-hub-page${panelOpen ? "" : " faccoes-page--panel-closed"}`} style={{ position: "relative" }}>
       <div className={`faccoes-hub-layout${panelOpen ? "" : " faccoes-hub-layout--no-panel"}`}>
         <div className="faccoes-hub-main">
 
@@ -226,8 +221,8 @@ export default function FaccoesHubPage() {
                     <div className="faction-info-stat-card">
                       <span className="faction-info-stat-label">INFLUÊNCIA DA {faction.name.toUpperCase()}</span>
                       <span className="faction-info-stat-value" style={{ fontSize: 22 }}>{(faction_influence ?? 0).toLocaleString("pt-BR")}</span>
-                      {user_rank_in_faction !== null && (
-                        <span className="faction-info-stat-sub">SUA POSIÇÃO NA FACÇÃO: #{user_rank_in_faction}</span>
+                      {user_global_rank != null && (
+                        <span className="faction-info-stat-sub">SUA POSIÇÃO GLOBAL: #{user_global_rank}</span>
                       )}
                     </div>
 
@@ -243,17 +238,17 @@ export default function FaccoesHubPage() {
                   <h2>SUA CONTRIBUIÇÃO</h2>
                   <p className="faccoes-hub-subtitle">Veja o impacto das suas ações na guerra.</p>
                   <div className="faccoes-hub-rank-box">
-                    <span className="faccoes-hub-rank-label">POSIÇÃO NA FACÇÃO</span>
-                    <span className="faccoes-hub-rank-num">#—</span>
-                    <span className="faccoes-hub-rank-sub">Entre os {totalMembers.toLocaleString("pt-BR")} membros</span>
+                    <span className="faccoes-hub-rank-label">POSIÇÃO GLOBAL</span>
+                    <span className="faccoes-hub-rank-num">#{(user_global_rank ?? 0).toLocaleString("pt-BR")}</span>
+                    <span className="faccoes-hub-rank-sub">Entre os {totalMembers.toLocaleString("pt-BR")} membros da facção</span>
                   </div>
                   <div className="faccoes-hub-stats-row">
-                    <div><span>PONTOS CONTRIBUÍDOS</span><strong>—</strong></div>
-                    <div><span>CONTRATOS CONCLUÍDOS</span><strong>—</strong></div>
+                    <div><span>PONTOS CONTRIBUÍDOS</span><strong>{(userRep).toLocaleString("pt-BR")}</strong></div>
+                    <div><span>CONTRATOS CONCLUÍDOS</span><strong>{completed_contracts}</strong></div>
                   </div>
                   <button type="button" className="btn-aceitar"
                     style={{ background: faction.color, boxShadow: `0 0 18px ${faction.color}70, 0 2px 8px rgba(0,0,0,0.4)`, color: "rgba(255,255,255,0.95)", marginTop: 12 }}
-                    onClick={() => router.push("/perfil")}>VER MINHA JORNADA</button>
+                    onClick={() => setActiveTab("Ranking de Facções")}>VER MINHA JORNADA</button>
                 </div>
               </div>
 
@@ -345,30 +340,8 @@ export default function FaccoesHubPage() {
                 </div>
               </div>
 
-              {/* ── Atividade da Facção + Vantagens ── */}
-              <div className="faccoes-hub-bottom-grid">
-                <div className="faccoes-hub-feed-card">
-                  <h2>ATIVIDADE DA FACÇÃO</h2>
-                  <p className="faccoes-hub-subtitle">Acompanhe as ações recentes dos membros da sua facção.</p>
-                  <div className="faction-hub-activity-list" style={{ marginTop: 12 }}>
-                    {faction_feed.length === 0 ? (
-                      <p style={{ color: "var(--gray-500)", fontSize: 12, margin: 0 }}>Nenhuma atividade ainda.</p>
-                    ) : faction_feed.map(a => (
-                      <div key={a.id} className="faction-hub-activity-item">
-                        <div className="faction-hub-activity-img" style={{ background: `color-mix(in srgb, ${faction.color} 15%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${faction.color} 30%, transparent)`, display: "grid", placeItems: "center", borderRadius: "50%" }}>
-                          {faction.icon_url ? <img src={faction.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} /> : <Users size={14} style={{ color: faction.color }} />}
-                        </div>
-                        <div className="faction-hub-activity-body">
-                          <p><strong>{a.display_name}</strong> {a.text}</p>
-                          {a.points && <span className="faction-hub-activity-pts">+{a.points.toLocaleString("pt-BR")} pontos para a facção</span>}
-                        </div>
-                        <span className="faction-hub-activity-time">{timeAgo(a.created_at)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <button type="button" className="faction-hub-about-btn" style={{ marginTop: 12 }}>VER TODAS AS ATIVIDADES <ChevronRight size={12} /></button>
-                </div>
-
+              {/* ── Vantagens ── */}
+              <div className="faccoes-hub-bottom-grid" style={{ gridTemplateColumns: "1fr" }}>
                 <div className="faccoes-hub-feed-card">
                   <h2>VANTAGENS ATIVAS</h2>
                   <p className="faccoes-hub-subtitle">Benefícios que sua facção desbloqueou para todos os membros.</p>
@@ -562,23 +535,22 @@ export default function FaccoesHubPage() {
             </div>
           </div>
 
-          {/* Atividades recentes */}
+          {/* Atividade da Facção */}
           <div className="store-side-card">
             <div className="faction-hub-activities-head">
-              <h2>Atividades Recentes</h2>
-              <button type="button" className="faction-hub-see-all">Ver Todas <ChevronRight size={12} /></button>
+              <h2>Atividade da Facção</h2>
             </div>
             <div className="faction-hub-activity-list">
-              {my_activity.length === 0 ? (
+              {faction_feed.length === 0 ? (
                 <p style={{ fontSize: 12, color: "var(--gray-500)", margin: 0 }}>Nenhuma atividade ainda.</p>
-              ) : my_activity.map(a => (
+              ) : faction_feed.map(a => (
                 <div key={a.id} className="faction-hub-activity-item">
                   <div className="faction-hub-activity-img" style={{ background: `color-mix(in srgb, ${faction.color} 15%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${faction.color} 30%, transparent)`, display: "grid", placeItems: "center", borderRadius: "50%" }}>
                     {faction.icon_url ? <img src={faction.icon_url} alt="" style={{ width: 18, height: 18, objectFit: "contain" }} /> : <Users size={12} style={{ color: faction.color }} />}
                   </div>
                   <div className="faction-hub-activity-body">
-                    <p>Você {a.text}</p>
-                    {a.points && <span className="faction-hub-activity-pts">+{a.points.toLocaleString("pt-BR")} pontos</span>}
+                    <p><strong>{a.display_name}</strong> {a.text}</p>
+                    {a.points && <span className="faction-hub-activity-pts" style={{ color: faction.color }}>+{a.points.toLocaleString("pt-BR")} pts</span>}
                   </div>
                   <span className="faction-hub-activity-time">{timeAgo(a.created_at)}</span>
                 </div>
@@ -586,35 +558,14 @@ export default function FaccoesHubPage() {
             </div>
           </div>
 
-          {/* Próximos eventos (decorativo) */}
-          <div className="store-side-card">
-            <div className="faction-hub-activities-head">
-              <h2>Próximos Eventos</h2>
-              <button type="button" className="faction-hub-see-all">Ver Todos <ChevronRight size={12} /></button>
-            </div>
-            <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-              {EVENTS.map((e, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(255,212,0,0.1)", border: "1px solid rgba(255,212,0,0.2)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                    <Zap size={14} style={{ color: "var(--yellow)" }} />
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: "var(--paper)" }}>{e.label}</p>
-                    <span style={{ fontSize: 11, color: "var(--yellow)" }}>{e.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recompensa da guerra (decorativo) */}
+          {/* Recompensa da guerra */}
           <div className="store-side-card">
             <h2>Recompensa da Guerra</h2>
-            <p style={{ margin: "4px 0 10px", fontSize: 11, fontWeight: 950, color: "var(--yellow)", textTransform: "uppercase" }}>TOP 10% AO FINAL DA GUERRA</p>
+            <p style={{ margin: "4px 0 10px", fontSize: 11, fontWeight: 950, color: faction.color, textTransform: "uppercase" }}>TOP 10% AO FINAL DA GUERRA</p>
             <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
               {WAR_REWARD_ITEMS.map((r, i) => (
-                <div key={i} style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid var(--stroke)", borderRadius: 8, padding: "10px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                  <r.icon size={18} style={{ color: "var(--yellow)" }} />
+                <div key={i} style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: `1px solid color-mix(in srgb, ${faction.color} 25%, var(--stroke))`, borderRadius: 8, padding: "10px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                  <r.icon size={18} style={{ color: faction.color }} />
                   <span style={{ fontSize: 9, color: "var(--paper-dim)", textAlign: "center", lineHeight: 1.3 }}>{r.label}</span>
                 </div>
               ))}

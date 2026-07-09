@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export type RepLevel = { name: string; min_points: number; color: string; position: number }
 
@@ -12,7 +13,7 @@ export type DashboardData = {
   joined_at: string | null
   member_counts: { faction_id: string; count: number }[]
   faction_influence: number
-  user_rank_in_faction: number | null
+  user_global_rank: number
   faction_feed: {
     id: string; display_name: string; text: string
     points: number | null; event_type: string; created_at: string
@@ -25,15 +26,17 @@ export type DashboardData = {
     name: string | null; avatar_url: string | null; points: number | null; reputation: number | null
   } | null
   rep_levels: RepLevel[]
+  completed_contracts: number
 }
 
 export async function GET() {
-  const supabase = await createClient()
+  const supabase      = await createClient()
+  const supabaseAdmin = createAdminClient()
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Não autenticado." }, { status: 401 })
 
-  const [ufRes, profileRes, countsRes, levelsRes] = await Promise.all([
+  const [ufRes, profileRes, countsRes, levelsRes, completedRes] = await Promise.all([
     // Facção do usuário
     supabase
       .from("user_factions")
@@ -47,7 +50,7 @@ export async function GET() {
       .eq("id", user.id)
       .single(),
     // Contagem de membros por facção
-    supabase
+    supabaseAdmin
       .from("user_factions")
       .select("faction_id"),
     // Níveis de reputação
@@ -55,38 +58,46 @@ export async function GET() {
       .from("reputation_levels")
       .select("name, min_points, color, position")
       .order("position"),
+    // Contratos concluídos pelo usuário
+    supabase
+      .from("user_contracts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("status", "completed"),
   ])
 
   const factionData = (Array.isArray(ufRes.data?.factions) ? ufRes.data?.factions[0] : ufRes.data?.factions) as DashboardData["faction"] | null
   const factionId   = factionData?.id ?? null
 
-  // Reputação de todos os membros da facção (para influência e rank)
-  let factionInfluence     = 0
-  let userRankInFaction: number | null = null
+  // Influência da facção (soma de reputação de todos os membros)
+  let factionInfluence = 0
 
   if (factionId) {
-    const { data: membersRep } = await supabase
+    const { data: membersRep } = await supabaseAdmin
       .from("user_factions")
       .select("user_id")
       .eq("faction_id", factionId)
 
     if (membersRep && membersRep.length > 0) {
       const userIds = membersRep.map(m => m.user_id)
-      const { data: memberProfiles } = await supabase
+      const { data: memberProfiles } = await supabaseAdmin
         .from("profiles")
-        .select("id, reputation")
+        .select("reputation")
         .in("id", userIds)
 
       if (memberProfiles && memberProfiles.length > 0) {
-        const repList = memberProfiles.map(p => (p.reputation ?? 0) as number)
-        factionInfluence = repList.reduce((a, b) => a + b, 0)
-
-        const userRep = (profileRes.data?.reputation ?? 0) as number
-        const sorted  = [...repList].sort((a, b) => b - a)
-        userRankInFaction = sorted.findIndex(r => r <= userRep) + 1
+        factionInfluence = memberProfiles.reduce((a, p) => a + ((p.reputation ?? 0) as number), 0)
       }
     }
   }
+
+  // Rank global: conta quantos usuários têm reputação maior que a do usuário
+  const userRep = (profileRes.data?.reputation ?? 0) as number
+  const { count: usersAbove } = await supabaseAdmin
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .gt("reputation", userRep)
+  const userGlobalRank = (usersAbove ?? 0) + 1
 
   const memberCounts: { faction_id: string; count: number }[] = []
   if (countsRes.data) {
@@ -127,11 +138,12 @@ export async function GET() {
     joined_at:            ufRes.data?.joined_at ?? null,
     member_counts:        memberCounts,
     faction_influence:    factionInfluence,
-    user_rank_in_faction: userRankInFaction,
+    user_global_rank:     userGlobalRank,
     faction_feed:         factionFeed,
     my_activity:          myActivity,
     user_profile:         profileRes.data ?? null,
     rep_levels:           (levelsRes.data ?? []) as RepLevel[],
+    completed_contracts:  completedRes.count ?? 0,
   }
 
   return NextResponse.json(result)
