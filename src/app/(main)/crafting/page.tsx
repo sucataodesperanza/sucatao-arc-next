@@ -78,7 +78,7 @@ export default function CraftingPage() {
   const [loadingFilter, setLoadingFilter] = useState(false)
   const [materialDetail, setMaterialDetail] = useState<MaterialItem | null>(null)
   const [selected, setSelected] = useState<CraftingItem | null>(null)
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)

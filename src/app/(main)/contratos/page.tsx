@@ -2,20 +2,18 @@
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import {
-  BarChart2, CalendarCheck, Check, CheckCircle, ChevronLeft, ChevronRight, Clock, Coins, Crosshair,
-  HelpCircle, Package, ScrollText, Shield, Star, Target, Trophy, Users, Wallet, XCircle, Zap,
+  BarChart2, Check, ChevronLeft, ChevronRight, Clock, Coins, Crosshair,
+  HelpCircle, ScrollText, Shield, Star, Target, Trophy, Users, Wallet, XCircle, Zap,
 } from "lucide-react"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import "../../../styles/contratos.css"
 import "../../../styles/contratos-venda.css"
 import type { Contract as ApiContract } from "@/app/api/contratos/route"
 import type { HistoryItem } from "@/app/api/contratos/history/route"
+import { ActiveContractCard, MISSION_COLORS, TIER_COLORS, RISK_COLORS, expiresInStr } from "@/components/active-contract-card"
 
 /* ── Constantes ── */
-const MISSION_COLORS: Record<string, string> = { diario: "#3df28b", semanal: "#ffd400", mensal: "#b477ff" }
 const MISSION_LABELS: Record<string, string> = { diario: "Diário", semanal: "Semanal", mensal: "Mensal" }
-const TIER_COLORS: Record<string, string>   = { Básico: "#5fa8ff", Avançado: "#ffd400", Épico: "#b477ff", Lendário: "#ff8c42" }
-const RISK_COLORS: Record<string, string>   = { Baixo: "#3df28b", Médio: "#ffd400", Alto: "#ff8c42", Extremo: "#F5090D" }
 
 const tabs = ["Contratos à Venda", "Contratos Ativos", "Histórico"] as const
 type Tab   = typeof tabs[number]
@@ -23,16 +21,6 @@ type Tab   = typeof tabs[number]
 /* ── Tipos locais ── */
 type BuyModal = { contract: ApiContract; step: "choose" | "points" | "cash" }
 type SchedModal = { contractId: string; objectiveIndex: number; title: string; objective: string }
-
-/* ── Helpers ── */
-function expiresInStr(iso: string | null): string {
-  if (!iso) return "—"
-  const diff = new Date(iso).getTime() - Date.now()
-  if (diff <= 0) return "Expirado"
-  const d = Math.floor(diff / 86400000)
-  const h = Math.floor((diff % 86400000) / 3600000)
-  return d > 0 ? `${d}d ${h}h` : `${h}h`
-}
 
 /* ── RewardBadge ── */
 function RewardBadge({ sucatas, xp, rep }: { sucatas: number; xp: number; rep: number | null }) {
@@ -48,11 +36,10 @@ function RewardBadge({ sucatas, xp, rep }: { sucatas: number; xp: number; rep: n
 const PANEL_KEY = "contratos-panel-open"
 
 export default function ContratosPage() {
-  const [panelOpen, setPanelOpen]     = useState(true)
+  const [panelOpen, setPanelOpen]     = useState(false)
   const [activeTab, setActiveTab]     = useState<Tab>("Contratos à Venda")
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
-  const trackRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
   // Contratos
   const [apiContracts, setApiContracts]       = useState<ApiContract[]>([])
@@ -61,6 +48,7 @@ export default function ContratosPage() {
   const [buyModal, setBuyModal]               = useState<BuyModal | null>(null)
   const [userPoints, setUserPoints]           = useState<number | null>(null)
   const [buyingId, setBuyingId]               = useState<string | null>(null)
+  const [detailModal, setDetailModal]         = useState<ApiContract | null>(null)
 
   // Histórico
   const [history, setHistory]                 = useState<HistoryItem[]>([])
@@ -185,275 +173,8 @@ export default function ContratosPage() {
     }
   }
 
-  /* ── Contratos Ativos: trilha visual ── */
-  function TrackView({ raw }: { raw: ApiContract }) {
-    const passColor    = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
-    const objectives   = (raw.objectives ?? []) as Array<{ text?: string; desc?: string; total: number; item_icon?: string }>
-    const objProg      = raw.objectives_progress ?? {}
-    const pct          = objectives.length > 0
-      ? Math.round((objectives.filter((o, i) => (objProg[String(i)] ?? 0) >= o.total).length / objectives.length) * 100)
-      : 0
-    const activeIdx    = objectives.findIndex((o, i) => (objProg[String(i)] ?? 0) < o.total)
-    const expiresIn    = expiresInStr(raw.expires_at)
-    const TYPE_LABEL   = MISSION_LABELS[raw.mission_type] ?? raw.mission_type
-
-    return (
-      <div className="ca-pass-wrap">
-        {/* Header */}
-        <div className="ca-pass-header">
-          {raw.image_url && <div className="ca-pass-header-bg" style={{ backgroundImage: `url(${raw.image_url})` }} />}
-          <div className="ca-pass-header-overlay" />
-          <div className="ca-pass-header-content">
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", padding: "3px 10px", borderRadius: 4, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, alignSelf: "flex-start" }}>
-                {TYPE_LABEL}
-                {raw.contract_type === "faccao" && " · Facção"}
-              </span>
-              <h2 className="ca-pass-title">{raw.title}</h2>
-            </div>
-            <div className="ca-pass-meta">
-              <div style={{ textAlign: "right" }}>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Progresso</p>
-                <p style={{ margin: "2px 0 0", fontSize: 18, fontWeight: 950, color: passColor }}>
-                  {objectives.filter((o, i) => (objProg[String(i)] ?? 0) >= o.total).length}
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 400 }}>/{objectives.length}</span>
-                </p>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <p style={{ margin: 0, fontSize: 11, color: "rgba(255,255,255,0.5)" }}>Expira em</p>
-                <p style={{ margin: "2px 0 0", fontSize: 13, fontWeight: 950, color: "var(--paper)" }}>{expiresIn}</p>
-              </div>
-            </div>
-          </div>
-          <div style={{ position: "relative", zIndex: 1, marginTop: 12, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${pct}%`, background: passColor, borderRadius: 2, transition: "width 0.5s ease" }} />
-          </div>
-        </div>
-
-        {/* Trilha de objetivos */}
-        <div
-          ref={el => { trackRefs.current[raw.id] = el }}
-          className="ca-track-wrap"
-          style={raw.mission_type === "mensal" ? { overflowX: "auto", cursor: "grab", userSelect: "none" } : {}}
-          onMouseDown={raw.mission_type === "mensal" ? e => {
-            const el = trackRefs.current[raw.id]
-            if (!el) return
-            el.style.cursor = "grabbing"
-            const startX = e.pageX - el.offsetLeft
-            const startScroll = el.scrollLeft
-            const onMove = (ev: MouseEvent) => { el.scrollLeft = startScroll - (ev.pageX - el.offsetLeft - startX) }
-            const onUp = () => { el.style.cursor = "grab"; window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp) }
-            window.addEventListener("mousemove", onMove)
-            window.addEventListener("mouseup", onUp)
-          } : undefined}
-        >
-          <div className="ca-track" style={raw.mission_type === "mensal" ? { minWidth: "max-content", width: "auto" } : { width: "100%", alignItems: "flex-start" }}>
-            {objectives.map((obj, i) => {
-              const done       = (objProg[String(i)] ?? 0) >= obj.total
-              const isActive   = i === activeIdx
-              const isLocked   = !done && !isActive
-              const nodeColor  = isLocked ? "rgba(255,255,255,0.12)" : passColor
-              const nodeBg     = done    ? `color-mix(in srgb, ${passColor} 30%, transparent)`
-                               : isActive ? `color-mix(in srgb, ${passColor} 12%, #0a0e16)`
-                               : "rgba(255,255,255,0.03)"
-              const isNext     = i < objectives.length - 1
-              const nextActive = isNext && (!(objectives[i+1] && (objProg[String(i+1)] ?? 0) < objectives[i+1].total) || i+1 === activeIdx)
-              const nodeSize   = 76
-
-              return (
-                <React.Fragment key={i}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0, width: raw.mission_type === "mensal" ? 64 : undefined }}>
-                    <div
-                      className={`ca-track-node${isActive ? " active" : ""}`}
-                      style={{
-                        width: nodeSize, height: nodeSize,
-                        background: nodeBg,
-                        borderColor: nodeColor,
-                        borderWidth: isActive ? 3 : 2,
-                        boxShadow: isActive ? `0 0 20px color-mix(in srgb, ${passColor} 50%, transparent)` : "none",
-                        ["--node-color-alpha" as string]: `color-mix(in srgb, ${passColor} 25%, transparent)`,
-                        ["--node-color-mid" as string]:   `color-mix(in srgb, ${passColor} 45%, transparent)`,
-                        flexDirection: "column" as const, gap: 1,
-                      }}>
-                      {done ? (
-                        <span style={{ fontSize: 28, color: nodeColor, fontWeight: 950 }}>✓</span>
-                      ) : obj.item_icon ? (
-                        <img src={obj.item_icon} alt="" style={{ width: 54, height: 54, objectFit: "contain", opacity: isLocked ? 0.25 : 1, filter: isLocked ? "grayscale(1)" : `drop-shadow(0 0 6px ${nodeColor})` }} />
-                      ) : (
-                        <span style={{ fontSize: 13, fontWeight: 950, color: isLocked ? "rgba(255,255,255,0.2)" : passColor, textAlign: "center" as const, padding: "0 4px" }}>
-                          {obj.text ? obj.text.slice(0, 20) : `Obj ${i + 1}`}
-                        </span>
-                      )}
-                    </div>
-                    <span style={{ fontSize: 9, color: isLocked ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.5)", textAlign: "center" as const }}>
-                      Dia {i + 1}
-                    </span>
-                  </div>
-                  {isNext && (
-                    <div style={{
-                      ...(raw.mission_type === "mensal" ? { width: 24, flexShrink: 0 } : { flex: 1 }),
-                      height: 6, borderRadius: 3, marginTop: 36, marginLeft: 24, marginRight: 24,
-                      background: (done || isActive) && nextActive ? `color-mix(in srgb, ${passColor} 55%, transparent)` : "rgba(255,255,255,0.07)",
-                      transition: "background 0.3s",
-                    }} />
-                  )}
-                </React.Fragment>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Card da missão ativa */}
-        {objectives.length === 0 ? (
-          <div style={{ padding: "12px 24px 20px", fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo cadastrado.</div>
-        ) : activeIdx === -1 ? (
-          <div style={{ padding: "16px 24px 20px", display: "flex", alignItems: "center", gap: 10 }}>
-            <span style={{ fontSize: 22 }}>🏆</span>
-            <span style={{ fontSize: 14, fontWeight: 950, color: "#3df28b" }}>Todos os objetivos concluídos!</span>
-          </div>
-        ) : (() => {
-          const obj     = objectives[activeIdx]
-          const prog    = objProg[String(activeIdx)] ?? 0
-          const objPct  = obj.total > 0 ? Math.min(100, Math.round((prog / obj.total) * 100)) : 0
-          const sched   = raw.active_schedule
-
-          return (
-            <div className="ca-mission-card" style={{ margin: "0 20px 20px" }}>
-              <div className="ca-mission-card-inner" style={{ background: `color-mix(in srgb, ${passColor} 7%, #0a0e16)`, border: `1px solid color-mix(in srgb, ${passColor} 22%, transparent)` }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 9, fontWeight: 950, textTransform: "uppercase", padding: "2px 8px", borderRadius: 3, background: `color-mix(in srgb, ${passColor} 20%, transparent)`, color: passColor, border: `1px solid color-mix(in srgb, ${passColor} 35%, transparent)`, letterSpacing: "0.07em" }}>
-                    {TYPE_LABEL} · Objetivo {activeIdx + 1}/{objectives.length}
-                  </span>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)", marginLeft: "auto" }}>Expira em {expiresIn}</span>
-                </div>
-                <div>
-                  <p style={{ margin: 0, fontSize: 9, fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.08em", color: "rgba(255,255,255,0.4)" }}>Objetivo Atual</p>
-                  <p style={{ margin: "4px 0 0", fontSize: 16, fontWeight: 950, color: "var(--paper)" }}>{obj.text || `Objetivo ${activeIdx + 1}`}</p>
-                  {obj.desc && <p style={{ margin: "4px 0 0", fontSize: 12, color: "var(--paper-dim)" }}>{obj.desc}</p>}
-                </div>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: 11 }}>
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Progresso</span>
-                    <span style={{ color: passColor, fontWeight: 950 }}>{prog} / {obj.total}</span>
-                  </div>
-                  <div className="ca-mission-progress-bar">
-                    <div className="ca-mission-progress-fill" style={{ width: `${objPct}%`, background: passColor }} />
-                  </div>
-                </div>
-                {/* Recompensa final */}
-                {raw.sucatas > 0 && (
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12 }}>
-                    <Coins size={13} style={{ color: "#ffd400" }} />
-                    <span style={{ color: "#ffd400", fontWeight: 950 }}>+{raw.sucatas.toLocaleString("pt-BR")} pts</span>
-                    <span style={{ color: "rgba(255,255,255,0.3)" }}>ao completar tudo</span>
-                  </div>
-                )}
-                {/* Status do agendamento */}
-                {sched?.status === "scheduled" ? (
-                  <div style={{ background: `color-mix(in srgb, ${passColor} 10%, transparent)`, border: `1px solid color-mix(in srgb, ${passColor} 25%, transparent)`, borderRadius: 8, padding: "10px 12px", fontSize: 12 }}>
-                    <p style={{ margin: 0, fontWeight: 950, color: passColor }}>✓ Entrega agendada</p>
-                    {sched.scheduled_at && (
-                      <p style={{ margin: "4px 0 0", color: "rgba(255,255,255,0.5)" }}>
-                        {new Date(sched.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    )}
-                    {sched.game_id && <p style={{ margin: "3px 0 0", fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Game ID: <strong style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{sched.game_id}</strong></p>}
-                  </div>
-                ) : (
-                  <button type="button" className="btn-agendar"
-                    style={{ "--btn-color": passColor, "--btn-bg": `color-mix(in srgb, ${passColor} 9%, #07090f)`, "--btn-border": `color-mix(in srgb, ${passColor} 38%, transparent)`, "--btn-glow": `color-mix(in srgb, ${passColor} 38%, transparent)`, "--btn-icon-bg": `color-mix(in srgb, ${passColor} 15%, transparent)` } as React.CSSProperties}
-                    onClick={() => openScheduleModal(raw.id, activeIdx, raw.title, obj.text ?? `Objetivo ${activeIdx + 1}`)}>
-                    <div className="btn-agendar-icon"><CalendarCheck size={22} /></div>
-                    <div className="btn-agendar-body">
-                      <p className="btn-agendar-title">Agendar Entrega</p>
-                      <p className="btn-agendar-sub">Confirme sua sessão com um administrador</p>
-                    </div>
-                    <ChevronRight className="btn-agendar-arrow" size={18} />
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        })()}
-      </div>
-    )
-  }
-
-  /* ── Contrato simples (diário) ativo ── */
-  function SimpleActiveView({ raw }: { raw: ApiContract }) {
-    const objectives = (raw.objectives ?? []) as Array<{ text?: string; desc?: string; total: number; item_id?: string; item_name?: string; item_icon?: string }>
-    const objProg    = raw.objectives_progress ?? {}
-    const mColor     = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
-    const sched      = raw.active_schedule
-
-    return (
-      <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ padding: "14px 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12 }}>
-          {raw.image_url && <img src={raw.image_url} alt="" style={{ width: 40, height: 40, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 950, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{raw.title}</p>
-            <p style={{ margin: "2px 0 0", fontSize: 11, color: "var(--gray-500)" }}>
-              <span style={{ color: mColor }}>{MISSION_LABELS[raw.mission_type]}</span>
-              {raw.tier && ` · ${raw.tier}`}
-            </p>
-          </div>
-          <RewardBadge sucatas={raw.sucatas} xp={raw.xp} rep={raw.rep} />
-        </div>
-        <div style={{ padding: "12px 18px", display: "grid", gap: 10 }}>
-          {objectives.length === 0 && (
-            <p style={{ margin: 0, fontSize: 12, color: "var(--gray-500)" }}>Nenhum objetivo cadastrado neste contrato.</p>
-          )}
-          {objectives.map((obj, i) => {
-            const delivered = objProg[String(i)] ?? 0
-            const done      = delivered >= obj.total
-            const pct       = obj.total > 0 ? Math.min(100, Math.round((delivered / obj.total) * 100)) : 0
-            return (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 12, alignItems: "center", padding: "10px 14px", background: done ? "rgba(61,242,139,0.04)" : "rgba(255,255,255,0.02)", border: `1px solid ${done ? "rgba(61,242,139,0.2)" : "rgba(255,255,255,0.06)"}`, borderRadius: 8 }}>
-                <div style={{ width: 40, height: 40, borderRadius: 6, background: "rgba(255,255,255,0.05)", display: "grid", placeItems: "center", flexShrink: 0 }}>
-                  {obj.item_icon
-                    ? <img src={obj.item_icon} alt={obj.item_name} style={{ width: 36, height: 36, objectFit: "contain" }} />
-                    : <Package size={18} style={{ color: "var(--gray-500)" }} />}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 950, color: done ? "var(--green)" : "var(--paper)" }}>{obj.text || obj.item_name || "Objetivo"}</p>
-                  {obj.desc && <p style={{ margin: "1px 0 4px", fontSize: 11, color: "var(--gray-500)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{obj.desc}</p>}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ flex: 1, height: 4, background: "rgba(255,255,255,0.08)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${pct}%`, background: done ? "var(--green)" : "var(--cyan)", borderRadius: 2, transition: "width 0.4s" }} />
-                    </div>
-                    <span style={{ fontSize: 10, fontWeight: 950, color: done ? "var(--green)" : "var(--paper-dim)", whiteSpace: "nowrap" }}>{delivered}/{obj.total}</span>
-                  </div>
-                </div>
-                {done ? (
-                  <span style={{ fontSize: 20 }}>✓</span>
-                ) : null}
-              </div>
-            )
-          })}
-          {/* Agendamento */}
-          {sched?.status === "scheduled" ? (
-            <div style={{ padding: "10px 14px", background: "rgba(61,242,139,0.04)", border: "1px solid rgba(61,242,139,0.2)", borderRadius: 8, fontSize: 12 }}>
-              <p style={{ margin: 0, fontWeight: 950, color: "var(--green)" }}>✓ Entrega agendada</p>
-              {sched.scheduled_at && <p style={{ margin: "3px 0 0", color: "var(--gray-500)" }}>{new Date(sched.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</p>}
-            </div>
-          ) : (
-            <button type="button" className="carrinho-checkout-btn" style={{ marginTop: 4 }}
-              onClick={() => {
-                const firstIncomplete = objectives.findIndex((o, i) => (objProg[String(i)] ?? 0) < o.total)
-                const idx = firstIncomplete >= 0 ? firstIncomplete : 0
-                const obj = objectives[idx]
-                openScheduleModal(raw.id, idx, raw.title, obj?.text ?? `Objetivo ${idx + 1}`)
-              }}>
-              <Zap size={14} fill="currentColor" /> Agendar Entrega
-            </button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
   /* ── Dados computados ── */
-  const saleContracts   = apiContracts.filter(c => c.user_status !== "active" && c.user_status !== "completed")
+  const saleContracts   = apiContracts.filter(c => c.user_status !== "active" && c.user_status !== "completed" && c.user_status !== "expired")
   const activeContracts = apiContracts.filter(c => c.user_status === "active")
 
   /* ── Render ── */
@@ -596,7 +317,7 @@ export default function ContratosPage() {
 
           {/* ── Aba: Contratos Ativos ── */}
           {activeTab === "Contratos Ativos" && (
-            <div style={{ display: "grid", gap: 24 }}>
+            <>
               {loadingContracts ? (
                 <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Carregando...</p>
               ) : activeContracts.length === 0 ? (
@@ -605,9 +326,60 @@ export default function ContratosPage() {
                   <p>Vá para <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para aceitar um contrato.</p>
                 </div>
               ) : (
-                activeContracts.map(raw => <TrackView key={raw.id} raw={raw} />)
+                <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
+                  {activeContracts.map(raw => {
+                    const mColor  = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
+                    const mLabel  = MISSION_LABELS[raw.mission_type] ?? raw.mission_type
+                    const tierCol = TIER_COLORS[raw.tier] ?? "var(--gray-500)"
+                    const doneCnt = ((raw.objectives ?? []) as any[]).filter((_: any, i: number) => (raw.objectives_progress?.[String(i)] ?? 0) >= ((_ as any).total ?? 1)).length
+                    const total   = (raw.objectives ?? []).length || raw.total
+                    const pct     = total > 0 ? Math.round((doneCnt / total) * 100) : 0
+
+                    return (
+                      <div key={raw.id} className={`cv-card${raw.variant ? ` cv-card--${raw.variant}` : ""}`}>
+                        {raw.variant && <div className="cv-card-frame" />}
+                        <div className="cv-card-bg">
+                          <div className="cv-card-bg-img" style={{ backgroundImage: `url(${raw.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
+                        </div>
+                        <div className="cv-card-badges">
+                          <span className="cv-card-type" style={{ color: mColor }}>{mLabel}</span>
+                          <span className="cv-card-tier" style={{ color: tierCol, borderColor: `color-mix(in srgb, ${tierCol} 40%, transparent)` }}>{raw.tier}</span>
+                          {raw.contract_type === "faccao" && (
+                            <span style={{ fontSize: 9, fontWeight: 950, color: "#b477ff", textTransform: "uppercase" }}>Facção</span>
+                          )}
+                        </div>
+                        <div className="cv-card-body">
+                          <strong className="cv-card-name">{raw.title}</strong>
+                          <p className="cv-card-desc">{raw.description}</p>
+                          <div className="cv-card-section-label">Recompensas</div>
+                          <RewardBadge sucatas={raw.sucatas} xp={raw.xp} rep={raw.rep} />
+                          <div className="cv-card-section-label">Progresso</div>
+                          <div className="ca-progress-wrap">
+                            <div className="ca-progress-bar"><span style={{ width: `${pct}%`, background: mColor }} /></div>
+                            <span className="ca-progress-label">{doneCnt}/{total}</span>
+                          </div>
+                          <div className="cv-card-footer-meta">
+                            <span className="cv-card-players"><Clock size={11} />{expiresInStr(raw.expires_at)}</span>
+                          </div>
+                          <div className="cv-card-actions">
+                            <button type="button" className="btn-aceitar"
+                              style={raw.faction_color ? { background: raw.faction_color, boxShadow: `0 0 18px ${raw.faction_color}70, 0 2px 8px rgba(0,0,0,0.4)`, color: "rgba(255,255,255,0.95)" } : undefined}
+                              onClick={() => setDetailModal(raw)}>
+                              <Zap size={14} fill="currentColor" /> Acompanhar Contrato
+                            </button>
+                          </div>
+                        </div>
+                        {raw.variant && (
+                          <div className="cv-card-variant-footer">
+                            ‹ {raw.variant === "dourada" ? "Versão Dourada" : raw.variant === "holografica" ? "Versão Holográfica" : "Versão Corrompida"} ›
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           {/* ── Aba: Histórico ── */}
@@ -919,6 +691,20 @@ export default function ContratosPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal de detalhe do contrato ativo ── */}
+      {detailModal && (
+        <div className="cdm-overlay" onClick={() => setDetailModal(null)}
+          style={{ zIndex: 200, backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", background: "rgba(7,9,15,0.75)", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: "100%", maxWidth: 920, maxHeight: "90vh", overflowY: "auto", borderRadius: 14, position: "relative" }}>
+            <button type="button" onClick={() => setDetailModal(null)}
+              style={{ position: "sticky", top: 0, float: "right", zIndex: 10, margin: "0 0 -36px auto", display: "flex", width: 32, height: 32, borderRadius: "50%", border: "1px solid rgba(255,255,255,0.15)", background: "rgba(12,16,24,0.9)", color: "var(--paper-dim)", cursor: "pointer", fontSize: 15, alignItems: "center", justifyContent: "center", font: "inherit" }}>
+              ✕
+            </button>
+            <ActiveContractCard raw={detailModal} accentColor={detailModal.faction_color ?? undefined} onAgendar={(id, idx, title, obj) => { setDetailModal(null); openScheduleModal(id, idx, title, obj) }} />
           </div>
         </div>
       )}

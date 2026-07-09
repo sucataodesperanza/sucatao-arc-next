@@ -1098,6 +1098,19 @@
   flex-shrink: 0;
 }
 
+.faction-info-banner-logo-right {
+  position: absolute;
+  top: 22px;
+  right: 28px;
+  z-index: 1;
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 28px var(--faction-color));
+  opacity: 0.9;
+  pointer-events: none;
+}
+
 .faction-info-banner-name {
   margin: 0;
   font-size: 26px;
