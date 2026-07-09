@@ -103,6 +103,10 @@ function ConfirmForm() {
     if (error) {
       setStatus("Link inválido ou expirado. Solicite um novo e-mail abaixo.")
     } else {
+      // Registra indicação se houver cookie ref_code (fire-and-forget)
+      if (type === "signup") {
+        fetch("/api/referral/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }).catch(() => {})
+      }
       setDone(true)
       setStatus(texts.success)
       setTimeout(() => {
