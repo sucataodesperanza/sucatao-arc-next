@@ -291,7 +291,7 @@ export default function LojaPage() {
   const [selectedContract, setSelectedContract] = useState<typeof contractsForSale[0] | null>(null)
   const [confirmContract, setConfirmContract] = useState<typeof contractsForSale[0] | null>(null)
   const [payMode, setPayMode] = useState<"real" | "pontos">("real")
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(false)
   const [weeklyItems, setWeeklyItems] = useState<RewardItem[]>([])
   const [timer, setTimer] = useState("")
 

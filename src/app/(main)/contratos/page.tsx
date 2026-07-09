@@ -358,7 +358,7 @@ function ActiveContractCard({ raw, onAgendar }: {
 }
 
 export default function ContratosPage() {
-  const [panelOpen, setPanelOpen]     = useState(true)
+  const [panelOpen, setPanelOpen]     = useState(false)
   const [activeTab, setActiveTab]     = useState<Tab>("Contratos à Venda")
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })

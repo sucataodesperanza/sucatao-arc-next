@@ -40,7 +40,7 @@ export default function FaccoesPage() {
   const [confirmFaction, setConfirmFaction] = useState<Faction | null>(null)
   const [joining, setJoining]           = useState(false)
   const [joinError, setJoinError]       = useState("")
-  const [panelOpen, setPanelOpen]       = useState(true)
+  const [panelOpen, setPanelOpen]       = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)

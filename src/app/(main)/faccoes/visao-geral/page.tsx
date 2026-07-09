@@ -53,7 +53,7 @@ export default function FaccoesHubPage() {
   const [passes, setPasses]           = useState<Pass[]>([])
   const [loading, setLoading]         = useState(true)
   const [activeTab, setActiveTab]     = useState(tabs[0])
-  const [panelOpen, setPanelOpen]     = useState(true)
+  const [panelOpen, setPanelOpen]     = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem(PANEL_KEY)
