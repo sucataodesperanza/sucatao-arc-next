@@ -23,17 +23,20 @@ type RewardConfig = {
   id: string
   name: string
   description: string | null
-  reward_type: "points" | "sucatas" | "item"
+  reward_type: "points" | "sucatas" | "item" | "raffle_tickets"
   reward_amount: number
   reward_amount_referred: number
   item_id: string | null
   item_name?: string | null
+  sorteio_id: string | null
+  sorteio_name?: string | null
   trigger_status: string
   active: boolean
   created_at: string
 }
 
 type CatalogItem = { id: string; name: string; icon_url: string | null }
+type SorteioOption = { id: string; title: string; status: string }
 
 type NewRewardForm = {
   name: string
@@ -44,11 +47,14 @@ type NewRewardForm = {
   trigger_status: string
   item_id: string | null
   item_name: string
+  sorteio_id: string | null
+  sorteio_name: string
 }
 const EMPTY_REWARD: NewRewardForm = {
   name: "", description: "", reward_type: "points",
   reward_amount: 0, reward_amount_referred: 0,
   trigger_status: "confirmed", item_id: null, item_name: "",
+  sorteio_id: null, sorteio_name: "",
 }
 
 const STATUS_LABEL: Record<string, string> = {
@@ -74,15 +80,17 @@ const TRIGGER_OPTIONS = [
 ]
 
 const REWARD_TYPE_OPTIONS = [
-  { value: "points",  label: "Pontos de Reputação" },
-  { value: "sucatas", label: "Sucatas" },
-  { value: "item",    label: "Item do Catálogo" },
+  { value: "points",         label: "Pontos de Reputação" },
+  { value: "sucatas",        label: "Sucatas" },
+  { value: "item",           label: "Item do Catálogo" },
+  { value: "raffle_tickets", label: "Tickets de Sorteio" },
 ]
 
 const REWARD_TYPE_COLOR: Record<string, string> = {
-  points:  "var(--yellow)",
-  sucatas: "var(--cyan)",
-  item:    "var(--purple)",
+  points:         "var(--yellow)",
+  sucatas:        "var(--cyan)",
+  item:           "var(--purple)",
+  raffle_tickets: "var(--green)",
 }
 
 function fmtDate(iso: string | null) {
@@ -177,6 +185,74 @@ function ItemSearch({ value, label, onSelect, onClear }: {
   )
 }
 
+function SorteioSearch({ value, label, onSelect, onClear }: {
+  value: string | null
+  label: string
+  onSelect: (s: SorteioOption) => void
+  onClear: () => void
+}) {
+  const [sorteios, setSorteios] = useState<SorteioOption[]>([])
+  const [q, setQ]               = useState("")
+  const [open, setOpen]         = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch("/api/admin/sorteios").then(r => r.json()).then(d => {
+      setSorteios((d.sorteios ?? []).filter((s: SorteioOption) => s.status === "active" || s.status === "upcoming"))
+    })
+    function onClickOutside(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onClickOutside)
+    return () => document.removeEventListener("mousedown", onClickOutside)
+  }, [])
+
+  const filtered = sorteios.filter(s => !q || s.title.toLowerCase().includes(q.toLowerCase()))
+
+  if (value) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, padding: "6px 10px" }}>
+        <span style={{ fontSize: 12, color: "var(--paper)", flex: 1 }}>{label}</span>
+        <button type="button" onClick={onClear} style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", padding: 0, display: "flex" }}>
+          <X size={13} />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      <div style={{ position: "relative" }}>
+        <Search size={12} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "var(--gray-500)", pointerEvents: "none" }} />
+        <input
+          style={{ ...inp, paddingLeft: 26 }}
+          placeholder="Buscar sorteio ativo ou em breve..."
+          value={q}
+          onChange={e => { setQ(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+        />
+      </div>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, zIndex: 50, maxHeight: 200, overflowY: "auto" }}>
+          {filtered.length === 0 ? (
+            <div style={{ padding: "10px 12px", fontSize: 11, color: "var(--gray-500)" }}>Nenhum sorteio ativo ou em breve.</div>
+          ) : filtered.map(s => (
+            <button key={s.id} type="button"
+              onClick={() => { onSelect(s); setQ(""); setOpen(false) }}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", background: "none", border: "none", borderBottom: "1px solid var(--stroke)", color: "var(--paper)", cursor: "pointer", textAlign: "left", fontSize: 12 }}
+            >
+              <span style={{ flex: 1 }}>{s.title}</span>
+              <span style={{ fontSize: 10, color: s.status === "active" ? "var(--green)" : "var(--yellow)", fontWeight: 950 }}>
+                {s.status === "active" ? "ATIVO" : "EM BREVE"}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminIndicacoesPage() {
   const [referrals, setReferrals]   = useState<AdminReferral[]>([])
   const [loading, setLoading]       = useState(true)
@@ -221,6 +297,7 @@ export default function AdminIndicacoesPage() {
     setRewardError("")
     if (!newReward.name.trim()) { setRewardError("Nome é obrigatório."); return }
     if (newReward.reward_type === "item" && !newReward.item_id) { setRewardError("Selecione um item do catálogo."); return }
+    if (newReward.reward_type === "raffle_tickets" && !newReward.sorteio_id) { setRewardError("Selecione um sorteio."); return }
     setSavingReward(true)
     const res = await fetch("/api/admin/referral-rewards", {
       method: "POST",
@@ -265,9 +342,10 @@ export default function AdminIndicacoesPage() {
     delivered: referrals.filter(r => r.status === "reward_delivered").length,
   }
 
-  const isItem = newReward.reward_type === "item"
-  const amtLabel = isItem ? "Qtd — Indicador" : "Valor — Indicador (dono do link)"
-  const amtRefLabel = isItem ? "Qtd — Indicado" : "Valor — Indicado (quem usou o link)"
+  const isItem    = newReward.reward_type === "item"
+  const isRaffle  = newReward.reward_type === "raffle_tickets"
+  const amtLabel    = (isItem || isRaffle) ? "Qtd — Indicador" : "Valor — Indicador (dono do link)"
+  const amtRefLabel = (isItem || isRaffle) ? "Qtd — Indicado"  : "Valor — Indicado (quem usou o link)"
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1100 }}>
@@ -376,7 +454,7 @@ export default function AdminIndicacoesPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de Recompensa *</label>
-            <select style={sel} value={newReward.reward_type} onChange={e => setNewReward(p => ({ ...p, reward_type: e.target.value as RewardConfig["reward_type"], item_id: null, item_name: "" }))}>
+            <select style={sel} value={newReward.reward_type} onChange={e => setNewReward(p => ({ ...p, reward_type: e.target.value as RewardConfig["reward_type"], item_id: null, item_name: "", sorteio_id: null, sorteio_name: "" }))}>
               {REWARD_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
@@ -388,6 +466,17 @@ export default function AdminIndicacoesPage() {
                 label={newReward.item_name}
                 onSelect={item => setNewReward(p => ({ ...p, item_id: item.id, item_name: item.name }))}
                 onClear={() => setNewReward(p => ({ ...p, item_id: null, item_name: "" }))}
+              />
+            </div>
+          )}
+          {newReward.reward_type === "raffle_tickets" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Sorteio *</label>
+              <SorteioSearch
+                value={newReward.sorteio_id}
+                label={newReward.sorteio_name}
+                onSelect={s => setNewReward(p => ({ ...p, sorteio_id: s.id, sorteio_name: s.title }))}
+                onClear={() => setNewReward(p => ({ ...p, sorteio_id: null, sorteio_name: "" }))}
               />
             </div>
           )}
@@ -448,6 +537,9 @@ export default function AdminIndicacoesPage() {
                     </span>
                     {r.reward_type === "item" && r.item_id && (
                       <div style={{ fontSize: 10, color: "var(--gray-500)", marginTop: 4, fontFamily: "monospace" }}>{r.item_name ?? r.item_id}</div>
+                    )}
+                    {r.reward_type === "raffle_tickets" && r.sorteio_id && (
+                      <div style={{ fontSize: 10, color: "var(--green)", marginTop: 4 }}>{r.sorteio_name ?? r.sorteio_id}</div>
                     )}
                   </td>
                   <td style={{ padding: "10px 14px", color: "var(--paper)", fontWeight: 700 }}>{r.reward_amount.toLocaleString("pt-BR")}</td>
