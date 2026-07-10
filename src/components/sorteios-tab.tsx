@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Ticket, TrendingUp, Trophy, ChevronRight, Minus, Plus, Loader2, Radio } from "lucide-react"
 
 type Sorteio = {
@@ -165,11 +165,14 @@ function ActiveSorteioCard({ sorteio, userPoints, onBuy }: {
       <div className="sorteio-featured-right">
         <span className="sorteio-stat-label">Tempo Restante</span>
         <div className="sorteio-countdown">
-          {[{ v: countdown.d, l: "DIAS" }, { v: countdown.h, l: "HORAS" }, { v: countdown.m, l: "MIN" }, { v: countdown.s, l: "SEG" }].map(({ v, l }) => (
-            <div key={l} className="sorteio-countdown-block">
-              <span className="sorteio-countdown-num">{pad(v)}</span>
-              <span className="sorteio-countdown-label">{l}</span>
-            </div>
+          {[{ v: countdown.d, l: "DIAS" }, { v: countdown.h, l: "HORAS" }, { v: countdown.m, l: "MIN" }, { v: countdown.s, l: "SEG" }].map(({ v, l }, i, arr) => (
+            <Fragment key={l}>
+              <div className="sorteio-countdown-block">
+                <span className="sorteio-countdown-num">{pad(v)}</span>
+                <span className="sorteio-countdown-label">{l}</span>
+              </div>
+              {i < arr.length - 1 && <span className="sorteio-countdown-sep">:</span>}
+            </Fragment>
           ))}
         </div>
 

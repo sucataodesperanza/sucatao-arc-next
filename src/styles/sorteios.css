@@ -248,16 +248,17 @@
 
 /* Countdown */
 .sorteio-countdown {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: auto 16px auto 16px auto 16px auto;
+  align-items: start;
+  column-gap: 0;
 }
 
 .sorteio-countdown-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .sorteio-countdown-num {
@@ -277,17 +278,15 @@
   color: var(--gray-500);
 }
 
-/* Separators between countdown blocks */
-.sorteio-countdown-block:not(:last-child)::after {
-  content: ":";
-  position: absolute;
+.sorteio-countdown-sep {
   font-size: 20px;
   font-weight: 950;
   color: var(--gray-500);
-  margin-top: 4px;
+  line-height: 1;
+  text-align: center;
+  padding-top: 4px;
+  user-select: none;
 }
-
-.sorteio-countdown { position: relative; }
 
 /* Progress */
 .sorteio-progress-section {
