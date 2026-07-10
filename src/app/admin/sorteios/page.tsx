@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Trophy, Ticket, Plus, RefreshCw, Play, XCircle, Shuffle, Trash2, TrendingUp } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Trophy, Ticket, Plus, RefreshCw, Play, XCircle, Shuffle, Trash2, ImagePlus, Loader2 } from "lucide-react"
 
 type Sorteio = {
   id: string
@@ -64,6 +64,8 @@ export default function AdminSorteiosPage() {
   const [saving, setSaving]       = useState(false)
   const [formError, setFormError] = useState("")
   const [acting, setActing]       = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   function load() {
     setLoading(true)
@@ -73,6 +75,18 @@ export default function AdminSorteiosPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  async function handleImageFile(file: File) {
+    setUploading(true)
+    setFormError("")
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd })
+    const data = await res.json()
+    setUploading(false)
+    if (!res.ok) { setFormError(data.error ?? "Erro no upload."); return }
+    setForm(p => ({ ...p, image_url: data.url }))
+  }
 
   async function create() {
     setFormError("")
@@ -153,8 +167,22 @@ export default function AdminSorteiosPage() {
             <input style={inp} placeholder="Descrição breve" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>URL da Imagem</label>
-            <input style={inp} placeholder="https://..." value={form.image_url} onChange={e => setForm(p => ({ ...p, image_url: e.target.value }))} />
+            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Imagem</label>
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
+            {form.image_url ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, padding: "6px 10px" }}>
+                <img src={form.image_url} alt="" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.05)" }} />
+                <span style={{ fontSize: 12, color: "var(--paper)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Imagem selecionada</span>
+                <button type="button" onClick={() => { setForm(p => ({ ...p, image_url: "" })); if (fileRef.current) fileRef.current.value = "" }} style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: 0 }}>×</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--surface-3)", border: "1px dashed var(--stroke)", borderRadius: 6, padding: "10px", cursor: "pointer", color: uploading ? "var(--cyan)" : "var(--gray-500)", fontSize: 12, fontFamily: "inherit", transition: "border-color 0.15s, color 0.15s" }}
+              >
+                {uploading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <ImagePlus size={14} />}
+                {uploading ? "Enviando..." : "Clique para anexar imagem"}
+              </button>
+            )}
           </div>
           <div style={{ display: "flex", gap: 8 }}>
             <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
