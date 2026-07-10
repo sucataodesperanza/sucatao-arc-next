@@ -12,8 +12,10 @@ import { CatalogGrid } from "@/components/catalog-grid"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { useItemsCatalog } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
+import { SorteiosTab } from "@/components/sorteios-tab"
 import "../../../styles/loja.css"
 import "../../../styles/contratos-venda.css"
+import "../../../styles/sorteios.css"
 
 function resolveImage(image?: string) {
   if (!image) return undefined
@@ -1285,6 +1287,8 @@ export default function LojaPage() {
                 </div>
               )}
             </>
+          ) : activeTab === "sorteios" ? (
+            <SorteiosTab />
           ) : activeTab === "servicos" ? (
             <>
               <section aria-label="Leilões">
