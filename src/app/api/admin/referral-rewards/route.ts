@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("referral_reward_configs")
-    .insert({ name, description: description || null, reward_type, reward_amount: Number(reward_amount) || 0, trigger_status })
+    .insert({ name, description: description || null, reward_type, reward_amount: Number(reward_amount) || 0, reward_amount_referred: Number(body.reward_amount_referred) || 0, trigger_status })
     .select()
     .single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
