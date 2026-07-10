@@ -248,16 +248,17 @@
 
 /* Countdown */
 .sorteio-countdown {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
+  display: grid;
+  grid-template-columns: auto 16px auto 16px auto 16px auto;
+  align-items: start;
+  column-gap: 0;
 }
 
 .sorteio-countdown-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .sorteio-countdown-num {
@@ -278,12 +279,12 @@
 }
 
 .sorteio-countdown-sep {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 950;
   color: var(--gray-500);
   line-height: 1;
-  align-self: flex-start;
-  padding-top: 3px;
+  text-align: center;
+  padding-top: 4px;
   user-select: none;
 }
 
