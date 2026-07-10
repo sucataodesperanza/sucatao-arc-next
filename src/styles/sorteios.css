@@ -277,17 +277,15 @@
   color: var(--gray-500);
 }
 
-/* Separators between countdown blocks */
-.sorteio-countdown-block:not(:last-child)::after {
-  content: ":";
-  position: absolute;
-  font-size: 20px;
+.sorteio-countdown-sep {
+  font-size: 22px;
   font-weight: 950;
   color: var(--gray-500);
-  margin-top: 4px;
+  line-height: 1;
+  align-self: flex-start;
+  padding-top: 3px;
+  user-select: none;
 }
-
-.sorteio-countdown { position: relative; }
 
 /* Progress */
 .sorteio-progress-section {
