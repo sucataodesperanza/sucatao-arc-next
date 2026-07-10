@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { Users2, Clock, CheckCircle2, Gift, RefreshCw, XCircle, Plus, Trash2, ToggleLeft, ToggleRight, Settings2 } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { Users2, Clock, CheckCircle2, Gift, RefreshCw, XCircle, Plus, Trash2, ToggleLeft, ToggleRight, Settings2, Search, X } from "lucide-react"
 
 type AdminReferral = {
   id: string
@@ -23,16 +23,33 @@ type RewardConfig = {
   id: string
   name: string
   description: string | null
-  reward_type: "points" | "sucatas" | "item" | "custom"
+  reward_type: "points" | "sucatas" | "item"
   reward_amount: number
   reward_amount_referred: number
+  item_id: string | null
+  item_name?: string | null
   trigger_status: string
   active: boolean
   created_at: string
 }
 
-type NewRewardForm = { name: string; description: string; reward_type: RewardConfig["reward_type"]; reward_amount: number; reward_amount_referred: number; trigger_status: string }
-const EMPTY_REWARD: NewRewardForm = { name: "", description: "", reward_type: "points", reward_amount: 0, reward_amount_referred: 0, trigger_status: "confirmed" }
+type CatalogItem = { id: string; name: string; icon_url: string | null }
+
+type NewRewardForm = {
+  name: string
+  description: string
+  reward_type: RewardConfig["reward_type"]
+  reward_amount: number
+  reward_amount_referred: number
+  trigger_status: string
+  item_id: string | null
+  item_name: string
+}
+const EMPTY_REWARD: NewRewardForm = {
+  name: "", description: "", reward_type: "points",
+  reward_amount: 0, reward_amount_referred: 0,
+  trigger_status: "confirmed", item_id: null, item_name: "",
+}
 
 const STATUS_LABEL: Record<string, string> = {
   registered:           "Cadastro Realizado",
@@ -59,15 +76,13 @@ const TRIGGER_OPTIONS = [
 const REWARD_TYPE_OPTIONS = [
   { value: "points",  label: "Pontos de Reputação" },
   { value: "sucatas", label: "Sucatas" },
-  { value: "item",    label: "Item" },
-  { value: "custom",  label: "Personalizado" },
+  { value: "item",    label: "Item do Catálogo" },
 ]
 
 const REWARD_TYPE_COLOR: Record<string, string> = {
   points:  "var(--yellow)",
   sucatas: "var(--cyan)",
   item:    "var(--purple)",
-  custom:  "var(--green)",
 }
 
 function fmtDate(iso: string | null) {
@@ -80,18 +95,100 @@ const inp: React.CSSProperties = { background: "var(--surface-3)", border: "1px 
 const sel: React.CSSProperties = { ...inp, cursor: "pointer" }
 const btn = (color = "var(--yellow)"): React.CSSProperties => ({ background: `color-mix(in srgb, ${color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, color, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 950, cursor: "pointer" })
 
+function ItemSearch({ value, label, onSelect, onClear }: {
+  value: string | null
+  label: string
+  onSelect: (item: CatalogItem) => void
+  onClear: () => void
+}) {
+  const [q, setQ]           = useState("")
+  const [items, setItems]   = useState<CatalogItem[]>([])
+  const [open, setOpen]     = useState(false)
+  const [searching, setSearching] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wrapRef  = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onClickOutside)
+    return () => document.removeEventListener("mousedown", onClickOutside)
+  }, [])
+
+  function handleInput(v: string) {
+    setQ(v)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (!v.trim()) { setItems([]); setOpen(false); return }
+    timerRef.current = setTimeout(async () => {
+      setSearching(true)
+      const res = await fetch(`/api/admin/catalog?q=${encodeURIComponent(v)}&pageSize=20`)
+      const data = await res.json().catch(() => ({}))
+      setItems(data.items ?? [])
+      setOpen(true)
+      setSearching(false)
+    }, 300)
+  }
+
+  if (value) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 6, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, padding: "6px 10px" }}>
+        <span style={{ fontSize: 12, color: "var(--paper)", flex: 1 }}>{label}</span>
+        <button type="button" onClick={onClear} style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", padding: 0, display: "flex" }}>
+          <X size={13} />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      <div style={{ position: "relative" }}>
+        <Search size={12} style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", color: "var(--gray-500)", pointerEvents: "none" }} />
+        <input
+          style={{ ...inp, paddingLeft: 26 }}
+          placeholder="Buscar item no catálogo..."
+          value={q}
+          onChange={e => handleInput(e.target.value)}
+          onFocus={() => items.length > 0 && setOpen(true)}
+        />
+      </div>
+      {open && (
+        <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, zIndex: 50, maxHeight: 200, overflowY: "auto" }}>
+          {searching ? (
+            <div style={{ padding: "10px 12px", fontSize: 11, color: "var(--gray-500)" }}>Buscando...</div>
+          ) : items.length === 0 ? (
+            <div style={{ padding: "10px 12px", fontSize: 11, color: "var(--gray-500)" }}>Nenhum item encontrado.</div>
+          ) : items.map(item => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => { onSelect(item); setQ(""); setOpen(false) }}
+              style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 12px", background: "none", border: "none", borderBottom: "1px solid var(--stroke)", color: "var(--paper)", cursor: "pointer", textAlign: "left", fontSize: 12 }}
+            >
+              {item.icon_url && <img src={item.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain", opacity: 0.85 }} />}
+              <span style={{ flex: 1 }}>{item.name}</span>
+              <span style={{ fontSize: 10, color: "var(--gray-500)", fontFamily: "monospace" }}>{item.id}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function AdminIndicacoesPage() {
   const [referrals, setReferrals]   = useState<AdminReferral[]>([])
   const [loading, setLoading]       = useState(true)
   const [filter, setFilter]         = useState("")
   const [updating, setUpdating]     = useState<string | null>(null)
 
-  const [rewards, setRewards]           = useState<RewardConfig[]>([])
+  const [rewards, setRewards]               = useState<RewardConfig[]>([])
   const [rewardsLoading, setRewardsLoading] = useState(true)
-  const [savingReward, setSavingReward] = useState(false)
+  const [savingReward, setSavingReward]     = useState(false)
   const [deletingReward, setDeletingReward] = useState<string | null>(null)
-  const [newReward, setNewReward]       = useState(EMPTY_REWARD)
-  const [rewardError, setRewardError]   = useState("")
+  const [newReward, setNewReward]           = useState<NewRewardForm>(EMPTY_REWARD)
+  const [rewardError, setRewardError]       = useState("")
 
   function load() {
     setLoading(true)
@@ -123,6 +220,7 @@ export default function AdminIndicacoesPage() {
   async function createReward() {
     setRewardError("")
     if (!newReward.name.trim()) { setRewardError("Nome é obrigatório."); return }
+    if (newReward.reward_type === "item" && !newReward.item_id) { setRewardError("Selecione um item do catálogo."); return }
     setSavingReward(true)
     const res = await fetch("/api/admin/referral-rewards", {
       method: "POST",
@@ -166,6 +264,10 @@ export default function AdminIndicacoesPage() {
     confirmed: referrals.filter(r => r.status === "confirmed").length,
     delivered: referrals.filter(r => r.status === "reward_delivered").length,
   }
+
+  const isItem = newReward.reward_type === "item"
+  const amtLabel = isItem ? "Qtd — Indicador" : "Valor — Indicador (dono do link)"
+  const amtRefLabel = isItem ? "Qtd — Indicado" : "Valor — Indicado (quem usou o link)"
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, maxWidth: 1100 }}>
@@ -274,16 +376,27 @@ export default function AdminIndicacoesPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Tipo de Recompensa *</label>
-            <select style={sel} value={newReward.reward_type} onChange={e => setNewReward(p => ({ ...p, reward_type: e.target.value as RewardConfig["reward_type"] }))}>
+            <select style={sel} value={newReward.reward_type} onChange={e => setNewReward(p => ({ ...p, reward_type: e.target.value as RewardConfig["reward_type"], item_id: null, item_name: "" }))}>
               {REWARD_TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           </div>
+          {isItem && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Item do Catálogo *</label>
+              <ItemSearch
+                value={newReward.item_id}
+                label={newReward.item_name}
+                onSelect={item => setNewReward(p => ({ ...p, item_id: item.id, item_name: item.name }))}
+                onClear={() => setNewReward(p => ({ ...p, item_id: null, item_name: "" }))}
+              />
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Valor — Indicador (dono do link)</label>
+            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>{amtLabel}</label>
             <input style={inp} type="number" min={0} placeholder="0" value={newReward.reward_amount} onChange={e => setNewReward(p => ({ ...p, reward_amount: Number(e.target.value) }))} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Valor — Indicado (quem usou o link)</label>
+            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>{amtRefLabel}</label>
             <input style={inp} type="number" min={0} placeholder="0" value={newReward.reward_amount_referred} onChange={e => setNewReward(p => ({ ...p, reward_amount_referred: Number(e.target.value) }))} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -313,7 +426,7 @@ export default function AdminIndicacoesPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--stroke)" }}>
-                {["Nome", "Tipo", "Indicador", "Indicado", "Gatilho", "Status", "Ações"].map(h => (
+                {["Nome", "Tipo / Item", "Indicador", "Indicado", "Gatilho", "Status", "Ações"].map(h => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", color: "var(--gray-500)", fontWeight: 950, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
@@ -333,6 +446,9 @@ export default function AdminIndicacoesPage() {
                     <span style={{ fontSize: 10, fontWeight: 950, padding: "3px 8px", borderRadius: 4, background: `color-mix(in srgb, ${REWARD_TYPE_COLOR[r.reward_type] ?? "var(--gray-500)"} 12%, transparent)`, color: REWARD_TYPE_COLOR[r.reward_type] ?? "var(--gray-500)", border: `1px solid color-mix(in srgb, ${REWARD_TYPE_COLOR[r.reward_type] ?? "var(--gray-500)"} 25%, transparent)` }}>
                       {REWARD_TYPE_OPTIONS.find(o => o.value === r.reward_type)?.label ?? r.reward_type}
                     </span>
+                    {r.reward_type === "item" && r.item_id && (
+                      <div style={{ fontSize: 10, color: "var(--gray-500)", marginTop: 4, fontFamily: "monospace" }}>{r.item_name ?? r.item_id}</div>
+                    )}
                   </td>
                   <td style={{ padding: "10px 14px", color: "var(--paper)", fontWeight: 700 }}>{r.reward_amount.toLocaleString("pt-BR")}</td>
                   <td style={{ padding: "10px 14px", color: "var(--cyan)", fontWeight: 700 }}>{r.reward_amount_referred.toLocaleString("pt-BR")}</td>
