@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { Trophy, Ticket, Plus, RefreshCw, Play, XCircle, Shuffle, Trash2, ImagePlus, Loader2 } from "lucide-react"
+import { Fragment, useEffect, useRef, useState } from "react"
+import { Trophy, Ticket, Plus, RefreshCw, Play, XCircle, Shuffle, Trash2, ImagePlus, Loader2, Pencil } from "lucide-react"
 
 type Sorteio = {
   id: string
@@ -52,10 +52,119 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" })
 }
 
+function toDatetimeLocal(iso: string) {
+  const d = new Date(iso)
+  const pad = (n: number) => String(n).padStart(2, "0")
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
 const card: React.CSSProperties = { background: "var(--surface-2)", border: "1px solid var(--stroke)", borderRadius: 12, padding: "20px 24px" }
 const inp: React.CSSProperties = { background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, color: "var(--paper)", padding: "6px 10px", fontSize: 12, width: "100%" }
 const sel: React.CSSProperties = { ...inp, cursor: "pointer" }
 const btn = (color = "var(--yellow)"): React.CSSProperties => ({ background: `color-mix(in srgb, ${color} 15%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 30%, transparent)`, color, borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 950, cursor: "pointer", fontFamily: "inherit" })
+
+function ImageUploadField({
+  value, onChange, uploading, fileRef, onError,
+}: {
+  value: string
+  onChange: (url: string) => void
+  uploading: boolean
+  fileRef: React.RefObject<HTMLInputElement | null>
+  onError: (e: string) => void
+}) {
+  async function handleFile(file: File) {
+    onError("")
+    const fd = new FormData()
+    fd.append("file", file)
+    const res = await fetch("/api/admin/upload", { method: "POST", body: fd })
+    const data = await res.json()
+    if (!res.ok) { onError(data.error ?? "Erro no upload."); return }
+    onChange(data.url)
+  }
+
+  return (
+    <>
+      <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }}
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f) }} />
+      {value ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, padding: "6px 10px" }}>
+          <img src={value} alt="" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.05)" }} />
+          <span style={{ fontSize: 12, color: "var(--paper)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Imagem selecionada</span>
+          <button type="button" onClick={() => { onChange(""); if (fileRef.current) fileRef.current.value = "" }}
+            style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: 0 }}>×</button>
+        </div>
+      ) : (
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--surface-3)", border: "1px dashed var(--stroke)", borderRadius: 6, padding: "10px", cursor: "pointer", color: uploading ? "var(--cyan)" : "var(--gray-500)", fontSize: 12, fontFamily: "inherit" }}>
+          {uploading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <ImagePlus size={14} />}
+          {uploading ? "Enviando..." : "Clique para anexar imagem"}
+        </button>
+      )}
+    </>
+  )
+}
+
+function SorteioFormFields({
+  form, setForm, uploading, setUploading, fileRef, setError,
+}: {
+  form: typeof EMPTY_FORM
+  setForm: React.Dispatch<React.SetStateAction<typeof EMPTY_FORM>>
+  uploading: boolean
+  setUploading: React.Dispatch<React.SetStateAction<boolean>>
+  fileRef: React.RefObject<HTMLInputElement | null>
+  setError: (e: string) => void
+}) {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Título *</label>
+        <input style={inp} placeholder="Ex: Drone ARC-07" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Descrição</label>
+        <input style={inp} placeholder="Descrição breve" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Imagem</label>
+        <ImageUploadField
+          value={form.image_url}
+          onChange={url => setForm(p => ({ ...p, image_url: url }))}
+          uploading={uploading}
+          fileRef={fileRef}
+          onError={e => { setUploading(false); setError(e) }}
+        />
+      </div>
+      <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+          <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Badge (texto)</label>
+          <input style={inp} placeholder="EXCLUSIVO" value={form.badge} onChange={e => setForm(p => ({ ...p, badge: e.target.value }))} />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4, width: 120 }}>
+          <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Cor do Badge</label>
+          <select style={sel} value={form.badge_color} onChange={e => setForm(p => ({ ...p, badge_color: e.target.value }))}>
+            {BADGE_COLOR_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Preço do Ticket (pontos) *</label>
+        <input style={inp} type="number" min={1} placeholder="10" value={form.ticket_price} onChange={e => setForm(p => ({ ...p, ticket_price: Number(e.target.value) }))} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Máx. de Tickets *</label>
+        <input style={inp} type="number" min={1} placeholder="1000" value={form.max_tickets} onChange={e => setForm(p => ({ ...p, max_tickets: Number(e.target.value) }))} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Início *</label>
+        <input style={inp} type="datetime-local" value={form.starts_at} onChange={e => setForm(p => ({ ...p, starts_at: e.target.value }))} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Encerramento *</label>
+        <input style={inp} type="datetime-local" value={form.ends_at} onChange={e => setForm(p => ({ ...p, ends_at: e.target.value }))} />
+      </div>
+    </div>
+  )
+}
 
 export default function AdminSorteiosPage() {
   const [sorteios, setSorteios]   = useState<Sorteio[]>([])
@@ -67,6 +176,13 @@ export default function AdminSorteiosPage() {
   const [uploading, setUploading] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
+  const [editingId, setEditingId]         = useState<string | null>(null)
+  const [editForm, setEditForm]           = useState(EMPTY_FORM)
+  const [editSaving, setEditSaving]       = useState(false)
+  const [editError, setEditError]         = useState("")
+  const [editUploading, setEditUploading] = useState(false)
+  const editFileRef = useRef<HTMLInputElement>(null)
+
   function load() {
     setLoading(true)
     fetch("/api/admin/sorteios").then(r => r.json()).then(d => {
@@ -76,16 +192,49 @@ export default function AdminSorteiosPage() {
 
   useEffect(() => { load() }, [])
 
-  async function handleImageFile(file: File) {
-    setUploading(true)
-    setFormError("")
-    const fd = new FormData()
-    fd.append("file", file)
-    const res = await fetch("/api/admin/upload", { method: "POST", body: fd })
+  function startEdit(s: Sorteio) {
+    setEditingId(s.id)
+    setEditError("")
+    if (editFileRef.current) editFileRef.current.value = ""
+    setEditForm({
+      title:        s.title,
+      description:  s.description ?? "",
+      image_url:    s.image_url ?? "",
+      badge:        s.badge ?? "",
+      badge_color:  s.badge_color,
+      ticket_price: s.ticket_price,
+      max_tickets:  s.max_tickets,
+      starts_at:    toDatetimeLocal(s.starts_at),
+      ends_at:      toDatetimeLocal(s.ends_at),
+    })
+  }
+
+  async function saveEdit() {
+    if (!editingId) return
+    setEditError("")
+    if (!editForm.title.trim()) { setEditError("Título é obrigatório."); return }
+    if (!editForm.starts_at || !editForm.ends_at) { setEditError("Datas de início e fim são obrigatórias."); return }
+    setEditSaving(true)
+    const res = await fetch(`/api/admin/sorteios/${editingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title:        editForm.title,
+        description:  editForm.description || null,
+        image_url:    editForm.image_url || null,
+        badge:        editForm.badge || null,
+        badge_color:  editForm.badge_color,
+        ticket_price: editForm.ticket_price,
+        max_tickets:  editForm.max_tickets,
+        starts_at:    editForm.starts_at,
+        ends_at:      editForm.ends_at,
+      }),
+    })
     const data = await res.json()
-    setUploading(false)
-    if (!res.ok) { setFormError(data.error ?? "Erro no upload."); return }
-    setForm(p => ({ ...p, image_url: data.url }))
+    setEditSaving(false)
+    if (!res.ok) { setEditError(data.error ?? "Erro ao salvar."); return }
+    setEditingId(null)
+    load()
   }
 
   async function create() {
@@ -139,10 +288,10 @@ export default function AdminSorteiosPage() {
       {/* Stats */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 12 }}>
         {[
-          { label: "Total",     value: stats.total,    icon: Trophy,     color: "var(--cyan)"   },
-          { label: "Ativos",    value: stats.active,   icon: Play,       color: "var(--green)"  },
-          { label: "Finalizados", value: stats.finished, icon: Shuffle,  color: "var(--purple)" },
-          { label: "Tickets Vendidos", value: stats.tickets, icon: Ticket, color: "var(--yellow)" },
+          { label: "Total",            value: stats.total,    icon: Trophy,  color: "var(--cyan)"   },
+          { label: "Ativos",           value: stats.active,   icon: Play,    color: "var(--green)"  },
+          { label: "Finalizados",      value: stats.finished, icon: Shuffle, color: "var(--purple)" },
+          { label: "Tickets Vendidos", value: stats.tickets,  icon: Ticket,  color: "var(--yellow)" },
         ].map(s => (
           <div key={s.label} style={{ ...card, display: "flex", alignItems: "center", gap: 12 }}>
             <s.icon size={22} style={{ color: s.color, flexShrink: 0 }} />
@@ -157,67 +306,16 @@ export default function AdminSorteiosPage() {
       {/* Formulário novo sorteio */}
       <div style={card}>
         <p style={{ margin: "0 0 16px", fontSize: 12, fontWeight: 950, color: "var(--paper)", textTransform: "uppercase", letterSpacing: "0.06em" }}>Novo Sorteio</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Título *</label>
-            <input style={inp} placeholder="Ex: Drone ARC-07" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Descrição</label>
-            <input style={inp} placeholder="Descrição breve" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Imagem</label>
-            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
-            {form.image_url ? (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "var(--surface-3)", border: "1px solid var(--stroke)", borderRadius: 6, padding: "6px 10px" }}>
-                <img src={form.image_url} alt="" style={{ width: 36, height: 36, objectFit: "contain", borderRadius: 4, background: "rgba(255,255,255,0.05)" }} />
-                <span style={{ fontSize: 12, color: "var(--paper)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Imagem selecionada</span>
-                <button type="button" onClick={() => { setForm(p => ({ ...p, image_url: "" })); if (fileRef.current) fileRef.current.value = "" }} style={{ background: "none", border: "none", color: "var(--gray-500)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: 0 }}>×</button>
-              </div>
-            ) : (
-              <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-                style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, background: "var(--surface-3)", border: "1px dashed var(--stroke)", borderRadius: 6, padding: "10px", cursor: "pointer", color: uploading ? "var(--cyan)" : "var(--gray-500)", fontSize: 12, fontFamily: "inherit", transition: "border-color 0.15s, color 0.15s" }}
-              >
-                {uploading ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <ImagePlus size={14} />}
-                {uploading ? "Enviando..." : "Clique para anexar imagem"}
-              </button>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
-              <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Badge (texto)</label>
-              <input style={inp} placeholder="EXCLUSIVO" value={form.badge} onChange={e => setForm(p => ({ ...p, badge: e.target.value }))} />
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 4, width: 120 }}>
-              <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Cor do Badge</label>
-              <select style={sel} value={form.badge_color} onChange={e => setForm(p => ({ ...p, badge_color: e.target.value }))}>
-                {BADGE_COLOR_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Preço do Ticket (pontos) *</label>
-            <input style={inp} type="number" min={1} placeholder="10" value={form.ticket_price} onChange={e => setForm(p => ({ ...p, ticket_price: Number(e.target.value) }))} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Máx. de Tickets *</label>
-            <input style={inp} type="number" min={1} placeholder="1000" value={form.max_tickets} onChange={e => setForm(p => ({ ...p, max_tickets: Number(e.target.value) }))} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Início *</label>
-            <input style={inp} type="datetime-local" value={form.starts_at} onChange={e => setForm(p => ({ ...p, starts_at: e.target.value }))} />
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Encerramento *</label>
-            <input style={inp} type="datetime-local" value={form.ends_at} onChange={e => setForm(p => ({ ...p, ends_at: e.target.value }))} />
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-            <button type="button" disabled={saving} onClick={create} style={{ ...btn("var(--yellow)"), padding: "8px 20px", fontSize: 12, flex: 1 }}>
-              <Plus size={13} style={{ display: "inline", marginRight: 4 }} />{saving ? "Criando..." : "Criar Sorteio"}
-            </button>
-            <button type="button" onClick={() => setForm(EMPTY_FORM)} style={{ ...btn("var(--gray-500)"), padding: "8px 14px", fontSize: 12 }}>Limpar</button>
-          </div>
+        <SorteioFormFields
+          form={form} setForm={setForm}
+          uploading={uploading} setUploading={setUploading}
+          fileRef={fileRef} setError={setFormError}
+        />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+          <button type="button" disabled={saving} onClick={create} style={{ ...btn("var(--yellow)"), padding: "8px 20px", fontSize: 12 }}>
+            <Plus size={13} style={{ display: "inline", marginRight: 4 }} />{saving ? "Criando..." : "Criar Sorteio"}
+          </button>
+          <button type="button" onClick={() => setForm(EMPTY_FORM)} style={{ ...btn("var(--gray-500)"), padding: "8px 14px", fontSize: 12 }}>Limpar</button>
         </div>
         {formError && <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--red)" }}>{formError}</p>}
       </div>
@@ -246,60 +344,95 @@ export default function AdminSorteiosPage() {
               ) : sorteios.length === 0 ? (
                 <tr><td colSpan={7} style={{ padding: 20, color: "var(--gray-500)", textAlign: "center" }}>Nenhum sorteio cadastrado.</td></tr>
               ) : sorteios.map((s, i) => (
-                <tr key={s.id} style={{ borderBottom: i < sorteios.length - 1 ? "1px solid var(--stroke)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div style={{ fontWeight: 700, color: "var(--paper)" }}>{s.title}</div>
-                    {s.badge && <div style={{ fontSize: 10, color: "var(--gray-500)", marginTop: 2 }}>{s.badge}</div>}
-                  </td>
-                  <td style={{ padding: "10px 14px", color: "var(--cyan)", fontWeight: 950 }}>{s.ticket_price} pts</td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div style={{ fontWeight: 950, color: "var(--paper)" }}>{s.tickets_sold} / {s.max_tickets}</div>
-                    <div style={{ height: 3, background: "var(--stroke)", borderRadius: 99, marginTop: 4, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${Math.round(s.tickets_sold / s.max_tickets * 100)}%`, background: "var(--cyan)", borderRadius: 99 }} />
-                    </div>
-                  </td>
-                  <td style={{ padding: "10px 14px", color: "var(--gray-500)" }}>
-                    <div style={{ fontSize: 11 }}>{fmtDate(s.starts_at)}</div>
-                    <div style={{ fontSize: 11, marginTop: 2 }}>→ {fmtDate(s.ends_at)}</div>
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <span style={{ fontSize: 10, fontWeight: 950, padding: "3px 8px", borderRadius: 4, background: `color-mix(in srgb, ${STATUS_COLOR[s.status] ?? "var(--gray-500)"} 12%, transparent)`, color: STATUS_COLOR[s.status] ?? "var(--gray-500)", border: `1px solid color-mix(in srgb, ${STATUS_COLOR[s.status] ?? "var(--gray-500)"} 25%, transparent)` }}>
-                      {STATUS_LABEL[s.status] ?? s.status}
-                    </span>
-                  </td>
-                  <td style={{ padding: "10px 14px", color: "var(--paper)" }}>
-                    {s.winner_name ? (
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{s.winner_name}</div>
-                        <div style={{ fontSize: 10, color: "var(--gray-500)" }}>Ticket #{s.winner_ticket}</div>
+                <Fragment key={s.id}>
+                  <tr style={{ borderBottom: editingId === s.id ? "none" : (i < sorteios.length - 1 ? "1px solid var(--stroke)" : "none"), background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div style={{ fontWeight: 700, color: "var(--paper)" }}>{s.title}</div>
+                      {s.badge && <div style={{ fontSize: 10, color: "var(--gray-500)", marginTop: 2 }}>{s.badge}</div>}
+                    </td>
+                    <td style={{ padding: "10px 14px", color: "var(--cyan)", fontWeight: 950 }}>{s.ticket_price} pts</td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div style={{ fontWeight: 950, color: "var(--paper)" }}>{s.tickets_sold} / {s.max_tickets}</div>
+                      <div style={{ height: 3, background: "var(--stroke)", borderRadius: 99, marginTop: 4, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${Math.round(s.tickets_sold / s.max_tickets * 100)}%`, background: "var(--cyan)", borderRadius: 99 }} />
                       </div>
-                    ) : "—"}
-                  </td>
-                  <td style={{ padding: "10px 14px" }}>
-                    <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                      {s.status === "upcoming" && (
-                        <button type="button" disabled={acting === s.id + "activate"} onClick={() => action(s.id, "activate")} style={btn("var(--green)")}>
-                          <Play size={10} style={{ display: "inline", marginRight: 3 }} />Ativar
+                    </td>
+                    <td style={{ padding: "10px 14px", color: "var(--gray-500)" }}>
+                      <div style={{ fontSize: 11 }}>{fmtDate(s.starts_at)}</div>
+                      <div style={{ fontSize: 11, marginTop: 2 }}>→ {fmtDate(s.ends_at)}</div>
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <span style={{ fontSize: 10, fontWeight: 950, padding: "3px 8px", borderRadius: 4, background: `color-mix(in srgb, ${STATUS_COLOR[s.status] ?? "var(--gray-500)"} 12%, transparent)`, color: STATUS_COLOR[s.status] ?? "var(--gray-500)", border: `1px solid color-mix(in srgb, ${STATUS_COLOR[s.status] ?? "var(--gray-500)"} 25%, transparent)` }}>
+                        {STATUS_LABEL[s.status] ?? s.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "10px 14px", color: "var(--paper)" }}>
+                      {s.winner_name ? (
+                        <div>
+                          <div style={{ fontWeight: 700 }}>{s.winner_name}</div>
+                          <div style={{ fontSize: 10, color: "var(--gray-500)" }}>Ticket #{s.winner_ticket}</div>
+                        </div>
+                      ) : "—"}
+                    </td>
+                    <td style={{ padding: "10px 14px" }}>
+                      <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
+                        <button type="button" onClick={() => editingId === s.id ? setEditingId(null) : startEdit(s)}
+                          style={btn(editingId === s.id ? "var(--cyan)" : "var(--paper)")}>
+                          <Pencil size={10} style={{ display: "inline", marginRight: 3 }} />
+                          {editingId === s.id ? "Fechar" : "Editar"}
                         </button>
-                      )}
-                      {s.status === "active" && (
-                        <button type="button" disabled={acting === s.id + "draw"} onClick={() => action(s.id, "draw")} style={btn("var(--purple)")}>
-                          <Shuffle size={10} style={{ display: "inline", marginRight: 3 }} />Sortear
-                        </button>
-                      )}
-                      {(s.status === "upcoming" || s.status === "active") && (
-                        <button type="button" disabled={acting === s.id + "cancel"} onClick={() => action(s.id, "cancel")} style={btn("var(--red)")}>
-                          <XCircle size={10} style={{ display: "inline", marginRight: 3 }} />Cancelar
-                        </button>
-                      )}
-                      {s.status === "cancelled" && (
-                        <button type="button" disabled={acting === s.id + "delete"} onClick={() => del(s.id)} style={btn("var(--gray-500)")}>
-                          <Trash2 size={10} style={{ display: "inline", marginRight: 3 }} />Excluir
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                        {s.status === "upcoming" && (
+                          <button type="button" disabled={acting === s.id + "activate"} onClick={() => action(s.id, "activate")} style={btn("var(--green)")}>
+                            <Play size={10} style={{ display: "inline", marginRight: 3 }} />Ativar
+                          </button>
+                        )}
+                        {s.status === "active" && (
+                          <button type="button" disabled={acting === s.id + "draw"} onClick={() => action(s.id, "draw")} style={btn("var(--purple)")}>
+                            <Shuffle size={10} style={{ display: "inline", marginRight: 3 }} />Sortear
+                          </button>
+                        )}
+                        {(s.status === "upcoming" || s.status === "active") && (
+                          <button type="button" disabled={acting === s.id + "cancel"} onClick={() => action(s.id, "cancel")} style={btn("var(--red)")}>
+                            <XCircle size={10} style={{ display: "inline", marginRight: 3 }} />Cancelar
+                          </button>
+                        )}
+                        {s.status === "cancelled" && (
+                          <button type="button" disabled={acting === s.id + "delete"} onClick={() => del(s.id)} style={btn("var(--gray-500)")}>
+                            <Trash2 size={10} style={{ display: "inline", marginRight: 3 }} />Excluir
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+
+                  {editingId === s.id && (
+                    <tr>
+                      <td colSpan={7} style={{ padding: 0, borderBottom: i < sorteios.length - 1 ? "1px solid var(--stroke)" : "none" }}>
+                        <div style={{ background: "rgba(0,200,255,0.03)", borderTop: "1px solid color-mix(in srgb, var(--cyan) 20%, transparent)", padding: "16px 20px" }}>
+                          <p style={{ margin: "0 0 14px", fontSize: 11, fontWeight: 950, color: "var(--cyan)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                            Editar: {s.title}
+                          </p>
+                          <SorteioFormFields
+                            form={editForm} setForm={setEditForm}
+                            uploading={editUploading} setUploading={setEditUploading}
+                            fileRef={editFileRef} setError={setEditError}
+                          />
+                          {editError && <p style={{ margin: "10px 0 0", fontSize: 12, color: "var(--red)" }}>{editError}</p>}
+                          <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                            <button type="button" disabled={editSaving} onClick={saveEdit}
+                              style={{ ...btn("var(--cyan)"), padding: "8px 20px", fontSize: 12 }}>
+                              {editSaving ? "Salvando..." : "Salvar Alterações"}
+                            </button>
+                            <button type="button" onClick={() => setEditingId(null)}
+                              style={{ ...btn("var(--gray-500)"), padding: "8px 14px", fontSize: 12 }}>
+                              Cancelar
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
           </table>
