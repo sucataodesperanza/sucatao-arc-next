@@ -25,13 +25,14 @@ type RewardConfig = {
   description: string | null
   reward_type: "points" | "sucatas" | "item" | "custom"
   reward_amount: number
+  reward_amount_referred: number
   trigger_status: string
   active: boolean
   created_at: string
 }
 
-type NewRewardForm = { name: string; description: string; reward_type: RewardConfig["reward_type"]; reward_amount: number; trigger_status: string }
-const EMPTY_REWARD: NewRewardForm = { name: "", description: "", reward_type: "points", reward_amount: 0, trigger_status: "confirmed" }
+type NewRewardForm = { name: string; description: string; reward_type: RewardConfig["reward_type"]; reward_amount: number; reward_amount_referred: number; trigger_status: string }
+const EMPTY_REWARD: NewRewardForm = { name: "", description: "", reward_type: "points", reward_amount: 0, reward_amount_referred: 0, trigger_status: "confirmed" }
 
 const STATUS_LABEL: Record<string, string> = {
   registered:           "Cadastro Realizado",
@@ -278,8 +279,12 @@ export default function AdminIndicacoesPage() {
             </select>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Quantidade / Valor</label>
+            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Valor — Indicador (dono do link)</label>
             <input style={inp} type="number" min={0} placeholder="0" value={newReward.reward_amount} onChange={e => setNewReward(p => ({ ...p, reward_amount: Number(e.target.value) }))} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Valor — Indicado (quem usou o link)</label>
+            <input style={inp} type="number" min={0} placeholder="0" value={newReward.reward_amount_referred} onChange={e => setNewReward(p => ({ ...p, reward_amount_referred: Number(e.target.value) }))} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label style={{ fontSize: 10, color: "var(--gray-500)", fontWeight: 950, textTransform: "uppercase", letterSpacing: "0.05em" }}>Gatilho (status) *</label>
@@ -308,16 +313,16 @@ export default function AdminIndicacoesPage() {
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--stroke)" }}>
-                {["Nome", "Tipo", "Valor", "Gatilho", "Status", "Ações"].map(h => (
+                {["Nome", "Tipo", "Indicador", "Indicado", "Gatilho", "Status", "Ações"].map(h => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", color: "var(--gray-500)", fontWeight: 950, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.05em", whiteSpace: "nowrap" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rewardsLoading ? (
-                <tr><td colSpan={6} style={{ padding: 20, color: "var(--gray-500)", textAlign: "center" }}>Carregando...</td></tr>
+                <tr><td colSpan={7} style={{ padding: 20, color: "var(--gray-500)", textAlign: "center" }}>Carregando...</td></tr>
               ) : rewards.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: 20, color: "var(--gray-500)", textAlign: "center" }}>Nenhuma recompensa configurada.</td></tr>
+                <tr><td colSpan={7} style={{ padding: 20, color: "var(--gray-500)", textAlign: "center" }}>Nenhuma recompensa configurada.</td></tr>
               ) : rewards.map((r, i) => (
                 <tr key={r.id} style={{ borderBottom: i < rewards.length - 1 ? "1px solid var(--stroke)" : "none", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)", opacity: r.active ? 1 : 0.5 }}>
                   <td style={{ padding: "10px 14px" }}>
@@ -330,6 +335,7 @@ export default function AdminIndicacoesPage() {
                     </span>
                   </td>
                   <td style={{ padding: "10px 14px", color: "var(--paper)", fontWeight: 700 }}>{r.reward_amount.toLocaleString("pt-BR")}</td>
+                  <td style={{ padding: "10px 14px", color: "var(--cyan)", fontWeight: 700 }}>{r.reward_amount_referred.toLocaleString("pt-BR")}</td>
                   <td style={{ padding: "10px 14px", color: "var(--gray-500)" }}>
                     {TRIGGER_OPTIONS.find(o => o.value === r.trigger_status)?.label ?? r.trigger_status}
                   </td>
