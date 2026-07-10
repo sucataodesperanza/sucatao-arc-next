@@ -30,7 +30,8 @@ type RewardConfig = {
   created_at: string
 }
 
-const EMPTY_REWARD = { name: "", description: "", reward_type: "points" as const, reward_amount: 0, trigger_status: "confirmed" }
+type NewRewardForm = { name: string; description: string; reward_type: RewardConfig["reward_type"]; reward_amount: number; trigger_status: string }
+const EMPTY_REWARD: NewRewardForm = { name: "", description: "", reward_type: "points", reward_amount: 0, trigger_status: "confirmed" }
 
 const STATUS_LABEL: Record<string, string> = {
   registered:           "Cadastro Realizado",
