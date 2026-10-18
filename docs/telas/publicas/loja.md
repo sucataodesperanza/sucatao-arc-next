@@ -106,6 +106,8 @@ Os espaços preenchidos e o seletor do loadout usam o brilho difuso de raridade 
 
 ### Dados de acessórios e variantes
 
+- A Empunhadura Horizontal também possui lista incompleta no MetaForge. A cópia e a sincronização usam as 12 famílias confirmadas em [Horizontal Grip](https://arcraiders.wiki/wiki/Horizontal_Grip), conferidas em 18/10/2026, sempre exigindo encaixe de empunhadura na variante escolhida.
+
 - Exceção verificada: a lista `compatibleWeapons` do Conversor Cinético no MetaForge está incompleta. A cópia local e a sincronização preservam as 14 famílias confirmadas em [Kinetic Converter](https://arcraiders.wiki/wiki/Kinetic_Converter), conferidas em 18/10/2026. O encaixe de coronha continua obrigatório, inclusive nas variantes Amplified.
 
 - A cópia local em `src/data/weapon-attachments.json` foi conferida em 18/10/2026: 181 armas/variantes e 38 acessórios do [MetaForge](https://metaforge.app/arc-raiders), inclusive variantes Amplified (tier V).

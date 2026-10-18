@@ -34,6 +34,9 @@ snapshot.mods = items.filter(item => item.item_type === "Modification").map(item
   // https://arcraiders.wiki/wiki/Kinetic_Converter (checked 2026-10-18)
   compatibleWeapons: item.id === "kinetic-converter"
     ? ["ferro", "kettle", "rattler", "stitcher", "arpeggio", "il toro", "osprey", "renegade", "torrente", "hullcracker", "bettina", "bobcat", "vulcano", "aphelion"]
+    // https://arcraiders.wiki/wiki/Horizontal_Grip (checked 2026-10-18)
+    : item.id === "horizontal-grip"
+    ? ["ferro", "kettle", "rattler", "stitcher", "arpeggio", "il toro", "venator", "bettina", "bobcat", "tempest", "vulcano", "aphelion"]
     : typeof item.stat_block?.compatibleWeapons === "string"
     ? item.stat_block.compatibleWeapons.split(",").map(name => name.toLowerCase().trim().replace(/^ii toro$/, "il toro")) : null,
 }))

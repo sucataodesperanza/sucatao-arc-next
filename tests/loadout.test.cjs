@@ -16,6 +16,20 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, 'src/lib/l
 const { acceptsLoadoutItem: accepts, loadoutSlots: slots, slotQuantityLimit, summarizeLoadout, buildLoadoutItems, isSurvivor, loadoutPurchaseIssue, getWeaponAttachmentSlots, getWeaponProfile, restoreLoadoutDraft, loadoutItemSearchText } = context.exports
 const item = (type, extra = {}) => ({ id: type, name: type, type, ...extra })
 
+test('horizontal grip supports verified families and only the underbarrel mount', () => {
+  const grip = game.items.find(row => row.id === 'horizontal_grip')
+  assert.ok(grip)
+  const weapons = require('../src/data/weapon-attachments.json').weapons
+  for (const family of ['ferro', 'kettle', 'rattler', 'stitcher', 'arpeggio', 'il toro', 'venator', 'bettina', 'bobcat', 'tempest', 'vulcano', 'aphelion']) {
+    const weapon = weapons.find(row => row.family === family && row.name.startsWith('Amplified ')) || weapons.find(row => row.family === family)
+    assert.ok(weapon, family)
+    for (const mod of [grip, { ...grip, id: 'stock-uuid' }]) assert.equal(accepts('attachment', mod, { ...weapon, type: 'Weapon' }, 'underbarrel'), true, family)
+    assert.equal(accepts('attachment', grip, { ...weapon, type: 'Weapon' }, 'stock'), false)
+  }
+  const noMount = weapons.find(row => row.family === 'renegade')
+  assert.equal(accepts('attachment', grip, { ...noMount, type: 'Weapon' }, 'underbarrel'), false)
+})
+
 test('kinetic converter supports verified stock families and respects amplified stock removal', () => {
   const converter = game.items.find(row => row.id === 'kinetic_converter')
   const stockConverter = { ...converter, id: 'stock-uuid' }

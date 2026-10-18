@@ -5,6 +5,7 @@
     "slots": "https://arcraiders.wiki/wiki/Weapons",
     "canto": "https://arcraiders.wiki/wiki/Canto",
     "kineticConverter": "https://arcraiders.wiki/wiki/Kinetic_Converter",
+    "horizontalGrip": "https://arcraiders.wiki/wiki/Horizontal_Grip",
     "amplifications": "https://arcraiders.wiki/wiki/Amplified_Weapons",
     "license": "https://creativecommons.org/licenses/by-sa/4.0/"
   },
@@ -2231,11 +2232,18 @@
       "name": "Horizontal Grip",
       "slot": "underbarrel",
       "compatibleWeapons": [
-        "rattler",
-        "kettle",
         "ferro",
-        "hullcracker",
-        "venator"
+        "kettle",
+        "rattler",
+        "stitcher",
+        "arpeggio",
+        "il toro",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest",
+        "vulcano",
+        "aphelion"
       ]
     },
     {
