@@ -283,17 +283,18 @@
   cursor: pointer;
 }
 
-.store-tabs {
+.store-page .store-tabs {
   position: relative;
   display: flex;
   align-items: center;
   gap: 20px;
   flex-wrap: nowrap;
   overflow-x: auto;
+  overflow-y: hidden;
   border-bottom: 1px solid var(--stroke);
 }
 
-.store-tab {
+.store-page .store-tab {
   flex-shrink: 0;
   border: none;
   background: none;
