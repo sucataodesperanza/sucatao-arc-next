@@ -288,11 +288,13 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
   border-bottom: 1px solid var(--stroke);
 }
 
 .store-tab {
+  flex-shrink: 0;
   border: none;
   background: none;
   padding: 0 0 12px;
@@ -621,6 +623,22 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
+}
+
+.store-category-placeholder {
+  background: linear-gradient(145deg, #1a2330, #0b1019);
+  min-height: 220px;
+}
+
+.store-category-placeholder > svg {
+  color: var(--gray-500);
+  margin-bottom: 12px;
+}
+
+.store-category-placeholder > svg:last-child {
+  margin-top: 16px;
+  margin-bottom: 0;
+  color: var(--paper);
 }
 
 .category-card-button {

@@ -14,12 +14,25 @@ Loja principal do site. Exibe itens do catálogo ARC Raiders à venda e itens de
 - **Itens em destaque** — grid de até 5 itens do catálogo (`catalog_items` com `featured = true`)
 - Cards de categorias do site
 
-### Aba Itens
+### Categorias da vitrine
+- Navegação principal: Destaques, Loadouts, Armas, Consumíveis, Granadas e Materiais.
+- Cards de categoria sem fotos por enquanto; as imagens serão fornecidas depois.
+- Armas: `isWeapon` ou tipo `Weapon`; projetos são excluídos.
+- Consumíveis: tipo `Consumable` e itens de cura, vigor e escudo classificados como `Quick Use`.
+- Granadas: `Grenade`, `Throwable` e granadas de `Quick Use` identificadas pelo nome; armadilhas e projetos são excluídos.
+- Materiais: `Material`, `Basic Material`, `Advanced Material`, `Refined Material` e `Topside Material`.
+- Loadouts: reservado para estoque com tipo `Loadout`; sem kits cadastrados, exibe um estado vazio sem oferecer pacotes fictícios.
+- Cada categoria mantém busca, raridade, tipo, favoritos, ordenação e modal de compra. Trocar de aba limpa os filtros.
+- Links diretos: `/loja?tab=armas`, `/loja?tab=consumiveis`, `/loja?tab=granadas`, `/loja?tab=materiais`, `/loja?tab=loadouts`.
+
+### Aba Todos os itens
 - Filtros: busca por nome, raridade, tipo, ordenação e filtro por drops de bots
 - Grid paginado de todos os itens com modal de detalhe
 
 ### Demais abas
-- Passes, Sorteios, Serviços, Gift Cards — **Em breve** (placeholder)
+- Contratos à Venda: lista contratos disponíveis e mantém o fluxo de aquisição existente.
+- Sorteios: componente próprio com os sorteios da loja.
+- Leilões e Gift Cards: permanecem disponíveis na navegação existente; nenhuma integração de pagamento nova foi adicionada.
 
 ### Painel lateral
 - Header do usuário (avatar, nome, saldo de pontos), reputação e badge Mercador

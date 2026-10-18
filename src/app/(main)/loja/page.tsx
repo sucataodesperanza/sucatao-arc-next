@@ -10,6 +10,7 @@ import { ArcIntelPanel } from "@/components/arc-intel-panel"
 import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
+import { matchesStoreCategory, storeCategories } from "@/lib/store-categories"
 import { useItemsCatalog } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import { SorteiosTab } from "@/components/sorteios-tab"
@@ -55,7 +56,8 @@ type BuyModal = { contract: ApiContract; step: "choose" | "points" | "cash" }
 
 const tabs: { key: string; label: string; href?: string }[] = [
   { key: "destaques", label: "Destaques" },
-  { key: "itens", label: "Itens" },
+  ...storeCategories.map(category => ({ key: category.key, label: category.title })),
+  { key: "itens", label: "Todos os itens" },
   { key: "passes", label: "Contratos à Venda" },
   { key: "sorteios", label: "Sorteios" },
   { key: "servicos", label: "Leilões" },
@@ -64,13 +66,6 @@ const tabs: { key: string; label: string; href?: string }[] = [
 
 type RewardItem = { id: string; name: string; description: string | null; image_url: string | null; price: number; stock: number; expires_at: string | null }
 
-const categories: { key: string; tag: string; tone: string; image: string; title: string; text: string; href?: string }[] = [
-  { key: "itens", tag: "CATÁLOGO", tone: "yellow", image: "/assets/bots/arc_leaper.png", title: "Itens", text: "Catálogo completo para resgatar ou comprar com pontos.", href: "/loja" },
-  { key: "passes", tag: "CONTRATOS", tone: "cyan", image: "/assets/maps/the_spaceport.png", title: "Contratos à Venda", text: "Compre contratos exclusivos e ganhe recompensas especiais." },
-  { key: "sorteios", tag: "SORTEIOS", tone: "red", image: "/assets/bots/arc_pop.png", title: "Sorteios", text: "Participe de sorteios e concorra a itens raros." },
-  { key: "servicos", tag: "LEILÕES", tone: "green", image: "/assets/maps/stella_montis_upper.png", title: "Leilões", text: "Dispute itens raros em leilões com tempo limitado." },
-  { key: "giftcards", tag: "GIFT CARDS", tone: "yellow", image: "/assets/bots/arc_snitch.png", title: "Gift Cards", text: "Cartões de presente para usar dentro da loja." },
-]
 
 const auctionItems: {
   id: string; name: string; description: string; rarity: string
@@ -94,6 +89,24 @@ const auctionRarityColors: Record<string, { color: string; bg: string; border: s
 export default function LojaPage() {
   const catalog = useItemsCatalog()
   const [activeTab, setActiveTab] = useState("destaques")
+  const selectedCategory = storeCategories.find(category => category.key === activeTab)
+  const isCatalogTab = activeTab === "itens" || !!selectedCategory
+  const categoryItems = catalog.catalogItems.filter(item => matchesStoreCategory(item, activeTab))
+  const storeCatalog = { ...catalog,
+    filteredItems: catalog.filteredItems.filter(item => matchesStoreCategory(item, activeTab)),
+    types: catalog.types.filter(type => categoryItems.some(item => item.type === type)),
+  }
+  function selectTab(key: string) {
+    catalog.setQuery("")
+    catalog.setRarity("all")
+    catalog.setType("all")
+    catalog.setBotFilter(null)
+    catalog.setShowFavorites(false)
+    setActiveTab(key)
+    const url = new URL(window.location.href)
+    url.searchParams.set("tab", key)
+    window.history.replaceState(null, "", url)
+  }
   const [panelOpen, setPanelOpen] = useState(false)
   const [weeklyItems, setWeeklyItems] = useState<RewardItem[]>([])
   const [timer, setTimer] = useState("")
@@ -323,7 +336,8 @@ export default function LojaPage() {
                 type="button"
                 ref={el => { tabRefs.current[tab.key] = el }}
                 className={`store-tab${activeTab === tab.key ? " active" : ""}`}
-                onClick={() => setActiveTab(tab.key)}
+                aria-pressed={activeTab === tab.key}
+                onClick={() => selectTab(tab.key)}
               >
                 {tab.label}
               </button>
@@ -334,17 +348,17 @@ export default function LojaPage() {
           {/* ── Aba: Destaques ── */}
           {activeTab === "destaques" ? (
             <>
-              <section aria-label="Pacote em destaque">
+              <section aria-label="Explore a loja">
                 <div className="hero-banner" style={{ backgroundImage: "url(/assets/bots/arc_the_queen.png)" }}>
                   <div className="hero-banner-content">
                     <span className="hero-banner-tag">
                       <Sparkles size={12} />
-                      Pacote exclusivo
+                      Equipe seu Raider
                     </span>
-                    <h2>Pacote Mercador do Sucatão</h2>
-                    <p>Um lote selecionado de itens raros e materiais de alto valor, direto do estoque do Sucatão. Disponível por tempo limitado.</p>
-                    <Link href="/loja" className="hero-banner-cta">
-                      Ver pacote
+                    <h2>Prepare sua próxima expedição</h2>
+                    <p>Armas, consumíveis, granadas e materiais do estoque do Sucatão. Escolha sua categoria e encontre o que precisa para voltar à superfície.</p>
+                    <Link href="/loja?tab=loadouts" className="hero-banner-cta" onClick={e => { e.preventDefault(); selectTab("loadouts") }}>
+                      Explorar loadouts
                       <ArrowRight size={16} />
                     </Link>
                   </div>
@@ -366,7 +380,7 @@ export default function LojaPage() {
                       Atualiza em breve
                     </span>
                   </h2>
-                  <Link href="/loja" className="store-see-all" onClick={() => setActiveTab("itens")}>
+                  <Link href="/loja?tab=itens" className="store-see-all" onClick={e => { e.preventDefault(); selectTab("itens") }}>
                     Ver todos os itens
                     <ArrowRight size={14} />
                   </Link>
@@ -483,31 +497,20 @@ export default function LojaPage() {
                   <h2>Categorias</h2>
                 </div>
                 <div className="store-category-row">
-                  {categories.map(cat => cat.href ? (
-                    <Link key={cat.key} href={cat.href} className="category-card">
-                      <div className="category-card-bg" style={{ backgroundImage: `url(${cat.image})` }} />
-                      <span className={`category-card-tag tone-${cat.tone}`}>{cat.tag}</span>
-                      <strong>{cat.title}</strong>
-                      <span>{cat.text}</span>
-                    </Link>
-                  ) : (
-                    <button
-                      key={cat.key}
-                      type="button"
-                      className="category-card category-card-button"
-                      onClick={() => setActiveTab(cat.key)}
-                    >
-                      <div className="category-card-bg" style={{ backgroundImage: `url(${cat.image})` }} />
-                      <span className={`category-card-tag tone-${cat.tone}`}>{cat.tag}</span>
-                      <strong>{cat.title}</strong>
-                      <span>{cat.text}</span>
+                  {storeCategories.map(category => (
+                    <button key={category.key} type="button" className="category-card category-card-button store-category-placeholder" onClick={() => selectTab(category.key)}>
+                      <Package size={32} aria-hidden="true" />
+                      <span className={`category-card-tag tone-${category.tone}`}>EXPLORE</span>
+                      <strong>{category.title}</strong>
+                      <span>{category.text}</span>
+                      <ArrowRight size={18} aria-hidden="true" />
                     </button>
                   ))}
                 </div>
               </section>
             </>
 
-          ) : activeTab === "itens" ? (
+          ) : isCatalogTab ? (
             <>
               <section aria-label="Sobre o catálogo de itens">
                 <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/bots/arc_sentinel.png)" }}>
@@ -516,13 +519,13 @@ export default function LojaPage() {
                       <Package size={12} />
                       Catálogo completo
                     </span>
-                    <h2>Todos os itens do jogo em um só lugar</h2>
-                    <p>Pesquise pelo nome, filtre por raridade ou tipo e veja os detalhes de cada item. Resgate com pontos do site ou compre direto com saldo real.</p>
+                    <h2>{selectedCategory?.title ?? "Todos os itens do jogo em um só lugar"}</h2>
+                    <p>{selectedCategory?.text ?? "Pesquise pelo nome, filtre por raridade ou tipo e veja os detalhes de cada item. Resgate com pontos do site ou compre direto com saldo real."}</p>
                   </div>
                 </div>
               </section>
 
-              {activeExpedition && (
+              {activeTab === "itens" && activeExpedition && (
                 <section ref={vaultSectionRef} aria-label="Cofre de Expedição" style={{ marginBottom: 8 }}>
                   <div
                     role={expeditionAsCatalogItem ? "button" : undefined}
@@ -589,11 +592,13 @@ export default function LojaPage() {
 
               <section aria-label="Itens do catálogo">
                 <div className="store-section-head">
-                  <h2>Itens</h2>
-                  <span>Exibindo {catalog.filteredItems.length} de {catalog.catalogItems.length}</span>
+                  <h2>{selectedCategory?.title ?? "Itens"}</h2>
+                  <span>Exibindo {storeCatalog.filteredItems.length} de {categoryItems.length}</span>
                 </div>
-                <CatalogFilters catalog={catalog} />
-                <CatalogGrid catalog={catalog} className="store-items-grid" />
+                <CatalogFilters catalog={storeCatalog} />
+                {activeTab === "loadouts" && !catalog.loadingCatalog && categoryItems.length === 0 ? (
+                  <div className="store-placeholder"><div><h2>Loadouts em preparação</h2><p>Os kits aparecerão aqui quando estiverem disponíveis no estoque.</p><button type="button" className="store-tab" onClick={() => selectTab("armas")}>Explorar armas</button></div></div>
+                ) : <CatalogGrid catalog={storeCatalog} className="store-items-grid" />}
               </section>
             </>
 
@@ -774,7 +779,7 @@ export default function LojaPage() {
         <aside className={`store-side-panel${panelOpen ? "" : " store-side-panel--hidden"}`} aria-label="Painel do jogador">
           <SidePanelUserHeader onClose={() => setPanel(false)} />
 
-          {activeTab === "itens" ? (
+          {isCatalogTab ? (
             <ArcIntelPanel catalog={catalog} />
           ) : (
             <div className="store-side-card">
