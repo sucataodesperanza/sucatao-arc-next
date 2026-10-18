@@ -1,0 +1,2614 @@
+{
+  "updatedAt": "2026-10-18",
+  "sources": {
+    "api": "https://metaforge.app/api/arc-raiders/items",
+    "slots": "https://arcraiders.wiki/wiki/Weapons",
+    "canto": "https://arcraiders.wiki/wiki/Canto",
+    "amplifications": "https://arcraiders.wiki/wiki/Amplified_Weapons",
+    "license": "https://creativecommons.org/licenses/by-sa/4.0/"
+  },
+  "weapons": [
+    {
+      "id": "amplified-anvil",
+      "name": "Amplified Anvil",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/eea53184b36738d95f6cfe5d8282c40091d2fdfd48390e7a563b7cdb00af2baf.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-anvil-projectile-splitter",
+      "name": "Amplified Anvil (Anvil Splitter)",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/eea53184b36738d95f6cfe5d8282c40091d2fdfd48390e7a563b7cdb00af2baf.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-anvil-x-rounds",
+      "name": "Amplified Anvil (X-Rounds)",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/eea53184b36738d95f6cfe5d8282c40091d2fdfd48390e7a563b7cdb00af2baf.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion",
+      "name": "Amplified Aphelion",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag",
+      "name": "Amplified Aphelion (Bigger Mag)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst, Incendiary Rounds)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst-increased-burst",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst, Increased Burst)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst-increased-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst, Increased Burst, Incendiary Rounds)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-incendiary-rounds",
+      "name": "Amplified Aphelion (Bigger Mag, Incendiary Rounds)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-charged-burst",
+      "name": "Amplified Aphelion (Charged Burst)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-charged-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Charged Burst, Incendiary Rounds)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-charged-burst-increased-burst",
+      "name": "Amplified Aphelion (Charged Burst, Increased Burst)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-charged-burst-increased-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Charged Burst, Increased Burst, Incendiary Rounds)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-aphelion-incendiary-rounds",
+      "name": "Amplified Aphelion (Incendiary Rounds)",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4415dd804f417454f5e9e761a84a7621d2989cc940b77720c457b463e9e12ef8.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-bettina",
+      "name": "Amplified Bettina",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/a48a24c2db26fcc6f9a198943ac4af9fff34e77e46ec09fb25b6a7131973903b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-bettina-bigger-mag",
+      "name": "Amplified Bettina (Bigger Mag)",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/a48a24c2db26fcc6f9a198943ac4af9fff34e77e46ec09fb25b6a7131973903b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-bettina-semi-auto",
+      "name": "Amplified Bettina (Semi-Auto)",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/a48a24c2db26fcc6f9a198943ac4af9fff34e77e46ec09fb25b6a7131973903b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-bettina-semi-auto-x-rounds",
+      "name": "Amplified Bettina (Semi-Auto, X-Rounds)",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/a48a24c2db26fcc6f9a198943ac4af9fff34e77e46ec09fb25b6a7131973903b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta",
+      "name": "Amplified Burletta",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-burst",
+      "name": "Amplified Burletta (Burst Fire)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-burst-increased-burst",
+      "name": "Amplified Burletta (Burst Fire, Increased Burst)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-burst-increased-burst-sprint-shooting",
+      "name": "Amplified Burletta (Burst Fire, Increased Burst, Sprint Shooting)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-burst-sprint-shooting",
+      "name": "Amplified Burletta (Burst Fire, Sprint Shooting)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-full-auto",
+      "name": "Amplified Burletta (Full-Auto)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-full-auto-sprint-shooting",
+      "name": "Amplified Burletta (Full-Auto, Sprint Shooting)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-burletta-sprint-shooting",
+      "name": "Amplified Burletta (Sprint Shooting)",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/723bb3d49522347dc74bc387c5f01f70e30cd05752d4828b4f5a26de40cdb09e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-canto",
+      "name": "Amplified Canto",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/9f129cb81f4a8c7670817ff6ed820882f092e5fce3bd7e8baff36530b7f2a5c0.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-canto-carbine",
+      "name": "Amplified Canto (Carbine Conversion)",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/f18e25135d7aa85081467e590566d7636939ce475588e36eed251a077be54e55.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-canto-incendiary-rounds",
+      "name": "Amplified Canto (Incendiary Rounds)",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/9f129cb81f4a8c7670817ff6ed820882f092e5fce3bd7e8baff36530b7f2a5c0.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-canto-incendiary-rounds-carbine",
+      "name": "Amplified Canto (Incendiary Rounds, Carbine Conversion)",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/f18e25135d7aa85081467e590566d7636939ce475588e36eed251a077be54e55.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-canto-incendiary-rounds-sprint-shooting",
+      "name": "Amplified Canto (Incendiary Rounds, Sprint Shooting)",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/9f129cb81f4a8c7670817ff6ed820882f092e5fce3bd7e8baff36530b7f2a5c0.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-canto-sprint-shooting",
+      "name": "Amplified Canto (Sprint Shooting)",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/9f129cb81f4a8c7670817ff6ed820882f092e5fce3bd7e8baff36530b7f2a5c0.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-equalizer",
+      "name": "Amplified Equalizer",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/43744e6206ee6de4d5665527c3af7802111de56c53fe43faa11a49d05f1e6f5b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-equalizer-anti-weak-point",
+      "name": "Amplified Equalizer (Anti-Weak Point)",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/43744e6206ee6de4d5665527c3af7802111de56c53fe43faa11a49d05f1e6f5b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-equalizer-anti-weak-point-bigger-mag",
+      "name": "Amplified Equalizer (Anti-Weak Point, Bigger Mag)",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/43744e6206ee6de4d5665527c3af7802111de56c53fe43faa11a49d05f1e6f5b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-equalizer-bigger-mag",
+      "name": "Amplified Equalizer (Bigger Mag)",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/43744e6206ee6de4d5665527c3af7802111de56c53fe43faa11a49d05f1e6f5b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-equalizer-ramping-damage",
+      "name": "Amplified Equalizer (Ramping Damage)",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/43744e6206ee6de4d5665527c3af7802111de56c53fe43faa11a49d05f1e6f5b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-equalizer-ramping-damage-bigger-mag",
+      "name": "Amplified Equalizer (Ramping Damage, Bigger Mag)",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/43744e6206ee6de4d5665527c3af7802111de56c53fe43faa11a49d05f1e6f5b.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hairpin",
+      "name": "Amplified Hairpin",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/539395c0e04f9bc352850c7440d84a5b761b2f6235cdcfa2e85a917f54aed4b5.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hairpin-incendiary-rounds",
+      "name": "Amplified Hairpin (Incendiary Rounds)",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/539395c0e04f9bc352850c7440d84a5b761b2f6235cdcfa2e85a917f54aed4b5.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hairpin-semi-auto",
+      "name": "Amplified Hairpin (Semi-Auto)",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/539395c0e04f9bc352850c7440d84a5b761b2f6235cdcfa2e85a917f54aed4b5.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hairpin-semi-auto-sprint-shooting",
+      "name": "Amplified Hairpin (Semi-Auto, Sprint Shooting)",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/539395c0e04f9bc352850c7440d84a5b761b2f6235cdcfa2e85a917f54aed4b5.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hairpin-tracker-rounds",
+      "name": "Amplified Hairpin (Tracker Rounds)",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/539395c0e04f9bc352850c7440d84a5b761b2f6235cdcfa2e85a917f54aed4b5.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hullcracker",
+      "name": "Amplified Hullcracker",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/23bab36fce8d2653ac209d9463d88c984d35fca2a51bec04ea0f20d49f11dd49.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hullcracker-incendiary-rounds",
+      "name": "Amplified Hullcracker (Incendiary Grenades)",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/23bab36fce8d2653ac209d9463d88c984d35fca2a51bec04ea0f20d49f11dd49.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hullcracker-incendiary-rounds-mag-reload",
+      "name": "Amplified Hullcracker (Incendiary Grenades, Mag Reload)",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/23bab36fce8d2653ac209d9463d88c984d35fca2a51bec04ea0f20d49f11dd49.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-hullcracker-mag-reload",
+      "name": "Amplified Hullcracker (Mag Reload)",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/23bab36fce8d2653ac209d9463d88c984d35fca2a51bec04ea0f20d49f11dd49.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-il-toro",
+      "name": "Amplified Il Toro",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/b0691e573abc30e742cd472c61ab76d0dd65ced57927fe64211f806cbe83c2fc.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-il-toro-more-reload",
+      "name": "Amplified Il Toro (More Reload)",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/b0691e573abc30e742cd472c61ab76d0dd65ced57927fe64211f806cbe83c2fc.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-il-toro-more-reload-slug-rounds",
+      "name": "Amplified Il Toro (More Reload, Slug Rounds)",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/b0691e573abc30e742cd472c61ab76d0dd65ced57927fe64211f806cbe83c2fc.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-il-toro-slug-rounds",
+      "name": "Amplified Il Toro (Slug Rounds)",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/b0691e573abc30e742cd472c61ab76d0dd65ced57927fe64211f806cbe83c2fc.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter",
+      "name": "Amplified Jupiter",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/e97a5911db30ebf7aec635521789374ccc58add35dedb6fcb3bf45c123a61d2e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag",
+      "name": "Amplified Jupiter (Bigger Mag)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/e97a5911db30ebf7aec635521789374ccc58add35dedb6fcb3bf45c123a61d2e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag-straight-bolt",
+      "name": "Amplified Jupiter (Bigger Mag, Ergonomic Bolt)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/e97a5911db30ebf7aec635521789374ccc58add35dedb6fcb3bf45c123a61d2e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag-scoped",
+      "name": "Amplified Jupiter (Bigger Mag, Scoped)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/2f85e07cb055884e92c6555ad14efa9e71c6372f35d291a812ea60c9774d7dae.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag-scoped-straight-bolt",
+      "name": "Amplified Jupiter (Bigger Mag, Scoped, Ergonomic Bolt)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/2f85e07cb055884e92c6555ad14efa9e71c6372f35d291a812ea60c9774d7dae.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-straight-bolt",
+      "name": "Amplified Jupiter (Ergonomic Bolt)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/e97a5911db30ebf7aec635521789374ccc58add35dedb6fcb3bf45c123a61d2e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-scoped",
+      "name": "Amplified Jupiter (Scoped)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/2f85e07cb055884e92c6555ad14efa9e71c6372f35d291a812ea60c9774d7dae.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-jupiter-scoped-straight-bolt",
+      "name": "Amplified Jupiter (Scoped, Ergonomic Bolt)",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/2f85e07cb055884e92c6555ad14efa9e71c6372f35d291a812ea60c9774d7dae.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-kettle",
+      "name": "Amplified Kettle",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/fe64e3a33f37b4bad26e1b41f969a16f4421ffc0eff5ce2c4cd2efeda18060ed.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-kettle-anti-shield",
+      "name": "Amplified Kettle (Anti-Shield)",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/fe64e3a33f37b4bad26e1b41f969a16f4421ffc0eff5ce2c4cd2efeda18060ed.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-kettle-anti-shield-full-auto",
+      "name": "Amplified Kettle (Anti-Shield, Full-Auto)",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/fe64e3a33f37b4bad26e1b41f969a16f4421ffc0eff5ce2c4cd2efeda18060ed.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-kettle-full-auto",
+      "name": "Amplified Kettle (Full-Auto)",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/fe64e3a33f37b4bad26e1b41f969a16f4421ffc0eff5ce2c4cd2efeda18060ed.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-kettle-x-rounds",
+      "name": "Amplified Kettle (X-Rounds)",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/fe64e3a33f37b4bad26e1b41f969a16f4421ffc0eff5ce2c4cd2efeda18060ed.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-osprey",
+      "name": "Amplified Osprey",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/c04a12c520e7c65f04ef5f1a3f2e91ecb3e02da88fd9609fb84fab1445200267.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-osprey-anti-weak-point",
+      "name": "Amplified Osprey (Anti-Weak Point)",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/c04a12c520e7c65f04ef5f1a3f2e91ecb3e02da88fd9609fb84fab1445200267.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-osprey-straight-bolt",
+      "name": "Amplified Osprey (Ergonomic Bolt)",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/c04a12c520e7c65f04ef5f1a3f2e91ecb3e02da88fd9609fb84fab1445200267.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-osprey-straight-bolt-anti-weak-point",
+      "name": "Amplified Osprey (Ergonomic Bolt, Anti-Weak Point)",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/c04a12c520e7c65f04ef5f1a3f2e91ecb3e02da88fd9609fb84fab1445200267.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-osprey-tracker-rounds",
+      "name": "Amplified Osprey (Tracker Rounds)",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/c04a12c520e7c65f04ef5f1a3f2e91ecb3e02da88fd9609fb84fab1445200267.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-osprey-tracker-rounds-straight-bolt",
+      "name": "Amplified Osprey (Tracker Rounds, Ergonomic Bolt)",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/c04a12c520e7c65f04ef5f1a3f2e91ecb3e02da88fd9609fb84fab1445200267.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal",
+      "name": "Amplified Rascal",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-high-velocity",
+      "name": "Amplified Rascal (High Velocity)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-high-velocity-incendiary-rounds",
+      "name": "Amplified Rascal (High Velocity, Incendiary Grenades)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-high-velocity-sprint-shooting",
+      "name": "Amplified Rascal (High Velocity, Sprint Shooting)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-high-velocity-sprint-shooting-incendiary-rounds",
+      "name": "Amplified Rascal (High Velocity, Sprint Shooting, Incendiary Grenades)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-incendiary-rounds",
+      "name": "Amplified Rascal (Incendiary Grenades)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-sprint-shooting",
+      "name": "Amplified Rascal (Sprint Shooting)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rascal-sprint-shooting-incendiary-rounds",
+      "name": "Amplified Rascal (Sprint Shooting, Incendiary Grenades)",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/05b734eda6591e9c46353255d668c2c986ad2da3d753a4622be995b0701ebd08.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rattler",
+      "name": "Amplified Rattler",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/1dfcdc9b7ce3851c1cd7c108a0c4345872548ed561bb013f714804c77da09f7c.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rattler-incendiary-rounds",
+      "name": "Amplified Rattler (Incendiary Rounds)",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/1dfcdc9b7ce3851c1cd7c108a0c4345872548ed561bb013f714804c77da09f7c.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rattler-more-reload",
+      "name": "Amplified Rattler (More Reload)",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/1dfcdc9b7ce3851c1cd7c108a0c4345872548ed561bb013f714804c77da09f7c.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rattler-more-reload-drum-mag",
+      "name": "Amplified Rattler (More Reload, Drum Mag)",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4e8374aec622c5b9f63847003aba6486a3a2b3a460dde03024ea8ed7438bff5d.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rattler-more-reload-drum-mag-incendiary-rounds",
+      "name": "Amplified Rattler (More Reload, Drum Mag, Incendiary Rounds)",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/4e8374aec622c5b9f63847003aba6486a3a2b3a460dde03024ea8ed7438bff5d.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-rattler-more-reload-incendiary-rounds",
+      "name": "Amplified Rattler (More Reload, Incendiary Rounds)",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/1dfcdc9b7ce3851c1cd7c108a0c4345872548ed561bb013f714804c77da09f7c.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-renegade",
+      "name": "Amplified Renegade",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/5212ad3b83bbf578185f66e96d5804a8e1285a4c5caf2cc3f3a88efb800521d9.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-renegade-more-reload",
+      "name": "Amplified Renegade (More Reload)",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/5212ad3b83bbf578185f66e96d5804a8e1285a4c5caf2cc3f3a88efb800521d9.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-renegade-more-reload-scoped",
+      "name": "Amplified Renegade (More Reload, Scoped)",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/81a978c30f4c36bc64b97ffe07a948575b785f0671714abbfa5fc248f6b5181e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "amplified-renegade-scoped",
+      "name": "Amplified Renegade (Scoped)",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/81a978c30f4c36bc64b97ffe07a948575b785f0671714abbfa5fc248f6b5181e.png",
+      "rarity": "Amplified"
+    },
+    {
+      "id": "anvil-i",
+      "name": "Anvil I",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/a6f5ae7dd4f8bb866752445dad31655a1d934feb2aa2cd106c2ff8b9d70d10e1.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "anvil-ii",
+      "name": "Anvil II",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/1b66f01227d5480212a81d6d7ef0d11cf0f6ee580668b87f6bb46557d4f749b9.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "anvil-iii",
+      "name": "Anvil III",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/f9100304f28f764bd3cda141058f2304e836eade07083139c364e449446beb4d.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "anvil-iv",
+      "name": "Anvil IV",
+      "family": "anvil",
+      "slots": [
+        "muzzle"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/3704776b8a4dc4cb2015920d5f66a8820cca8c7f5b04744875d15989559a139c.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "aphelion-rifle",
+      "name": "Aphelion Rifle",
+      "family": "aphelion",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/c1c59f3cf0cd556bd66aeacc32db364e8db92fc8da6986f5f4fd60c1a3476ec2.png",
+      "rarity": "Legendary"
+    },
+    {
+      "id": "arpeggio-i",
+      "name": "Arpeggio I",
+      "family": "arpeggio",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/dc3c4f9e8305eb41d5048c817029995c8197586441640c96f006e206f2ac95f2.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "arpeggio-ii",
+      "name": "Arpeggio II",
+      "family": "arpeggio",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/199dc9d6e022302347230f59bf284ca857e0c9e3bba3c9fc6143ad85cda701c9.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "arpeggio-iii",
+      "name": "Arpeggio III",
+      "family": "arpeggio",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/da2ded1cd25bd144c6d0a2a378cacb7a563bb13f244a8d20d179b4bd1cb25b7c.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "arpeggio-iv",
+      "name": "Arpeggio IV",
+      "family": "arpeggio",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/4d99bdc3739b2370881e52927e494ea43c82bc1cc6d8e4689b4fb37525ee22f4.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "bantam",
+      "name": "Bantam I",
+      "family": "bantam",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/409af2360aa05662035a9cb36b28108455a57ae41ac6c906f6c4ddcd9772c2bc.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "bantam-ii",
+      "name": "Bantam II",
+      "family": "bantam",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/409af2360aa05662035a9cb36b28108455a57ae41ac6c906f6c4ddcd9772c2bc.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "bantam-iii",
+      "name": "Bantam III",
+      "family": "bantam",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/409af2360aa05662035a9cb36b28108455a57ae41ac6c906f6c4ddcd9772c2bc.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "bantam-iv",
+      "name": "Bantam IV",
+      "family": "bantam",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/409af2360aa05662035a9cb36b28108455a57ae41ac6c906f6c4ddcd9772c2bc.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "bettina-i",
+      "name": "Bettina I",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/06d8b439ec8641b72149d65110cb898fd16164349ed124f14c9391810d56e526.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bettina-ii",
+      "name": "Bettina II",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/4fc672f8fcabc4876595f038a506fe0050a8eac240f625f1f6e8d382d9623d17.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bettina-iii",
+      "name": "Bettina III",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/bf0398d3b57367e6d6b0412bb9874c8e6817e1b6f73ab37c67832e060d43bac7.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bettina-iv",
+      "name": "Bettina IV",
+      "family": "bettina",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/ddcf8d89363364a27691ae405658c22d582ae155a1c7b3f256e762cdbcff594e.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bobcat-i",
+      "name": "Bobcat I",
+      "family": "bobcat",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/234ed5bfd984b29d6c08c0bd3290a9ef862ad0b1b97e9c8d8b145c7d4c43d2bb.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bobcat-ii",
+      "name": "Bobcat II",
+      "family": "bobcat",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/3ec89eff99acc08c759962a9303bfd9340b965087b2e6b841129eaf3e8040020.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bobcat-iii",
+      "name": "Bobcat III",
+      "family": "bobcat",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/f570bcfde11008e72746eb29edaf7b8aa07b75b5f7fada83fac208e7e714fd58.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "bobcat-iv",
+      "name": "Bobcat IV",
+      "family": "bobcat",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/41effd20b3bd61678406ac46591c9acc12c5da364234150d1a6a334f46e57545.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "burletta-i",
+      "name": "Burletta I",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/9ecca70d1bb2420829cdcf6cc7a868dc14b70c1217ae689863f5b3a9adaf35f2.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "burletta-ii",
+      "name": "Burletta II",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/a43d83d9cda922ebaecc2ba8d236893d868562bfe451aacad5e56ec3393bd71f.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "burletta-iiii",
+      "name": "Burletta III",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/c4628ed26c28ea339b0c10eb1bc6133a81115c04f3bac2dbbb3019b8857e705e.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "burletta-iv",
+      "name": "Burletta IV",
+      "family": "burletta",
+      "slots": [
+        "muzzle",
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/c0e172074a67c9875f63bf6a6baccf630f2c62aec4d4ef9828118bcf131acf0d.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "canto",
+      "name": "Canto I",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/98ca26be2da12d290d00b451ed6b738581335d77b2a36d9ba3317c160923c331.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "canto-ii",
+      "name": "Canto II",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/9154faffe59797e1a50af6df972c0b7d32b7c5b0629e8e132bb44208d3f8c26c.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "canto-iii",
+      "name": "Canto III",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/c9f9505f466450f059a27c4bb9b01bc7b7aa97d0d2a5f5471559e2d5eeaf4adb.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "canto-iv",
+      "name": "Canto IV",
+      "family": "canto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/42a6c1ed0ab176fa58e04a8060d35ca8e5db52606399ab3dafe3947c4db1fc46.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "dolabra",
+      "name": "Dolabra",
+      "family": "dolabra",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/b2827c8b5214e825d552056b77e93b6b40302868e25d51fe4273af47ce8ee399.png",
+      "rarity": "Legendary"
+    },
+    {
+      "id": "equalizer-i",
+      "name": "Equalizer",
+      "family": "equalizer",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/b3f9cde8f883d8f923d0c6ae110f44e74dfe5ca1bcdb5dd50f7b95a5d20c4334.png",
+      "rarity": "Legendary"
+    },
+    {
+      "id": "ferro-i",
+      "name": "Ferro I",
+      "family": "ferro",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/fe769a6a4d3138fc4ab1cd5dbc9d8894b1f0f7cbfd117d27243d60f4dd251ab5.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "ferro-ii",
+      "name": "Ferro II",
+      "family": "ferro",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/45417a77ca2997284bf521ac04db54d47571f22fab1fa1a8b702fa1daf31f393.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "ferro-iii",
+      "name": "Ferro III",
+      "family": "ferro",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/566ad8fa229d4f158fa872dc1ee56680fedfc1b1a6da597d38aacd01e261a721.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "ferro-iv",
+      "name": "Ferro IV",
+      "family": "ferro",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/f8c37d51249cd6148302ed9b04b05ec5e5fdba9f32445e48d0c906650a6ff2c6.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "hairpin-i",
+      "name": "Hairpin I",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/5a865fad284b381230c7f98be198e94a0ba848ea049477316947eb52164bd22b.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "hairpin-ii",
+      "name": "Hairpin II",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/aff0dabc783392f9ca70978e7ca8f97159ec6e770d871717e0b3c1ac203a4fae.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "hairpin-iii",
+      "name": "Hairpin III",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/172e360628db9145ac72354a0996044ab0c92603718d134852841e72440b52df.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "hairpin-iv",
+      "name": "Hairpin IV",
+      "family": "hairpin",
+      "slots": [
+        "light-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/7259afc7d41cfdd53629b8317fc19ee7da81a0c905ec362185f5a63806d78e21.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "hullcracker-i",
+      "name": "Hullcracker I",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/bb34cb6de72f17249fa398720b89d5cdcdce713cc258b24f5bb88cc315908418.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "hullcracker-ii",
+      "name": "Hullcracker II",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/5ce13cda08706c8280e8357967706a5f89a550bf2e228e1922e6f8a6d311a8a0.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "hullcracker-iii",
+      "name": "Hullcracker III",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/0c1410844f060d768cf60052c4b3b46f7346d1a69d67f10b04aac87ee9192a09.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "hullcracker-iv",
+      "name": "Hullcracker IV",
+      "family": "hullcracker",
+      "slots": [
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/20edc278e9aadf2e7dce33b48c83e8363806a4db80fac7fd6eb35841cb27dc26.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "il-toro-i",
+      "name": "Il Toro I",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/07b56ac03f97e123f766b771a6757aa30d66fd7517af99130accf95d63414ec6.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "il-toro-ii",
+      "name": "Il Toro II",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/4191bbf661b13ea1a486c5c7d3486588e02b5eef74f96289266f3c6ce0d0f07a.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "il-toro-iiii",
+      "name": "Il Toro III",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/fe67a9c4d84db8e4038ad2e2b308ff09dffe58d03f882d2d21212c1083431561.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "il-toro-iv",
+      "name": "Il Toro IV",
+      "family": "il toro",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/350c1e590b8560ef5ebcff48d7cdc6039b09b8ecd0a94bf96701cfd5c18bd8fc.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "jupiter-i",
+      "name": "Jupiter",
+      "family": "jupiter",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/2d362cc57d7afab8806b349868e6ebababf0066c4ced7accdea5cafde1b273ea.png",
+      "rarity": "Legendary"
+    },
+    {
+      "id": "kettle-i",
+      "name": "Kettle I",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/6eb605bf6b6e2c4fd69593aca5a520936c86f23c5a72ea71e29567650aef9823.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "kettle-ii",
+      "name": "Kettle II",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/5c97afc5ff3ece75d199abffbffa7f717f24fc73ab225d89d6361f4927fade4a.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "kettle-iii",
+      "name": "Kettle III",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/b6cfcba7bc060cccddc89b48bee4f0862dd02e8739e8c233f1bb19b3407789e6.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "kettle-iv",
+      "name": "Kettle IV",
+      "family": "kettle",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/d1ff05211c7340f80d117fe23ca1007e69db2f3ac45b0a369cb8b792e99820d9.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "osprey-i",
+      "name": "Osprey I",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/49875185a4588aee78100ca9c47e525183ed257ca1b4d988efc2f649e5f62e82.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "osprey-ii",
+      "name": "Osprey II",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/1526425e96fd0e27b357d650a34f5fed35838df311e5f833a78dba9e4e8b40a5.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "osprey-iii",
+      "name": "Osprey III",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/30a3212ed46b499c4164bf32abced01d87d597d7c7d5b0a2660c7f2a0fada6b3.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "osprey-iv",
+      "name": "Osprey IV",
+      "family": "osprey",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/5ba3f710e3606684774255f88e4c7f868a917fa89667cb794d03d2f7c8a75456.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "rascal",
+      "name": "Rascal",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/0aabb8da784330210cdc35fd3e081f52e12790eb6ebfb2a1ddd1c94ff7e315fe.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "rascal-ii",
+      "name": "Rascal II",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/3422d23cc6f38fd737ab78969b10c6416c0b6df8a6083b06561b664fcb00ee8d.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "rascal-iii",
+      "name": "Rascal III",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/557e14c3ffcbf9c088c90bad2032043aea51707d1ecb1a312018107da400adcc.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "rascal-iv",
+      "name": "Rascal IV",
+      "family": "rascal",
+      "slots": [],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/fb8618cb89062279b94d8ce154df2f474d8abc882c8781989f1b17724e8a91c2.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "rattler-i",
+      "name": "Rattler I",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/5a37f4b6b837f6d209a911e1fca050ec11e41b0da36830aac458e7a98443746d.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "rattler-ii",
+      "name": "Rattler II",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/d317992beb2ad1ad66efb94480a1bbb9c85654a2fb389901ac9ca6c4070758e7.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "rattler-iii",
+      "name": "Rattler III",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/4dc8f4476f93fa84a22eefaf6f468f0acbd7fa4a416390f767e6de703340c152.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "rattler-iv",
+      "name": "Rattler IV",
+      "family": "rattler",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/6ef9806da320275dfb0c19a89072a11b459f4baf58cc54bbb3445ddd9e8e8c9f.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "renegade-i",
+      "name": "Renegade I",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/b5e14eb05a013525e57114ccaf7e1d0a0248b10eec866e36965df7376350a7eb.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "renegade-ii",
+      "name": "Renegade II",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/2b166a4f1beab77b3799534a68722f10dcc5e8fac5312bb172370068ac93d4e5.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "renegade-iii",
+      "name": "Renegade III",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/54725e7abe56c051fad98a155f473ecdb4bae98889b2be6e17a7bc09349df9d3.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "renegade-iv",
+      "name": "Renegade IV",
+      "family": "renegade",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/61108ee7390185135a25e5bd30244f5917ba69177616d561e743c991c41c1b03.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "stiletto",
+      "name": "Stiletto I",
+      "family": "stiletto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/0891b5311e82585b17e35964b36e500d9f877c504d242decc0b51132a1e6cde3.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "stiletto-ii",
+      "name": "Stiletto II",
+      "family": "stiletto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/0891b5311e82585b17e35964b36e500d9f877c504d242decc0b51132a1e6cde3.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "stiletto-iii",
+      "name": "Stiletto III",
+      "family": "stiletto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/0891b5311e82585b17e35964b36e500d9f877c504d242decc0b51132a1e6cde3.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "stiletto-iv",
+      "name": "Stiletto IV",
+      "family": "stiletto",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/0891b5311e82585b17e35964b36e500d9f877c504d242decc0b51132a1e6cde3.png",
+      "rarity": "Uncommon"
+    },
+    {
+      "id": "stitcher-i",
+      "name": "Stitcher I",
+      "family": "stitcher",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/f3426ccf14570cd8823771e669ad08dc3650e4464b51bf4a6071d6a1f3a2fada.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "stitcher-ii",
+      "name": "Stitcher II",
+      "family": "stitcher",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/886d6f5b235b674b1e595d6c15b841b9c3dd2ffaa94700e6eac9300541b16545.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "stitcher-iii",
+      "name": "Stitcher III",
+      "family": "stitcher",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/96e76d4ce4f63a8b20b523104d335dd8a3298e5f999a3149c12bf64acd424f80.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "stitcher-iv",
+      "name": "Stitcher IV",
+      "family": "stitcher",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "light-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/6974ef8a609ec37b34793e3d97e5f4f7aab184ad0dbabb2bb265e2561363d1d1.png",
+      "rarity": "Common"
+    },
+    {
+      "id": "tempest-i",
+      "name": "Tempest I",
+      "family": "tempest",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/51f180b2f6cb06bd5fca1aafb988e065a31a950b1cb9e8e7cf074ba26ca9fa35.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "tempest-ii",
+      "name": "Tempest II",
+      "family": "tempest",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/635fb24a64a6c8bba983b65755063c8b794a7309c34d674ffea45beb31d135d3.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "tempest-iii",
+      "name": "Tempest III",
+      "family": "tempest",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/f1230dbfc6a219bac543d90f2541cd4426aec299b41a88c3d125c5622c91b2e1.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "tempest-iv",
+      "name": "Tempest IV",
+      "family": "tempest",
+      "slots": [
+        "muzzle",
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/a2650f0beb52259e3971e98c8845c3f82e8ecb5b0651b4060420ed7d2b74e47d.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "torrente-i",
+      "name": "Torrente I",
+      "family": "torrente",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/f7e3ca5bd3de28e12b6f23219076ade2887e09404ee1b3791fcf1c08fdda9e0b.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "torrente-ii",
+      "name": "Torrente II",
+      "family": "torrente",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/8c5ae63fd20e83064a4c58068bb1d9b1a3d857a1f96e9d0ddffe328cb67adda6.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "torrente-iii",
+      "name": "Torrente III",
+      "family": "torrente",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/c543b8737021baebb9b33d7546858ebb2d8d395b122ef9742048cc205d2ffaa0.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "torrente-iv",
+      "name": "Torrente IV",
+      "family": "torrente",
+      "slots": [
+        "muzzle",
+        "medium-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/322a62f40f76d9ac4efa51f814fc9b845d07226a7318dcce4765891a0b039bcb.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "venator-i",
+      "name": "Venator I",
+      "family": "venator",
+      "slots": [
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/096ed6dc7e583d2bdea0a27c04143716ca411a379a79b03e7a5b709618cbdc20.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "venator-ii",
+      "name": "Venator II",
+      "family": "venator",
+      "slots": [
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/17b25c16c802873068cad5b26d77008671e533efdc0aaf4164abe73990c4396f.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "venator-iii",
+      "name": "Venator III",
+      "family": "venator",
+      "slots": [
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/dc2429ce5de24967256b9ff1a6a80d1e2a94daab064f1303e8a5a33e09b88924.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "venator-iv",
+      "name": "Venator IV",
+      "family": "venator",
+      "slots": [
+        "underbarrel",
+        "medium-mag"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/0dfbc8e5a079d248606701c96bf378a10638256c17f17a525ea6b152594548d3.png",
+      "rarity": "Rare"
+    },
+    {
+      "id": "vulcano-i",
+      "name": "Vulcano I",
+      "family": "vulcano",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/a166927f097577535968c08df9db2dda5b6142133afcf75cbb0d90af16b9a646.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "vulcano-ii",
+      "name": "Vulcano II",
+      "family": "vulcano",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/2d7e072ec7707646ef937b2525decf7546960f0173ded94e1a31defe424f098a.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "vulcano-iii",
+      "name": "Vulcano III",
+      "family": "vulcano",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/22e7c8063b7d935075a3d5a698ae0e4145da330da08cf68449b3d7661c1a922f.png",
+      "rarity": "Epic"
+    },
+    {
+      "id": "vulcano-iv",
+      "name": "Vulcano IV",
+      "family": "vulcano",
+      "slots": [
+        "shotgun-muzzle",
+        "underbarrel",
+        "shotgun-mag",
+        "stock"
+      ],
+      "image": "https://static.metaforge.app/arc-raiders/preview/20260919/b8dea33b155d29e9821b3b7a62281f66d88cc4f72b643a1645087fc7b577fd8f.png",
+      "rarity": "Epic"
+    }
+  ],
+  "mods": [
+    {
+      "id": "angled-grip-i",
+      "name": "Angled Grip I",
+      "slot": "underbarrel",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "arpeggio",
+        "il toro",
+        "venator",
+        "bobcat",
+        "tempest",
+        "vulcano"
+      ]
+    },
+    {
+      "id": "angled-grip-ii",
+      "name": "Angled Grip II",
+      "slot": "underbarrel",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "angled-grip-iii",
+      "name": "Angled Grip III",
+      "slot": "underbarrel",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "arpeggio",
+        "il toro",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest",
+        "vulcano",
+        "aphelion"
+      ]
+    },
+    {
+      "id": "compensator-i",
+      "name": "Compensator I",
+      "slot": "muzzle",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "compensator-ii",
+      "name": "Compensator II",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "compensator-iii",
+      "name": "Compensator III",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "extended-barrel-i",
+      "name": "Extended Barrel I",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "tempest",
+        "arpeggio",
+        "bettina",
+        "anvil",
+        "torrente"
+      ]
+    },
+    {
+      "id": "extended-barrel-ii",
+      "name": "Extended Barrel II",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "tempest",
+        "arpeggio",
+        "bettina",
+        "anvil",
+        "torrente"
+      ]
+    },
+    {
+      "id": "extended-barrel",
+      "name": "Extended Barrel III",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "extended-light-mag-i",
+      "name": "Extended Light Mag I",
+      "slot": "light-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "extended-light-mag-ii",
+      "name": "Extended Light Mag II",
+      "slot": "light-mag",
+      "compatibleWeapons": [
+        "kettle",
+        "burletta",
+        "hairpin",
+        "stitcher",
+        "bobcat"
+      ]
+    },
+    {
+      "id": "extended-light-mag-iii",
+      "name": "Extended Light Mag III",
+      "slot": "light-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "extended-medium-mag-i",
+      "name": "Extended Medium Mag I",
+      "slot": "medium-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "extended-medium-mag-ii",
+      "name": "Extended Medium Mag II",
+      "slot": "medium-mag",
+      "compatibleWeapons": [
+        "arpeggio",
+        "osprey",
+        "renegade",
+        "torrente",
+        "tempest",
+        "venator"
+      ]
+    },
+    {
+      "id": "extended-medium-mag-iii",
+      "name": "Extended Medium Mag III",
+      "slot": "medium-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "extended-shotgun-mag-i",
+      "name": "Extended Shotgun Mag I",
+      "slot": "shotgun-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "extended-shotgun-mag-ii",
+      "name": "Extended Shotgun Mag II",
+      "slot": "shotgun-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "extended-shotgun-mag-iii",
+      "name": "Extended Shotgun Mag III",
+      "slot": "shotgun-mag",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "horizontal-grip",
+      "name": "Horizontal Grip",
+      "slot": "underbarrel",
+      "compatibleWeapons": [
+        "rattler",
+        "kettle",
+        "ferro",
+        "hullcracker",
+        "venator"
+      ]
+    },
+    {
+      "id": "kinetic-converter",
+      "name": "Kinetic Converter",
+      "slot": "stock",
+      "compatibleWeapons": [
+        "rattler",
+        "kettle",
+        "ferro",
+        "renegade",
+        "hullcracker"
+      ]
+    },
+    {
+      "id": "lightweight-stock",
+      "name": "Lightweight Stock",
+      "slot": "stock",
+      "compatibleWeapons": [
+        "rattler",
+        "kettle",
+        "ferro",
+        "renegade",
+        "hullcracker"
+      ]
+    },
+    {
+      "id": "muzzle-brake-i",
+      "name": "Muzzle Brake I",
+      "slot": "muzzle",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "muzzle-brake-ii",
+      "name": "Muzzle Brake II",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "muzzle-brake-iii",
+      "name": "Muzzle Brake III",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "padded-stock",
+      "name": "Padded Stock",
+      "slot": "stock",
+      "compatibleWeapons": [
+        "arpeggio",
+        "bettina",
+        "rattler",
+        "kettle",
+        "ferro"
+      ]
+    },
+    {
+      "id": "shotgun-choke-i",
+      "name": "Shotgun Choke I",
+      "slot": "shotgun-muzzle",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "shotgun-choke-ii",
+      "name": "Shotgun Choke II",
+      "slot": "shotgun-muzzle",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "shotgun-choke-iii",
+      "name": "Shotgun Choke III",
+      "slot": "shotgun-muzzle",
+      "compatibleWeapons": [
+        "il toro",
+        "vulcano"
+      ]
+    },
+    {
+      "id": "shotgun-silencer",
+      "name": "Shotgun Silencer",
+      "slot": "shotgun-muzzle",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "silencer-i",
+      "name": "Silencer I",
+      "slot": "muzzle",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "silencer-ii",
+      "name": "Silencer II",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "silencer-iii",
+      "name": "Silencer III",
+      "slot": "muzzle",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "anvil",
+        "arpeggio",
+        "burletta",
+        "osprey",
+        "renegade",
+        "torrente",
+        "venator",
+        "bettina",
+        "bobcat",
+        "tempest"
+      ]
+    },
+    {
+      "id": "stable-stock-i",
+      "name": "Stable Stock I",
+      "slot": "stock",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "stable-stock-ii",
+      "name": "Stable Stock II",
+      "slot": "stock",
+      "compatibleWeapons": [
+        "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "arpeggio",
+        "il toro",
+        "osprey",
+        "renegade",
+        "torrente",
+        "bettina",
+        "bobcat",
+        "tempest",
+        "vulcano",
+        "aphelion"
+      ]
+    },
+    {
+      "id": "stable-stock-iii",
+      "name": "Stable Stock III",
+      "slot": "stock",
+      "compatibleWeapons": [
+        "rattler",
+        "kettle",
+        "ferro",
+        "renegade",
+        "hullcracker"
+      ]
+    },
+    {
+      "id": "vertical-grip-i",
+      "name": "Vertical Grip I",
+      "slot": "underbarrel",
+      "compatibleWeapons": null
+    },
+    {
+      "id": "vertical-grip-ii",
+      "name": "Vertical Grip II",
+      "slot": "underbarrel",
+      "compatibleWeapons": [
+        "rattler",
+        "kettle",
+        "ferro",
+        "hullcracker",
+        "venator"
+      ]
+    },
+    {
+      "id": "vertical-grip-iii",
+      "name": "Vertical Grip III",
+      "slot": "underbarrel",
+      "compatibleWeapons": null
+    }
+  ],
+  "familySlots": {
+    "anvil": [
+      "muzzle"
+    ],
+    "aphelion": [
+      "underbarrel",
+      "stock"
+    ],
+    "arpeggio": [
+      "muzzle",
+      "underbarrel",
+      "medium-mag",
+      "stock"
+    ],
+    "bantam": [],
+    "bettina": [
+      "muzzle",
+      "underbarrel",
+      "stock"
+    ],
+    "bobcat": [
+      "muzzle",
+      "underbarrel",
+      "light-mag",
+      "stock"
+    ],
+    "burletta": [
+      "muzzle",
+      "light-mag"
+    ],
+    "canto": [
+      "muzzle",
+      "underbarrel",
+      "medium-mag",
+      "stock"
+    ],
+    "dolabra": [],
+    "equalizer": [],
+    "ferro": [
+      "muzzle",
+      "underbarrel",
+      "stock"
+    ],
+    "hairpin": [
+      "light-mag"
+    ],
+    "hullcracker": [
+      "underbarrel",
+      "stock"
+    ],
+    "il toro": [
+      "shotgun-muzzle",
+      "underbarrel",
+      "shotgun-mag",
+      "stock"
+    ],
+    "jupiter": [],
+    "kettle": [
+      "muzzle",
+      "underbarrel",
+      "light-mag",
+      "stock"
+    ],
+    "osprey": [
+      "muzzle",
+      "underbarrel",
+      "medium-mag",
+      "stock"
+    ],
+    "rascal": [],
+    "rattler": [
+      "muzzle",
+      "underbarrel",
+      "stock"
+    ],
+    "renegade": [
+      "muzzle",
+      "medium-mag",
+      "stock"
+    ],
+    "stiletto": [
+      "muzzle",
+      "underbarrel",
+      "stock"
+    ],
+    "stitcher": [
+      "muzzle",
+      "underbarrel",
+      "light-mag",
+      "stock"
+    ],
+    "tempest": [
+      "muzzle",
+      "underbarrel",
+      "medium-mag"
+    ],
+    "torrente": [
+      "muzzle",
+      "medium-mag",
+      "stock"
+    ],
+    "venator": [
+      "underbarrel",
+      "medium-mag"
+    ],
+    "vulcano": [
+      "shotgun-muzzle",
+      "underbarrel",
+      "shotgun-mag",
+      "stock"
+    ]
+  },
+  "amplificationBlocks": [
+    {
+      "family": "kettle",
+      "upgrades": [
+        "X-Rounds"
+      ],
+      "slots": [
+        "light-mag"
+      ]
+    },
+    {
+      "family": "renegade",
+      "upgrades": [
+        "Scoped"
+      ],
+      "slots": [
+        "medium-mag"
+      ]
+    },
+    {
+      "family": "canto",
+      "upgrades": [
+        "Carbine Conversion",
+        "Sprint Shooting"
+      ],
+      "slots": [
+        "stock"
+      ]
+    },
+    {
+      "family": "osprey",
+      "upgrades": [
+        "Ergonomic Bolt"
+      ],
+      "slots": [
+        "stock"
+      ]
+    }
+  ]
+}

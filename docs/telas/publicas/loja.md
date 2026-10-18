@@ -83,14 +83,14 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 | Mochila equipada | 1 | MK3 Sobrevivente (fixa nesta fase de teste) |
 | Escudo | 1 | Shield |
 | Armas | 2 | Weapon ou isWeapon, excluindo projetos |
-| Acessórios | Até 3 por arma | Modification com compatibilidade explícita na descrição; sem repetir família |
+| Acessórios | 0 a 4, conforme arma e variante | Encaixes específicos: bocal, empunhadura, coronha e carregador do tipo correto |
 | Mochila | 20 | Qualquer item do jogo |
 | Uso rápido | 5 | Quick Use, Throwable, Grenade, Consumable, Gadget e Deployable |
 | Espaço aperfeiçoado | 1 | Gadget, Deployable ou gadget conhecido do catálogo antigo Quick Use |
 | Bolso seguro | 3 | Qualquer item, exceto Weapon, isWeapon e Shield |
 
 - Equipamentos usam os ícones reais do catálogo. Itens equipados podem ser removidos individualmente; a MK3 é mantida no teste.
-- Trocar ou remover uma arma limpa seus acessórios. Acessórios sem informação de compatibilidade não são oferecidos. A compatibilidade considera o nome da arma, tradução local e tier; não simula todas as estatísticas do jogo.
+- Trocar ou remover uma arma limpa seus acessórios. Os encaixes dependem da arma e da variante exata; acessórios são filtrados pelo encaixe e pelas listas estruturadas disponíveis. Não simula todas as estatísticas do jogo.
 - Quantidades são limitadas por `stackSize`; sem informação de pilha, usa 1. Armas, escudos e acessórios ocupam uma unidade.
 - A montagem combina estoque da API com metadados locais de `arc-data.js`. Itens sem estoque podem ser usados e são identificados no seletor.
 - O rascunho fica neste navegador em `sucatao-loadout-mk3-v1`. Ao restaurar, os dados são validados contra os espaços e o catálogo atuais. Não grava no inventário do jogador.
@@ -101,3 +101,14 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 ### Validação
 
 `node --test tests/loadout.test.cjs` valida capacidades, restrições, acessórios, pilhas, agregação e disponibilidade. Compilar com `npm run build` (exige as variáveis do projeto, inclusive RESEND_API_KEY).
+
+### Dados de acessórios e variantes
+
+- A cópia local em `src/data/weapon-attachments.json` foi conferida em 18/10/2026: 181 armas/variantes e 38 acessórios do [MetaForge](https://metaforge.app/arc-raiders), inclusive variantes Amplified (tier V).
+- A API pública `GET /api/arc-raiders/items` fornece `stat_block.compatibleWeapons` em parte dos acessórios. `loadout_slots` indica em qual região do inventário o item pode ser colocado; não informa a quantidade de acessórios da arma. `attachedSlots`, observado em móveis, também não é usado como capacidade de arma.
+- Como a API não fornece essa matriz, os tipos de encaixe são complementados pelas tabelas [Weapons](https://arcraiders.wiki/wiki/Weapons), [Canto](https://arcraiders.wiki/wiki/Canto) e [Weapon Mods](https://arcraiders.wiki/wiki/Weapon_Mods) da ARC Raiders Wiki. A página individual de Canto confirma carregador médio, corrigindo uma inconsistência da tabela geral.
+- As restrições de [Amplified Weapons](https://arcraiders.wiki/wiki/Amplified_Weapons) são aplicadas por variante: Renegade Scoped remove carregador; Kettle X-Rounds remove carregador; Canto Carbine Conversion/Sprint Shooting e Osprey Ergonomic Bolt removem coronha. Outras variantes mantêm os encaixes base confirmados. Um nome genérico terminado em V representa apenas a variante amplificada base, sem presumir uma melhoria específica.
+- Listas explícitas `compatibleWeapons` restringem os acessórios; quando esse campo falta, usa-se o tipo de encaixe confirmado. Dados novos ou armas sem regra confirmada não recebem três espaços genéricos: a interface informa que os encaixes não estão confirmados.
+- Cada encaixe tem ID estável por tipo. Rascunhos antigos com três espaços numerados são migrados para os encaixes válidos; acessórios incompatíveis ou de encaixes removidos são descartados antes da revisão/carrinho.
+- Atualização manual: `node scripts/sync-weapon-attachments.mjs`. Busca o catálogo paginado uma vez e atualiza a cópia local somente ao concluir. Mantém a matriz curada e as restrições confirmadas; novas famílias continuam sem encaixes até conferência. O navegador não consulta o MetaForge diretamente.
+- Atribuição visível no montador: MetaForge e ARC Raiders Wiki. As referências da wiki indicam [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/); os dados de regras foram adaptados para este montador.

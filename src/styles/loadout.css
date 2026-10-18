@@ -32,11 +32,15 @@
 .loadout-weapon-label { position: absolute; top: 12px; left: 14px; font-size: 13px; }
 .loadout-weapon-name { position: absolute; left: 14px; top: 32px; color: var(--muted); font-size: 10px; }
 .loadout-attachments { position: absolute; bottom: 10px; left: 20%; right: 10%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.loadout-slot--attachment { height: 35px; aspect-ratio: auto; }
+.loadout-slot--attachment { height: 44px; aspect-ratio: auto; }
 .loadout-slot--attachment > .loadout-slot-select { padding: 4px; }
-.loadout-slot--attachment > .loadout-slot-select > img { height: 100%; width: 70%; }
+.loadout-slot--attachment > .loadout-slot-select > img { height: 22px; width: 70%; }
 .loadout-slot--attachment .loadout-remove { width: 18px; height: 18px; top: 0; right: 0; }
-.loadout-slot--attachment .loadout-empty-icon { width: 17px; }
+.loadout-slot--attachment .loadout-empty-icon { width: 17px; height: 17px; }
+.loadout-attachment-label { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font-size: 8px; }
+.loadout-attachment-note { color: var(--gray-500); font-size: 10px; }
+.loadout-data-credit { display: block; margin-top: 6px; color: var(--gray-500); font-size: 10px; }
+.loadout-data-credit a { text-decoration: underline; text-underline-offset: 2px; }
 .loadout-fallback { color: var(--muted); font-size: 18px; }
 .loadout-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--stroke); }
 .loadout-actions p { flex: 1; min-width: 180px; margin: 0; color: var(--gray-500); font-size: 12px; }
