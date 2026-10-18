@@ -59,7 +59,7 @@ export function loadoutItemSearchText(item: CatalogItem) {
   if (!profile) return normalizeLoadoutText(item.name)
   const aliases = gameItems.filter(meta => isWeapon(meta) && meta.nameEn && baseName(meta.nameEn) === profile.family)
   const amplified = profile.name.startsWith("Amplified ")
-  return normalizeLoadoutText([item.name, profile.name, ...aliases.map(meta => `${baseName(meta.name)} ${amplified ? "V" : ""}`)].join(" "))
+  return normalizeLoadoutText([item.name, profile.name, amplified ? `${profile.family} V` : "", ...aliases.map(meta => `${baseName(meta.name)} ${amplified ? "V" : ""}`)].join(" "))
 }
 
 export function getWeaponAttachmentSlots(weapon: CatalogItem | undefined, weaponSlot: string): LoadoutSlot[] {

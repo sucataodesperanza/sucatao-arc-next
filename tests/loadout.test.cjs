@@ -118,4 +118,5 @@ test('translated legacy weapons resolve by exact English tier without losing var
 })
 test('tier V variants can be found with the Portuguese weapon name', () => {
   assert.match(loadoutItemSearchText(item('Weapon',{name:'Amplified Renegade (Scoped)'})),/renegado v/)
+  assert.match(loadoutItemSearchText(item('Weapon',{name:'Amplified Canto (Carbine Conversion)'})),/canto v/)
 })
