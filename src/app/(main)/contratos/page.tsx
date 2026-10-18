@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import Link from "next/link"
 import {
   BarChart2, Check, ChevronLeft, ChevronRight, Clock, Coins, Crosshair,
   HelpCircle, ScrollText, Shield, Star, Target, Trophy, Users, Wallet, XCircle, Zap,
@@ -15,7 +16,7 @@ import { ActiveContractCard, MISSION_COLORS, TIER_COLORS, RISK_COLORS, expiresIn
 /* ── Constantes ── */
 const MISSION_LABELS: Record<string, string> = { diario: "Diário", semanal: "Semanal", mensal: "Mensal" }
 
-const tabs = ["Contratos à Venda", "Contratos Ativos", "Histórico"] as const
+const tabs = ["Contratos Ativos", "Histórico"] as const
 type Tab   = typeof tabs[number]
 
 /* ── Tipos locais ── */
@@ -37,7 +38,7 @@ const PANEL_KEY = "contratos-panel-open"
 
 export default function ContratosPage() {
   const [panelOpen, setPanelOpen]     = useState(false)
-  const [activeTab, setActiveTab]     = useState<Tab>("Contratos à Venda")
+  const [activeTab, setActiveTab]     = useState<Tab>("Contratos Ativos")
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
   const [indicator, setIndicator]     = useState({ left: 0, width: 0 })
 
@@ -212,109 +213,6 @@ export default function ContratosPage() {
             <span className="store-tab-indicator" style={{ left: indicator.left, width: indicator.width }} />
           </div>
 
-          {/* ── Aba: Contratos à Venda ── */}
-          {activeTab === "Contratos à Venda" && (
-            <>
-              <div className="contratos-hero-row">
-                <div className="hero-banner" style={{ backgroundImage: "url(/assets/bots/arc_rocketeer.png)" }}>
-                  <div className="hero-banner-content">
-                    <span className="hero-banner-tag"><ScrollText size={12} />Contratos ARC</span>
-                    <h2>Sua Missão. Sua Recompensa.</h2>
-                    <p>Aceite contratos de Raiders, facções e do próprio Sucatão. Complete objetivos e receba recompensas exclusivas em Sucatas, Reputação e itens.</p>
-                  </div>
-                </div>
-                <div className="contratos-summary">
-                  <h2>Resumo Geral</h2>
-                  <div className="contratos-summary-grid">
-                    <div className="contratos-summary-stat"><span>Contratos Ativos</span><strong>{activeContracts.length}</strong></div>
-                    <div className="contratos-summary-stat"><span>Concluídos</span><strong>{contractStats?.completed ?? "—"}</strong></div>
-                    <div className="contratos-summary-stat"><span>Taxa de Sucesso</span><strong>{contractStats ? `${contractStats.success_rate}%` : "—"}</strong></div>
-                    <div className="contratos-summary-stat"><span>Sucatas</span><strong>{userSucatas?.toLocaleString("pt-BR") ?? "—"}</strong></div>
-                  </div>
-                </div>
-              </div>
-
-              {loadingContracts ? (
-                <p style={{ color: "var(--gray-500)", fontSize: 13, padding: 24 }}>Carregando contratos...</p>
-              ) : saleContracts.length === 0 ? (
-                <div className="contratos-placeholder"><h2>Nenhum contrato disponível</h2><p>Novos contratos serão lançados em breve.</p></div>
-              ) : (
-                <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>
-                  {saleContracts.map(raw => {
-                    const mColor  = MISSION_COLORS[raw.mission_type] ?? "#5fa8ff"
-                    const mLabel  = MISSION_LABELS[raw.mission_type] ?? raw.mission_type
-                    const tierCol = TIER_COLORS[raw.tier] ?? "var(--gray-500)"
-                    const pct     = raw.total > 0 ? Math.round(((raw.user_progress ?? 0) / raw.total) * 100) : 0
-                    const isFree  = !raw.price_points && !raw.price_real
-                    const isPending = raw.user_status === null
-
-                    return (
-                      <div key={raw.id} className={`cv-card${raw.variant ? ` cv-card--${raw.variant}` : ""}`}>
-                        {raw.variant && <div className="cv-card-frame" />}
-                        <div className="cv-card-bg">
-                          <div className="cv-card-bg-img" style={{ backgroundImage: `url(${raw.image_url ?? "/assets/bots/arc_sentinel.png"})` }} />
-                        </div>
-                        <div className="cv-card-badges">
-                          <span className="cv-card-type" style={{ color: mColor }}>{mLabel}</span>
-                          <span className="cv-card-tier" style={{ color: tierCol, borderColor: `color-mix(in srgb, ${tierCol} 40%, transparent)` }}>{raw.tier}</span>
-                          {raw.contract_type === "faccao" && (
-                            <span style={{ fontSize: 9, fontWeight: 950, color: "#b477ff", textTransform: "uppercase" }}>Facção</span>
-                          )}
-                        </div>
-                        <div className="cv-card-body">
-                          <strong className="cv-card-name">{raw.title}</strong>
-                          <p className="cv-card-desc">{raw.description}</p>
-                          <div className="cv-card-section-label">Objetivo</div>
-                          <div className="cv-card-objective"><Target size={11} />{raw.objective}</div>
-                          <div className="cv-card-section-label">Recompensas</div>
-                          <RewardBadge sucatas={raw.sucatas} xp={raw.xp} rep={raw.rep} />
-                          <div className="cv-card-section-label">Progresso</div>
-                          <div className="ca-progress-wrap">
-                            <div className="ca-progress-bar"><span style={{ width: `${pct}%` }} /></div>
-                            <span className="ca-progress-label">{raw.user_progress ?? 0}/{raw.total}</span>
-                          </div>
-                          <div className="cv-card-footer-meta">
-                            <span className="cv-card-players"><Clock size={11} />{expiresInStr(raw.expires_at)}</span>
-                            {!isFree && (
-                              <span style={{ fontSize: 10, color: "#ffd400" }}>
-                                {raw.price_points > 0 ? `${raw.price_points.toLocaleString("pt-BR")} pts` : `R$ ${Number(raw.price_real).toFixed(2).replace(".", ",")}`}
-                              </span>
-                            )}
-                          </div>
-                          <div className="cv-card-actions">
-                            {raw.user_status === "completed" ? (
-                              <span style={{ fontSize: 10, fontWeight: 950, color: "var(--green)", textTransform: "uppercase" }}>Concluído</span>
-                            ) : isPending ? (
-                              isFree ? (
-                                <button type="button" className="btn-aceitar" disabled={acceptingId === raw.id}
-                                  onClick={() => handleAcceptFree(raw.id)}>
-                                  <Zap size={14} fill="currentColor" />
-                                  {acceptingId === raw.id ? "Aceitando..." : "Aceitar"}
-                                </button>
-                              ) : (
-                                <button type="button" className="btn-aceitar" onClick={() => openBuyModal(raw)}>
-                                  <Zap size={14} fill="currentColor" />
-                                  {raw.price_points > 0 ? `${raw.price_points.toLocaleString("pt-BR")} pts` : `R$ ${Number(raw.price_real).toFixed(2).replace(".", ",")}`}
-                                </button>
-                              )
-                            ) : (
-                              <span style={{ fontSize: 10, fontWeight: 950, color: "var(--yellow)", textTransform: "uppercase" }}>Em progresso</span>
-                            )}
-                          </div>
-                        </div>
-                        {raw.variant && (
-                          <div className="cv-card-variant-footer">
-                            ‹ {raw.variant === "dourada" ? "Versão Dourada" : raw.variant === "holografica" ? "Versão Holográfica" : "Versão Corrompida"} ›
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </>
-          )}
-
           {/* ── Aba: Contratos Ativos ── */}
           {activeTab === "Contratos Ativos" && (
             <>
@@ -323,7 +221,7 @@ export default function ContratosPage() {
               ) : activeContracts.length === 0 ? (
                 <div className="contratos-placeholder">
                   <h2>Nenhum contrato ativo</h2>
-                  <p>Vá para <button type="button" onClick={() => setActiveTab("Contratos à Venda")} style={{ background: "none", border: "none", color: "var(--cyan)", cursor: "pointer", font: "inherit", textDecoration: "underline" }}>Contratos à Venda</button> para aceitar um contrato.</p>
+                  <p>Vá para <Link href="/loja?tab=passes" style={{ color: "var(--cyan)" }}>Contratos à Venda</Link> para aceitar um contrato.</p>
                 </div>
               ) : (
                 <div className="cv-cards-scroll" style={{ paddingBottom: 8 }}>

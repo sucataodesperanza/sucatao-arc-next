@@ -30,6 +30,7 @@ const links = [
   { href: "/admin/home",      label: "Home page",  icon: Home,          exact: false },
   { href: "/admin/usuarios",    label: "Usuários",   icon: Users,    exact: false },
   { href: "/admin/indicacoes",  label: "Indicações", icon: UserPlus, exact: false },
+  { href: "/admin/sorteios",    label: "Sorteios",   icon: Ticket,   exact: false },
 ]
 
 export function AdminSidebar() {

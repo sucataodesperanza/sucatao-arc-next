@@ -761,7 +761,6 @@ export default function PerfilPage() {
           )}
         </div>
       </section>
-    </div>
     </>)}
     </div>
     </div>

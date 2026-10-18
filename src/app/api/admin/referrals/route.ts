@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { deliverRewards } from "@/lib/referral-rewards"
 
 async function assertAdmin() {
   const supabase = await createClient()
@@ -56,6 +57,8 @@ export async function PATCH(req: NextRequest) {
 
   const { error } = await admin.from("referrals").update(updates).eq("id", id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  await deliverRewards(id, status, admin)
 
   return NextResponse.json({ ok: true })
 }

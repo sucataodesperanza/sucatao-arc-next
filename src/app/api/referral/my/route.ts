@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { deliverRewards } from "@/lib/referral-rewards"
 
 export type ReferralSummary = {
   code: string
@@ -87,9 +88,10 @@ export async function GET() {
   }
 
   if (toUpdate.length > 0) {
-    await Promise.all(toUpdate.map(u =>
-      admin.from("referrals").update({ status: u.status, contract_accepted_at: u.contract_accepted_at, contract_completed_at: u.contract_completed_at, confirmed_at: u.confirmed_at }).eq("id", u.id)
-    ))
+    await Promise.all(toUpdate.map(async u => {
+      await admin.from("referrals").update({ status: u.status, contract_accepted_at: u.contract_accepted_at, contract_completed_at: u.contract_completed_at, confirmed_at: u.confirmed_at }).eq("id", u.id)
+      await deliverRewards(u.id, u.status, admin)
+    }))
   }
 
   // Busca perfis dos indicados
