@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { getItemGlowColor } from "@/lib/use-items-catalog"
 import { ArrowRight, Backpack, Crosshair, Plus, Search, Shield, Trash2, Wrench, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type { CatalogItem } from "@/lib/catalog"
@@ -87,7 +88,7 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
     const Icon = slot.kind === "shield" ? Shield : slot.kind === "weapon" ? Crosshair : slot.kind === "backpack" ? Backpack : slot.kind === "attachment" ? Wrench : Plus
     const disabled = !ready || (slot.kind === "attachment" && !draft[slot.weaponSlot!])
     return <div key={slot.id} className={`loadout-slot${large ? " loadout-slot--weapon" : ""}${slot.kind === "attachment" ? " loadout-slot--attachment" : ""}`}>
-      <button type="button" className="loadout-slot-select" title={item ? `${slot.label}: ${item.name}` : slot.label} disabled={disabled} onClick={() => open(slot)} aria-label={`${slot.label}${item ? `: ${item.name}, quantidade ${entry.quantity}. Alterar` : ": selecionar item"}`}>
+      <button type="button" className={`loadout-slot-select${item ? " loadout-item-glow" : ""}`} style={item ? { "--rarity-color": getItemGlowColor(item) } as CSSProperties : undefined} title={item ? `${slot.label}: ${item.name}` : slot.label} disabled={disabled} onClick={() => open(slot)} aria-label={`${slot.label}${item ? `: ${item.name}, quantidade ${entry.quantity}. Alterar` : ": selecionar item"}`}>
         {large && <strong className="loadout-weapon-label">{slot.label}</strong>}
         {item ? itemImage(item) ? <img src={itemImage(item)} alt="" loading="lazy" /> : <span className="loadout-fallback">{item.name.slice(0, 2)}</span> : <Icon className="loadout-empty-icon" size={large ? 48 : 28} strokeWidth={1.5} />}
         {(slot.kind === "backpack" || slot.kind === "shield") && <span className="loadout-slot-name">{slot.kind === "backpack" ? "MK3 Sobrevivente" : item?.name ?? "Escudo"}</span>}
@@ -150,7 +151,7 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
           <div className="loadout-picker-controls"><label className="loadout-search"><Search size={17} /><input ref={search} type="search" placeholder="Buscar item compatível…" value={query} onChange={event => setQuery(event.target.value)} /></label>{["bag", "quick", "safe"].includes(selectedSlot.kind) && <label className="loadout-quantity">Quantidade<input aria-label="Quantidade do item" type="number" min={1} max={999} value={quantity} onChange={event => setQuantity(Math.max(1, Math.min(999, Math.floor(Number(event.target.value) || 1))))} /></label>}</div>
           <p className="loadout-dialog-help">{choices.length} itens • Quantidades limitadas ao tamanho da pilha de cada item. Itens sem estoque podem ser usados na montagem.</p>
           <div className="loadout-picker">{choices.map(item => <button key={item.id} type="button" className="loadout-choice" onClick={() => equip(selectedSlot, item)}>
-            <div className="loadout-choice-image">{itemImage(item) ? <img src={itemImage(item)} alt="" loading="lazy" /> : <Backpack size={26} />}</div><strong>{item.name}</strong><small>{getItemTypeLabel(item.type)}{item.stackSize ? ` · Pilha ${item.stackSize}` : ""}</small><span>{stock.some(row => row.id === item.id && (row.quantity ?? 0) > 0) ? "Em estoque" : "Sem estoque · montagem"}</span>
+            <div className="loadout-choice-image loadout-item-glow" style={{ "--rarity-color": getItemGlowColor(item) } as CSSProperties}>{itemImage(item) ? <img src={itemImage(item)} alt="" loading="lazy" /> : <Backpack size={26} />}</div><strong>{item.name}</strong><small>{getItemTypeLabel(item.type)}{item.stackSize ? ` · Pilha ${item.stackSize}` : ""}</small><span>{stock.some(row => row.id === item.id && (row.quantity ?? 0) > 0) ? "Em estoque" : "Sem estoque · montagem"}</span>
           </button>)}</div>
           {choices.length === 0 && <p className="loadout-empty">Nenhum item compatível encontrado.{selectedSlot.kind === "attachment" ? " Tente outra arma ou busque outro acessório." : " Ajuste a busca."}</p>}
         </>}

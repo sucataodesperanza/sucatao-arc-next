@@ -12,7 +12,7 @@ import { CatalogGrid } from "@/components/catalog-grid"
 import { LoadoutBuilder } from "@/components/loadout-builder"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { matchesStoreCategory, storeCategories } from "@/lib/store-categories"
-import { useItemsCatalog } from "@/lib/use-items-catalog"
+import { useItemsCatalog, getItemGlowColor } from "@/lib/use-items-catalog"
 import SidePanelUserHeader from "@/components/side-panel-user-header"
 import { SorteiosTab } from "@/components/sorteios-tab"
 import { MISSION_COLORS, TIER_COLORS, expiresInStr } from "@/components/active-contract-card"
@@ -30,9 +30,6 @@ function resolveImage(image?: string) {
 const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Unknown"]
 const rarityMetaLabels: Record<string, string> = {
   Common: "Comum", Uncommon: "Incomum", Rare: "Raro", Epic: "Epico", Legendary: "Lendario", Unknown: "Desconhecido"
-}
-const rarityColors: Record<string, string> = {
-  Common: "#8b99aa", Uncommon: "#3df28b", Rare: "#5fa8ff", Epic: "#b477ff", Legendary: "#ffd400", Unknown: "#566171"
 }
 
 function getRarity(item: CatalogItem) {
@@ -449,7 +446,7 @@ export default function LojaPage() {
                       <article
                         key={item.id}
                         className="store-highlight-card"
-                        style={{ "--rarity-color": rarityColors[r] } as React.CSSProperties}
+                        style={{ "--rarity-color": getItemGlowColor(item) } as React.CSSProperties}
                         tabIndex={0}
                         role="button"
                         aria-label={`Abrir detalhe de ${item.name}`}

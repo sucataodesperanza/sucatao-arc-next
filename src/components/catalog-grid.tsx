@@ -2,7 +2,7 @@
 
 import { Banknote, Coins, Heart, ShoppingCart } from "lucide-react"
 import { getItemTypeLabel } from "@/lib/catalog"
-import { formatNumber, getRarity, getType, rarityColors, rarityMetaLabels, resolveImage, type ItemsCatalog } from "@/lib/use-items-catalog"
+import { formatNumber, getRarity, getType, getItemGlowColor, rarityMetaLabels, resolveImage, type ItemsCatalog } from "@/lib/use-items-catalog"
 
 export function CatalogGrid({ catalog, className, pinnedFirst }: { catalog: ItemsCatalog; className?: string; pinnedFirst?: React.ReactNode }) {
   const { filteredItems, loadingCatalog, favorites, toggleFavorite, setSelectedItem } = catalog
@@ -25,7 +25,7 @@ export function CatalogGrid({ catalog, className, pinnedFirst }: { catalog: Item
           <article
             key={item.id}
             className={`store-highlight-card${item.quantity === 0 ? " sold-out" : ""}`}
-            style={{ "--rarity-color": rarityColors[r] } as React.CSSProperties}
+            style={{ "--rarity-color": getItemGlowColor(item) } as React.CSSProperties}
             tabIndex={0}
             role="button"
             aria-label={`Abrir detalhe de ${item.name}`}

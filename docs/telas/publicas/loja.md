@@ -100,6 +100,8 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 
 ### Validação
 
+Os espaços preenchidos e o seletor do loadout usam o brilho difuso de raridade da loja. Armas Amplified (inclusive nomes legados de tier V) usam laranja (`#ff8a32`) no loadout e nos cards da loja, sem alterar sua raridade cadastrada. Espaços vazios continuam neutros.
+
 `node --test tests/loadout.test.cjs` valida capacidades, restrições, acessórios, pilhas, agregação e disponibilidade. Compilar com `npm run build` (exige as variáveis do projeto, inclusive RESEND_API_KEY).
 
 ### Dados de acessórios e variantes
