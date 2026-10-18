@@ -9,6 +9,7 @@ import { getItemTypeLabel, type CatalogItem } from "@/lib/catalog"
 import { ArcIntelPanel } from "@/components/arc-intel-panel"
 import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
+import { LoadoutBuilder } from "@/components/loadout-builder"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { matchesStoreCategory, storeCategories } from "@/lib/store-categories"
 import { useItemsCatalog } from "@/lib/use-items-catalog"
@@ -90,7 +91,7 @@ export default function LojaPage() {
   const catalog = useItemsCatalog()
   const [activeTab, setActiveTab] = useState("destaques")
   const selectedCategory = storeCategories.find(category => category.key === activeTab)
-  const isCatalogTab = activeTab === "itens" || !!selectedCategory
+  const isCatalogTab = activeTab === "itens" || (!!selectedCategory && activeTab !== "loadouts")
   const categoryItems = catalog.catalogItems.filter(item => matchesStoreCategory(item, activeTab))
   const storeCatalog = { ...catalog,
     filteredItems: catalog.filteredItems.filter(item => matchesStoreCategory(item, activeTab)),
@@ -313,7 +314,7 @@ export default function LojaPage() {
   }, [activeTab])
 
   return (
-    <div className={`store-page${panelOpen ? "" : " store-page--panel-closed"}`}>
+    <div className={`store-page${panelOpen ? "" : " store-page--panel-closed"}${activeTab === "loadouts" ? " store-page--loadout" : ""}`}>
       <div className={`store-layout${panelOpen ? "" : " store-layout--no-panel"}`}>
         <div className="store-main">
           <div className="store-topbar">
@@ -510,6 +511,8 @@ export default function LojaPage() {
               </section>
             </>
 
+          ) : activeTab === "loadouts" ? (
+            <LoadoutBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />
           ) : isCatalogTab ? (
             <>
               <section aria-label="Sobre o catálogo de itens">
@@ -596,9 +599,7 @@ export default function LojaPage() {
                   <span>Exibindo {storeCatalog.filteredItems.length} de {categoryItems.length}</span>
                 </div>
                 <CatalogFilters catalog={storeCatalog} />
-                {activeTab === "loadouts" && !catalog.loadingCatalog && categoryItems.length === 0 ? (
-                  <div className="store-placeholder"><div><h2>Loadouts em preparação</h2><p>Os kits aparecerão aqui quando estiverem disponíveis no estoque.</p><button type="button" className="store-tab" onClick={() => selectTab("armas")}>Explorar armas</button></div></div>
-                ) : <CatalogGrid catalog={storeCatalog} className="store-items-grid" />}
+                <CatalogGrid catalog={storeCatalog} className="store-items-grid" />
               </section>
             </>
 
