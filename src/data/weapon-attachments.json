@@ -4,6 +4,7 @@
     "api": "https://metaforge.app/api/arc-raiders/items",
     "slots": "https://arcraiders.wiki/wiki/Weapons",
     "canto": "https://arcraiders.wiki/wiki/Canto",
+    "kineticConverter": "https://arcraiders.wiki/wiki/Kinetic_Converter",
     "amplifications": "https://arcraiders.wiki/wiki/Amplified_Weapons",
     "license": "https://creativecommons.org/licenses/by-sa/4.0/"
   },
@@ -2242,11 +2243,20 @@
       "name": "Kinetic Converter",
       "slot": "stock",
       "compatibleWeapons": [
-        "rattler",
-        "kettle",
         "ferro",
+        "kettle",
+        "rattler",
+        "stitcher",
+        "arpeggio",
+        "il toro",
+        "osprey",
         "renegade",
-        "hullcracker"
+        "torrente",
+        "hullcracker",
+        "bettina",
+        "bobcat",
+        "vulcano",
+        "aphelion"
       ]
     },
     {

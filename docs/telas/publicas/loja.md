@@ -106,6 +106,8 @@ Os espaços preenchidos e o seletor do loadout usam o brilho difuso de raridade 
 
 ### Dados de acessórios e variantes
 
+- Exceção verificada: a lista `compatibleWeapons` do Conversor Cinético no MetaForge está incompleta. A cópia local e a sincronização preservam as 14 famílias confirmadas em [Kinetic Converter](https://arcraiders.wiki/wiki/Kinetic_Converter), conferidas em 18/10/2026. O encaixe de coronha continua obrigatório, inclusive nas variantes Amplified.
+
 - A cópia local em `src/data/weapon-attachments.json` foi conferida em 18/10/2026: 181 armas/variantes e 38 acessórios do [MetaForge](https://metaforge.app/arc-raiders), inclusive variantes Amplified (tier V).
 - A API pública `GET /api/arc-raiders/items` fornece `stat_block.compatibleWeapons` em parte dos acessórios. `loadout_slots` indica em qual região do inventário o item pode ser colocado; não informa a quantidade de acessórios da arma. `attachedSlots`, observado em móveis, também não é usado como capacidade de arma.
 - Como a API não fornece essa matriz, os tipos de encaixe são complementados pelas tabelas [Weapons](https://arcraiders.wiki/wiki/Weapons), [Canto](https://arcraiders.wiki/wiki/Canto) e [Weapon Mods](https://arcraiders.wiki/wiki/Weapon_Mods) da ARC Raiders Wiki. A página individual de Canto confirma carregador médio, corrigindo uma inconsistência da tabela geral.

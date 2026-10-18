@@ -16,6 +16,20 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, 'src/lib/l
 const { acceptsLoadoutItem: accepts, loadoutSlots: slots, slotQuantityLimit, summarizeLoadout, buildLoadoutItems, isSurvivor, loadoutPurchaseIssue, getWeaponAttachmentSlots, getWeaponProfile, restoreLoadoutDraft, loadoutItemSearchText } = context.exports
 const item = (type, extra = {}) => ({ id: type, name: type, type, ...extra })
 
+test('kinetic converter supports verified stock families and respects amplified stock removal', () => {
+  const converter = game.items.find(row => row.id === 'kinetic_converter')
+  const stockConverter = { ...converter, id: 'stock-uuid' }
+  for (const family of ['aphelion', 'arpeggio', 'bettina', 'bobcat', 'ferro', 'hullcracker', 'il toro', 'kettle', 'osprey', 'rattler', 'renegade', 'stitcher', 'torrente', 'vulcano']) {
+    const weapon = require('../src/data/weapon-attachments.json').weapons.find(row => row.family === family && row.slots?.includes('stock'))
+    assert.ok(weapon, family)
+    for (const mod of [converter, stockConverter]) assert.equal(accepts('attachment', mod, { ...weapon, type: 'Weapon' }, 'stock'), true, family)
+    assert.equal(accepts('attachment', converter, { ...weapon, type: 'Weapon' }, 'muzzle'), false)
+  }
+  const removed = require('../src/data/weapon-attachments.json').weapons.find(row => row.name.includes('Amplified Osprey') && row.name.includes('Ergonomic Bolt'))
+  assert.ok(removed)
+  assert.equal(accepts('attachment', converter, { ...removed, type: 'Weapon' }, 'stock'), false)
+})
+
 test('capacity matches the agreed MK3 test layout', () => {
   for (const [kind, count] of Object.entries({ bag: 20, weapon: 2, quick: 5, gadget: 1, safe: 3, shield: 1, backpack: 1, attachment: 0 })) assert.equal(slots.filter(slot => slot.kind === kind).length, count)
 })
