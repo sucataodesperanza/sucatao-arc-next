@@ -30,14 +30,8 @@ snapshot.weapons = items.filter(item => item.item_type === "Weapon").map(item =>
 })
 snapshot.mods = items.filter(item => item.item_type === "Modification").map(item => ({
   id: item.id, name: item.name, slot: modSlot(item.name),
-  // Verified stock compatibility: MetaForge's Kinetic Converter list is incomplete.
-  // https://arcraiders.wiki/wiki/Kinetic_Converter (checked 2026-10-18)
-  compatibleWeapons: item.id === "kinetic-converter"
-    ? ["ferro", "kettle", "rattler", "stitcher", "arpeggio", "il toro", "osprey", "renegade", "torrente", "hullcracker", "bettina", "bobcat", "vulcano", "aphelion"]
-    // https://arcraiders.wiki/wiki/Horizontal_Grip (checked 2026-10-18)
-    : item.id === "horizontal-grip"
-    ? ["ferro", "kettle", "rattler", "stitcher", "arpeggio", "il toro", "venator", "bettina", "bobcat", "tempest", "vulcano", "aphelion"]
-    : typeof item.stat_block?.compatibleWeapons === "string"
+  // Kept for provenance only: loadout compatibility uses the mounting category.
+  compatibleWeapons: typeof item.stat_block?.compatibleWeapons === "string"
     ? item.stat_block.compatibleWeapons.split(",").map(name => name.toLowerCase().trim().replace(/^ii toro$/, "il toro")) : null,
 }))
 snapshot.updatedAt = new Date().toISOString().slice(0, 10)

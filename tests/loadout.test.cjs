@@ -16,6 +16,32 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, 'src/lib/l
 const { acceptsLoadoutItem: accepts, loadoutSlots: slots, slotQuantityLimit, summarizeLoadout, buildLoadoutItems, isSurvivor, loadoutPurchaseIssue, getWeaponAttachmentSlots, getWeaponProfile, restoreLoadoutDraft, loadoutItemSearchText } = context.exports
 const item = (type, extra = {}) => ({ id: type, name: type, type, ...extra })
 
+test('all weapon tiers expose every attachment of each available mounting category', () => {
+  const data = require('../src/data/weapon-attachments.json')
+  const all = buildLoadoutItems([])
+  for (const mod of data.mods) {
+    assert.ok(mod.slot, `Unclassified mod: ${mod.name}`)
+    assert.ok(all.some(row => row.type === 'Modification' && (row.id.replace(/_/g, '-') === mod.id || row.name === mod.name || game.items.some(meta => meta.id === row.id && meta.nameEn === mod.name))), `Missing mod: ${mod.name}`)
+  }
+  const weapons = [...data.weapons.map(row => ({ ...row, type: 'Weapon' })), ...game.items.filter(row => row.isWeapon && !row.isBlueprint)]
+  for (const weapon of weapons) {
+    const profile = getWeaponProfile(weapon)
+    assert.ok(profile, weapon.name)
+    for (const mod of data.mods) {
+      assert.equal(accepts('attachment', { ...mod, type: 'Modification' }, weapon, mod.slot), !!profile.slots?.includes(mod.slot), `${weapon.name}: ${mod.name}`)
+    }
+  }
+})
+
+test('Osprey IV exposes all six stocks, including padded and lightweight stocks', () => {
+  const weapon = game.items.find(row => row.nameEn === 'Osprey IV')
+  assert.ok(weapon)
+  const data = require('../src/data/weapon-attachments.json')
+  const stocks = data.mods.filter(row => row.slot === 'stock')
+  assert.equal(stocks.length, 6)
+  for (const mod of stocks) assert.equal(accepts('attachment', { ...mod, type: 'Modification' }, weapon, 'stock'), true, mod.name)
+})
+
 test('horizontal grip supports verified families and only the underbarrel mount', () => {
   const grip = game.items.find(row => row.id === 'horizontal_grip')
   assert.ok(grip)
@@ -81,7 +107,7 @@ test('the fixed backpack is the survivor augment, not its blueprint', () => {
 test('attachments use structured compatibility and the specific mounting point', () => {
   const mod = item('Modification', { name: 'Empunhadura Angulada I' })
   assert.equal(accepts('attachment', mod, item('Weapon', { name: 'Ferro IV' })), true)
-  assert.equal(accepts('attachment', mod, item('Weapon', { name: 'Bettina IV' })), false)
+  assert.equal(accepts('attachment', mod, item('Weapon', { name: 'Bettina IV' })), true)
   assert.equal(accepts('attachment', mod, item('Weapon', { name: 'Ferro IV' }), 'muzzle'), false)
   assert.equal(accepts('attachment', mod, item('Weapon', { name: 'Ferro IV' }), 'underbarrel'), true)
   assert.equal(accepts('attachment', mod), false)

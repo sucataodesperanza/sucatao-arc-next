@@ -142,8 +142,9 @@ export function acceptsLoadoutItem(kind: SlotKind, item: CatalogItem, weapon?: C
       const mod = getModProfile(item)
       if (!profile || !mod?.slot || !profile.slots?.includes(mod.slot)) return false
       if (attachmentType && mod.slot !== attachmentType) return false
-      // Explicit API lists narrow compatibility; missing lists fall back to the verified slot matrix.
-      return !mod.compatibleWeapons || mod.compatibleWeapons.includes(profile.family)
+      // The mounting category determines compatibility, regardless of weapon tier.
+      // MetaForge's partial family lists must not hide valid attachments.
+      return true
     }
   }
 }
