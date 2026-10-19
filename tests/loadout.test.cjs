@@ -16,6 +16,41 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, 'src/lib/l
 const { acceptsLoadoutItem: accepts, loadoutSlots: slots, slotQuantityLimit, summarizeLoadout, buildLoadoutItems, isSurvivor, loadoutPurchaseIssue, getWeaponAttachmentSlots, getWeaponProfile, restoreLoadoutDraft, loadoutItemSearchText } = context.exports
 const item = (type, extra = {}) => ({ id: type, name: type, type, ...extra })
 
+test('stack distribution fills existing piles then splits excess within the selected section', () => {
+  const { equipLoadoutStacks } = context.exports
+  const bandage = item('Quick Use', { id: 'bandage', stackSize: 5 })
+  const bag = slots.find(row => row.id === 'bag-0')
+  const split = equipLoadoutStacks({}, bag, bandage, 12, slots)
+  assert.equal(split.error, null)
+  assert.deepEqual(Object.values(split.draft).map(row => row.quantity), [5, 5, 2])
+  const draft = { 'bag-1': { itemId: 'bandage', quantity: 3 }, 'quick-0': { itemId: 'bandage', quantity: 1 } }
+  const result = equipLoadoutStacks(draft, bag, bandage, 8, slots)
+  assert.equal(result.draft['bag-1'].quantity, 5)
+  assert.equal(result.draft['bag-0'].quantity, 5)
+  assert.equal(result.draft['bag-2'].quantity, 1)
+  assert.equal(result.draft['quick-0'].quantity, 1)
+  assert.equal(draft['bag-1'].quantity, 3)
+})
+
+test('stack overflow is atomic and editing replaces the selected pile without losing other items', () => {
+  const { equipLoadoutStacks } = context.exports
+  const bandage = item('Quick Use', { id: 'bandage', stackSize: 5 })
+  const safe = slots.find(row => row.id === 'safe-0')
+  const draft = { 'safe-0': { itemId: 'other', quantity: 1 }, 'safe-1': { itemId: 'bandage', quantity: 4 }, 'safe-2': { itemId: 'valuable', quantity: 1 } }
+  const denied = equipLoadoutStacks(draft, safe, bandage, 7, slots)
+  assert.match(denied.error, /6 unidade/)
+  assert.equal(denied.draft, draft)
+  const result = equipLoadoutStacks(draft, safe, bandage, 6, slots)
+  assert.equal(result.error, null)
+  assert.equal(result.draft['safe-0'].quantity, 5)
+  assert.equal(result.draft['safe-1'].quantity, 5)
+  assert.equal(result.draft['safe-2'].itemId, 'valuable')
+  const edit = equipLoadoutStacks(result.draft, safe, bandage, 2, slots)
+  assert.equal(edit.draft['safe-0'].quantity, 2)
+  assert.equal(edit.draft['safe-1'].quantity, 5)
+  assert.equal(equipLoadoutStacks({}, safe, bandage, Infinity, slots).draft['safe-0'], undefined)
+})
+
 test('loadout prices sum quantities and mark missing currencies independently', () => {
   const { loadoutPrice, loadoutTotals } = context.exports
   for (const value of [undefined, 0, -1, NaN, Infinity]) assert.equal(loadoutPrice(value), null)

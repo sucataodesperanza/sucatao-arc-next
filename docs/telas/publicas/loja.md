@@ -100,6 +100,8 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 
 ### Validação
 
+Empilhamento: a quantidade escolhida completa pilhas do mesmo item e usa espaços vazios somente na seção selecionada (mochila, uso rápido ou bolso seguro). Exemplo: 12 ataduras com limite 5 ocupam três espaços, 5 + 5 + 2. Editar um espaço preenchido substitui sua pilha; outras pilhas e seções não são removidas. Se toda a quantidade não couber, a operação é recusada por inteiro e informa a capacidade disponível, preservando a montagem. Equipamentos e acessórios continuam com uma unidade por encaixe.
+
 Em telas a partir de 1600px, a montagem fica alinhada à esquerda e Valores do loadout ocupa uma coluna à direita, com rolagem própria para listas longas. Em telas menores o resumo fica abaixo, sem aumentar os slots.
 
 O montador exibe preços unitários em pontos e reais no seletor. A seção Valores do loadout lista cada item equipado (incluindo acessórios), quantidade e valor já multiplicado, sem repetir preço unitário ou rótulo de subtotal por item, além dos totais nas duas moedas, atualizados ao montar. Usa somente `pricePoints` e `priceCash` cadastrados; não converte o valor de venda do jogo em preço da loja. Preço ausente, inválido ou não positivo aparece como indisponível e é excluído da soma; nesse caso a respectiva moeda mostra subtotal e quantidade de unidades sem preço. Estoque e validação de compra continuam independentes da exibição do preço.

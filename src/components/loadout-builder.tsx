@@ -7,9 +7,9 @@ import { useRouter } from "next/navigation"
 import type { CatalogItem } from "@/lib/catalog"
 import { getItemTypeLabel } from "@/lib/catalog"
 import { useCart, type CartMode } from "@/lib/cart-context"
-import { acceptsLoadoutItem, attachmentLabels, getLoadoutSlots, getWeaponProfile, buildLoadoutItems, isSurvivor, loadoutItemSearchText, loadoutPurchaseIssue, normalizeLoadoutText, restoreLoadoutDraft, slotQuantityLimit, summarizeLoadout, type LoadoutDraft, type LoadoutSlot } from "@/lib/loadout"
+import { acceptsLoadoutItem, attachmentLabels, getLoadoutSlots, getWeaponProfile, buildLoadoutItems, isSurvivor, loadoutItemSearchText, loadoutPurchaseIssue, normalizeLoadoutText, restoreLoadoutDraft, summarizeLoadout, type LoadoutDraft, type LoadoutSlot } from "@/lib/loadout"
 import "@/styles/loadout.css"
-import { loadoutPrice, loadoutTotals } from "@/lib/loadout"
+import { equipLoadoutStacks, loadoutPrice, loadoutTotals } from "@/lib/loadout"
 
 const STORAGE_KEY = "sucatao-loadout-mk3-v1"
 const cash = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
@@ -80,11 +80,12 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
   function equip(slot: LoadoutSlot, item: CatalogItem) {
     const weapon = slot.weaponSlot ? items.find(item => item.id === draft[slot.weaponSlot!]?.itemId) : undefined
     if (!acceptsLoadoutItem(slot.kind, item, weapon, slot.attachmentType)) return
-    setDraft(previous => {
-      const next = { ...previous, [slot.id]: { itemId: item.id, quantity: Math.min(quantity, slotQuantityLimit(slot.kind, item)) } }
-      if (slot.kind === "weapon" && previous[slot.id]?.itemId !== item.id) for (const attachment of slots.filter(item => item.weaponSlot === slot.id)) delete next[attachment.id]
-      return next
-    })
+    const result = equipLoadoutStacks(draft, slot, item, quantity, slots)
+    if (result.error) { setMessage(result.error); return }
+    const next = result.draft
+    if (slot.kind === "weapon" && draft[slot.id]?.itemId !== item.id) for (const attachment of slots.filter(item => item.weaponSlot === slot.id)) delete next[attachment.id]
+    setDraft(next)
+    setMessage("")
     setPopup(null)
   }
 
@@ -163,7 +164,8 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
         {selectedSlot && <>
           <p className="loadout-dialog-help">Selecione um item compatível com este espaço.{selectedSlot.kind === "attachment" && " Somente acessórios compatíveis com este encaixe e a variante da arma."}</p>
           <div className="loadout-picker-controls"><label className="loadout-search"><Search size={17} /><input ref={search} type="search" placeholder="Buscar item compatível…" value={query} onChange={event => setQuery(event.target.value)} /></label>{["bag", "quick", "safe"].includes(selectedSlot.kind) && <label className="loadout-quantity">Quantidade<input aria-label="Quantidade do item" type="number" min={1} max={999} value={quantity} onChange={event => setQuantity(Math.max(1, Math.min(999, Math.floor(Number(event.target.value) || 1))))} /></label>}</div>
-          <p className="loadout-dialog-help">{choices.length} itens • Quantidades limitadas ao tamanho da pilha de cada item. Itens sem estoque podem ser usados na montagem.</p>
+          <p className="loadout-dialog-help">{choices.length} itens • A quantidade completa pilhas existentes e ocupa espaços vazios nesta seção. Ao editar um espaço preenchido, a quantidade substitui a pilha selecionada. Itens sem estoque podem ser usados na montagem.</p>
+          {message && <p role="alert" className="loadout-dialog-help">{message}</p>}
           <div className="loadout-picker">{choices.map(item => <button key={item.id} type="button" className="loadout-choice" onClick={() => equip(selectedSlot, item)}>
             <div className="loadout-choice-image loadout-item-glow" style={{ "--rarity-color": getItemGlowColor(item) } as CSSProperties}>{itemImage(item) ? <img src={itemImage(item)} alt="" loading="lazy" /> : <Backpack size={26} />}</div><strong>{item.name}</strong><small>{getItemTypeLabel(item.type)}{item.stackSize ? ` · Pilha ${item.stackSize}` : ""}</small><span>{stock.some(row => row.id === item.id && (row.quantity ?? 0) > 0) ? "Em estoque" : "Sem estoque · montagem"}</span>
             {itemPrices(item)}

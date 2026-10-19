@@ -153,6 +153,31 @@ export function slotQuantityLimit(kind: SlotKind, item: CatalogItem) {
   return ["bag", "quick", "safe"].includes(kind) ? Math.max(1, Math.floor(item.stackSize ?? 1)) : 1
 }
 
+export function equipLoadoutStacks(draft: LoadoutDraft, slot: LoadoutSlot, item: CatalogItem, quantity: number, slots: LoadoutSlot[]) {
+  const stackable = ["bag", "quick", "safe"].includes(slot.kind)
+  const requested = Math.max(1, Math.floor(quantity))
+  const limit = slotQuantityLimit(slot.kind, item)
+  if (!Number.isFinite(requested)) return { draft, error: "Informe uma quantidade válida." }
+  if (!stackable) return { draft: { ...draft, [slot.id]: { itemId: item.id, quantity: 1 } }, error: null }
+  // Editing a filled slot replaces that pile's quantity; other piles are preserved.
+  const next = { ...draft }
+  delete next[slot.id]
+  const section = slots.filter(candidate => candidate.kind === slot.kind)
+  const existing = section.filter(candidate => next[candidate.id]?.itemId === item.id)
+  const empty = [slot, ...section.filter(candidate => candidate.id !== slot.id && !next[candidate.id])]
+  const capacity = existing.reduce((sum, candidate) => sum + Math.max(0, limit - next[candidate.id].quantity), 0) + empty.length * limit
+  if (requested > capacity) return { draft, error: `Cabem mais ${capacity} unidade(s) nesta seção. Libere espaços ou reduza a quantidade.` }
+  let remaining = requested
+  for (const candidate of [...existing, ...empty]) {
+    if (!remaining) break
+    const current = next[candidate.id]?.quantity ?? 0
+    const added = Math.min(remaining, Math.max(0, limit - current))
+    if (added) next[candidate.id] = { itemId: item.id, quantity: current + added }
+    remaining -= added
+  }
+  return { draft: next, error: null }
+}
+
 export function summarizeLoadout(draft: LoadoutDraft, items: CatalogItem[]) {
   const totals = new Map<string, { item: CatalogItem; quantity: number }>()
   for (const entry of Object.values(draft)) {
