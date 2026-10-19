@@ -16,6 +16,7 @@ export type CartItem = {
   image?: string
   mode: CartMode
   quantity: number
+  kitContents?: string
 }
 
 type CartContextValue = {

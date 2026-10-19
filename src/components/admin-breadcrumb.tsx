@@ -13,6 +13,7 @@ const PAGE_NAMES: Record<string, string> = {
   pedidos:      "Pedidos",
   catalogo:     "Catálogo",
   "kits-de-armas": "Kits de armas",
+  "kits-prontos": "Kits prontos",
   estoque:      "Estoque",
   trades:       "Trades",
   recompensas:  "Recompensas",

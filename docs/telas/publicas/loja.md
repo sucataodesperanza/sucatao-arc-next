@@ -135,3 +135,8 @@ Os espaços preenchidos e o seletor do loadout usam o brilho difuso de raridade 
 - Cada encaixe tem ID estável por tipo. Rascunhos antigos com três espaços numerados são migrados para os encaixes válidos; acessórios incompatíveis ou de encaixes removidos são descartados antes da revisão/carrinho.
 - Atualização manual: `node scripts/sync-weapon-attachments.mjs`. Busca o catálogo paginado uma vez e atualiza a cópia local somente ao concluir. Mantém a matriz curada e as restrições confirmadas; novas famílias continuam sem encaixes até conferência. O navegador não consulta o MetaForge diretamente.
 - Atribuição visível no montador: MetaForge e ARC Raiders Wiki. As referências da wiki indicam [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/); os dados de regras foram adaptados para este montador.
+# Kits prontos
+
+A aba **Kits prontos** vende pacotes com composição e preço próprios. Em **Admin → Kits prontos**, cadastre nome, descrição, imagem (opcional, usa o primeiro item se vazia), itens e quantidades por pacote, pontos e reais. Zero desabilita a modalidade. Kits começam inativos; ative depois de revisar. Destaques aparecem primeiro, seguidos pela ordem cadastrada. Não há pacotes ou preços comerciais criados automaticamente.
+
+O carrinho contabiliza pacotes: duas unidades de um kit com 20 armas entregam 40 armas. O checkout consulta novamente o cadastro, recusa kits inativos ou conteúdo/preços alterados, converte o pacote em seus componentes reais e baixa o estoque agregado, inclusive com itens avulsos no carrinho. Pontos e centavos são distribuídos sem alterar o total do pacote. Pedidos e inventário registram os componentes para entrega. Alterações no admin não reservam estoque.

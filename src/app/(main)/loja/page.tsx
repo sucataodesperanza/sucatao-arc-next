@@ -11,6 +11,7 @@ import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
 import { LoadoutBuilder } from "@/components/loadout-builder"
 import { WeaponKitBuilder } from "@/components/weapon-kit-builder"
+import { ReadyKits } from "@/components/ready-kits"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { matchesStoreCategory, storeCategories } from "@/lib/store-categories"
 import { useItemsCatalog, getItemGlowColor } from "@/lib/use-items-catalog"
@@ -55,6 +56,7 @@ type BuyModal = { contract: ApiContract; step: "choose" | "points" | "cash" }
 
 const tabs: { key: string; label: string; href?: string }[] = [
   { key: "destaques", label: "Destaques" },
+  { key: "kits", label: "Kits prontos" },
   ...storeCategories.map(category => ({ key: category.key, label: category.title })),
   { key: "itens", label: "Todos os itens" },
   { key: "passes", label: "Contratos à Venda" },
@@ -509,6 +511,8 @@ export default function LojaPage() {
               </section>
             </>
 
+          ) : activeTab === "kits" ? (
+            <ReadyKits />
           ) : activeTab === "loadouts" ? (
             <LoadoutBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />
           ) : activeTab === "armas" ? (

@@ -16,6 +16,7 @@ const links = [
   { href: "/admin/estoque",   label: "Estoque",    icon: Warehouse,     exact: false },
   { href: "/admin/catalogo",  label: "Catálogo",   icon: Package,       exact: false },
   { href: "/admin/kits-de-armas", label: "Kits de armas", icon: Package, exact: false },
+  { href: "/admin/kits-prontos", label: "Kits prontos", icon: Package, exact: false },
   { href: "/admin/precos",    label: "Preços",     icon: DollarSign,    exact: false },
   { href: "/admin/economia",  label: "Economia",   icon: TrendingUp,    exact: false },
   { href: "/admin/recompensas", label: "Recompensas", icon: Star,       exact: false },

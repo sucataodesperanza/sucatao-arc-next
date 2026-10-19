@@ -8,6 +8,8 @@ import { creditExpeditionVaultPacks } from "@/lib/expedition-vault"
 import { logEconomy } from "@/lib/economy"
 import { alertPedidoPontos, alertPedidoPix, alertCofresExpedicao } from "@/lib/discord-webhook"
 import { sendDiscordDM, dmPedidoConfirmado } from "@/lib/discord-bot"
+import { readReadyKits, readReadyKitItems } from "@/lib/ready-kit-store"
+import { prepareReadyKitPurchase, validateReadyKit } from "@/lib/ready-kits"
 
 type CheckoutItem = {
   itemId: string
@@ -15,6 +17,9 @@ type CheckoutItem = {
   type?: string
   rarity?: string
   value: number
+  pricePoints?: number
+  priceCash?: number
+  kitContents?: string
   weightKg?: number
   image?: string
   mode: "points" | "cash"
@@ -30,7 +35,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const items: CheckoutItem[] = Array.isArray(body.items) ? body.items : []
+  let items: CheckoutItem[] = Array.isArray(body.items) ? body.items : []
   const couponCode = typeof body.couponCode === "string" ? body.couponCode.trim().toUpperCase() : null
 
   if (items.length === 0) {
@@ -38,9 +43,32 @@ export async function POST(request: NextRequest) {
   }
 
   for (const item of items) {
-    if (!item.itemId || !item.name || typeof item.value !== "number" || typeof item.quantity !== "number" || item.quantity < 1 || (item.mode !== "points" && item.mode !== "cash")) {
+    if (typeof item.itemId !== "string" || !item.itemId || !item.name || typeof item.value !== "number" || !Number.isSafeInteger(item.quantity) || item.quantity < 1 || item.quantity > 2000 || (item.mode !== "points" && item.mode !== "cash")) {
       return NextResponse.json({ error: "Item do carrinho inválido." }, { status: 400 })
     }
+  }
+
+  const readyKitLines = new Set<CheckoutItem>()
+  const pointsUnitPrice = (item: CheckoutItem) => readyKitLines.has(item) ? item.pricePoints! : (item.pricePoints || Math.round(item.value * 24))
+  // Resolve packages from the admin's current definition, never from client prices.
+  if (items.some(i => i.itemId.startsWith("kit:") || i.type === "ready_kit")) {
+    try {
+      const [kits, catalog] = await Promise.all([readReadyKits(), readReadyKitItems()])
+      const ids = new Set(catalog.map(i => i.id))
+      items = items.flatMap(line => {
+        if (!line.itemId.startsWith("kit:") && line.type !== "ready_kit") return [line]
+        const kit = kits.find(k => `kit:${k.id}` === line.itemId && k.active)
+        if (!kit) throw new Error("Um kit foi desativado. Remova-o do carrinho e escolha novamente.")
+        validateReadyKit(kit, ids)
+        return prepareReadyKitPurchase(kit, line).map(entry => {
+          const item = catalog.find(i => i.id === entry.itemId)!
+          const unit = entry.unitPrice
+          const component = { itemId: item.id, name: item.name, type: item.type, rarity: item.rarity, image: item.image, value: unit, quantity: entry.quantity, mode: line.mode, ...(line.mode === "points" ? { pricePoints: unit } : { priceCash: unit }) }
+          readyKitLines.add(component)
+          return component
+        })
+      })
+    } catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Não foi possível validar os kits." }, { status: 409 }) }
   }
 
   const pointsItems = items.filter(i => i.mode === "points")
@@ -113,7 +141,7 @@ export async function POST(request: NextRequest) {
 
   if (pointsItems.length > 0) {
     // Usa price_points do estoque se disponível, fallback para value × 24
-    const pointsCost = pointsItems.reduce((sum, i) => sum + ((i as any).pricePoints ? (i as any).pricePoints * i.quantity : Math.round(i.value * 24) * i.quantity), 0)
+    const pointsCost = pointsItems.reduce((sum, i) => sum + pointsUnitPrice(i) * i.quantity, 0)
 
     const currentPoints = profile.points ?? 0
     if (currentPoints < pointsCost) {
@@ -151,7 +179,7 @@ export async function POST(request: NextRequest) {
           image: i.image ?? null,
           quantity: i.quantity,
           mode: "points",
-          pointsCost: Math.round(i.value * 24) * i.quantity,
+          pointsCost: pointsUnitPrice(i) * i.quantity,
         })),
       })
       .select("id")
@@ -199,7 +227,7 @@ export async function POST(request: NextRequest) {
       userName: pointsUserName,
       gameId: profile.game_id ?? "—",
       items: pointsItems.map(i => ({ name: i.name, quantity: i.quantity })),
-      pointsCost: pointsItems.reduce((s, i) => s + (Math.round(i.value * 24) * i.quantity), 0),
+      pointsCost: pointsItems.reduce((s, i) => s + pointsUnitPrice(i) * i.quantity, 0),
     }).catch(() => {})
 
     // DM Discord ao comprador — fire-and-forget
@@ -210,7 +238,7 @@ export async function POST(request: NextRequest) {
 
     // Registra no economy_logs
     for (const item of pointsItems) {
-      await logEconomy({ player_id: user.id, action: "buy", value: Math.round(item.value * 24) * item.quantity, currency: "points", item_id: item.itemId, item_qty: item.quantity, source: "shop", source_id: order?.id })
+      await logEconomy({ player_id: user.id, action: "buy", value: pointsUnitPrice(item) * item.quantity, currency: "points", item_id: item.itemId, item_qty: item.quantity, source: "shop", source_id: order?.id })
     }
   }
 

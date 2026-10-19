@@ -10,7 +10,8 @@
 .admin-kit-list article > div, .admin-kit-form > div { display: flex; flex-wrap: wrap; gap: 8px; }
 .admin-kit-form { display: grid; gap: 16px; margin-top: 20px; }
 .admin-kit-form label { display: grid; gap: 7px; font-size: 13px; }
-.admin-kit-form input, .admin-kit-form select { width: 100%; padding: 10px; color: inherit; background: #10151d; border: 1px solid var(--line, #38404b); border-radius: 6px; }
+.admin-kit-form input, .admin-kit-form select, .admin-kit-form textarea { width: 100%; padding: 10px; color: inherit; background: #10151d; border: 1px solid var(--line, #38404b); border-radius: 6px; }
+.admin-kit-form input[type=checkbox] { width: auto; justify-self: start; }
 .admin-kit-form .admin-kit-checkbox { display: flex; align-items: center; gap: 10px; }
 .admin-kit-checkbox input { width: auto; }
 @media (max-width: 650px) { .admin-weapon-kits { padding: 12px; } .admin-kit-list { grid-template-columns: 1fr; } }
