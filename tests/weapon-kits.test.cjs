@@ -11,13 +11,32 @@ const modules = {
   '@/data/arc-data': { __esModule: true, default: game },
   '@/data/weapon-attachments.json': { __esModule: true, default: require('../src/data/weapon-attachments.json') },
 }
-for (const name of ['loadout', 'weapon-kits']) {
+for (const name of ['loadout', 'weapon-kits', 'weapon-configurator']) {
   const context = { exports: {}, require: id => { assert.ok(modules[id], id); return modules[id] } }
   vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, `src/lib/${name}.ts`), 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, context)
   modules[`@/lib/${name}`] = context.exports
 }
 const loadout = modules['@/lib/loadout']
 const kits = modules['@/lib/weapon-kits']
+
+test('weapon configurator uses real tiers and exact amplified combinations', () => {
+  const config = modules['@/lib/weapon-configurator']
+  const items = loadout.buildLoadoutItems([])
+  const base = config.findWeaponConfiguration(items, 'renegade', 'V')
+  const scoped = config.findWeaponConfiguration(items, 'renegade', 'V', ['Scoped', 'More Reload'])
+  assert.ok(base)
+  assert.ok(scoped)
+  assert.equal(config.weaponLevel(scoped), 'V')
+  assert.equal(config.findWeaponConfiguration(items, 'renegade', 'V', ['Invented Upgrade']), undefined)
+  const iv = config.findWeaponConfiguration(items, 'renegade', 'IV')
+  const mag = items.find(item => item.name === 'Carregador Estendido Médio III')
+  const stock = items.find(item => item.name === 'Coronha Acolchoada')
+  assert.ok(mag); assert.ok(stock)
+  const next = config.changeConfiguredWeapon({ 'weapon-1': { itemId: iv.id, quantity: 1 }, 'attachment-1-medium-mag': { itemId: mag.id, quantity: 1 }, 'attachment-1-stock': { itemId: stock.id, quantity: 1 } }, scoped, items)
+  assert.equal(next['attachment-1-medium-mag'], undefined)
+  assert.equal(next['attachment-1-stock'].itemId, stock.id)
+  assert.equal(next['weapon-1'].itemId, scoped.id)
+})
 
 test('admin kit validation rejects invalid mounts, unknown items and malformed settings', () => {
   const items = loadout.buildLoadoutItems([])

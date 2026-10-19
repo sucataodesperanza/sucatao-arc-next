@@ -9,6 +9,7 @@ import { acceptsLoadoutItem, attachmentLabels, buildLoadoutItems, getWeaponAttac
 import { suggestedKitWeapons, suggestedWeaponKit, weaponKitPurchaseIssues, type SavedWeaponKit } from "@/lib/weapon-kits"
 import { getItemGlowColor } from "@/lib/use-items-catalog"
 import "@/styles/weapon-kits.css"
+import { changeConfiguredWeapon, describeWeaponConfiguration } from "@/lib/weapon-configurator"
 
 const cash = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 const image = (item: CatalogItem) => item.image?.startsWith("http") || item.image?.startsWith("/") ? item.image : item.image ? `/${item.image}` : undefined
@@ -42,6 +43,24 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
   const draft = custom ?? suggestions[0]?.draft ?? {}
   const weapon = items.find(item => item.id === draft["weapon-1"]?.itemId)
   const mounts = getWeaponAttachmentSlots(weapon, "weapon-1")
+  const configurations = useMemo(() => {
+    const map = new Map<string, NonNullable<ReturnType<typeof describeWeaponConfiguration>>>()
+    for (const item of items) {
+      const entry = describeWeaponConfiguration(item)
+      if (entry && (!map.has(entry.profile.id) || ((item.quantity ?? 0) > 0 && (map.get(entry.profile.id)!.item.quantity ?? 0) <= 0))) map.set(entry.profile.id, entry)
+    }
+    return [...map.values()]
+  }, [items])
+  const selectedProfile = weapon ? getWeaponProfile(weapon) : undefined
+  const current = configurations.find(entry => entry.profile.id === selectedProfile?.id)
+  const family = current?.family ?? "", level = current?.level ?? "", upgrades = current?.upgrades ?? []
+  const families = useMemo(() => [...new Set(configurations.map(entry => entry.family))].map(key => {
+    const base = configurations.find(entry => entry.family === key && entry.level !== "V")
+    return { key, name: base?.item.name.replace(/\s(IV|III|II|I)$/, "") ?? key }
+  }).sort((a, b) => a.name.localeCompare(b.name, "pt-BR")), [configurations])
+  const modifications = [...new Set(configurations.filter(entry => entry.family === family && entry.level === "V").flatMap(entry => entry.upgrades))].sort()
+  const findConfiguration = (key: string, tier: string, mods: string[] = []) => configurations.find(entry => entry.family === key && entry.level === tier && entry.upgrades.join("|") === [...mods].sort().join("|"))?.item
+  function configure(target: CatalogItem | undefined) { if (target) { setCustom(changeConfiguredWeapon(draft, target, items)); setMessage("") } }
   const [count, setCount] = useState(1)
   const [mode, setMode] = useState<CartMode>("points")
   const [query, setQuery] = useState("")
@@ -80,8 +99,8 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
 
   if (loading || kitsLoading) return <p role="status">Carregando kits de armas…</p>
   return <section className="weapon-kits" aria-label="Kits de armas">
-    <header><h2>Kits de armas</h2><p>Escolha uma combinação sugerida ou personalize sua arma.</p></header>
-    <h3>Kits prontos</h3>
+    <header><h2>Configure sua arma</h2><p>Escolha a arma, o nível e as modificações.</p></header>
+    <details className="weapon-config-presets"><summary>Kits em destaque</summary>
     {kitError && <p role="status">{kitError}</p>}
     {!suggestions.length && <p>Novos kits em breve. Você pode montar sua arma abaixo.</p>}
     <div className="weapon-kit-presets">{suggestions.map(preset => <article key={preset.id} className={`weapon-kit-preset${draft === preset.draft ? " is-selected" : ""}`}>
@@ -91,8 +110,14 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
       <ul className="weapon-kit-includes">{summarizeLoadout(preset.draft, items).filter(row => row.item.id !== preset.weapon.id).map(({ item }) => <li key={item.id}>{item.name}</li>)}</ul>
       <button type="button" onClick={() => { setCustom(preset.draft); setCount(1); setMessage(""); editor.current?.scrollIntoView({ behavior: "smooth", block: "start" }) }}>Personalizar kit</button>
     </article>)}</div>
+    </details>
     <div className="weapon-kit-layout" ref={editor}>
-      <div className="weapon-kit-editor"><h3>Personalize seu kit</h3><p>Clique na arma ou em um acessório para trocar.</p>
+      <div className="weapon-kit-editor"><h3>Configure sua arma</h3><p>Escolha a arma, o nível e os acessórios.</p>
+        <div className="weapon-config-controls"><label>Arma<select aria-label="Arma" value={family} onChange={event => {
+          const key = event.target.value
+          const target = findConfiguration(key, level) ?? ["IV", "III", "II", "I", "base", "V"].map(tier => findConfiguration(key, tier)).find(Boolean)
+          configure(target)
+        }}><option value="">Escolher arma</option>{families.map(row => <option key={row.key} value={row.key}>{row.name}</option>)}</select></label><div role="group" aria-label="Nível da arma"><span>Nível</span>{[...(configurations.some(entry => entry.family === family && entry.level === "base") ? ["base"] : []), "I", "II", "III", "IV", "V"].map(tier => <button type="button" key={tier} aria-pressed={level === tier} disabled={!findConfiguration(family, tier)} onClick={() => configure(findConfiguration(family, tier))}>{tier === "base" ? "Base" : tier}</button>)}</div></div>
         <button className="weapon-kit-weapon" type="button" onClick={() => open("weapon")} aria-label={`Escolher arma e tier${weapon ? `: ${weapon.name}` : ""}`}>
           <strong>{weapon?.name ?? "Escolher arma e tier"}</strong><span>Trocar arma / tier</span>
           <div className="weapon-kit-art" style={weapon ? glow(weapon) : undefined}>{weapon && image(weapon) ? <img src={image(weapon)} alt="" /> : <Plus />}</div>
@@ -101,8 +126,20 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
           const mod = items.find(item => item.id === draft[slot.id]?.itemId)
           return <div className="weapon-kit-mount" key={slot.id}><button type="button" onClick={() => open(slot)} aria-label={`Escolher ${slot.label}${mod ? `: ${mod.name}` : ""}`}><strong>{attachmentLabels[slot.attachmentType!]}</strong><div className="weapon-kit-art" style={mod ? glow(mod) : undefined}>{mod && image(mod) ? <img src={image(mod)} alt="" /> : <Plus />}</div><span>{mod?.name ?? "Selecionar acessório"}</span></button>{mod && <button className="weapon-kit-remove" type="button" aria-label={`Remover ${mod.name}`} onClick={() => { const next = { ...draft }; delete next[slot.id]; setCustom(next) }}><X size={14} /></button>}</div>
         })}</div>
+        {level === "V" && <div className="weapon-config-selected"><h4>Modificações da variante</h4><p>{upgrades.length ? upgrades.join(" + ") : "Amplificada base · sem melhorias adicionais selecionadas"}</p></div>}
         {weapon && mounts.length === 0 && <p>{getWeaponProfile(weapon)?.slots ? "Esta arma não possui encaixes de acessórios." : "Encaixes desta arma ainda não confirmados."}</p>}
       </div>
+      <aside className="weapon-config-upgrades" aria-label="Modificações da arma"><h3>{level === "V" ? "Modificações · Tier V" : "Modificações Amplified"}</h3><p>{level === "V" ? "Escolha uma combinação disponível para esta arma." : "Selecione o nível V para configurar as melhorias da variante."}</p>
+        {level === "V" && <label>Configuração<select aria-label="Configuração Amplified" value={weapon?.id ?? ""} onChange={event => configure(configurations.find(entry => entry.item.id === event.target.value)?.item)}>{configurations.filter(entry => entry.family === family && entry.level === "V").map(entry => <option key={entry.item.id} value={entry.item.id}>{entry.upgrades.join(" + ") || "Amplificada base"}</option>)}</select></label>}
+        {level === "V" && modifications.map(mod => {
+          const active = upgrades.includes(mod)
+          const next = active ? upgrades.filter(name => name !== mod) : [...upgrades, mod]
+          const target = findConfiguration(family, "V", next)
+          return <button key={mod} type="button" aria-pressed={active} disabled={!target} onClick={() => configure(target)}><strong>{mod}</strong><span>{active ? "Selecionada" : target ? "Selecionar" : "Indisponível nesta combinação"}</span></button>
+        })}
+        {level === "V" && !modifications.length && <p>Não há melhorias adicionais confirmadas para esta arma.</p>}
+        <p>As melhorias fazem parte da variante da arma. Os encaixes e o preço acompanham a configuração escolhida.</p>
+      </aside>
       <aside className="weapon-kit-summary" aria-label="Resumo do kit"><h3>Seu kit</h3>
         <ul>{rows.map(({ item }) => <li key={item.id}><strong>{item.name}</strong><Prices rows={[{ item, quantity: count }]} /></li>)}</ul>
         <label className="weapon-kit-count">Quantidade de kits<input type="number" min={1} max={99} value={count} onChange={event => setCount(Math.max(1, Math.min(99, Math.floor(Number(event.target.value) || 1))))} /></label>

@@ -100,6 +100,8 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 
 ### Kits de armas
 
+O configurador separa família da arma e nível (I–V ou Base quando a arma não tem esses tiers). No nível V, o painel à direita permite selecionar melhorias e combinações Amplified que existem no catálogo de variantes. Cada combinação corresponde à arma real que será comprada, com seu preço e estoque; melhorias não viram acessórios cobrados separadamente. Trocar nível/variante preserva somente acessórios ainda compatíveis; trocar família inicia os encaixes vazios. O resumo da compra fica abaixo. Kits em destaque do admin ficam disponíveis em uma seção recolhível acima da montagem.
+
 Gestão em `/admin/kits-de-armas`, acessível pelo menu Kits de armas. Permite criar e editar nome, arma/tier, acessórios compatíveis, posição (menores primeiro), ativo e destaque. Desativar ou retirar destaque oculta o card na próxima abertura/atualização da loja. Sem kits cadastrados, permanecem as sugestões iniciais; o botão Cadastrar as três sugestões iniciais as transforma em registros editáveis. Após o primeiro cadastro, apenas registros ativos e em destaque aparecem; desligar todos não recria sugestões.
 
 Persistência na tabela existente `app_entities`, com `entity_type = weapon_kit` e dados no `payload`. A tabela tem RLS habilitada; as rotas administrativas exigem `requireAdmin` e usam o cliente de serviço somente no servidor. A rota pública retorna apenas kits ativos/em destaque e seus componentes públicos. POST valida nome, posição, quantidade e encaixes usando o catálogo ativo; alterações não permitem mudar o tipo da entidade. Não requer migração de banco. Rotas: `/api/admin/weapon-kits` e `/api/store/weapon-kits`.
