@@ -153,7 +153,7 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
         <h3>Valores do loadout</h3>
         <div className="loadout-budget-totals" aria-live="polite">{(["pricePoints", "priceCash"] as const).map(key => <div key={key}><span>{totals[key].missing ? "Subtotal" : "Total"} em {key === "pricePoints" ? "pontos" : "reais"}</span><strong>{key === "pricePoints" ? `${totals[key].total.toLocaleString("pt-BR")} pts` : cash(totals[key].total)}</strong>{totals[key].missing > 0 && <small>{totals[key].missing} unidade(s) sem preço · não incluídas</small>}</div>)}</div>
         <p>Valores dos itens equipados, incluindo acessórios. Itens repetidos são somados.</p>
-        <ul className="loadout-budget-items">{summary.map(({ item, quantity }) => <li key={item.id}><span><strong>{item.name} ×{quantity}</strong><small>Por unidade</small>{itemPrices(item)}</span><span><small>Subtotal ×{quantity}</small>{itemPrices(item, quantity)}</span></li>)}</ul>
+        <ul className="loadout-budget-items">{summary.map(({ item, quantity }) => <li key={item.id}><span><strong>{item.name} ×{quantity}</strong>{itemPrices(item, quantity)}</span></li>)}</ul>
       </section>
       <footer className="loadout-actions"><p role="status">{message || "Sua montagem é salva neste navegador."}</p><button type="button" onClick={() => { const survivor = items.find(isSurvivor); setDraft(survivor ? { backpack: { itemId: survivor.id, quantity: 1 } } : {}); setMessage("Loadout limpo. MK3 Sobrevivente mantida para o teste.") }}><Trash2 size={16} />Limpar loadout</button><button type="button" className="loadout-primary" onClick={() => { setMessage(""); setPopup("review") }}>Revisar loadout<ArrowRight size={17} /></button></footer>
     </>}
