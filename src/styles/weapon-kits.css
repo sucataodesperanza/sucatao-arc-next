@@ -1,0 +1,52 @@
+.weapon-kits { color: var(--paper); margin-bottom: 36px; }
+.weapon-kits h2 { font-size: 28px; margin: 0 0 8px; text-transform: uppercase; }
+.weapon-kits h3 { font-size: 15px; margin: 0 0 12px; }
+.weapon-kits p { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.weapon-kits > header { margin-bottom: 24px; }
+.weapon-kit-presets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.weapon-kit-preset, .weapon-kit-editor, .weapon-kit-summary { padding: 18px; border: 1px solid var(--stroke); border-radius: 8px; background: var(--surface-2); min-width: 0; }
+.weapon-kit-preset.is-selected { border-color: var(--red); }
+.weapon-kit-preset > div:first-child { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+.weapon-kit-prices { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; line-height: 1.5; }
+.weapon-kit-prices > span:first-child { color: var(--yellow, #ffd400); font-weight: 800; }
+.weapon-kit-art { position: relative; isolation: isolate; display: grid; place-items: center; height: 125px; overflow: hidden; }
+.weapon-kit-art::before { content: ""; position: absolute; width: 100px; height: 70px; border-radius: 50%; background: color-mix(in srgb, var(--rarity-color, transparent) 35%, transparent); filter: blur(25px); z-index: -1; }
+.weapon-kit-art img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 8px; object-fit: contain; }
+.weapon-kit-includes { margin: 8px 0 16px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 5px 12px; color: var(--muted); font-size: 10px; }
+.weapon-kits button { cursor: pointer; color: var(--paper); border: 1px solid var(--stroke-strong); background: var(--surface-3); border-radius: 6px; padding: 10px 12px; font: inherit; font-size: 12px; }
+.weapon-kits button:hover { border-color: var(--paper-dim); }
+.weapon-kits button:focus-visible, .weapon-kits input:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.weapon-kits button:disabled { opacity: .45; cursor: not-allowed; }
+.weapon-kit-preset > button { width: 100%; font-weight: 750; }
+.weapon-kit-preset.is-selected > button, .weapon-kits .weapon-kit-buy { background: var(--red); border-color: var(--red); color: white; }
+.weapon-kit-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; scroll-margin-top: 20px; }
+.weapon-kit-weapon { display: block; width: 100%; text-align: left; }
+.weapon-kit-weapon > span { float: right; color: var(--muted); font-size: 11px; }
+.weapon-kit-weapon .weapon-kit-art { height: 200px; }
+.weapon-kit-mounts { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-top: 12px; }
+.weapon-kit-mount { position: relative; min-width: 0; }
+.weapon-kit-mount > button:first-child { width: 100%; height: 100%; text-align: left; }
+.weapon-kit-mount .weapon-kit-art { height: 68px; }
+.weapon-kit-mount span { display: block; font-size: 10px; overflow-wrap: anywhere; color: var(--muted); }
+.weapon-kits .weapon-kit-remove { position: absolute; top: 3px; right: 3px; padding: 3px; display: grid; place-items: center; }
+.weapon-kit-summary { position: sticky; top: 20px; }
+.weapon-kit-summary ul { list-style: none; margin: 0 0 16px; padding: 0; }
+.weapon-kit-summary li { display: grid; gap: 5px; padding: 10px 0; border-bottom: 1px solid var(--stroke); font-size: 12px; }
+.weapon-kit-count { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 12px; }
+.weapon-kits input { color: var(--paper); background: var(--surface-3); border: 1px solid var(--stroke-strong); border-radius: 6px; padding: 10px; }
+.weapon-kit-count input { width: 70px; }
+.weapon-kit-payment { display: flex; gap: 8px; margin: 16px 0; }
+.weapon-kit-payment button[aria-pressed="true"] { border-color: var(--red); }
+.weapon-kit-summary > div[aria-live] .weapon-kit-prices { font-size: 18px; font-weight: 800; }
+.weapon-kits .weapon-kit-warning { color: #ffaaa1; }
+.weapon-kit-buy { display: flex; gap: 8px; width: 100%; align-items: center; justify-content: center; margin-top: 16px; }
+.weapon-kit-dialog { width: min(900px, calc(100vw - 32px)); max-height: 85dvh; padding: 20px; background: var(--surface); color: var(--paper); border: 1px solid var(--stroke-strong); border-radius: 10px; }
+.weapon-kit-dialog::backdrop { background: #000c; }
+.weapon-kit-dialog > header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.weapon-kit-dialog > input { width: 100%; margin-bottom: 16px; }
+.weapon-kit-choices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.weapon-kit-choices > button { display: flex; flex-direction: column; gap: 8px; text-align: left; min-width: 0; }
+.weapon-kit-choices .weapon-kit-art { width: 100%; height: 80px; }
+.weapon-kit-choices small { color: var(--muted); }
+@media (max-width: 1100px) { .weapon-kit-layout { grid-template-columns: minmax(0, 1fr); } .weapon-kit-summary { position: static; } }
+@media (max-width: 700px) { .weapon-kit-presets { grid-template-columns: 1fr; } .weapon-kit-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); } .weapon-kit-weapon > span { float: none; display: block; margin-top: 8px; } }

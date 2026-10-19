@@ -10,6 +10,7 @@ import { ArcIntelPanel } from "@/components/arc-intel-panel"
 import { CatalogFilters } from "@/components/catalog-filters"
 import { CatalogGrid } from "@/components/catalog-grid"
 import { LoadoutBuilder } from "@/components/loadout-builder"
+import { WeaponKitBuilder } from "@/components/weapon-kit-builder"
 import { CatalogItemModal } from "@/components/catalog-item-modal"
 import { matchesStoreCategory, storeCategories } from "@/lib/store-categories"
 import { useItemsCatalog, getItemGlowColor } from "@/lib/use-items-catalog"
@@ -311,7 +312,7 @@ export default function LojaPage() {
   }, [activeTab])
 
   return (
-    <div className={`store-page${panelOpen ? "" : " store-page--panel-closed"}${activeTab === "loadouts" ? " store-page--loadout" : ""}`}>
+    <div className={`store-page${panelOpen ? "" : " store-page--panel-closed"}${["loadouts", "armas"].includes(activeTab) ? " store-page--loadout" : ""}`}>
       <div className={`store-layout${panelOpen ? "" : " store-layout--no-panel"}`}>
         <div className="store-main">
           <div className="store-topbar">
@@ -512,7 +513,8 @@ export default function LojaPage() {
             <LoadoutBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />
           ) : isCatalogTab ? (
             <>
-              <section aria-label="Sobre o catálogo de itens">
+              {activeTab === "armas" && <WeaponKitBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />}
+              <section aria-label="Sobre o catálogo de itens" hidden={activeTab === "armas"}>
                 <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/bots/arc_sentinel.png)" }}>
                   <div className="hero-banner-content">
                     <span className="hero-banner-tag">
@@ -592,7 +594,7 @@ export default function LojaPage() {
 
               <section aria-label="Itens do catálogo">
                 <div className="store-section-head">
-                  <h2>{selectedCategory?.title ?? "Itens"}</h2>
+                  <h2>{activeTab === "armas" ? "Armas avulsas" : selectedCategory?.title ?? "Itens"}</h2>
                   <span>Exibindo {storeCatalog.filteredItems.length} de {categoryItems.length}</span>
                 </div>
                 <CatalogFilters catalog={storeCatalog} />

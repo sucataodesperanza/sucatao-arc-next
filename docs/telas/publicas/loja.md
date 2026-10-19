@@ -98,6 +98,10 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 - Enviar ao carrinho exige login, preço configurado e estoque para todos os itens, incluindo as quantidades já no carrinho. Montar ou revisar não realiza compras ou pagamentos.
 - Layout em três colunas no desktop, reorganizado em telas menores.
 
+### Kits de armas
+
+A aba Armas inclui três combinações sugeridas (Águia-Pescadora IV, Renegado IV e Afélio Amplified), editor de uma arma com seus encaixes dinâmicos e resumo à direita. O catálogo avulso permanece abaixo. Os acessórios sugeridos priorizam estoque e podem ser trocados ou removidos; trocar arma/tier limpa os acessórios para evitar combinações inválidas. Sem preços ou descontos fictícios: valores são a soma de `pricePoints`/`priceCash` dos componentes. Quantidade de kits multiplica todos os componentes. A compra valida estoque, moeda e quantidades já no carrinho para o conjunto completo, exige login e adiciona os componentes ao carrinho existente. A montagem não reserva estoque. A escolha é mantida enquanto o componente está aberto. Validação adicional: `node --test tests/weapon-kits.test.cjs`.
+
 ### Validação
 
 Itens com a nomenclatura `Amplification` (incluindo módulos) recebem o mesmo brilho laranja das armas Amplified, nos cards da loja e no loadout. A identificação considera nome e ID, independentemente do tipo do item.
