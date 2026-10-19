@@ -100,6 +100,8 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 
 ### Validação
 
+Em telas a partir de 1600px, a montagem fica alinhada à esquerda e Valores do loadout ocupa uma coluna à direita, com rolagem própria para listas longas. Em telas menores o resumo fica abaixo, sem aumentar os slots.
+
 O montador exibe preços unitários em pontos e reais no seletor. A seção Valores do loadout lista cada item equipado (incluindo acessórios), quantidade, preço unitário e subtotal, além dos totais nas duas moedas, atualizados ao montar. Usa somente `pricePoints` e `priceCash` cadastrados; não converte o valor de venda do jogo em preço da loja. Preço ausente, inválido ou não positivo aparece como indisponível e é excluído da soma; nesse caso a respectiva moeda mostra subtotal e quantidade de unidades sem preço. Estoque e validação de compra continuam independentes da exibição do preço.
 
 Os espaços preenchidos e o seletor do loadout usam o brilho difuso de raridade da loja. Armas Amplified (inclusive nomes legados de tier V) usam laranja (`#ff8a32`) no loadout e nos cards da loja, sem alterar sua raridade cadastrada. Espaços vazios continuam neutros.
