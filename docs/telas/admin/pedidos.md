@@ -27,3 +27,7 @@ Visualização e gerenciamento de todos os pedidos do site. Permite buscar por I
 | `status` | `pending`, `processing`, `completed`, `cancelled` |
 | `payment_status` | `pending`, `paid`, `failed`, `refunded` |
 | `payment_method` | `points`, `pix` |
+
+## Entrega de kits, stacks e estampas
+
+Pedidos registram os componentes reais e quantidades físicas, em vez dos identificadores sintéticos do carrinho. Uma compra de dois stacks com cinco itens representa dez unidades. Kits distribuem o preço total entre componentes, sem alterar o valor pago. Armas com estampa identificam a escolha no nome e nos campos stencilId/stencilName do item da arma; consulte essa informação para preparar a entrega. Não há aplicação automática da estampa no jogo. Veja [regras da API](../../apis/loja.md).

@@ -1,5 +1,7 @@
 # Edição rápida de preços
 
+A lista mostra somente itens ativos no Catálogo que já possuem registro em estoque, inclusive com quantidade zero. O carregamento usa `GET /api/admin/stock?active=true`, filtrando `catalog_items.active` antes da paginação e da contagem. Busca, filtros, seleção de todos os resultados e edição em lote operam sobre essa lista. Após ativar ou desativar itens no Catálogo, use Atualizar lista (salve ou descarte rascunhos antes). Desativar não apaga preços nem estoque; a tela Estoque mantém sua consulta completa.
+
 Em `/admin/precos`, o administrador pode buscar sem acentos, filtrar categoria/tier/situação, editar pontos e reais diretamente na tabela e usar Tab para avançar. As células pendentes ficam destacadas. Alterações permanecem ao filtrar ou paginar. Salvar alterações grava somente os campos modificados; Descartar alterações e Desfazer (por linha) revertem apenas os rascunhos locais.
 
 Selecionar esta página marca 50 linhas; Selecionar todos os resultados marca todo o filtro. A barra de lote informa a seleção completa, inclusive itens em outras páginas. Definir preço nos selecionados modifica apenas as moedas marcadas e prepara rascunhos para revisão. Os valores em reais aceitam vírgula (1,50) e os pontos exigem inteiros positivos. Não há criação de estoque nesta tela.

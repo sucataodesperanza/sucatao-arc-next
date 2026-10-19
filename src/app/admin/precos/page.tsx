@@ -39,7 +39,7 @@ export default function AdminPrecosPage() {
     try {
       const all: Item[] = []
       for (let pg = 1; ; pg++) {
-        const response = await fetch(`/api/admin/stock?pageSize=500&page=${pg}`, { cache: "no-store" })
+        const response = await fetch(`/api/admin/stock?active=true&pageSize=500&page=${pg}`, { cache: "no-store" })
         const body = await response.json()
         if (!response.ok) throw new Error(body.error ?? "Não foi possível carregar os preços.")
         all.push(...body.items)
@@ -147,7 +147,7 @@ export default function AdminPrecosPage() {
     finally { setSaving(false) }
   }
 
-  return <div className="admin-prices"><header><h1>Preços</h1><p>Edite na tabela, use Tab para avançar e salve tudo de uma vez.</p></header>
+  return <div className="admin-prices"><header><h1>Preços</h1><p>Somente itens ativos no Catálogo. Edite na tabela, use Tab para avançar e salve tudo de uma vez.</p></header>
     <div className="price-toolbar"><input aria-label="Buscar item" placeholder="Buscar item…" value={search} onChange={event => setSearch(event.target.value)} />
       <select aria-label="Categoria" value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas as categorias</option>{[...new Set(items.map(item => item.catalog_items?.item_type).filter(Boolean))].sort().map(type => <option key={type} value={type!}>{getItemTypeLabel(type!)}</option>)}</select>
       <select aria-label="Tier" value={tier} onChange={event => setTier(event.target.value)}><option value="">Todos os tiers</option>{["I", "II", "III", "IV", "V"].map(value => <option key={value}>{value}</option>)}</select>

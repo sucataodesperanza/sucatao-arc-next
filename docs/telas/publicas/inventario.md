@@ -1,7 +1,7 @@
 # Inventário
 
 **Rota:** `/inventario`  
-**Requer autenticação:** Sim (middleware global)
+**Requer autenticação:** Sim
 
 ## Descrição
 
@@ -85,3 +85,7 @@ Inventário pessoal do usuário. Exibe todos os itens adquiridos via compras na 
 
 - **Inventário vazio**: reconciliação automática ao montar o componente
 - **Painel fechado**: salvo em `localStorage` (chave `inventario-panel-open`)
+
+## Compras compostas
+
+Kits, stacks e armas com estampa entram como IDs reais e quantidades físicas dos componentes. O número de pacotes do carrinho não corresponde à quantidade final de itens. O rascunho do loadout não altera o inventário. Veja [checkout da loja](../../apis/loja.md).

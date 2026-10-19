@@ -7,8 +7,8 @@ Documentação técnica e funcional das telas do site ARC Raiders.
 ```
 docs/
 ├── telas/
-│   ├── publicas/    → 15 telas acessíveis pelos usuários
-│   └── admin/       → 13 telas do painel administrativo
+│   ├── publicas/    → telas acessíveis pelos usuários
+│   └── admin/       → telas do painel administrativo
 └── apis/
     ├── trades.md    → endpoints do sistema de trades
     └── inventory.md → endpoints do inventário
@@ -16,7 +16,7 @@ docs/
 
 ## Telas Públicas
 
-> **Atenção:** O middleware (`src/proxy.ts`) usa `getSession()` (sem chamada de rede) e protege **todas** as rotas. Qualquer usuário não autenticado é redirecionado para `/login`. Rotas livres: `/login`, `/registro`, `/recuperar-senha`, `/completar-cadastro`, `/atualizar-senha` e `/confirmar-email`.
+> **Acesso:** src/proxy.ts renova a sessão; não impõe redirecionamento global para login. A loja é pública para consulta. Páginas e APIs verificam a sessão conforme a operação; APIs administrativas exigem admin.
 
 A ordem abaixo segue a **sidebar de navegação** do site:
 
@@ -44,6 +44,8 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 |---|---|---|
 | [Dashboard](telas/admin/dashboard.md) | `/admin` | Redireciona para /admin/catalogo |
 | [Catálogo](telas/admin/catalogo.md) | `/admin/catalogo` | catalog_items |
+| [Kits](telas/admin/kits.md) | /admin/kits | app_entities, catalog_items, stock_items |
+| [Preços](admin-precos.md) | /admin/precos | stock_items, catalog_items |
 | [Estoque](telas/admin/estoque.md) | `/admin/estoque` | stock_items, catalog_items |
 | [Trades](telas/admin/trades.md) | `/admin/trades` | trades, trade_acceptances, trade_settings |
 | [Contratos](telas/admin/contratos.md) | `/admin/contratos` | contracts, user_contracts, Storage `contract-images` |
@@ -82,7 +84,8 @@ A ordem abaixo segue a **sidebar de navegação** do site:
 | `user_contract_group_purchases` | Compras de contratos sequenciais (UNIQUE user_id+group_id) |
 | `user_inventory` | Inventário do jogador (`user_id + item_id FK → catalog_items + quantity`) |
 | `inventory_history` | Log append-only de cada evento de aquisição de item |
-| `orders` | Pedidos dos usuários |
+| `app_entities` | Kits livres, kits legados e traduções manuais protegidas |
+| `orders` | Pedidos com componentes reais de kits, estampas e stacks |
 | `profiles` | Perfis dos usuários (points, avatar, game_id, cpf, inventory_capacity) |
 | `coupons` | Cupons de desconto |
 | `loot_boxes` | Configuração das loot boxes |
@@ -116,6 +119,7 @@ const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
 
 | Arquivo | Conteúdo |
 |---|---|
+| [apis/loja.md](apis/loja.md) | Catálogo, kits livres, estampas, stacks e checkout |
 | [apis/trades.md](apis/trades.md) | Sistema de trades: aceitação, agendamento, slots, conclusão |
 | [apis/inventory.md](apis/inventory.md) | Inventário: listar, histórico, expandir slots, reconciliar |
 
@@ -123,5 +127,12 @@ const { confirm }   = useConfirm()    // await confirm("Mensagem?") → boolean
 
 | Arquivo | Conteúdo | Usado em |
 |---|---|---|
-| `src/data/arc-data.js` | 567 itens, 17 bots | arcpedia, home |
+| `src/data/arc-data.js` | Itens, bots e traduções locais | arcpedia, home, loadouts |
+| `src/data/weapon-attachments.json` | Variantes e encaixes de acessórios | loadout e armas |
+| `src/data/weapon-stencils.json` | Estampas e famílias compatíveis | armas e checkout |
+| `src/data/item-stack-sizes.json` | Limites de pilha, fonte e data de consulta | Todos os itens e checkout |
 | `src/data/map-markers.js` | Marcadores de mapa por categoria | /mapas |
+
+## Atualizações consolidadas
+
+Revisão de 19/10/2026: [mudanças da loja e do admin](atualizacoes-2026-10-19.md).

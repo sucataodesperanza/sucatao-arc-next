@@ -5,7 +5,7 @@
 
 ## Descrição
 
-Gerenciamento do catálogo de itens sincronizados via MetaForge. Permite ativar/desativar itens e sincronizar com a API externa.
+Gerenciamento do catálogo de itens sincronizados via MetaForge. Permite traduzir nomes dentro do site, ativar/desativar itens e sincronizar com a API externa. Não depende de planilha vinculada para editar nomes.
 
 ## Conteúdo Visível
 
@@ -22,7 +22,7 @@ Gerenciamento do catálogo de itens sincronizados via MetaForge. Permite ativar/
 
 | Conteúdo | Tabela / Fonte | Campo(s) | Endpoint / Query |
 |---|---|---|---|
-| Lista de itens | `catalog_items` | `id`, `name`, `item_type`, `rarity`, `icon_url`, `active`, `synced_at` | `GET /api/admin/catalog?page&pageSize&q&rarity&type` |
+| Lista de itens | `catalog_items` | `id`, `name`, `name_en`, `item_type`, `rarity`, `icon_url`, `active`, `synced_at` | `GET /api/admin/catalog?page&pageSize&q&rarity&type` |
 | Toggle ativo | `catalog_items` | `active` | `PATCH /api/admin/catalog/:id` com `{ active: bool }` |
 | Sincronização MetaForge | API MetaForge + `catalog_items` | todos os campos | `POST /api/admin/catalog/sync` |
 
@@ -34,4 +34,13 @@ O sync (`POST /api/admin/catalog/sync`):
 3. Faz match com arc-data por `nameEn` para usar traduções curadas e popular `arc_item_id`
 4. Traduz nomes não encontrados via API de tradução
 5. Remapeia IDs para preservar referências de `stock_items` (FK)
-6. Upsert em `catalog_items` com `onConflict: "id"`
+6. Reaplica traduções manuais após deduplicação e remapeamento
+7. Upsert em `catalog_items` com `onConflict: "id"`
+
+## Operação e manutenção
+
+Busque o nome em português ou inglês, clique em **Editar nome** e salve. O nome original é preservado. Revisões manuais prevalecem sobre a tradução automática nas sincronizações; falhas ao ler essas revisões interrompem o sync.
+
+GET /api/admin/catalog/types lista os tipos existentes. PATCH /api/admin/catalog/:id aceita name e/ou active com permissão de administrador. Pesquisa agrupa Research e Research Item; Design e Estampas estão contemplados no filtro.
+
+Preços ficam em [Preços](../../admin-precos.md), quantidades em [Estoque](estoque.md) e pacotes em [Kits](kits.md). Alterar nomes não define preço nem estoque.

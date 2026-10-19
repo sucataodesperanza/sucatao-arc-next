@@ -34,3 +34,7 @@ O checkout envia todos os itens do carrinho para `POST /api/store/checkout`. Dep
 
 - **Carrinho vazio**: mensagem e link de volta à loja
 - **Sem game_id/CPF**: aviso com link para o perfil preencher antes de comprar
+
+## Kits, estampas e stacks
+
+A quantidade de uma linha pode representar pacotes ou pilhas completas. Kits prontos mantêm o preço e conteúdo do pacote; armas com estampa aparecem como combinação própria; stacks indicam o número de unidades incluídas. O checkout transforma essas ofertas em componentes reais e confere o estoque agregado. Preço, composição ou limite alterado pode exigir remover e adicionar a oferta novamente. Veja [regras da API](../../apis/loja.md).

@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
     .order("catalog_item_id", { ascending: true })
 
   if (q) query = query.ilike("catalog_items.name", `%${q}%`)
+  if (searchParams.get("active") === "true") query = query.eq("catalog_items.active", true)
 
   const { data, error, count } = await query.range(from, to)
 
