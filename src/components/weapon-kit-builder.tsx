@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { useMemo, useRef, useState, type CSSProperties } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, ShoppingCart, X } from "lucide-react"
 import type { CatalogItem } from "@/lib/catalog"
 import { useCart, type CartMode } from "@/lib/cart-context"
 import { acceptsLoadoutItem, attachmentLabels, buildLoadoutItems, getWeaponAttachmentSlots, getWeaponProfile, loadoutItemSearchText, loadoutTotals, normalizeLoadoutText, summarizeLoadout, type LoadoutDraft, type LoadoutSlot } from "@/lib/loadout"
-import { suggestedKitWeapons, suggestedWeaponKit, weaponKitPurchaseIssues, type SavedWeaponKit } from "@/lib/weapon-kits"
+import { suggestedKitWeapons, suggestedWeaponKit, weaponKitPurchaseIssues } from "@/lib/weapon-kits"
 import { getItemGlowColor } from "@/lib/use-items-catalog"
 import "@/styles/weapon-kits.css"
 import { changeConfiguredWeapon, describeWeaponConfiguration } from "@/lib/weapon-configurator"
@@ -20,27 +20,10 @@ function Prices({ rows }: { rows: { item: CatalogItem; quantity: number }[] }) {
 }
 
 export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogItem[]; loading: boolean; userId: string | null }) {
-  const [savedKits, setSavedKits] = useState<SavedWeaponKit[] | null>(null)
-  const [kitItems, setKitItems] = useState<CatalogItem[]>([])
-  const [kitError, setKitError] = useState("")
-  const [kitsLoading, setKitsLoading] = useState(true)
-  const items = useMemo(() => buildLoadoutItems([...stock, ...kitItems.filter(item => !stock.some(row => row.id === item.id))]), [stock, kitItems])
-  const suggestions = useMemo(() => savedKits === null
-    ? suggestedKitWeapons(items).map(weapon => ({ id: weapon.id, name: weapon.name, weapon, draft: suggestedWeaponKit(weapon, items) }))
-    : savedKits.flatMap(kit => { const weapon = items.find(item => item.id === kit.draft["weapon-1"]?.itemId); return weapon ? [{ id: kit.id, name: kit.name, weapon, draft: kit.draft }] : [] }), [items, savedKits])
-  useEffect(() => {
-    const controller = new AbortController()
-    fetch("/api/store/weapon-kits", { cache: "no-store", signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error()
-      const body = await response.json()
-      setKitItems(body.items ?? [])
-      if (body.configured) setSavedKits(body.kits ?? [])
-    }).catch(() => { if (!controller.signal.aborted) { setSavedKits([]); setKitError("Não foi possível carregar os destaques. Atualize a página para tentar novamente.") } })
-      .finally(() => { if (!controller.signal.aborted) setKitsLoading(false) })
-    return () => controller.abort()
-  }, [])
+  const items = useMemo(() => buildLoadoutItems(stock), [stock])
+  const initialDraft = useMemo(() => { const first = suggestedKitWeapons(items)[0]; return first ? suggestedWeaponKit(first, items) : {} }, [items])
   const [custom, setCustom] = useState<LoadoutDraft | null>(null)
-  const draft = custom ?? suggestions[0]?.draft ?? {}
+  const draft = custom ?? initialDraft
   const weapon = items.find(item => item.id === draft["weapon-1"]?.itemId)
   const mounts = getWeaponAttachmentSlots(weapon, "weapon-1")
   const configurations = useMemo(() => {
@@ -97,20 +80,9 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
     cart.openDrawer()
   }
 
-  if (loading || kitsLoading) return <p role="status">Carregando kits de armas…</p>
-  return <section className="weapon-kits" aria-label="Kits de armas">
+  if (loading) return <p role="status">Carregando armas…</p>
+  return <section className="weapon-kits" aria-label="Configurador de armas">
     <header><h2>Configure sua arma</h2><p>Escolha a arma, o nível e as modificações.</p></header>
-    <details className="weapon-config-presets"><summary>Kits em destaque</summary>
-    {kitError && <p role="status">{kitError}</p>}
-    {!suggestions.length && <p>Novos kits em breve. Você pode montar sua arma abaixo.</p>}
-    <div className="weapon-kit-presets">{suggestions.map(preset => <article key={preset.id} className={`weapon-kit-preset${draft === preset.draft ? " is-selected" : ""}`}>
-      <div><h3>{preset.name}</h3><Prices rows={summarizeLoadout(preset.draft, items)} /></div>
-      <p>Arma + {Object.keys(preset.draft).length - 1} acessórios · 1 kit</p>
-      <div className="weapon-kit-art" style={glow(preset.weapon)}>{image(preset.weapon) && <img src={image(preset.weapon)} alt={preset.weapon.name} />}</div>
-      <ul className="weapon-kit-includes">{summarizeLoadout(preset.draft, items).filter(row => row.item.id !== preset.weapon.id).map(({ item }) => <li key={item.id}>{item.name}</li>)}</ul>
-      <button type="button" onClick={() => { setCustom(preset.draft); setCount(1); setMessage(""); editor.current?.scrollIntoView({ behavior: "smooth", block: "start" }) }}>Personalizar kit</button>
-    </article>)}</div>
-    </details>
     <div className="weapon-kit-layout" ref={editor}>
       <div className="weapon-kit-editor"><h3>Configure sua arma</h3><p>Escolha a arma, o nível e os acessórios.</p>
         <div className="weapon-config-controls"><label>Arma<select aria-label="Arma" value={family} onChange={event => {

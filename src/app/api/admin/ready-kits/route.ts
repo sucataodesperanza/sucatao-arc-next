@@ -14,7 +14,14 @@ export async function POST(request:Request) {
     if(body.id!==undefined && (typeof body.id!=="string" || !/^[a-f0-9-]{36}$/i.test(body.id))) throw new Error("Identificador inválido.")
     const payload=validateReadyKit(body,new Set((await readReadyKitItems()).map(i=>i.id)))
     const db=createAdminClient()
-    const result=body.id ? await db.from("app_entities").update({payload,updated_at:new Date().toISOString()}).eq("entity_type","ready_kit").eq("id",body.id).select("id").single() : await db.from("app_entities").insert({entity_type:"ready_kit",payload}).select("id").single()
+    let storedPayload: object = payload
+    if (body.id) {
+      const previous = await db.from("app_entities").select("entity_type,payload").eq("id",body.id).in("entity_type",["ready_kit","weapon_kit"]).single()
+      if (previous.error) throw new Error("Kit não encontrado.")
+      const original = previous.data.entity_type === "weapon_kit" ? previous.data.payload : previous.data.payload.legacyWeaponKit
+      if (original) storedPayload = {...payload,legacyWeaponKit:original}
+    }
+    const result=body.id ? await db.from("app_entities").update({entity_type:"ready_kit",payload:storedPayload,updated_at:new Date().toISOString()}).in("entity_type",["ready_kit","weapon_kit"]).eq("id",body.id).select("id").single() : await db.from("app_entities").insert({entity_type:"ready_kit",payload}).select("id").single()
     if(result.error)throw new Error("Não foi possível salvar.")
     return NextResponse.json({id:result.data.id})
   } catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Dados inválidos."},{status:400})}

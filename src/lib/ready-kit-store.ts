@@ -1,9 +1,18 @@
 import { createAdminClient } from "@/lib/supabase/admin"
-import type { ReadyKit } from "@/lib/ready-kits"
+import { convertWeaponKit, type ReadyKit } from "@/lib/ready-kits"
+import type { SavedWeaponKit } from "@/lib/weapon-kits"
 export async function readReadyKits() {
-  const { data, error } = await createAdminClient().from("app_entities").select("id,payload").eq("entity_type", "ready_kit").limit(1000)
+  const db = createAdminClient()
+  const { data, error } = await db.from("app_entities").select("id,payload,entity_type").in("entity_type", ["ready_kit", "weapon_kit"]).limit(1000)
   if (error) throw new Error("Não foi possível carregar os kits.")
-  return (data ?? []).map(row => ({ ...row.payload, id: row.id }) as ReadyKit).sort((a,b) => Number(b.featured)-Number(a.featured) || a.position-b.position || a.name.localeCompare(b.name))
+  const prices = new Map<string, { points:number; cash:number }>()
+  const legacyIds = [...new Set((data ?? []).filter(row=>row.entity_type === "weapon_kit").flatMap(row=>Object.values((row.payload as SavedWeaponKit).draft).map(e=>e.itemId)))]
+  if (legacyIds.length) {
+    const stock = await db.from("stock_items").select("catalog_item_id,price_points,price_cash").in("catalog_item_id",legacyIds)
+    if (stock.error) throw new Error("Não foi possível carregar os preços dos kits anteriores.")
+    for (const row of stock.data ?? []) prices.set(row.catalog_item_id,{points:row.price_points ?? 0,cash:row.price_cash ?? 0})
+  }
+  return (data ?? []).map(row => row.entity_type === "weapon_kit" ? convertWeaponKit({...row.payload,id:row.id} as SavedWeaponKit,prices) : ({ ...row.payload, id: row.id }) as ReadyKit).sort((a,b) => Number(b.featured)-Number(a.featured) || a.position-b.position || a.name.localeCompare(b.name))
 }
 export async function readReadyKitItems() {
   const db = createAdminClient()

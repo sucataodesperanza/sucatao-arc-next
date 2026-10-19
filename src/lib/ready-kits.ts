@@ -1,5 +1,14 @@
 export type ReadyKit = { id: string; name: string; description: string; image: string; active: boolean; featured: boolean; position: number; pricePoints: number; priceCash: number; entries: { itemId: string; quantity: number }[] }
 
+export function convertWeaponKit(kit: { id: string; name: string; active: boolean; featured: boolean; position: number; draft: Record<string, { itemId: string; quantity: number }> }, prices: Map<string, { points: number; cash: number }>): ReadyKit {
+  const grouped = new Map<string, number>()
+  for (const entry of Object.values(kit.draft)) grouped.set(entry.itemId, (grouped.get(entry.itemId) ?? 0) + entry.quantity)
+  const entries = [...grouped].map(([itemId, quantity]) => ({ itemId, quantity }))
+  const pricePoints = entries.every(e => (prices.get(e.itemId)?.points ?? 0) > 0) ? entries.reduce((sum,e)=>sum+prices.get(e.itemId)!.points*e.quantity,0) : 0
+  const priceCash = entries.every(e => (prices.get(e.itemId)?.cash ?? 0) > 0) ? Math.round(entries.reduce((sum,e)=>sum+prices.get(e.itemId)!.cash*e.quantity,0)*100)/100 : 0
+  return { id:kit.id, name:kit.name, description:"", image:"", active:kit.active && !!(pricePoints || priceCash), featured:kit.featured, position:kit.position, entries, pricePoints, priceCash }
+}
+
 export function validateReadyKit(input: unknown, ids: Set<string>): Omit<ReadyKit, "id"> {
   const b = input as ReadyKit
   if (!b || typeof b.name !== "string" || !b.name.trim() || b.name.length > 100 || !Array.isArray(b.entries) || !b.entries.length || b.entries.length > 30) throw new Error("Informe um nome e de 1 a 30 itens.")
