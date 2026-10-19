@@ -59,10 +59,6 @@ const tabs: { key: string; label: string; href?: string }[] = [
   { key: "kits", label: "Kits prontos" },
   ...storeCategories.map(category => ({ key: category.key, label: category.title })),
   { key: "itens", label: "Todos os itens" },
-  { key: "passes", label: "Contratos à Venda" },
-  { key: "sorteios", label: "Sorteios" },
-  { key: "servicos", label: "Leilões" },
-  { key: "giftcards", label: "Gift Cards" },
 ]
 
 type RewardItem = { id: string; name: string; description: string | null; image_url: string | null; price: number; stock: number; expires_at: string | null }
@@ -98,6 +94,7 @@ export default function LojaPage() {
     types: catalog.types.filter(type => categoryItems.some(item => item.type === type)),
   }
   function selectTab(key: string) {
+    if (!tabs.some(tab => tab.key === key)) return
     catalog.setQuery("")
     catalog.setRarity("all")
     catalog.setType("all")

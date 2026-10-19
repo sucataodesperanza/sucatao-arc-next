@@ -5,7 +5,7 @@
 
 ## Descrição
 
-Loja principal do site. Exibe itens do catálogo ARC Raiders à venda e itens de recompensa especiais (gift cards, merch, sorteios) gerenciados pelo admin.
+Loja principal do site. Exibe itens do catálogo ARC Raiders à venda e kits gerenciados pelo admin. As abas Contratos à Venda, Leilões, Sorteios e Gift Cards estão temporariamente ocultas na loja. Links antigos com esses valores de `?tab=` abrem a aba Destaques; os cadastros e as áreas administrativas permanecem disponíveis.
 
 ## Conteúdo Visível
 
