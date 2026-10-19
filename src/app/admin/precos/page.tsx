@@ -1,449 +1,168 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
-import { RefreshCw, TrendingUp, Package, Zap, Filter } from "lucide-react"
-import { useToast } from "@/components/admin-notifications"
+import { useCallback, useEffect, useMemo, useState } from "react"
+import { getItemTypeLabel } from "@/lib/catalog"
+import { parsePriceInput, priceFields, type PriceField } from "@/lib/price-editor"
+import "@/styles/admin-prices.css"
 
-type StockItem = {
-  catalog_item_id: string
-  value: number
-  price_points: number
-  price_cash: number
-  quantity: number
-  catalog_items: { name: string; rarity: string | null; item_type: string | null; icon_url: string | null } | null
-  vei?: number
-  suggested_points?: number
-  suggested_cash?: number
-}
-
-const RARITY_COLORS: Record<string, string> = {
-  Common: "#8b99aa", Uncommon: "#3df28b", Rare: "#5fa8ff", Epic: "#b477ff", Legendary: "#ffd400",
-}
+type Item = { catalog_item_id: string; price_points: number | null; price_cash: number | null; quantity: number; catalog_items: { name: string; rarity: string | null; item_type: string | null; icon_url: string | null } | null }
+type Draft = Record<string, Partial<Record<PriceField, string>>>
+const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+const priceText = (item: Item, field: PriceField) => item[field] == null ? "" : field === "price_cash" ? Number(item[field]).toFixed(2).replace(".", ",") : String(item[field])
+const tierOf = (item: Item) => /amplified/i.test(item.catalog_items?.name ?? "") ? "V" : item.catalog_items?.name.match(/\b(IV|III|II|I|V)\b/)?.[1] ?? ""
 
 export default function AdminPrecosPage() {
-  const toast = useToast()
-  const [items, setItems]               = useState<StockItem[]>([])
-  const [loading, setLoading]           = useState(true)
-  const [applying, setApplying]         = useState(false)
-  const [bulkAdding, setBulkAdding]     = useState(false)
-  const [editingItem, setEditingItem]   = useState<StockItem | null>(null)
-  const [editForm, setEditForm]         = useState({ price_points: 0, price_cash: 0 })
-  const [savingEdit, setSavingEdit]     = useState(false)
-  const [settings, setSettings]         = useState({ points_multiplier: 100, cash_multiplier: 0.10 })
-  const [savingSettings, setSavingSettings] = useState(false)
-  const [filterRarity, setFilterRarity] = useState("")
-  const [filterType, setFilterType]     = useState("")
-  const [filterVei, setFilterVei]       = useState("")
-  const [search, setSearch]             = useState("")
-  const [selectedIds, setSelectedIds]   = useState<Set<string>>(new Set())
-  const [page, setPage]                 = useState(1)
-  const [pageSize, setPageSize]         = useState(50)
+  const [items, setItems] = useState<Item[]>([])
+  const [draft, setDraft] = useState<Draft>({})
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [suggesting, setSuggesting] = useState(false)
+  const [message, setMessage] = useState("")
+  const [search, setSearch] = useState("")
+  const [category, setCategory] = useState("")
+  const [tier, setTier] = useState("")
+  const [status, setStatus] = useState("")
+  const [page, setPage] = useState(1)
+  const [bulkPoints, setBulkPoints] = useState("")
+  const [bulkCash, setBulkCash] = useState("")
+  const [usePoints, setUsePoints] = useState(false)
+  const [useCash, setUseCash] = useState(true)
+  const [suggestionField, setSuggestionField] = useState("both")
+  const dirtyIds = Object.keys(draft)
+  const busy = loading || saving || suggesting
+  const invalid = Object.values(draft).some(row => priceFields.some(field => row[field] !== undefined && parsePriceInput(row[field]!, field) === null))
 
   const load = useCallback(async () => {
-    setLoading(true)
-    const [stockRes, settingsRes, veiRes] = await Promise.all([
-      // Busca todos os itens do estoque em múltiplas páginas
-      (async () => {
-        const all: any[] = []
-        let pg = 1
-        while (true) {
-          const r = await fetch(`/api/admin/stock?pageSize=2000&page=${pg}`).then(r => r.json()).catch(() => ({ items: [], total: 0 }))
-          all.push(...(r.items ?? []))
-          if (all.length >= (r.total ?? 0) || !(r.items?.length)) break
-          pg++
-        }
-        return { items: all }
-      })(),
-      fetch("/api/admin/economia/settings").then(r => r.json()).catch(() => ({ points_multiplier: 100, cash_multiplier: 0.10 })),
-      fetch("/api/admin/economia/vei-list").then(r => r.json()).catch(() => ({ data: [] })),
-    ])
-    setSettings({ points_multiplier: Number(settingsRes.points_multiplier ?? 100), cash_multiplier: Number(settingsRes.cash_multiplier ?? 0.10) })
-    const veiMap: Record<string, number> = {}
-    for (const v of veiRes.data ?? []) veiMap[v.item_id] = Number(v.vei)
-    const pm = Number(settingsRes.points_multiplier ?? 100)
-    const cm = Number(settingsRes.cash_multiplier   ?? 0.10)
-    const enriched = (stockRes.items ?? []).map((s: StockItem) => {
-      const vei = veiMap[s.catalog_item_id] ?? 0
-      return { ...s, vei, suggested_points: Math.max(1, Math.round(vei * pm)), suggested_cash: Math.max(0.01, parseFloat((vei * cm).toFixed(2))) }
-    })
-    setItems(enriched)
-    setLoading(false)
+    setLoading(true); setMessage("")
+    try {
+      const all: Item[] = []
+      for (let pg = 1; ; pg++) {
+        const response = await fetch(`/api/admin/stock?pageSize=500&page=${pg}`, { cache: "no-store" })
+        const body = await response.json()
+        if (!response.ok) throw new Error(body.error ?? "Não foi possível carregar os preços.")
+        all.push(...body.items)
+        if (all.length >= body.total) break
+        if (!body.items.length) throw new Error("A lista não carregou por completo. Tente atualizar.")
+      }
+      all.sort((a, b) => (a.catalog_items?.name ?? a.catalog_item_id).localeCompare(b.catalog_items?.name ?? b.catalog_item_id, "pt-BR"))
+      setItems(all); setSelected(new Set()); setErrors({})
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível carregar os preços.") }
+    finally { setLoading(false) }
   }, [])
-
   useEffect(() => { load() }, [load])
-
-  async function saveSettings() {
-    setSavingSettings(true)
-    await fetch("/api/admin/economia/settings", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(settings) })
-    setSavingSettings(false)
-    toast.success("Multiplicadores salvos!")
-    await load()
-  }
-
-  async function bulkAdd() {
-    setBulkAdding(true)
-    const res = await fetch("/api/admin/stock/bulk-add", { method: "POST" })
-    setBulkAdding(false)
-    if (res.ok) { const body = await res.json(); toast.success(`${body.added} itens adicionados ao estoque!`); await load() }
-    else toast.error("Erro ao adicionar itens.")
-  }
-
-  async function applyVei(ids?: string[]) {
-    setApplying(true)
-    const body = ids?.length ? { item_ids: ids } : {}
-    const res = await fetch("/api/admin/stock/apply-vei", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-    setApplying(false)
-    if (res.ok) { const b = await res.json(); toast.success(`Preços VEI aplicados em ${b.updated} itens!`); setSelectedIds(new Set()); await load() }
-    else toast.error("Erro ao aplicar preços VEI.")
-  }
-
-  async function updatePrice(itemId: string, field: "price_points" | "price_cash", value: number) {
-    await fetch(`/api/admin/stock/${itemId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ [field]: value }) })
-    await load()
-  }
-
-  function openEdit(item: StockItem) {
-    setEditingItem(item)
-    setEditForm({ price_points: item.price_points, price_cash: item.price_cash })
-  }
-
-  async function saveEdit() {
-    if (!editingItem) return
-    setSavingEdit(true)
-    const res = await fetch(`/api/admin/stock/${editingItem.catalog_item_id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ price_points: editForm.price_points, price_cash: editForm.price_cash }),
-    })
-    setSavingEdit(false)
-    if (res.ok) {
-      toast.success("Preços salvos!")
-      setEditingItem(null)
-      await load()
-    } else {
-      toast.error("Erro ao salvar preços.")
+  useEffect(() => {
+    if (!dirtyIds.length) return
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = "" }
+    const leaving = (event: MouseEvent) => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.button !== 0) return
+      const link = (event.target as Element)?.closest<HTMLAnchorElement>("a[href]")
+      if (!link || link.target === "_blank" || (link.pathname === window.location.pathname && link.search === window.location.search)) return
+      if (saving || !window.confirm("Há alterações não salvas. Deseja sair e descartar essas edições?")) { event.preventDefault(); event.stopPropagation() }
     }
-  }
+    window.addEventListener("beforeunload", warn)
+    document.addEventListener("click", leaving, true)
+    return () => { window.removeEventListener("beforeunload", warn); document.removeEventListener("click", leaving, true) }
+  }, [dirtyIds.length, saving])
+  useEffect(() => setPage(1), [search, category, tier, status])
 
-  // Filtros
-  const rarities  = [...new Set(items.map(i => i.catalog_items?.rarity).filter(Boolean))]
-  const types     = [...new Set(items.map(i => i.catalog_items?.item_type).filter(Boolean))]
-  const filtered  = items.filter(i => {
-    if (filterRarity && i.catalog_items?.rarity !== filterRarity) return false
-    if (filterType   && i.catalog_items?.item_type !== filterType) return false
-    if (search && !i.catalog_items?.name?.toLowerCase().includes(search.toLowerCase())) return false
-    if (filterVei === "low"  && (i.vei ?? 0) >= 40)  return false
-    if (filterVei === "mid"  && ((i.vei ?? 0) < 40 || (i.vei ?? 0) >= 70)) return false
-    if (filterVei === "high" && (i.vei ?? 0) < 70)  return false
+  const filtered = useMemo(() => items.filter(item => {
+    const name = item.catalog_items?.name ?? item.catalog_item_id
+    if (search && !normalize(name).includes(normalize(search))) return false
+    if (category && item.catalog_items?.item_type !== category) return false
+    if (tier && tierOf(item) !== tier) return false
+    if (status === "pending" && !draft[item.catalog_item_id]) return false
+    if (status === "missing" && Number(item.price_points) > 0 && Number(item.price_cash) > 0) return false
+    if (status === "stock" && item.quantity <= 0) return false
     return true
-  })
+  }), [items, search, category, tier, status, draft])
+  const totalPages = Math.max(1, Math.ceil(filtered.length / 50))
+  const currentPage = Math.min(page, totalPages)
+  const visible = filtered.slice((currentPage - 1) * 50, currentPage * 50)
 
-  // Resetar página ao mudar filtros ou page size
-  useEffect(() => setPage(1), [filterRarity, filterType, filterVei, search, pageSize])
-
-  const totalPages  = Math.max(1, Math.ceil(filtered.length / pageSize))
-  const pagedItems  = filtered.slice((page - 1) * pageSize, page * pageSize)
-
-  const priceDiff = (curr: number, sug: number) => sug > 0 ? Math.round(((curr - sug) / sug) * 100) : 0
-
-  const sel: React.CSSProperties = { background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "6px 10px", fontSize: 12, borderRadius: 4, font: "inherit" }
-  const inp: React.CSSProperties = { ...sel, width: "100%" }
-
-  // Stats por categoria e raridade
-  const byRarity: Record<string, number> = {}
-  const byType:   Record<string, number> = {}
-  for (const i of items) {
-    const r = i.catalog_items?.rarity ?? "Unknown"
-    const t = i.catalog_items?.item_type ?? "Unknown"
-    byRarity[r] = (byRarity[r] ?? 0) + 1
-    byType[t]   = (byType[t]   ?? 0) + 1
+  function edit(item: Item, field: PriceField, value: string) {
+    setDraft(previous => {
+      const next = { ...previous }, row = { ...next[item.catalog_item_id] }
+      if (parsePriceInput(value, field) === item[field]) delete row[field]
+      else row[field] = value
+      if (Object.keys(row).length) next[item.catalog_item_id] = row
+      else delete next[item.catalog_item_id]
+      return next
+    })
+    setErrors(previous => { const next = { ...previous }; delete next[item.catalog_item_id]; return next })
+  }
+  function bulk() {
+    if ((!useCash && !usePoints) || !selected.size) return
+    if ((usePoints && parsePriceInput(bulkPoints, "price_points") === null) || (useCash && parsePriceInput(bulkCash, "price_cash") === null)) { setMessage("Informe pontos inteiros positivos e/ou reais no formato 1,50."); return }
+    for (const item of items.filter(item => selected.has(item.catalog_item_id))) {
+      if (usePoints) edit(item, "price_points", bulkPoints)
+      if (useCash) edit(item, "price_cash", bulkCash)
+    }
+    setMessage("Valores preparados nos selecionados. Revise as células destacadas e clique em Salvar alterações.")
+  }
+  async function suggestions() {
+    setSuggesting(true); setMessage("")
+    const ids = [...selected]
+    try {
+      const prepared: Draft = {}
+      for (let index = 0; index < ids.length; index += 100) {
+        const response = await fetch("/api/admin/prices/suggestions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ids: ids.slice(index, index + 100) }) })
+        const body = await response.json()
+        if (!response.ok) throw new Error(body.error ?? "Não foi possível carregar sugestões.")
+        for (const row of body.items) {
+          const item = items.find(item => item.catalog_item_id === row.id)
+          if (!item) continue
+          for (const field of priceFields) if ((suggestionField === "both" || suggestionField === field) && !draft[row.id]?.[field] && Number(item[field]) !== row[field]) prepared[row.id] = { ...prepared[row.id], [field]: field === "price_cash" ? String(row[field]).replace(".", ",") : String(row[field]) }
+        }
+      }
+      setDraft(previous => { const next = { ...previous }; for (const [id, fields] of Object.entries(prepared)) next[id] = { ...fields, ...next[id] }; return next })
+      setMessage("Sugestões preparadas para revisão. Edições já digitadas foram preservadas. Nada foi salvo ainda.")
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Não foi possível carregar sugestões.") }
+    finally { setSuggesting(false) }
+  }
+  async function save() {
+    if (busy || invalid || !dirtyIds.length) return
+    setSaving(true); setMessage(""); setErrors({})
+    let saved = 0
+    try {
+      for (let index = 0; index < dirtyIds.length; index += 100) {
+        const batch = dirtyIds.slice(index, index + 100).map(id => {
+          const item = items.find(item => item.catalog_item_id === id)!
+          const changes: Partial<Record<PriceField, number>> = {}, expected: Partial<Record<PriceField, number | null>> = {}
+          for (const field of priceFields) if (draft[id][field] !== undefined) { changes[field] = parsePriceInput(draft[id][field]!, field)!; expected[field] = item[field] == null ? null : Number(item[field]) }
+          return { id, changes, expected }
+        })
+        const response = await fetch("/api/admin/prices", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ items: batch }) })
+        const body = await response.json()
+        if (!response.ok) throw new Error(body.error ?? "Não foi possível salvar este lote.")
+        const succeeded = new Set<string>(body.results.filter((row: { ok: boolean }) => row.ok).map((row: { id: string }) => row.id))
+        saved += succeeded.size
+        setItems(previous => previous.map(item => succeeded.has(item.catalog_item_id) ? { ...item, ...batch.find(row => row.id === item.catalog_item_id)!.changes } : item))
+        setDraft(previous => { const next = { ...previous }; for (const id of succeeded) delete next[id]; return next })
+        setErrors(previous => ({ ...previous, ...Object.fromEntries(body.results.filter((row: { ok: boolean }) => !row.ok).map((row: { id: string; error: string }) => [row.id, row.error])) }))
+      }
+      setMessage(`${saved} item(ns) salvo(s).${saved < dirtyIds.length ? " Os itens com erro continuam destacados para revisão." : " Todos os preços foram atualizados."}`)
+    } catch (error) { setMessage(`${saved} item(ns) confirmado(s). ${error instanceof Error ? error.message : "Falha de conexão."} As alterações restantes foram mantidas.`) }
+    finally { setSaving(false) }
   }
 
-  const modalInp: React.CSSProperties = { background: "rgba(0,0,0,0.4)", border: "1px solid var(--stroke)", color: "var(--paper)", padding: "10px 12px", fontSize: 14, borderRadius: 6, font: "inherit", width: "100%", boxSizing: "border-box" as const }
-
-  return (
-    <div>
-    {/* Modal de edição */}
-    {editingItem && (
-      <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(2,7,11,0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}
-        onClick={() => setEditingItem(null)}>
-        <div style={{ background: "var(--surface)", border: "1px solid var(--stroke)", borderRadius: 12, width: "100%", maxWidth: 440, padding: 28 }} onClick={e => e.stopPropagation()}>
-          {/* Header */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
-            {editingItem.catalog_items?.icon_url && <img src={editingItem.catalog_items.icon_url} alt="" style={{ width: 36, height: 36, objectFit: "contain" }} />}
-            <div>
-              <p style={{ margin: 0, fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--cyan)", opacity: 0.7 }}>Editar Preços</p>
-              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 950 }}>{editingItem.catalog_items?.name ?? editingItem.catalog_item_id}</h2>
-            </div>
-          </div>
-
-          {/* Referência VEI */}
-          <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--stroke)", borderRadius: 8, padding: 12, marginBottom: 20, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
-            <div>
-              <p style={{ margin: 0, fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>VEI</p>
-              <p style={{ margin: "4px 0 0", fontSize: 18, fontWeight: 950, color: (editingItem.vei ?? 0) >= 70 ? "var(--yellow)" : (editingItem.vei ?? 0) >= 40 ? "var(--cyan)" : "var(--paper-dim)" }}>
-                {(editingItem.vei ?? 0).toFixed(1)}
-              </p>
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Sugerido pts</p>
-              <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 800, color: "var(--paper-dim)" }}>{(editingItem.suggested_points ?? 0).toLocaleString("pt-BR")} pts</p>
-            </div>
-            <div>
-              <p style={{ margin: 0, fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Sugerido R$</p>
-              <p style={{ margin: "4px 0 0", fontSize: 14, fontWeight: 800, color: "var(--paper-dim)" }}>R$ {(editingItem.suggested_cash ?? 0).toFixed(2).replace(".", ",")}</p>
-            </div>
-          </div>
-
-          {/* Campos */}
-          <div style={{ display: "grid", gap: 14, marginBottom: 24 }}>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Preço em Pontos</span>
-              <div style={{ position: "relative" }}>
-                <input type="number" min={1} value={editForm.price_points}
-                  onChange={e => setEditForm(p => ({ ...p, price_points: Number(e.target.value) }))}
-                  style={{ ...modalInp, paddingRight: 44 }} />
-                <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--yellow)", fontWeight: 950, pointerEvents: "none" }}>pts</span>
-              </div>
-              {editingItem.suggested_points && editForm.price_points !== editingItem.suggested_points && (
-                <button type="button" onClick={() => setEditForm(p => ({ ...p, price_points: editingItem.suggested_points! }))}
-                  style={{ background: "none", border: "none", color: "var(--cyan)", fontSize: 11, cursor: "pointer", textAlign: "left", padding: 0, font: "inherit" }}>
-                  ↩ Usar sugerido ({editingItem.suggested_points?.toLocaleString("pt-BR")} pts)
-                </button>
-              )}
-            </label>
-
-            <label style={{ display: "grid", gap: 6 }}>
-              <span style={{ fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Preço em R$</span>
-              <div style={{ position: "relative" }}>
-                <input type="number" min={0.01} step={0.01} value={editForm.price_cash}
-                  onChange={e => setEditForm(p => ({ ...p, price_cash: Number(e.target.value) }))}
-                  style={{ ...modalInp, paddingRight: 44 }} />
-                <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 12, color: "var(--green)", fontWeight: 950, pointerEvents: "none" }}>R$</span>
-              </div>
-              {editingItem.suggested_cash && editForm.price_cash !== editingItem.suggested_cash && (
-                <button type="button" onClick={() => setEditForm(p => ({ ...p, price_cash: editingItem.suggested_cash! }))}
-                  style={{ background: "none", border: "none", color: "var(--cyan)", fontSize: 11, cursor: "pointer", textAlign: "left", padding: 0, font: "inherit" }}>
-                  ↩ Usar sugerido (R$ {editingItem.suggested_cash?.toFixed(2).replace(".", ",")})
-                </button>
-              )}
-            </label>
-          </div>
-
-          {/* Ações */}
-          <div style={{ display: "flex", gap: 10, justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => setEditingItem(null)}
-              style={{ border: "1px solid var(--stroke)", background: "none", color: "var(--muted)", padding: "10px 20px", fontSize: 13, cursor: "pointer", borderRadius: 6, font: "inherit" }}>
-              Cancelar
-            </button>
-            <button type="button" onClick={saveEdit} disabled={savingEdit}
-              style={{ border: "none", background: "var(--cyan)", color: "#000", padding: "10px 24px", fontSize: 13, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 6, font: "inherit", opacity: savingEdit ? 0.7 : 1 }}>
-              {savingEdit ? "Salvando..." : "Salvar"}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ margin: 0, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--cyan)", opacity: 0.7 }}>Painel Administrativo</p>
-        <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 950, textTransform: "uppercase" }}>ANÁLISE DE PREÇOS</h1>
-      </div>
-
-      {/* Multiplicadores + ações */}
-      <div className="utility-panel" style={{ marginBottom: 16 }}>
-        <div className="utility-panel-head"><strong>Multiplicadores VEI</strong><small>Preço = VEI × multiplicador</small></div>
-        <div style={{ display: "flex", gap: 16, alignItems: "end", flexWrap: "wrap" }}>
-          <label style={{ display: "grid", gap: 4 }}>
-            <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Multiplicador Pontos</span>
-            <input type="number" min={1} step={1} value={settings.points_multiplier}
-              onChange={e => setSettings(p => ({ ...p, points_multiplier: Number(e.target.value) }))}
-              style={{ ...inp, width: 140 }} />
-            <span style={{ fontSize: 10, color: "var(--gray-500)" }}>VEI 80 × {settings.points_multiplier} = {(80 * settings.points_multiplier).toLocaleString("pt-BR")} pts</span>
-          </label>
-          <label style={{ display: "grid", gap: 4 }}>
-            <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Multiplicador R$</span>
-            <input type="number" min={0.01} step={0.01} value={settings.cash_multiplier}
-              onChange={e => setSettings(p => ({ ...p, cash_multiplier: Number(e.target.value) }))}
-              style={{ ...inp, width: 140 }} />
-            <span style={{ fontSize: 10, color: "var(--gray-500)" }}>VEI 80 × {settings.cash_multiplier} = R$ {(80 * settings.cash_multiplier).toFixed(2)}</span>
-          </label>
-          <button type="button" onClick={saveSettings} disabled={savingSettings}
-            style={{ alignSelf: "end", border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
-            {savingSettings ? "Salvando..." : "Salvar Multiplicadores"}
-          </button>
-          <button type="button" onClick={bulkAdd} disabled={bulkAdding}
-            style={{ alignSelf: "end", border: "1px solid rgba(255,212,0,0.4)", background: "rgba(255,212,0,0.06)", color: "var(--yellow)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
-            <Package size={12} style={{ marginRight: 4 }} />{bulkAdding ? "Adicionando..." : "Add Todos ao Estoque"}
-          </button>
-          <button type="button" onClick={() => applyVei()} disabled={applying}
-            style={{ alignSelf: "end", border: "1px solid rgba(61,242,139,0.4)", background: "rgba(61,242,139,0.06)", color: "var(--green)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
-            <TrendingUp size={12} style={{ marginRight: 4 }} />{applying ? "Aplicando..." : "Aplicar VEI a Todos"}
-          </button>
-          {selectedIds.size > 0 && (
-            <button type="button" onClick={() => applyVei([...selectedIds])} disabled={applying}
-              style={{ alignSelf: "end", border: "1px solid rgba(91,168,255,0.4)", background: "rgba(91,168,255,0.06)", color: "var(--blue)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit" }}>
-              Aplicar VEI aos {selectedIds.size} selecionados
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Distribuição rápida */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
-        <div className="utility-panel">
-          <div className="utility-panel-head"><strong>Por Raridade</strong></div>
-          <div style={{ display: "grid", gap: 6 }}>
-            {Object.entries(byRarity).sort((a, b) => b[1] - a[1]).map(([r, n]) => (
-              <div key={r} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div style={{ width: 10, height: 10, borderRadius: 2, background: RARITY_COLORS[r] ?? "var(--gray-500)", flexShrink: 0 }} />
-                <span style={{ fontSize: 12, flex: 1 }}>{r}</span>
-                <strong style={{ fontSize: 12, color: RARITY_COLORS[r] ?? "var(--paper)" }}>{n}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="utility-panel">
-          <div className="utility-panel-head"><strong>Por Categoria</strong></div>
-          <div style={{ display: "grid", gap: 6 }}>
-            {Object.entries(byType).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t, n]) => (
-              <div key={t} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 12, flex: 1, color: "var(--paper-dim)" }}>{t}</span>
-                <strong style={{ fontSize: 12 }}>{n}</strong>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabela de preços */}
-      <div className="utility-panel">
-        <div className="utility-panel-head">
-          <strong>Itens no Estoque — {filtered.length} de {items.length}</strong>
-        </div>
-
-        {/* Filtros */}
-        <div style={{ display: "flex", gap: 10, marginBottom: 14, flexWrap: "wrap" }}>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar item..." style={{ ...inp, width: 200 }} />
-          <select value={filterRarity} onChange={e => setFilterRarity(e.target.value)} style={sel}>
-            <option value="">Todas as raridades</option>
-            {rarities.map(r => <option key={r} value={r!}>{r}</option>)}
-          </select>
-          <select value={filterType} onChange={e => setFilterType(e.target.value)} style={sel}>
-            <option value="">Todas as categorias</option>
-            {types.map(t => <option key={t} value={t!}>{t}</option>)}
-          </select>
-          <select value={filterVei} onChange={e => setFilterVei(e.target.value)} style={sel}>
-            <option value="">Todos os VEIs</option>
-            <option value="low">VEI baixo (&lt;40)</option>
-            <option value="mid">VEI médio (40-70)</option>
-            <option value="high">VEI alto (&gt;70)</option>
-          </select>
-          <button type="button" onClick={() => { setSearch(""); setFilterRarity(""); setFilterType(""); setFilterVei("") }}
-            style={{ border: "1px solid var(--stroke)", background: "none", color: "var(--muted)", padding: "6px 12px", fontSize: 11, cursor: "pointer", borderRadius: 4, font: "inherit" }}>
-            Limpar
-          </button>
-        </div>
-
-        {loading ? <p style={{ color: "var(--muted)", fontSize: 13 }}>Carregando...</p> : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid var(--stroke)" }}>
-                  <th style={{ padding: "8px 4px", width: 28 }}>
-                    <input type="checkbox"
-                      checked={pagedItems.length > 0 && pagedItems.every(i => selectedIds.has(i.catalog_item_id))}
-                      onChange={e => {
-                        const s = new Set(selectedIds)
-                        pagedItems.forEach(i => e.target.checked ? s.add(i.catalog_item_id) : s.delete(i.catalog_item_id))
-                        setSelectedIds(s)
-                      }} />
-                  </th>
-                  {["Item", "Raridade", "Tipo", "VEI", "Pts Atual", "Pts Sugerido", "Δ Pts", "R$ Atual", "R$ Sugerido", "Qtd"].map(h => (
-                    <th key={h} style={{ padding: "8px", fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)", textAlign: "left", whiteSpace: "nowrap" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {pagedItems.map(item => {
-                  const diffPts  = priceDiff(item.price_points, item.suggested_points ?? 0)
-                  const diffCash = priceDiff(item.price_cash,   item.suggested_cash   ?? 0)
-                  const rarColor = RARITY_COLORS[item.catalog_items?.rarity ?? "Unknown"] ?? "var(--gray-500)"
-                  return (
-                    <tr key={item.catalog_item_id} onClick={() => openEdit(item)}
-                      style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", cursor: "pointer" }}
-                      onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                      onMouseLeave={e => (e.currentTarget.style.background = "")}>
-                      <td style={{ padding: "6px 4px" }}>
-                        <input type="checkbox"
-                          checked={selectedIds.has(item.catalog_item_id)}
-                          onChange={e => { const s = new Set(selectedIds); e.target.checked ? s.add(item.catalog_item_id) : s.delete(item.catalog_item_id); setSelectedIds(s) }} />
-                      </td>
-                      <td style={{ padding: "6px 8px", fontWeight: 800 }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                          {item.catalog_items?.icon_url && <img src={item.catalog_items.icon_url} alt="" style={{ width: 20, height: 20, objectFit: "contain" }} />}
-                          <span style={{ maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.catalog_items?.name ?? item.catalog_item_id}</span>
-                        </div>
-                      </td>
-                      <td style={{ padding: "6px 8px" }}><span style={{ fontSize: 10, fontWeight: 950, color: rarColor }}>{item.catalog_items?.rarity ?? "—"}</span></td>
-                      <td style={{ padding: "6px 8px", color: "var(--muted)", fontSize: 11 }}>{item.catalog_items?.item_type ?? "—"}</td>
-                      <td style={{ padding: "6px 8px" }}>
-                        <strong style={{ color: (item.vei ?? 0) >= 70 ? "var(--yellow)" : (item.vei ?? 0) >= 40 ? "var(--cyan)" : "var(--paper-dim)" }}>{(item.vei ?? 0).toFixed(1)}</strong>
-                      </td>
-                      {/* Pts Atual (editável) */}
-                      <td style={{ padding: "6px 4px" }} onClick={e => e.stopPropagation()}>
-                        <input type="number" min={1} defaultValue={item.price_points}
-                          onBlur={e => { const v = Number(e.target.value); if (v !== item.price_points) updatePrice(item.catalog_item_id, "price_points", v) }}
-                          style={{ width: 80, background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--yellow)", padding: "3px 6px", fontSize: 11, fontWeight: 950, borderRadius: 4, font: "inherit", textAlign: "right" }} />
-                      </td>
-                      <td style={{ padding: "6px 8px", color: "var(--paper-dim)" }}>{(item.suggested_points ?? 0).toLocaleString("pt-BR")}</td>
-                      <td style={{ padding: "6px 8px" }}>
-                        <span style={{ fontSize: 10, fontWeight: 950, color: Math.abs(diffPts) > 20 ? "var(--red)" : "var(--gray-500)" }}>
-                          {diffPts > 0 ? "+" : ""}{diffPts}%
-                        </span>
-                      </td>
-                      {/* R$ Atual (editável) */}
-                      <td style={{ padding: "6px 4px" }} onClick={e => e.stopPropagation()}>
-                        <input type="number" min={0.01} step={0.01} defaultValue={item.price_cash}
-                          onBlur={e => { const v = Number(e.target.value); if (v !== item.price_cash) updatePrice(item.catalog_item_id, "price_cash", v) }}
-                          style={{ width: 80, background: "rgba(0,0,0,0.3)", border: "1px solid var(--stroke)", color: "var(--green)", padding: "3px 6px", fontSize: 11, fontWeight: 950, borderRadius: 4, font: "inherit", textAlign: "right" }} />
-                      </td>
-                      <td style={{ padding: "6px 8px", color: "var(--paper-dim)" }}>R$ {(item.suggested_cash ?? 0).toFixed(2).replace(".", ",")}</td>
-                      <td style={{ padding: "6px 8px", color: "var(--muted)" }}>{item.quantity === -1 ? "∞" : item.quantity}</td>
-                    </tr>
-                  )
-                })}
-                {pagedItems.length === 0 && <tr><td colSpan={10} style={{ padding: 24, textAlign: "center", color: "var(--muted)" }}>Nenhum item encontrado.</td></tr>}
-              </tbody>
-            </table>
-
-            {/* Paginação */}
-            {filtered.length > 0 && (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginTop: 14, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                <span style={{ fontSize: 11, color: "var(--gray-500)" }}>
-                  {filtered.length === 0 ? "0 itens" : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, filtered.length)} de ${filtered.length} itens`}
-                </span>
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <select value={pageSize} onChange={e => setPageSize(Number(e.target.value))} style={{ ...sel, fontSize: 11 }}>
-                    <option value={25}>25 / página</option>
-                    <option value={50}>50 / página</option>
-                    <option value={100}>100 / página</option>
-                  </select>
-                  <button type="button" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    style={{ border: "1px solid var(--stroke)", background: "none", color: page === 1 ? "var(--gray-500)" : "var(--paper)", padding: "5px 12px", fontSize: 11, cursor: page === 1 ? "default" : "pointer", borderRadius: 4, font: "inherit", opacity: page === 1 ? 0.4 : 1 }}>
-                    ← Anterior
-                  </button>
-                  <span style={{ fontSize: 11, color: "var(--paper-dim)", whiteSpace: "nowrap", padding: "0 4px" }}>
-                    {page} / {totalPages}
-                  </span>
-                  <button type="button" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    style={{ border: "1px solid var(--stroke)", background: "none", color: page === totalPages ? "var(--gray-500)" : "var(--paper)", padding: "5px 12px", fontSize: 11, cursor: page === totalPages ? "default" : "pointer", borderRadius: 4, font: "inherit", opacity: page === totalPages ? 0.4 : 1 }}>
-                    Próxima →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+  return <div className="admin-prices"><header><h1>Preços</h1><p>Edite na tabela, use Tab para avançar e salve tudo de uma vez.</p></header>
+    <div className="price-toolbar"><input aria-label="Buscar item" placeholder="Buscar item…" value={search} onChange={event => setSearch(event.target.value)} />
+      <select aria-label="Categoria" value={category} onChange={event => setCategory(event.target.value)}><option value="">Todas as categorias</option>{[...new Set(items.map(item => item.catalog_items?.item_type).filter(Boolean))].sort().map(type => <option key={type} value={type!}>{getItemTypeLabel(type!)}</option>)}</select>
+      <select aria-label="Tier" value={tier} onChange={event => setTier(event.target.value)}><option value="">Todos os tiers</option>{["I", "II", "III", "IV", "V"].map(value => <option key={value}>{value}</option>)}</select>
+      <select aria-label="Situação" value={status} onChange={event => setStatus(event.target.value)}><option value="">Todos os itens</option><option value="missing">Sem preço completo</option><option value="pending">Alterados nesta edição</option><option value="stock">Com estoque</option></select>
+      <button disabled={busy || !!dirtyIds.length} onClick={load}>Atualizar lista</button>
     </div>
-  )
+    <p role="status" className="price-message">{message}</p>
+    {selected.size > 0 && <section className="price-bulk" aria-label="Definir preço em lote"><strong>{selected.size} item(ns) selecionado(s)</strong><label><input type="checkbox" checked={usePoints} disabled={busy} onChange={event => setUsePoints(event.target.checked)} />Pontos<input aria-label="Pontos em lote" placeholder="15000" disabled={busy || !usePoints} inputMode="numeric" value={bulkPoints} onChange={event => setBulkPoints(event.target.value)} /></label><label><input type="checkbox" checked={useCash} disabled={busy} onChange={event => setUseCash(event.target.checked)} />Reais<input aria-label="Reais em lote" placeholder="1,50" disabled={busy || !useCash} inputMode="decimal" value={bulkCash} onChange={event => setBulkCash(event.target.value)} /></label><button disabled={busy || (!useCash && !usePoints)} onClick={bulk}>Definir preço nos selecionados</button><button disabled={busy} onClick={() => setSelected(new Set())}>Limpar seleção</button></section>}
+    <div className="price-selection"><span>{filtered.length} de {items.length} itens · {dirtyIds.length} alterado(s)</span><button disabled={busy || !filtered.length} onClick={() => setSelected(new Set(filtered.map(item => item.catalog_item_id)))}>Selecionar todos os {filtered.length} resultados</button></div>
+    <div className="price-table"><table><thead><tr><th><input aria-label="Selecionar esta página" type="checkbox" disabled={busy} checked={!!visible.length && visible.every(item => selected.has(item.catalog_item_id))} onChange={event => setSelected(previous => { const next = new Set(previous); for (const item of visible) if (event.target.checked) next.add(item.catalog_item_id); else next.delete(item.catalog_item_id); return next })} /></th><th>Item</th><th>Categoria / Tier</th><th>Pontos</th><th>Reais</th><th>Edição</th></tr></thead><tbody>{visible.map(item => {
+      const id = item.catalog_item_id
+      return <tr key={id} className={draft[id] ? "price-row-edited" : ""}><td><input aria-label={`Selecionar ${item.catalog_items?.name}`} type="checkbox" disabled={busy} checked={selected.has(id)} onChange={event => setSelected(previous => { const next = new Set(previous); if (event.target.checked) next.add(id); else next.delete(id); return next })} /></td><td><div className="price-item">{item.catalog_items?.icon_url && <img src={item.catalog_items.icon_url} alt="" loading="lazy" />}<strong>{item.catalog_items?.name ?? id}</strong></div>{errors[id] && <p role="alert" className="price-error">{errors[id]}</p>}</td><td>{getItemTypeLabel(item.catalog_items?.item_type ?? undefined)}{tierOf(item) && ` · ${tierOf(item)}`}</td>{priceFields.map(field => { const changed = draft[id]?.[field] !== undefined; const value = draft[id]?.[field] ?? priceText(item, field); const bad = changed && parsePriceInput(value, field) === null; return <td key={field}><input aria-label={`${field === "price_points" ? "Pontos" : "Reais"}: ${item.catalog_items?.name}`} aria-invalid={bad} disabled={busy} className={changed ? "price-input-edited" : ""} inputMode={field === "price_points" ? "numeric" : "decimal"} value={value} onChange={event => edit(item, field, event.target.value)} />{bad && <small className="price-error">{field === "price_points" ? "Use um inteiro positivo" : "Use um valor positivo, ex.: 1,50"}</small>}</td>})}<td>{draft[id] ? <button disabled={busy} onClick={() => { setDraft(previous => { const next = { ...previous }; delete next[id]; return next }); setErrors(previous => { const next = { ...previous }; delete next[id]; return next }) }}>Desfazer</button> : <small>Salvo</small>}</td></tr>
+    })}{!visible.length && <tr><td colSpan={6}>{loading ? "Carregando preços…" : "Nenhum item encontrado."}</td></tr>}</tbody></table></div>
+    <nav className="price-pagination" aria-label="Páginas de preços"><button disabled={busy || currentPage === 1} onClick={() => setPage(currentPage - 1)}>Anterior</button><span>{currentPage} / {totalPages}</span><button disabled={busy || currentPage === totalPages} onClick={() => setPage(currentPage + 1)}>Próxima</button></nav>
+    <details className="price-advanced"><summary>Opções avançadas · sugestões VEI</summary><p>Selecione os itens, escolha a moeda e carregue as sugestões. Elas ficam destacadas para revisão e só são gravadas ao salvar. Preços já digitados são preservados.</p><select aria-label="Moedas das sugestões" value={suggestionField} onChange={event => setSuggestionField(event.target.value)}><option value="both">Pontos e reais</option><option value="price_points">Somente pontos</option><option value="price_cash">Somente reais</option></select><button disabled={busy || !selected.size} onClick={suggestions}>{suggesting ? "Calculando…" : `Preparar sugestões para ${selected.size} selecionado(s)`}</button></details>
+    <footer className="price-savebar"><span>{invalid ? "Corrija os campos inválidos antes de salvar." : `${dirtyIds.length} item(ns) com alterações não salvas`}</span><button disabled={busy || !dirtyIds.length} onClick={() => { setDraft({}); setErrors({}); setMessage("Edições pendentes descartadas. Os preços salvos foram mantidos.") }}>Descartar alterações</button><button className="price-save" disabled={busy || invalid || !dirtyIds.length} onClick={save}>{saving ? "Salvando…" : "Salvar alterações"}</button></footer>
+  </div>
 }
