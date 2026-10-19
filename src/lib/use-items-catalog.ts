@@ -32,8 +32,9 @@ export function getRarity(item: CatalogItem) {
   return rarityOrder.includes(item.rarity ?? "") ? (item.rarity as string) : "Unknown"
 }
 export function getItemGlowColor(item: CatalogItem) {
+  const amplification = /\bamplification\b/i.test(`${item.name} ${item.id}`.replace(/[_-]/g, " "))
   const amplified = (item.isWeapon || item.type === "Weapon" || item.type === "Arma") && (/^amplified[\s_-]/i.test(item.name) || /^amplified[\s_-]/i.test(item.id) || /\sV$/i.test(item.name))
-  return amplified ? "#ff8a32" : rarityColors[getRarity(item)]
+  return amplification || amplified ? "#ff8a32" : rarityColors[getRarity(item)]
 }
 export function getType(item: CatalogItem) { return item.type ?? "Item" }
 export function formatNumber(n: number | undefined) { return (n ?? 0).toLocaleString("pt-BR") }

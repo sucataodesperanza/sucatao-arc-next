@@ -100,6 +100,8 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 
 ### Validação
 
+Itens com a nomenclatura `Amplification` (incluindo módulos) recebem o mesmo brilho laranja das armas Amplified, nos cards da loja e no loadout. A identificação considera nome e ID, independentemente do tipo do item.
+
 Empilhamento: a quantidade escolhida completa pilhas do mesmo item e usa espaços vazios somente na seção selecionada (mochila, uso rápido ou bolso seguro). Exemplo: 12 ataduras com limite 5 ocupam três espaços, 5 + 5 + 2. Editar um espaço preenchido substitui sua pilha; outras pilhas e seções não são removidas. Se toda a quantidade não couber, a operação é recusada por inteiro e informa a capacidade disponível, preservando a montagem. Equipamentos e acessórios continuam com uma unidade por encaixe.
 
 Em telas a partir de 1600px, a montagem fica alinhada à esquerda e Valores do loadout ocupa uma coluna à direita, com rolagem própria para listas longas. Em telas menores o resumo fica abaixo, sem aumentar os slots.
