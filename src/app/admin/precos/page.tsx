@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { getItemTypeLabel } from "@/lib/catalog"
-import { parsePriceInput, priceFields, type PriceField } from "@/lib/price-editor"
+import { parsePriceInput, priceFields, priceInputText, shouldKeepPriceInput, type PriceField } from "@/lib/price-editor"
 import "@/styles/admin-prices.css"
 
 type Item = { catalog_item_id: string; price_points: number | null; price_cash: number | null; quantity: number; catalog_items: { name: string; rarity: string | null; item_type: string | null; icon_url: string | null } | null }
 type Draft = Record<string, Partial<Record<PriceField, string>>>
 const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
-const priceText = (item: Item, field: PriceField) => item[field] == null ? "" : field === "price_cash" ? Number(item[field]).toFixed(2).replace(".", ",") : String(item[field])
+const priceText = (item: Item, field: PriceField) => priceInputText(item[field], field)
 const tierOf = (item: Item) => /amplified/i.test(item.catalog_items?.name ?? "") ? "V" : item.catalog_items?.name.match(/\b(IV|III|II|I|V)\b/)?.[1] ?? ""
 
 export default function AdminPrecosPage() {
@@ -89,8 +89,8 @@ export default function AdminPrecosPage() {
   function edit(item: Item, field: PriceField, value: string) {
     setDraft(previous => {
       const next = { ...previous }, row = { ...next[item.catalog_item_id] }
-      if (parsePriceInput(value, field) === item[field]) delete row[field]
-      else row[field] = value
+      if (shouldKeepPriceInput(value, item[field], field)) row[field] = value
+      else delete row[field]
       if (Object.keys(row).length) next[item.catalog_item_id] = row
       else delete next[item.catalog_item_id]
       return next

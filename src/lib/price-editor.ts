@@ -1,6 +1,15 @@
 export type PriceField = "price_points" | "price_cash"
 export const priceFields: PriceField[] = ["price_points", "price_cash"]
 
+export function priceInputText(value: number | null, field: PriceField): string {
+  return value == null ? "" : field === "price_cash" ? Number(value).toFixed(2).replace(".", ",") : String(value)
+}
+
+export function shouldKeepPriceInput(raw: string, saved: number | null, field: PriceField): boolean {
+  // Compare text while typing: numeric equality would reset 2,0 to 2,00 and move the caret.
+  return raw !== priceInputText(saved, field)
+}
+
 export function parsePriceInput(raw: string, field: PriceField): number | null {
   let value = raw.trim()
   if (field === "price_points") {

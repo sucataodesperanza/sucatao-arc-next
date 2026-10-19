@@ -13,3 +13,5 @@ Opções avançadas permite preparar sugestões VEI nas moedas escolhidas. Calcu
 O carregamento usa páginas de 500 registros para respeitar limites do banco e não saltar itens. Falhas não exibem uma lista parcial como completa. Salvar não recarrega a tabela nem perde página/filtros. Atualizar lista fica bloqueado enquanto há edições pendentes. Fechar/recarregar a página com rascunhos gera o aviso padrão do navegador.
 
 Verificação: `node --test tests/price-editor.test.cjs` e `npm run build`. Não alterar preços reais como teste de interface.
+
+Durante a digitação, o campo preserva o texto literal (por exemplo, 2, e 2,5), mesmo quando seu valor numérico é igual ao preço salvo. A formatação em duas casas é usada para exibir valores carregados/salvos, sem substituir o texto intermediário. Valores incompletos ou inválidos continuam bloqueando Salvar; a correção não recalcula nem migra preços existentes.
