@@ -19,7 +19,7 @@ type AdminCatalogItem = {
 const RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 const TYPES = [
   "Advanced Material", "Ammunition", "Augment", "Basic Material", "Blueprint", "Consumable",
-  "Cosmetic", "Deployable", "Gadget", "Key", "Material", "Misc", "Modification", "Nature",
+  "Cosmetic", "Deployable", "Design", "Gadget", "Key", "Material", "Misc", "Modification", "Nature",
   "Quest Item", "Quick Use", "Recyclable", "Refined Material", "Research", "Shield", "Throwable",
   "Topside Material", "Trinket", "Weapon",
 ]
@@ -43,12 +43,21 @@ export default function AdminCatalogoPage() {
   const [q, setQ] = useState("")
   const [rarity, setRarity] = useState("all")
   const [type, setType] = useState("all")
+  const [availableTypes, setAvailableTypes] = useState<string[]>(TYPES)
   const toast = useToast()
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
   const [savingId, setSavingId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch("/api/admin/catalog/types", {cache:"no-store",signal:controller.signal})
+      .then(async response => { if(!response.ok) return; const body=await response.json(); if(Array.isArray(body.types)) setAvailableTypes(body.types.filter((value:unknown):value is string=>typeof value === "string")) })
+      .catch(() => {})
+    return () => controller.abort()
+  }, [])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -137,7 +146,7 @@ export default function AdminCatalogoPage() {
         </select>
         <select value={type} onChange={e => { setPage(1); setType(e.target.value) }} style={inputStyle}>
           <option value="all">Todos os tipos</option>
-          {TYPES.map(t => <option key={t} value={t}>{getItemTypeLabel(t)}</option>)}
+          {availableTypes.map(t => <option key={t} value={t}>{getItemTypeLabel(t)}</option>)}
         </select>
         <button type="button" onClick={handleSync} disabled={syncing || savingId !== null || editingId !== null} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", opacity: syncing ? 0.6 : 1 }}>
           {syncing ? "Sincronizando..." : "Sincronizar com MetaForge"}
