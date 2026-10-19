@@ -42,6 +42,21 @@
 .loadout-data-credit { display: block; margin-top: 6px; color: var(--gray-500); font-size: 10px; }
 .loadout-data-credit a { text-decoration: underline; text-underline-offset: 2px; }
 .loadout-fallback { color: var(--muted); font-size: 18px; }
+.loadout-prices { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; line-height: 1.5; }
+.loadout-prices > span:first-child { color: var(--yellow, #ffd400); }
+.loadout-budget { margin-top: 24px; padding: 18px; background: var(--surface-2); border: 1px solid var(--stroke); border-radius: 8px; }
+.loadout-budget h3 { margin: 0 0 14px; font-size: 14px; text-transform: uppercase; }
+.loadout-budget > p { color: var(--muted); font-size: 11px; }
+.loadout-budget-totals { display: flex; flex-wrap: wrap; gap: 16px 40px; }
+.loadout-budget-totals > div { display: grid; gap: 5px; }
+.loadout-budget-totals span, .loadout-budget small { color: var(--muted); font-size: 11px; }
+.loadout-budget-totals strong { font-size: 20px; }
+.loadout-budget-totals > div:first-child strong { color: var(--yellow, #ffd400); }
+.loadout-budget-items { list-style: none; margin: 16px 0 0; padding: 0; }
+.loadout-budget-items li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px 24px; padding: 12px 0; border-top: 1px solid var(--stroke); }
+.loadout-budget-items li > span { display: grid; gap: 4px; min-width: 0; }
+.loadout-budget-items strong { font-size: 12px; overflow-wrap: anywhere; }
+.loadout-choice > .loadout-prices { margin-top: 4px; color: var(--paper); }
 .loadout-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--stroke); }
 .loadout-actions p { flex: 1; min-width: 180px; margin: 0; color: var(--gray-500); font-size: 12px; }
 .loadout-actions button, .loadout-primary, .loadout-payment button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--stroke-strong); border-radius: 6px; background: var(--surface-2); color: var(--paper); padding: 12px 18px; font-size: 12px; font-weight: 800; cursor: pointer; }

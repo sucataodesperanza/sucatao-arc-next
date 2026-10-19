@@ -164,6 +164,23 @@ export function summarizeLoadout(draft: LoadoutDraft, items: CatalogItem[]) {
   return [...totals.values()]
 }
 
+export function loadoutPrice(value: number | undefined, quantity = 1) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? Math.round(value * quantity * 100) / 100 : null
+}
+
+export function loadoutTotals(rows: { item: CatalogItem; quantity: number }[]) {
+  return Object.fromEntries((["pricePoints", "priceCash"] as const).map(key => {
+    let total = 0, missing = 0
+    for (const { item, quantity } of rows) {
+      const amount = loadoutPrice(item[key], quantity)
+      if (amount === null) missing += quantity
+      else total += amount
+    }
+    return [key, { total: Math.round(total * 100) / 100, missing }]
+  })) as Record<"pricePoints" | "priceCash", { total: number; missing: number }>
+}
+
 export function loadoutPurchaseIssue(itemId: string, quantity: number, mode: "points" | "cash", stock: CatalogItem[], cart: { itemId: string; quantity: number }[]) {
   const item = stock.find(item => item.id === itemId)
   const price = mode === "points" ? item?.pricePoints : item?.priceCash

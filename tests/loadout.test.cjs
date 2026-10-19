@@ -16,6 +16,19 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root, 'src/lib/l
 const { acceptsLoadoutItem: accepts, loadoutSlots: slots, slotQuantityLimit, summarizeLoadout, buildLoadoutItems, isSurvivor, loadoutPurchaseIssue, getWeaponAttachmentSlots, getWeaponProfile, restoreLoadoutDraft, loadoutItemSearchText } = context.exports
 const item = (type, extra = {}) => ({ id: type, name: type, type, ...extra })
 
+test('loadout prices sum quantities and mark missing currencies independently', () => {
+  const { loadoutPrice, loadoutTotals } = context.exports
+  for (const value of [undefined, 0, -1, NaN, Infinity]) assert.equal(loadoutPrice(value), null)
+  assert.equal(loadoutPrice(0.1, 3), 0.3)
+  const rows = summarizeLoadout({ a: { itemId: 'a', quantity: 2 }, b: { itemId: 'a', quantity: 3 }, c: { itemId: 'b', quantity: 1 } }, [item('Modification', { id: 'a', pricePoints: 100, priceCash: 0.1 }), item('Weapon', { id: 'b', priceCash: 2.5 })])
+  const totals = loadoutTotals(rows)
+  assert.equal(totals.pricePoints.total, 500)
+  assert.equal(totals.pricePoints.missing, 1)
+  assert.equal(totals.priceCash.total, 3)
+  assert.equal(totals.priceCash.missing, 0)
+  assert.equal(loadoutTotals([]).pricePoints.total, 0)
+})
+
 test('all weapon tiers expose every attachment of each available mounting category', () => {
   const data = require('../src/data/weapon-attachments.json')
   const all = buildLoadoutItems([])

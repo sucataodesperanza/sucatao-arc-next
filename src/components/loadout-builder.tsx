@@ -9,10 +9,16 @@ import { getItemTypeLabel } from "@/lib/catalog"
 import { useCart, type CartMode } from "@/lib/cart-context"
 import { acceptsLoadoutItem, attachmentLabels, getLoadoutSlots, getWeaponProfile, buildLoadoutItems, isSurvivor, loadoutItemSearchText, loadoutPurchaseIssue, normalizeLoadoutText, restoreLoadoutDraft, slotQuantityLimit, summarizeLoadout, type LoadoutDraft, type LoadoutSlot } from "@/lib/loadout"
 import "@/styles/loadout.css"
+import { loadoutPrice, loadoutTotals } from "@/lib/loadout"
 
 const STORAGE_KEY = "sucatao-loadout-mk3-v1"
 const cash = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 function itemImage(item: CatalogItem) { return item.image ? (item.image.startsWith("http") || item.image.startsWith("/") ? item.image : `/${item.image}`) : undefined }
+function itemPrices(item: CatalogItem, quantity = 1) {
+  const points = loadoutPrice(item.pricePoints, quantity)
+  const reais = loadoutPrice(item.priceCash, quantity)
+  return <span className="loadout-prices"><span>{points === null ? "Pontos: preço indisponível" : `${points.toLocaleString("pt-BR")} pts`}</span><span>{reais === null ? "Reais: preço indisponível" : cash(reais)}</span></span>
+}
 
 export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[]; loading: boolean; userId: string | null }) {
   const items = useMemo(() => buildLoadoutItems(stock), [stock])
@@ -107,8 +113,10 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
     .filter(item => !query || loadoutItemSearchText(item).includes(normalizeLoadoutText(query)))
     .sort((a, b) => Number(stock.some(item => item.id === b.id && (item.quantity ?? 0) > 0)) - Number(stock.some(item => item.id === a.id && (item.quantity ?? 0) > 0)) || a.name.localeCompare(b.name, "pt-BR")) : []
   const summary = summarizeLoadout(draft, items)
+  const totals = loadoutTotals(summary)
   const price = (item: CatalogItem) => mode === "points" ? item.pricePoints : item.priceCash
-  const total = summary.reduce((sum, row) => sum + (price(row.item) ?? 0) * row.quantity, 0)
+  const selectedTotal = totals[mode === "points" ? "pricePoints" : "priceCash"]
+  const total = selectedTotal.total
   const problem = (item: CatalogItem, quantity: number) => loadoutPurchaseIssue(item.id, quantity, mode, stock, cart.items)
   const canAdd = summary.length > 0 && summary.every(row => !problem(row.item, row.quantity))
   function addToCart() {
@@ -141,6 +149,12 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
         {section("bag", "Mochila", "20 espaços para qualquer item do jogo.")}
         <div className="loadout-special">{section("quick", "Uso rápido", "Granadas, consumíveis e gadgets.")}{section("gadget", "Espaço aperfeiçoado", "Somente gadgets.")}{section("safe", "Bolso seguro", "Qualquer item, exceto armas e escudos.")}</div>
       </div>
+      <section className="loadout-budget" aria-label="Valores do loadout">
+        <h3>Valores do loadout</h3>
+        <div className="loadout-budget-totals" aria-live="polite">{(["pricePoints", "priceCash"] as const).map(key => <div key={key}><span>{totals[key].missing ? "Subtotal" : "Total"} em {key === "pricePoints" ? "pontos" : "reais"}</span><strong>{key === "pricePoints" ? `${totals[key].total.toLocaleString("pt-BR")} pts` : cash(totals[key].total)}</strong>{totals[key].missing > 0 && <small>{totals[key].missing} unidade(s) sem preço · não incluídas</small>}</div>)}</div>
+        <p>Valores dos itens equipados, incluindo acessórios. Itens repetidos são somados.</p>
+        <ul className="loadout-budget-items">{summary.map(({ item, quantity }) => <li key={item.id}><span><strong>{item.name} ×{quantity}</strong><small>Por unidade</small>{itemPrices(item)}</span><span><small>Subtotal ×{quantity}</small>{itemPrices(item, quantity)}</span></li>)}</ul>
+      </section>
       <footer className="loadout-actions"><p role="status">{message || "Sua montagem é salva neste navegador."}</p><button type="button" onClick={() => { const survivor = items.find(isSurvivor); setDraft(survivor ? { backpack: { itemId: survivor.id, quantity: 1 } } : {}); setMessage("Loadout limpo. MK3 Sobrevivente mantida para o teste.") }}><Trash2 size={16} />Limpar loadout</button><button type="button" className="loadout-primary" onClick={() => { setMessage(""); setPopup("review") }}>Revisar loadout<ArrowRight size={17} /></button></footer>
     </>}
     <dialog ref={dialog} className="loadout-dialog" onClose={() => setPopup(null)} onClick={event => { if (event.target === event.currentTarget) setPopup(null) }} aria-labelledby="loadout-dialog-title">
@@ -152,14 +166,15 @@ export function LoadoutBuilder({ stock, loading, userId }: { stock: CatalogItem[
           <p className="loadout-dialog-help">{choices.length} itens • Quantidades limitadas ao tamanho da pilha de cada item. Itens sem estoque podem ser usados na montagem.</p>
           <div className="loadout-picker">{choices.map(item => <button key={item.id} type="button" className="loadout-choice" onClick={() => equip(selectedSlot, item)}>
             <div className="loadout-choice-image loadout-item-glow" style={{ "--rarity-color": getItemGlowColor(item) } as CSSProperties}>{itemImage(item) ? <img src={itemImage(item)} alt="" loading="lazy" /> : <Backpack size={26} />}</div><strong>{item.name}</strong><small>{getItemTypeLabel(item.type)}{item.stackSize ? ` · Pilha ${item.stackSize}` : ""}</small><span>{stock.some(row => row.id === item.id && (row.quantity ?? 0) > 0) ? "Em estoque" : "Sem estoque · montagem"}</span>
+            {itemPrices(item)}
           </button>)}</div>
           {choices.length === 0 && <p className="loadout-empty">Nenhum item compatível encontrado.{selectedSlot.kind === "attachment" ? " Tente outra arma ou busque outro acessório." : " Ajuste a busca."}</p>}
         </>}
         {popup === "review" && <>
           <p className="loadout-dialog-help">Itens repetidos nos espaços são somados. A montagem não reserva estoque.</p>
           <div className="loadout-payment" role="group" aria-label="Forma de pagamento"><button type="button" aria-pressed={mode === "points"} onClick={() => setMode("points")}>Pontos</button><button type="button" aria-pressed={mode === "cash"} onClick={() => setMode("cash")}>Reais</button></div>
-          <ul className="loadout-review-list">{summary.map(({ item, quantity }) => <li key={item.id}><span><strong>{item.name}</strong><small>Quantidade: {quantity}</small>{problem(item, quantity) && <em>{problem(item, quantity)}</em>}</span><strong>{price(item) === undefined ? "—" : mode === "points" ? `${((price(item) ?? 0) * quantity).toLocaleString("pt-BR")} pts` : cash((price(item) ?? 0) * quantity)}</strong></li>)}</ul>
-          <div className="loadout-review-total"><span>{canAdd ? "Total" : "Subtotal dos itens com preço"}</span><strong>{mode === "points" ? `${total.toLocaleString("pt-BR")} pts` : cash(total)}</strong></div>
+          <ul className="loadout-review-list">{summary.map(({ item, quantity }) => <li key={item.id}><span><strong>{item.name}</strong><small>Quantidade: {quantity}</small>{problem(item, quantity) && <em>{problem(item, quantity)}</em>}</span><strong>{loadoutPrice(price(item), quantity) === null ? "Preço indisponível" : mode === "points" ? `${loadoutPrice(price(item), quantity)!.toLocaleString("pt-BR")} pts` : cash(loadoutPrice(price(item), quantity)!)}</strong></li>)}</ul>
+          <div className="loadout-review-total"><span>{selectedTotal.missing ? "Subtotal dos itens com preço" : "Total"}</span><strong>{mode === "points" ? `${total.toLocaleString("pt-BR")} pts` : cash(total)}</strong></div>
           {!canAdd && <p className="loadout-dialog-help">Troque ou remova os itens indisponíveis e ajuste as quantidades para adicionar o loadout completo ao carrinho.</p>}
           <button type="button" className="loadout-primary loadout-checkout" disabled={!canAdd} onClick={addToCart}>{userId ? "Adicionar loadout ao carrinho" : "Entrar para adicionar ao carrinho"}<ArrowRight size={17} /></button>
         </>}
