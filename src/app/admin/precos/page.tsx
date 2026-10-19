@@ -39,7 +39,7 @@ export default function AdminPrecosPage() {
     try {
       const all: Item[] = []
       for (let pg = 1; ; pg++) {
-        const response = await fetch(`/api/admin/stock?active=true&pageSize=500&page=${pg}`, { cache: "no-store" })
+        const response = await fetch(`/api/admin/prices?page=${pg}`, { cache: "no-store" })
         const body = await response.json()
         if (!response.ok) throw new Error(body.error ?? "Não foi possível carregar os preços.")
         all.push(...body.items)
@@ -52,6 +52,11 @@ export default function AdminPrecosPage() {
     finally { setLoading(false) }
   }, [])
   useEffect(() => { load() }, [load])
+  useEffect(() => {
+    const refresh = () => { if (!busy && !dirtyIds.length) void load() }
+    window.addEventListener("focus", refresh)
+    return () => window.removeEventListener("focus", refresh)
+  }, [load, busy, dirtyIds.length])
   useEffect(() => {
     if (!dirtyIds.length) return
     const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = "" }

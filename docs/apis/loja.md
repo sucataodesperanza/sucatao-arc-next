@@ -12,6 +12,7 @@
 | PATCH /api/admin/catalog/:id | Ativação ou edição protegida do nome |
 | POST /api/admin/catalog/sync | Sincronização com MetaForge preservando nomes manuais |
 | PATCH /api/admin/prices | Edição de preços com resultados por linha e proteção contra concorrência |
+| GET /api/admin/prices | Lista exclusiva de preços dos itens ativos no catálogo com registro de estoque; paginação de 500 e resposta sem cache |
 | POST /api/store/checkout | Validação e criação do pedido |
 
 ## Linhas compostas no carrinho

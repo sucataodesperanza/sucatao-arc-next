@@ -3,6 +3,31 @@ import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { validatePriceBatch } from "@/lib/price-editor"
 
+export async function GET(request: Request) {
+  const guard = await requireAdmin()
+  if (guard.error) return guard.error
+  const params = new URL(request.url).searchParams
+  const page = Math.max(1, Math.trunc(Number(params.get("page")) || 1))
+  const pageSize = 500
+  const { data, error, count } = await createAdminClient()
+    .from("catalog_items")
+    .select("id, name, rarity, item_type, icon_url, active, stock_items!inner(price_points, price_cash, quantity)", { count: "exact" })
+    .eq("active", true)
+    .order("id", { ascending: true })
+    .range((page - 1) * pageSize, page * pageSize - 1)
+  if (error) return NextResponse.json({ error: "Não foi possível carregar os preços dos itens ativos." }, { status: 500 })
+  const items = (data ?? []).flatMap(item => {
+    if (item.active !== true) return []
+    const stocks = Array.isArray(item.stock_items) ? item.stock_items : [item.stock_items]
+    return stocks.filter(Boolean).map(stock => ({
+      catalog_item_id: item.id,
+      ...stock,
+      catalog_items: { name: item.name, rarity: item.rarity, item_type: item.item_type, icon_url: item.icon_url, active: item.active },
+    }))
+  })
+  return NextResponse.json({ items, total: count ?? 0, page, pageSize }, { headers: { "Cache-Control": "no-store" } })
+}
+
 export async function PATCH(request: Request) {
   const guard = await requireAdmin()
   if (guard.error) return guard.error
