@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
 import arcData from "@/data/arc-data"
+import { applyCatalogTranslations } from "@/lib/catalog-translations"
+import { readCatalogTranslations } from "@/lib/catalog-translation-store"
 
 const MATERIAL_TYPES = [
   "Raw Material", "Topside Material", "Refined Material",
@@ -44,9 +46,12 @@ export async function POST() {
   }))
 
   const supabase = createAdminClient()
+  let translatedRows
+  try { translatedRows = applyCatalogTranslations(rows, await readCatalogTranslations()) }
+  catch { return NextResponse.json({error:"Sincronização interrompida para preservar as traduções manuais."},{status:503}) }
   const { error } = await supabase
     .from("catalog_items")
-    .upsert(rows, { onConflict: "id", ignoreDuplicates: false })
+    .upsert(translatedRows, { onConflict: "id", ignoreDuplicates: false })
 
   if (error) {
     console.error("sync-materials error:", error)

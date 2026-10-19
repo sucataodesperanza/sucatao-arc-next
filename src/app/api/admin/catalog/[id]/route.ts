@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { requireAdmin } from "@/lib/admin-guard"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { translationRecordId, validateTranslatedName } from "@/lib/catalog-translations"
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const guard = await requireAdmin()
@@ -11,7 +12,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   const update: Record<string, unknown> = {}
   if (typeof body.active === "boolean") update.active = body.active
-  if (typeof body.name === "string" && body.name.trim()) update.name = body.name.trim()
+  if ("name" in body) {
+    try { update.name = validateTranslatedName(body.name) }
+    catch(error) { return NextResponse.json({error: (error as Error).message},{status:400}) }
+  }
   if ("recipe" in body)           update.recipe           = body.recipe           ?? null
   if ("obtained_from" in body)    update.obtained_from    = body.obtained_from    ?? []
   if ("recycled_into" in body)    update.recycled_into    = body.recycled_into    ?? []
@@ -23,7 +27,13 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   const supabase = createAdminClient()
-  const { error } = await supabase.from("catalog_items").update(update).eq("id", id)
+  if ("name" in update) {
+    const existing = await supabase.from("catalog_items").select("id").eq("id",id).single()
+    if(existing.error) return NextResponse.json({error:"Item não encontrado."},{status:404})
+    const saved = await supabase.from("app_entities").upsert({id:translationRecordId(id),entity_type:"catalog_translation",payload:{itemId:id,name:update.name},updated_at:new Date().toISOString()},{onConflict:"id"})
+    if(saved.error) return NextResponse.json({error:"Não foi possível proteger a tradução. Tente novamente."},{status:500})
+  }
+  const { error } = await supabase.from("catalog_items").update(update).eq("id", id).select("id").single()
 
   if (error) {
     console.error("api/admin/catalog/[id] PATCH error:", error)

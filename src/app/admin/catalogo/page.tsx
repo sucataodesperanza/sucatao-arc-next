@@ -8,6 +8,7 @@ import "../../../styles/admin-catalogo.css"
 type AdminCatalogItem = {
   id: string
   name: string
+  name_en: string | null
   item_type: string | null
   rarity: string | null
   icon_url: string | null
@@ -47,6 +48,7 @@ export default function AdminCatalogoPage() {
   const [syncing, setSyncing] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState("")
+  const [savingId, setSavingId] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -55,7 +57,7 @@ export default function AdminCatalogoPage() {
     if (rarity !== "all") params.set("rarity", rarity)
     if (type !== "all") params.set("type", type)
 
-    const res = await fetch(`/api/admin/catalog?${params.toString()}`)
+    const res = await fetch(`/api/admin/catalog?${params.toString()}`, { cache: "no-store" })
     const body = await res.json().catch(() => ({}))
     if (res.ok) {
       setItems(body.items ?? [])
@@ -82,19 +84,25 @@ export default function AdminCatalogoPage() {
   }
 
   async function patchItem(id: string, patch: Record<string, unknown>) {
-    setItems(prev => prev.map(it => it.id === id ? { ...it, ...patch } as AdminCatalogItem : it))
+    setSavingId(id)
+    try {
     const res = await fetch(`/api/admin/catalog/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
     })
     if (res.ok) {
+      setItems(prev => prev.map(it => it.id === id ? { ...it, ...patch } as AdminCatalogItem : it))
       if ("active" in patch) toast.success(patch.active ? "Item ativado!" : "Item desativado.")
       else toast.success("Salvo!")
+      return true
     } else {
-      toast.error("Erro ao salvar.")
-      await load()
+      const body = await res.json().catch(()=>({}))
+      toast.error(body.error ?? "Erro ao salvar.")
+      return false
     }
+    } catch { toast.error("Não foi possível salvar. Confira a conexão e tente novamente."); return false }
+    finally { setSavingId(null) }
   }
 
   function startEditName(item: AdminCatalogItem) {
@@ -104,21 +112,21 @@ export default function AdminCatalogoPage() {
 
   async function commitName(id: string) {
     const name = editingName.trim()
-    setEditingId(null)
-    if (!name) return
+    if (!name) { toast.error("Informe o nome em português."); return }
     const original = items.find(i => i.id === id)?.name
-    if (name === original) return
-    await patchItem(id, { name })
+    if (name === original) { setEditingId(null); return }
+    if (await patchItem(id, { name })) setEditingId(null)
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   return (
     <>
+      <div className="utility-panel" style={{marginBottom:16}}><h1 style={{fontSize:22}}>Catálogo e traduções</h1><p style={{color:"var(--muted)",fontSize:13}}>Busque pelo nome em português ou inglês e clique em Editar nome. As alterações manuais serão preservadas ao sincronizar com o MetaForge.</p></div>
       <div className="utility-panel" style={{ marginBottom: "16px", display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
         <input
           type="search"
-          placeholder="Buscar por nome..."
+          placeholder="Buscar por nome em português ou inglês..."
           value={q}
           onChange={e => { setPage(1); setQ(e.target.value) }}
           style={{ ...inputStyle, flex: "1 1 220px" }}
@@ -131,7 +139,7 @@ export default function AdminCatalogoPage() {
           <option value="all">Todos os tipos</option>
           {TYPES.map(t => <option key={t} value={t}>{getItemTypeLabel(t)}</option>)}
         </select>
-        <button type="button" onClick={handleSync} disabled={syncing} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", opacity: syncing ? 0.6 : 1 }}>
+        <button type="button" onClick={handleSync} disabled={syncing || savingId !== null || editingId !== null} style={{ ...btnStyle, borderColor: "var(--cyan)", color: "var(--cyan)", opacity: syncing ? 0.6 : 1 }}>
           {syncing ? "Sincronizando..." : "Sincronizar com MetaForge"}
         </button>
       </div>
@@ -150,7 +158,8 @@ export default function AdminCatalogoPage() {
               <thead>
                 <tr style={{ textAlign: "left", borderBottom: "1px solid var(--line)" }}>
                   <th style={{ padding: "8px" }}></th>
-                  <th style={{ padding: "8px" }}>Nome</th>
+                  <th style={{ padding: "8px" }}>Nome em português</th>
+                  <th style={{ padding: "8px" }}>Original em inglês</th>
                   <th style={{ padding: "8px" }}>Tipo</th>
                   <th style={{ padding: "8px" }}>Raridade</th>
                   <th style={{ padding: "8px" }}>Ativo</th>
@@ -166,36 +175,33 @@ export default function AdminCatalogoPage() {
                     </td>
                     <td style={{ padding: "8px" }}>
                       {editingId === item.id ? (
-                        <input
+                        <div><input
                           autoFocus
+                          aria-label={`Nome em português de ${item.name_en || item.name}`}
+                          maxLength={200}
+                          disabled={savingId === item.id}
                           value={editingName}
                           onChange={e => setEditingName(e.target.value)}
-                          onBlur={() => commitName(item.id)}
                           onKeyDown={e => {
-                            if (e.key === "Enter") { e.preventDefault(); commitName(item.id) }
-                            if (e.key === "Escape") setEditingId(null)
+                            if (e.key === "Enter" && !savingId) { e.preventDefault(); commitName(item.id) }
+                            if (e.key === "Escape" && !savingId) setEditingId(null)
                           }}
                           style={{ ...inputStyle, width: "100%", fontWeight: 800 }}
-                        />
+                        /><div style={{display:"flex",gap:8,marginTop:8}}><button type="button" style={btnStyle} disabled={savingId!==null} onClick={()=>commitName(item.id)}>{savingId===item.id?"Salvando…":"Salvar"}</button><button type="button" style={btnStyle} disabled={savingId!==null} onClick={()=>setEditingId(null)}>Cancelar</button></div></div>
                       ) : (
-                        <span
-                          style={{ fontWeight: 800, cursor: "text", display: "block" }}
-                          onClick={() => startEditName(item)}
-                          title="Clique para editar o nome"
-                        >
-                          {item.name}
-                        </span>
+                        <div><strong style={{display:"block",marginBottom:8}}>{item.name}</strong><button type="button" disabled={savingId!==null || syncing} style={btnStyle} onClick={()=>startEditName(item)}>Editar nome</button></div>
                       )}
                     </td>
+                    <td style={{padding:8,color:"var(--muted)"}}>{item.name_en || "Não informado"}</td>
                     <td style={{ padding: "8px", color: "var(--muted)" }}>{getItemTypeLabel(item.item_type)}</td>
                     <td style={{ padding: "8px", color: "var(--muted)" }}>{getRarityLabel(item.rarity)}</td>
                     <td style={{ padding: "8px" }}>
-                      <input type="checkbox" checked={item.active} onChange={e => patchItem(item.id, { active: e.target.checked })} />
+                      <input type="checkbox" aria-label={`Ativar ${item.name}`} disabled={savingId!==null || syncing} checked={item.active} onChange={e => patchItem(item.id, { active: e.target.checked })} />
                     </td>
                   </tr>
                 ))}
                 {items.length === 0 && (
-                  <tr><td colSpan={5} style={{ padding: "24px", textAlign: "center", color: "var(--muted)" }}>Nenhum item encontrado. Clique em &quot;Sincronizar com MetaForge&quot; para popular o catálogo.</td></tr>
+                  <tr><td colSpan={6} style={{ padding: "24px", textAlign: "center", color: "var(--muted)" }}>Nenhum item encontrado. Clique em &quot;Sincronizar com MetaForge&quot; para popular o catálogo.</td></tr>
                 )}
               </tbody>
             </table>

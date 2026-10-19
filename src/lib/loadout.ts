@@ -25,7 +25,8 @@ export const loadoutSlots: LoadoutSlot[] = [
 
 export function buildLoadoutItems(stock: CatalogItem[]): CatalogItem[] {
   const names = new Set(stock.map(item => normalizeLoadoutText(item.name)))
-  const combined = [...stock, ...gameItems.filter(item => !names.has(normalizeLoadoutText(item.name)))].filter(item => item.type !== "expedition_vault_pack")
+  const ids = new Set(stock.map(item => item.id))
+  const combined = [...stock, ...gameItems.filter(item => !ids.has(item.id) && !names.has(normalizeLoadoutText(item.name)))].filter(item => item.type !== "expedition_vault_pack")
   const known = new Set(combined.map(item => getWeaponProfile(item)?.id).filter(Boolean))
   return [...combined, ...attachmentData.weapons.filter(item => !known.has(item.id)).map(item => ({ id: item.id, name: item.name, type: "Weapon", isWeapon: true, image: item.image, rarity: item.rarity ?? undefined, stackSize: 1 }))]
 }

@@ -18,10 +18,13 @@ export async function GET(request: NextRequest) {
   const supabase = createAdminClient()
   let query = supabase
     .from("catalog_items")
-    .select("id, name, item_type, rarity, icon_url, active, synced_at", { count: "exact" })
+    .select("id, name, name_en, item_type, rarity, icon_url, active, synced_at", { count: "exact" })
     .order("name", { ascending: true })
 
-  if (q) query = query.ilike("name", `%${q}%`)
+  if (q) {
+    const pattern = `%${q.replace(/\\/g,"\\\\").replace(/"/g,'\\"')}%`
+    query = query.or(`name.ilike."${pattern}",name_en.ilike."${pattern}"`)
+  }
   if (rarity !== "all") query = query.eq("rarity", rarity)
   if (type !== "all") query = query.eq("item_type", type)
 

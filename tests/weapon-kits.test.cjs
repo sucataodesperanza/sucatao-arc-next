@@ -19,6 +19,16 @@ for (const name of ['loadout', 'weapon-kits', 'weapon-configurator']) {
 const loadout = modules['@/lib/loadout']
 const kits = modules['@/lib/weapon-kits']
 
+test('renaming a catalogue item keeps one loadout entry with the original identity', () => {
+  const original = game.items.find(item => item.isWeapon)
+  assert.ok(original)
+  const renamed = { ...original, name: 'Nome revisado pelo admin', quantity: 2 }
+  const matches = loadout.buildLoadoutItems([renamed]).filter(item => item.id === original.id)
+  assert.equal(matches.length, 1)
+  assert.equal(matches[0].name, renamed.name)
+  assert.equal(matches[0].quantity, 2)
+})
+
 test('weapon configurator uses real tiers and exact amplified combinations', () => {
   const config = modules['@/lib/weapon-configurator']
   const items = loadout.buildLoadoutItems([])

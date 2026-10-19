@@ -4,6 +4,8 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchMetaForgeItems, type CatalogItemRow } from "@/lib/metaforge"
 import { translateToPtBr } from "@/lib/translate"
 import arcData from "@/data/arc-data"
+import { applyCatalogTranslations } from "@/lib/catalog-translations"
+import { readCatalogTranslations } from "@/lib/catalog-translation-store"
 
 function normalizeText(s: string) {
   return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
@@ -133,7 +135,10 @@ export async function POST() {
     return true
   })
 
-  const { error } = await supabase.from("catalog_items").upsert(deduped, { onConflict: "id" })
+  let translatedRows
+  try { translatedRows = applyCatalogTranslations(deduped, await readCatalogTranslations()) }
+  catch { return NextResponse.json({error:"Sincronização interrompida para preservar as traduções manuais. Tente novamente."},{status:503}) }
+  const { error } = await supabase.from("catalog_items").upsert(translatedRows, { onConflict: "id" })
 
   if (error) {
     console.error("api/admin/catalog/sync upsert error:", error)

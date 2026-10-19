@@ -12,6 +12,8 @@ Gerenciamento do catálogo de itens sincronizados via MetaForge. Permite ativar/
 - **Busca + filtros** — por nome, raridade e tipo
 - **Botão "Sincronizar com MetaForge"** — dispara o sync e exibe resultado (itens atualizados / traduzidos)
 - **Tabela paginada** — imagem, nome, tipo, raridade, toggle ativo/inativo
+- **Traduções no site** — nome em português ao lado do original em inglês, botão Editar nome e ações Salvar/Cancelar. Enter salva; Escape cancela. A busca consulta os dois idiomas. Erros mantêm o texto para tentar novamente.
+- **Proteção das edições** — nomes revisados são registrados em `app_entities` como `catalog_translation`, com identidade determinística por item. As sincronizações de MetaForge e materiais reaplicam essas revisões antes de gravar o catálogo. Se não for possível ler as revisões, a sincronização é interrompida para preservá-las. O nome original `name_en` não é alterado pela edição.
 
 ## Fontes de Dados
 
