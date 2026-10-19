@@ -8,7 +8,7 @@ export function validateReadyKit(input: unknown, ids: Set<string>): Omit<ReadyKi
     return { itemId: e.itemId, quantity: e.quantity }
   })
   if (new Set(entries.map(e => e.itemId)).size !== entries.length) throw new Error("Agrupe itens repetidos em uma única linha.")
-  if (![b.pricePoints, b.priceCash].every(n => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 100000000) || (!b.pricePoints && !b.priceCash) || !Number.isSafeInteger(b.pricePoints)) throw new Error("Informe o preço do pacote em pontos e/ou reais. Zero desabilita a forma de pagamento.")
+  if (![b.pricePoints, b.priceCash].every(n => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 100000000) || (b.active && !b.pricePoints && !b.priceCash) || !Number.isSafeInteger(b.pricePoints)) throw new Error("Informe o preço do pacote antes de ativar. Zero desabilita a forma de pagamento.")
   const image = typeof b.image === "string" ? b.image.trim() : ""
   if (image && !/^https:\/\//.test(image) && !/^\/(?!\/)/.test(image)) throw new Error("Use uma imagem HTTPS ou um caminho do site.")
   return { name: b.name.trim(), description: String(b.description ?? "").slice(0, 500), image, active: b.active === true, featured: b.featured === true, position: Number.isFinite(b.position) ? Math.trunc(b.position) : 0, pricePoints: b.pricePoints, priceCash: Math.round(b.priceCash * 100) / 100, entries }

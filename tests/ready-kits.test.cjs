@@ -7,6 +7,7 @@ const {validateReadyKit,allocateKitPrice,prepareReadyKitPurchase,readyKitContent
 const kit={name:'20 curas verdes',pricePoints:1001,priceCash:9.99,active:true,featured:false,position:0,entries:[{itemId:'cura',quantity:20}]}
 test('ready kit validates catalogue, quantity and package prices',()=>{
  assert.equal(validateReadyKit(kit,new Set(['cura'])).entries[0].quantity,20)
+ assert.equal(validateReadyKit({...kit,active:false,pricePoints:0,priceCash:0},new Set(['cura'])).active,false)
  for(const change of [{entries:[{itemId:'outro',quantity:20}]},{entries:[{itemId:'cura',quantity:0}]},{entries:[{itemId:'cura',quantity:1.5}]},{pricePoints:-1},{pricePoints:0,priceCash:0},{image:'javascript:alert(1)'},{entries:[...kit.entries,...kit.entries]}]) assert.throws(()=>validateReadyKit({...kit,...change},new Set(['cura'])))
 })
 test('package allocation keeps exact cents and quantities for mixed items and multiple kits',()=>{
