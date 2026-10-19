@@ -2,9 +2,10 @@
 
 import { Banknote, Coins, Heart, ShoppingCart } from "lucide-react"
 import { getItemTypeLabel } from "@/lib/catalog"
+import { saleStackSize, stackSaleOffer } from "@/lib/stack-sales"
 import { formatNumber, getRarity, getType, getItemGlowColor, rarityMetaLabels, resolveImage, type ItemsCatalog } from "@/lib/use-items-catalog"
 
-export function CatalogGrid({ catalog, className, pinnedFirst }: { catalog: ItemsCatalog; className?: string; pinnedFirst?: React.ReactNode }) {
+export function CatalogGrid({ catalog, className, pinnedFirst, stackSales=false }: { catalog: ItemsCatalog; className?: string; pinnedFirst?: React.ReactNode; stackSales?: boolean }) {
   const { filteredItems, loadingCatalog, favorites, toggleFavorite, setSelectedItem } = catalog
 
   if (loadingCatalog) {
@@ -19,12 +20,15 @@ export function CatalogGrid({ catalog, className, pinnedFirst }: { catalog: Item
     <div className={`store-highlight-grid${className ? ` ${className}` : ""}`}>
       {pinnedFirst}
       {filteredItems.map(item => {
+        const size=stackSales?saleStackSize(item):1
+        const offer=stackSales?stackSaleOffer(item):item
+        const soldOut=stackSales?(!offer || (offer.quantity??0)<1):item.quantity===0
         const r = getRarity(item)
         const isFavorite = favorites.has(item.id)
         return (
           <article
             key={item.id}
-            className={`store-highlight-card${item.quantity === 0 ? " sold-out" : ""}`}
+            className={`store-highlight-card${soldOut ? " sold-out" : ""}`}
             style={{ "--rarity-color": getItemGlowColor(item) } as React.CSSProperties}
             tabIndex={0}
             role="button"
@@ -45,26 +49,27 @@ export function CatalogGrid({ catalog, className, pinnedFirst }: { catalog: Item
               >
                 <Heart size={14} fill={isFavorite ? "currentColor" : "none"} />
               </button>
-              {item.quantity === 0 && <span className="store-highlight-soldout">Esgotado</span>}
+              {soldOut && <span className="store-highlight-soldout">{stackSales&&!size?"Pilha não confirmada":stackSales&&size&&size>1&&item.quantity?"Sem stack completo":"Esgotado"}</span>}
             </div>
             <div className="store-highlight-body">
               <p className="store-highlight-type">{getItemTypeLabel(getType(item))}</p>
               <h3>{item.name}</h3>
+              {stackSales&&<p className="store-highlight-type">{size?(size>1?`Stack com ${size} unidades`:"Venda por unidade"):"Stack não confirmado"}</p>}
               <div className="store-highlight-footer">
                 <span className="store-highlight-price">
                   <span className="store-highlight-price-cash">
                     <Banknote size={14} />
-                    R$ {formatNumber(item.priceCash ?? item.value)}
+                    R$ {offer?formatNumber(offer.priceCash ?? offer.value):"—"}
                   </span>
                   <span className="store-highlight-price-points">
                     <Coins size={14} />
-                    {formatNumber(item.pricePoints ?? Math.round((item.value ?? 0) * 24))}
+                    {offer?formatNumber(offer.pricePoints ?? Math.round((offer.value ?? 0) * 24)):"—"}
                   </span>
                 </span>
                 <button
                   type="button"
                   className="store-highlight-cart"
-                  disabled={item.quantity === 0}
+                  disabled={soldOut}
                   tabIndex={-1}
                   aria-hidden
                 >

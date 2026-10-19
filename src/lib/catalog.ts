@@ -49,6 +49,7 @@ export function getRarityLabel(rarity?: string | null) {
 export type CatalogItem = {
   id: string
   name: string
+  nameEn?: string
   description?: string
   type?: string
   rarity?: string
@@ -75,6 +76,7 @@ export type StockJoinRow = {
   catalog_items: {
     id: string
     name: string
+    name_en?: string | null
     description: string | null
     item_type: string | null
     rarity: string | null
@@ -96,6 +98,7 @@ export function mapStockItem(row: StockJoinRow): CatalogItem {
   return {
     id: item.id,
     name: item.name,
+    nameEn: item.name_en ?? undefined,
     description: item.description ?? undefined,
     type: item.item_type ?? undefined,
     rarity: item.rarity ?? undefined,

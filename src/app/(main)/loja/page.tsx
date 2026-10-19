@@ -600,7 +600,7 @@ export default function LojaPage() {
                   <span>Exibindo {storeCatalog.filteredItems.length} de {categoryItems.length}</span>
                 </div>
                 <CatalogFilters catalog={storeCatalog} />
-                <CatalogGrid catalog={storeCatalog} className="store-items-grid" />
+                <CatalogGrid catalog={storeCatalog} className="store-items-grid" stackSales={activeTab === "itens"} />
               </section>
             </>
 
@@ -831,7 +831,7 @@ export default function LojaPage() {
         </aside>
       </div>
 
-      <CatalogItemModal catalog={catalog} />
+      <CatalogItemModal catalog={catalog} stackSales={activeTab === "itens"} />
 
       <button
         type="button"

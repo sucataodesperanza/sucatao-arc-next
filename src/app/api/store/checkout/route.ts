@@ -12,6 +12,7 @@ import { readReadyKits, readReadyKitItems } from "@/lib/ready-kit-store"
 import { prepareReadyKitPurchase, validateReadyKit } from "@/lib/ready-kits"
 import { parsePaintedWeaponId, preparePaintedWeaponPurchase } from "@/lib/weapon-stencils"
 import { readPaintedWeaponItems } from "@/lib/painted-weapon-store"
+import { parseStackSaleId, prepareStackPurchase } from "@/lib/stack-sales"
 
 type CheckoutItem = {
   itemId: string
@@ -54,6 +55,18 @@ export async function POST(request: NextRequest) {
 
   const readyKitLines = new Set<CheckoutItem>()
   const paintedLines = new Set<CheckoutItem>()
+  if(items.some(i=>i.itemId.startsWith("stack:"))) {
+    try {
+      const ids=[...new Set(items.filter(i=>i.itemId.startsWith("stack:")).map(i=>parseStackSaleId(i.itemId).itemId))]
+      const catalog=await readPaintedWeaponItems(ids)
+      items=items.map(line=>{
+        if(!line.itemId.startsWith("stack:"))return line
+        const parsed=parseStackSaleId(line.itemId),item=catalog.find(i=>i.id===parsed.itemId)
+        const purchase=prepareStackPurchase(item,line)
+        return {itemId:item!.id,name:item!.name,type:item!.type,rarity:item!.rarity,image:item!.image,weightKg:item!.weightKg,value:item!.value??0,quantity:purchase.quantity,pricePoints:purchase.pricePoints,priceCash:purchase.priceCash,mode:line.mode}
+      })
+    }catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Não foi possível validar os stacks."},{status:409})}
+  }
   if(items.some(i=>i.itemId.startsWith("painted:") || i.type==="painted_weapon")) {
     try {
       const ids=[...new Set(items.filter(i=>i.itemId.startsWith("painted:") || i.type==="painted_weapon").flatMap(i=>Object.values(parsePaintedWeaponId(i.itemId))))]

@@ -1,0 +1,4481 @@
+{
+  "source": "https://metaforge.app/api/arc-raiders/items",
+  "checkedAt": "2026-10-19",
+  "items": [
+    {
+      "id": "acoustic-guitar",
+      "name": "Acoustic Guitar",
+      "stackSize": 1
+    },
+    {
+      "id": "action-economy",
+      "name": "Action Economy",
+      "stackSize": 1
+    },
+    {
+      "id": "adrenaline-shot",
+      "name": "Adrenaline Shot",
+      "stackSize": 5
+    },
+    {
+      "id": "advanced-arc-powercell",
+      "name": "Advanced ARC Powercell",
+      "stackSize": 5
+    },
+    {
+      "id": "advanced-camera",
+      "name": "Advanced Camera",
+      "stackSize": 1
+    },
+    {
+      "id": "advanced-camera-blueprint",
+      "name": "Advanced Camera Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "advanced-electrical-components",
+      "name": "Advanced Electrical Components",
+      "stackSize": 5
+    },
+    {
+      "id": "advanced-mechanical-components",
+      "name": "Advanced Mechanical Components",
+      "stackSize": 5
+    },
+    {
+      "id": "agave",
+      "name": "Agave",
+      "stackSize": 10
+    },
+    {
+      "id": "agave-juice",
+      "name": "Agave Juice",
+      "stackSize": 5
+    },
+    {
+      "id": "air-freshener",
+      "name": "Air Freshener",
+      "stackSize": 5
+    },
+    {
+      "id": "alarm-clock",
+      "name": "Alarm Clock",
+      "stackSize": 3
+    },
+    {
+      "id": "alien-duck",
+      "name": "Alien Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "alpine-wardrobe-design",
+      "name": "Alpine Wardrobe Design",
+      "stackSize": 1
+    },
+    {
+      "id": "amplification-module-mk-i",
+      "name": "Amplification Module MK. I",
+      "stackSize": 1
+    },
+    {
+      "id": "amplification-module-mk-ii",
+      "name": "Amplification Module MK. II",
+      "stackSize": 1
+    },
+    {
+      "id": "amplification-module-mk-iii",
+      "name": "Amplification Module MK. III",
+      "stackSize": 1
+    },
+    {
+      "id": "amplification-module-mk-iv",
+      "name": "Amplification Module MK. IV",
+      "stackSize": 1
+    },
+    {
+      "id": "amplification-module-mk-v",
+      "name": "Amplification Module MK. V",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-anvil",
+      "name": "Amplified Anvil",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-anvil-projectile-splitter",
+      "name": "Amplified Anvil (Anvil Splitter)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-anvil-x-rounds",
+      "name": "Amplified Anvil (X-Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion",
+      "name": "Amplified Aphelion",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag",
+      "name": "Amplified Aphelion (Bigger Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst-increased-burst",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst, Increased Burst)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-charged-burst-increased-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Bigger Mag, Charged Burst, Increased Burst, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-bigger-mag-incendiary-rounds",
+      "name": "Amplified Aphelion (Bigger Mag, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-charged-burst",
+      "name": "Amplified Aphelion (Charged Burst)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-charged-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Charged Burst, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-charged-burst-increased-burst",
+      "name": "Amplified Aphelion (Charged Burst, Increased Burst)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-charged-burst-increased-burst-incendiary-rounds",
+      "name": "Amplified Aphelion (Charged Burst, Increased Burst, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-aphelion-incendiary-rounds",
+      "name": "Amplified Aphelion (Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-bettina",
+      "name": "Amplified Bettina",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-bettina-bigger-mag",
+      "name": "Amplified Bettina (Bigger Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-bettina-semi-auto",
+      "name": "Amplified Bettina (Semi-Auto)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-bettina-semi-auto-x-rounds",
+      "name": "Amplified Bettina (Semi-Auto, X-Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta",
+      "name": "Amplified Burletta",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-burst",
+      "name": "Amplified Burletta (Burst Fire)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-burst-increased-burst",
+      "name": "Amplified Burletta (Burst Fire, Increased Burst)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-burst-increased-burst-sprint-shooting",
+      "name": "Amplified Burletta (Burst Fire, Increased Burst, Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-burst-sprint-shooting",
+      "name": "Amplified Burletta (Burst Fire, Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-full-auto",
+      "name": "Amplified Burletta (Full-Auto)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-full-auto-sprint-shooting",
+      "name": "Amplified Burletta (Full-Auto, Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-burletta-sprint-shooting",
+      "name": "Amplified Burletta (Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-canto",
+      "name": "Amplified Canto",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-canto-carbine",
+      "name": "Amplified Canto (Carbine Conversion)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-canto-incendiary-rounds",
+      "name": "Amplified Canto (Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-canto-incendiary-rounds-carbine",
+      "name": "Amplified Canto (Incendiary Rounds, Carbine Conversion)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-canto-incendiary-rounds-sprint-shooting",
+      "name": "Amplified Canto (Incendiary Rounds, Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-canto-sprint-shooting",
+      "name": "Amplified Canto (Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-equalizer",
+      "name": "Amplified Equalizer",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-equalizer-anti-weak-point",
+      "name": "Amplified Equalizer (Anti-Weak Point)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-equalizer-anti-weak-point-bigger-mag",
+      "name": "Amplified Equalizer (Anti-Weak Point, Bigger Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-equalizer-bigger-mag",
+      "name": "Amplified Equalizer (Bigger Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-equalizer-ramping-damage",
+      "name": "Amplified Equalizer (Ramping Damage)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-equalizer-ramping-damage-bigger-mag",
+      "name": "Amplified Equalizer (Ramping Damage, Bigger Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-fragments",
+      "name": "Amplified Fragments",
+      "stackSize": 50
+    },
+    {
+      "id": "amplified-hairpin",
+      "name": "Amplified Hairpin",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hairpin-incendiary-rounds",
+      "name": "Amplified Hairpin (Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hairpin-semi-auto",
+      "name": "Amplified Hairpin (Semi-Auto)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hairpin-semi-auto-sprint-shooting",
+      "name": "Amplified Hairpin (Semi-Auto, Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hairpin-tracker-rounds",
+      "name": "Amplified Hairpin (Tracker Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hullcracker",
+      "name": "Amplified Hullcracker",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hullcracker-incendiary-rounds",
+      "name": "Amplified Hullcracker (Incendiary Grenades)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hullcracker-incendiary-rounds-mag-reload",
+      "name": "Amplified Hullcracker (Incendiary Grenades, Mag Reload)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-hullcracker-mag-reload",
+      "name": "Amplified Hullcracker (Mag Reload)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-il-toro",
+      "name": "Amplified Il Toro",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-il-toro-more-reload",
+      "name": "Amplified Il Toro (More Reload)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-il-toro-more-reload-slug-rounds",
+      "name": "Amplified Il Toro (More Reload, Slug Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-il-toro-slug-rounds",
+      "name": "Amplified Il Toro (Slug Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter",
+      "name": "Amplified Jupiter",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag",
+      "name": "Amplified Jupiter (Bigger Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag-straight-bolt",
+      "name": "Amplified Jupiter (Bigger Mag, Ergonomic Bolt)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag-scoped",
+      "name": "Amplified Jupiter (Bigger Mag, Scoped)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-bigger-mag-scoped-straight-bolt",
+      "name": "Amplified Jupiter (Bigger Mag, Scoped, Ergonomic Bolt)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-straight-bolt",
+      "name": "Amplified Jupiter (Ergonomic Bolt)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-scoped",
+      "name": "Amplified Jupiter (Scoped)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-jupiter-scoped-straight-bolt",
+      "name": "Amplified Jupiter (Scoped, Ergonomic Bolt)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-kettle",
+      "name": "Amplified Kettle",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-kettle-anti-shield",
+      "name": "Amplified Kettle (Anti-Shield)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-kettle-anti-shield-full-auto",
+      "name": "Amplified Kettle (Anti-Shield, Full-Auto)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-kettle-full-auto",
+      "name": "Amplified Kettle (Full-Auto)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-kettle-x-rounds",
+      "name": "Amplified Kettle (X-Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-osprey",
+      "name": "Amplified Osprey",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-osprey-anti-weak-point",
+      "name": "Amplified Osprey (Anti-Weak Point)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-osprey-straight-bolt",
+      "name": "Amplified Osprey (Ergonomic Bolt)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-osprey-straight-bolt-anti-weak-point",
+      "name": "Amplified Osprey (Ergonomic Bolt, Anti-Weak Point)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-osprey-tracker-rounds",
+      "name": "Amplified Osprey (Tracker Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-osprey-tracker-rounds-straight-bolt",
+      "name": "Amplified Osprey (Tracker Rounds, Ergonomic Bolt)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal",
+      "name": "Amplified Rascal",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-high-velocity",
+      "name": "Amplified Rascal (High Velocity)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-high-velocity-incendiary-rounds",
+      "name": "Amplified Rascal (High Velocity, Incendiary Grenades)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-high-velocity-sprint-shooting",
+      "name": "Amplified Rascal (High Velocity, Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-high-velocity-sprint-shooting-incendiary-rounds",
+      "name": "Amplified Rascal (High Velocity, Sprint Shooting, Incendiary Grenades)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-incendiary-rounds",
+      "name": "Amplified Rascal (Incendiary Grenades)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-sprint-shooting",
+      "name": "Amplified Rascal (Sprint Shooting)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rascal-sprint-shooting-incendiary-rounds",
+      "name": "Amplified Rascal (Sprint Shooting, Incendiary Grenades)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rattler",
+      "name": "Amplified Rattler",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rattler-incendiary-rounds",
+      "name": "Amplified Rattler (Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rattler-more-reload",
+      "name": "Amplified Rattler (More Reload)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rattler-more-reload-drum-mag",
+      "name": "Amplified Rattler (More Reload, Drum Mag)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rattler-more-reload-drum-mag-incendiary-rounds",
+      "name": "Amplified Rattler (More Reload, Drum Mag, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-rattler-more-reload-incendiary-rounds",
+      "name": "Amplified Rattler (More Reload, Incendiary Rounds)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-renegade",
+      "name": "Amplified Renegade",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-renegade-more-reload",
+      "name": "Amplified Renegade (More Reload)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-renegade-more-reload-scoped",
+      "name": "Amplified Renegade (More Reload, Scoped)",
+      "stackSize": 1
+    },
+    {
+      "id": "amplified-renegade-scoped",
+      "name": "Amplified Renegade (Scoped)",
+      "stackSize": 1
+    },
+    {
+      "id": "ancient-fort-security-code",
+      "name": "Ancient Fort Security Code",
+      "stackSize": 1
+    },
+    {
+      "id": "angled-grip-i",
+      "name": "Angled Grip I",
+      "stackSize": 1
+    },
+    {
+      "id": "angled-grip-ii",
+      "name": "Angled Grip II",
+      "stackSize": 1
+    },
+    {
+      "id": "angled-grip-ii-recipe",
+      "name": "Angled Grip II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "angled-grip-iii",
+      "name": "Angled Grip III",
+      "stackSize": 1
+    },
+    {
+      "id": "angled-grip-iii-recipe",
+      "name": "Angled Grip III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "antiseptic",
+      "name": "Antiseptic",
+      "stackSize": 5
+    },
+    {
+      "id": "anvil-recipe",
+      "name": "Anvil Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "anvil-i",
+      "name": "Anvil I",
+      "stackSize": 1
+    },
+    {
+      "id": "anvil-ii",
+      "name": "Anvil II",
+      "stackSize": 1
+    },
+    {
+      "id": "anvil-iii",
+      "name": "Anvil III",
+      "stackSize": 1
+    },
+    {
+      "id": "anvil-iv",
+      "name": "Anvil IV",
+      "stackSize": 1
+    },
+    {
+      "id": "anvil-splitter",
+      "name": "Anvil Splitter",
+      "stackSize": 1
+    },
+    {
+      "id": "aphelion-rifle-blueprint",
+      "name": "Aphelion Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "aphelion-rifle",
+      "name": "Aphelion Rifle",
+      "stackSize": 1
+    },
+    {
+      "id": "apricot",
+      "name": "Apricot",
+      "stackSize": 10
+    },
+    {
+      "id": "arcade-duck",
+      "name": "Arcade Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "arc-alloy",
+      "name": "ARC Alloy",
+      "stackSize": 15
+    },
+    {
+      "id": "arc-circuitry",
+      "name": "ARC Circuitry",
+      "stackSize": 5
+    },
+    {
+      "id": "arc-conductive-coupler",
+      "name": "ARC Conductive Coupler",
+      "stackSize": 1
+    },
+    {
+      "id": "arc-coolant",
+      "name": "ARC Coolant",
+      "stackSize": 3
+    },
+    {
+      "id": "arc-data-module",
+      "name": "ARC Data Module",
+      "stackSize": 3
+    },
+    {
+      "id": "arc-flex-rubber",
+      "name": "ARC Flex Rubber",
+      "stackSize": 3
+    },
+    {
+      "id": "archive-desk-lamp",
+      "name": "Archive Desk Lamp",
+      "stackSize": 1
+    },
+    {
+      "id": "archive-floor-lamp-design",
+      "name": "Archive Floor Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "arc-insulated-coupler",
+      "name": "ARC Insulated Coupler",
+      "stackSize": 1
+    },
+    {
+      "id": "arc-motion-core",
+      "name": "ARC Motion Core",
+      "stackSize": 5
+    },
+    {
+      "id": "arc-performance-steel",
+      "name": "ARC Performance Steel",
+      "stackSize": 3
+    },
+    {
+      "id": "arc-plated-coupler",
+      "name": "ARC Plated Coupler",
+      "stackSize": 1
+    },
+    {
+      "id": "arc-powercell",
+      "name": "ARC Powercell",
+      "stackSize": 5
+    },
+    {
+      "id": "arc-synthetic-resin",
+      "name": "ARC Synthetic Resin",
+      "stackSize": 3
+    },
+    {
+      "id": "arc-thermo-lining",
+      "name": "ARC Thermo Lining",
+      "stackSize": 3
+    },
+    {
+      "id": "arpeggio-i",
+      "name": "Arpeggio I",
+      "stackSize": 1
+    },
+    {
+      "id": "arpeggio-ii",
+      "name": "Arpeggio II",
+      "stackSize": 1
+    },
+    {
+      "id": "arpeggio-iii",
+      "name": "Arpeggio III",
+      "stackSize": 1
+    },
+    {
+      "id": "arpeggio-iv",
+      "name": "Arpeggio IV",
+      "stackSize": 1
+    },
+    {
+      "id": "assessor-matrix",
+      "name": "Assessor Matrix",
+      "stackSize": 1
+    },
+    {
+      "id": "assorted-seeds",
+      "name": "Assorted Seeds",
+      "stackSize": 100
+    },
+    {
+      "id": "bandage",
+      "name": "Bandage",
+      "stackSize": 5
+    },
+    {
+      "id": "banjo",
+      "name": "Banjo",
+      "stackSize": 1
+    },
+    {
+      "id": "banjo-blueprint",
+      "name": "Banjo Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "bantam-blueprint",
+      "name": "Bantam Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "bantam",
+      "name": "Bantam I",
+      "stackSize": 1
+    },
+    {
+      "id": "bantam-ii",
+      "name": "Bantam II",
+      "stackSize": 1
+    },
+    {
+      "id": "bantam-iii",
+      "name": "Bantam III",
+      "stackSize": 1
+    },
+    {
+      "id": "bantam-iv",
+      "name": "Bantam IV",
+      "stackSize": 1
+    },
+    {
+      "id": "barricade-kit",
+      "name": "Barricade Kit",
+      "stackSize": 3
+    },
+    {
+      "id": "barricade-kit-recipe",
+      "name": "Barricade Kit Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "barstool-design",
+      "name": "Barstool Design",
+      "stackSize": 1
+    },
+    {
+      "id": "bar-table-design",
+      "name": "Bar Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "camera",
+      "name": "Basic Camera",
+      "stackSize": 1
+    },
+    {
+      "id": "bastion-part",
+      "name": "Bastion Cell",
+      "stackSize": 3
+    },
+    {
+      "id": "battered-aviary-table-design",
+      "name": "Battered Aviary Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-bureau-chair-design",
+      "name": "Battered Bureau Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-bureau-sofa-design",
+      "name": "Battered Bureau Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-den-bed-design",
+      "name": "Battered Den Bed Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-den-shelf-design",
+      "name": "Battered Den Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-diner-chair-design",
+      "name": "Battered Diner Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-faculty-table-design",
+      "name": "Battered Faculty Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-lab-cabinet-design",
+      "name": "Battered Lab Cabinet Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-lab-cabinet-wide-design",
+      "name": "Battered Lab Cabinet (Wide) Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-lab-chair-design",
+      "name": "Battered Lab Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-paperback",
+      "name": "Battered Paperback",
+      "stackSize": 5
+    },
+    {
+      "id": "battered-shelf-design",
+      "name": "Battered Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-stash-design",
+      "name": "Battered Stash Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battered-weapon-rack-design",
+      "name": "Battered Weapon Rack Design",
+      "stackSize": 1
+    },
+    {
+      "id": "battery",
+      "name": "Battery",
+      "stackSize": 15
+    },
+    {
+      "id": "beam-resonance-tech",
+      "name": "Beam Resonance Tech",
+      "stackSize": 1
+    },
+    {
+      "id": "bent-clothes-hanger",
+      "name": "Bent Clothes Hanger",
+      "stackSize": 15
+    },
+    {
+      "id": "bettina-blueprint",
+      "name": "Bettina Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "bettina-i",
+      "name": "Bettina I",
+      "stackSize": 1
+    },
+    {
+      "id": "bettina-ii",
+      "name": "Bettina II",
+      "stackSize": 1
+    },
+    {
+      "id": "bettina-iii",
+      "name": "Bettina III",
+      "stackSize": 1
+    },
+    {
+      "id": "bettina-iv",
+      "name": "Bettina IV",
+      "stackSize": 1
+    },
+    {
+      "id": "bicycle-pump",
+      "name": "Bicycle Pump",
+      "stackSize": 3
+    },
+    {
+      "id": "binoculars",
+      "name": "Binoculars",
+      "stackSize": 1
+    },
+    {
+      "id": "bison-driver",
+      "name": "Bison Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "blaze-grenade",
+      "name": "Blaze Grenade",
+      "stackSize": 5
+    },
+    {
+      "id": "blaze-grenade-blueprint",
+      "name": "Blaze Grenade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "blaze-grenade-trap",
+      "name": "Blaze Grenade Trap",
+      "stackSize": 3
+    },
+    {
+      "id": "bloated-tuna-can",
+      "name": "Bloated Tuna Can",
+      "stackSize": 15
+    },
+    {
+      "id": "blown-fuses",
+      "name": "Blown Fuses",
+      "stackSize": 10
+    },
+    {
+      "id": "blue-gate-cellar-key",
+      "name": "Blue Gate Cellar Key",
+      "stackSize": 1
+    },
+    {
+      "id": "blue-gate-communication-tower-key",
+      "name": "Blue Gate Communication Tower Key",
+      "stackSize": 1
+    },
+    {
+      "id": "blue-gate-confiscation-room-key",
+      "name": "Blue Gate Confiscation Room Key",
+      "stackSize": 1
+    },
+    {
+      "id": "blue-gate-village-key",
+      "name": "Blue Gate Village Key",
+      "stackSize": 1
+    },
+    {
+      "id": "blue-lab-cabinet-design",
+      "name": "Blue Lab Cabinet Design",
+      "stackSize": 1
+    },
+    {
+      "id": "blue-light-stick",
+      "name": "Blue Light Stick",
+      "stackSize": 5
+    },
+    {
+      "id": "blue-light-stick-blueprint",
+      "name": "Blue Light Stick Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "bobcat-i-recipe",
+      "name": "Bobcat Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "bobcat-i",
+      "name": "Bobcat I",
+      "stackSize": 1
+    },
+    {
+      "id": "bobcat-ii",
+      "name": "Bobcat II",
+      "stackSize": 1
+    },
+    {
+      "id": "bobcat-iii",
+      "name": "Bobcat III",
+      "stackSize": 1
+    },
+    {
+      "id": "bobcat-iv",
+      "name": "Bobcat IV",
+      "stackSize": 1
+    },
+    {
+      "id": "bombardier-cell",
+      "name": "Bombardier Cell",
+      "stackSize": 3
+    },
+    {
+      "id": "breathtaking-snow-globe",
+      "name": "Breathtaking Snow Globe",
+      "stackSize": 1
+    },
+    {
+      "id": "broken-compass",
+      "name": "Broken Compass",
+      "stackSize": 1
+    },
+    {
+      "id": "broken-flashlight",
+      "name": "Broken Flashlight",
+      "stackSize": 3
+    },
+    {
+      "id": "broken-guidance-system",
+      "name": "Broken Guidance System",
+      "stackSize": 3
+    },
+    {
+      "id": "broken-handcuffs",
+      "name": "Broken Handcuffs",
+      "stackSize": 5
+    },
+    {
+      "id": "broken-handheld-radio",
+      "name": "Broken Handheld Radio",
+      "stackSize": 3
+    },
+    {
+      "id": "broken-taser",
+      "name": "Broken Taser",
+      "stackSize": 3
+    },
+    {
+      "id": "bronze-statuette",
+      "name": "Bronze Statuette",
+      "stackSize": 25
+    },
+    {
+      "id": "bully-fragmenter",
+      "name": "Bully Fragmenter",
+      "stackSize": 3
+    },
+    {
+      "id": "bulwark-stencil",
+      "name": "Bulwark Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "bureau-ceiling-lamp-design",
+      "name": "Bureau Ceiling Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "bureau-desk-lamp",
+      "name": "Bureau Desk Lamp",
+      "stackSize": 1
+    },
+    {
+      "id": "buried-city-hospital-key",
+      "name": "Buried City Hospital Key",
+      "stackSize": 1
+    },
+    {
+      "id": "buried-city-jkv-employee-access-card",
+      "name": "Buried City JKV Employee Access Card",
+      "stackSize": 1
+    },
+    {
+      "id": "buried-city-residential-master-key",
+      "name": "Buried City Residential Master Key",
+      "stackSize": 1
+    },
+    {
+      "id": "buried-city-town-hall-key",
+      "name": "Buried City Town Hall Key",
+      "stackSize": 1
+    },
+    {
+      "id": "burltetta-recipe",
+      "name": "Burletta Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "burletta-i",
+      "name": "Burletta I",
+      "stackSize": 1
+    },
+    {
+      "id": "burletta-ii",
+      "name": "Burletta II",
+      "stackSize": 1
+    },
+    {
+      "id": "burletta-iiii",
+      "name": "Burletta III",
+      "stackSize": 1
+    },
+    {
+      "id": "burletta-iv",
+      "name": "Burletta IV",
+      "stackSize": 1
+    },
+    {
+      "id": "burned-arc-circuitry",
+      "name": "Burned ARC Circuitry",
+      "stackSize": 3
+    },
+    {
+      "id": "burnt-out-candles",
+      "name": "Burnt-out Candles",
+      "stackSize": 15
+    },
+    {
+      "id": "burst-assembly-recovery",
+      "name": "Burst Assembly Recovery",
+      "stackSize": 1
+    },
+    {
+      "id": "cable-stripper",
+      "name": "Cable Stripper",
+      "stackSize": 15
+    },
+    {
+      "id": "cafeteria-table-design",
+      "name": "Cafeteria Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "calculator",
+      "name": "Calculator",
+      "stackSize": 3
+    },
+    {
+      "id": "camera-lens",
+      "name": "Camera Lens",
+      "stackSize": 5
+    },
+    {
+      "id": "candleberries",
+      "name": "Candleberries",
+      "stackSize": 10
+    },
+    {
+      "id": "candle-holder",
+      "name": "Candle Holder",
+      "stackSize": 3
+    },
+    {
+      "id": "canister",
+      "name": "Canister",
+      "stackSize": 15
+    },
+    {
+      "id": "canto-blueprint",
+      "name": "Canto Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "canto",
+      "name": "Canto I",
+      "stackSize": 1
+    },
+    {
+      "id": "canto-ii",
+      "name": "Canto II",
+      "stackSize": 1
+    },
+    {
+      "id": "canto-iii",
+      "name": "Canto III",
+      "stackSize": 1
+    },
+    {
+      "id": "canto-iv",
+      "name": "Canto IV",
+      "stackSize": 1
+    },
+    {
+      "id": "cat-bed",
+      "name": "Cat Bed",
+      "stackSize": 3
+    },
+    {
+      "id": "celeste-s-journal",
+      "name": "Celeste's Journal",
+      "stackSize": 1
+    },
+    {
+      "id": "cerulean-stencil",
+      "name": "Cerulean Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "chambers-lamp-design",
+      "name": "Chambers Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "chambers-nightstand-design",
+      "name": "Chambers Nightstand Design",
+      "stackSize": 1
+    },
+    {
+      "id": "chambers-shelf-design",
+      "name": "Chambers Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "chandelier-design",
+      "name": "Chandelier Design",
+      "stackSize": 1
+    },
+    {
+      "id": "chemicals",
+      "name": "Chemicals",
+      "stackSize": 50
+    },
+    {
+      "id": "clinic-medical-cabinet-design",
+      "name": "Clinic Medical Cabinet Design",
+      "stackSize": 1
+    },
+    {
+      "id": "coffee-pot",
+      "name": "Coffee Pot",
+      "stackSize": 3
+    },
+    {
+      "id": "colorful-shoes",
+      "name": "Colorful Shoes",
+      "stackSize": 1
+    },
+    {
+      "id": "colorful-shoes-epic",
+      "name": "Colorful Shoes",
+      "stackSize": 1
+    },
+    {
+      "id": "colorful-shoes-rare",
+      "name": "Colorful Shoes",
+      "stackSize": 3
+    },
+    {
+      "id": "combat-mk-1",
+      "name": "Combat Mk. 1",
+      "stackSize": 1
+    },
+    {
+      "id": "combat-mk-2",
+      "name": "Combat Mk. 2",
+      "stackSize": 1
+    },
+    {
+      "id": "combat-mk-3-aggressive",
+      "name": "Combat Mk. 3 (Aggressive)",
+      "stackSize": 1
+    },
+    {
+      "id": "combat-mk3-aggressive-blueprint",
+      "name": "Combat Mk. 3 (Aggressive) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "combat-mk3-flanking",
+      "name": "Combat Mk. 3 (Flanking)",
+      "stackSize": 1
+    },
+    {
+      "id": "combat-mk-3-flanking",
+      "name": "Combat Mk. 3 (Flanking) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "comet-igniter",
+      "name": "Comet Igniter",
+      "stackSize": 3
+    },
+    {
+      "id": "compact-combustion-charges",
+      "name": "Compact Combustion Charges",
+      "stackSize": 1
+    },
+    {
+      "id": "compensator-i",
+      "name": "Compensator I",
+      "stackSize": 1
+    },
+    {
+      "id": "compensator-ii",
+      "name": "Compensator II",
+      "stackSize": 1
+    },
+    {
+      "id": "compensator-ii-recipe",
+      "name": "Compensator II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "compensator-iii",
+      "name": "Compensator III",
+      "stackSize": 1
+    },
+    {
+      "id": "compensator-iii-recipe",
+      "name": "Compensator III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "complex-gun-parts",
+      "name": "Complex Gun Parts",
+      "stackSize": 3
+    },
+    {
+      "id": "complex-gun-parts-blueprint",
+      "name": "Complex Gun Parts Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "console-chest-design",
+      "name": "Console Chest Design",
+      "stackSize": 1
+    },
+    {
+      "id": "coolant",
+      "name": "Coolant",
+      "stackSize": 3
+    },
+    {
+      "id": "cooling-coil",
+      "name": "Cooling Coil",
+      "stackSize": 3
+    },
+    {
+      "id": "cooling-fan",
+      "name": "Cooling Fan",
+      "stackSize": 3
+    },
+    {
+      "id": "cracked-bioscanner",
+      "name": "Cracked Bioscanner",
+      "stackSize": 3
+    },
+    {
+      "id": "crash-mat",
+      "name": "Crash Mat",
+      "stackSize": 5
+    },
+    {
+      "id": "crash-mat-blueprint",
+      "name": "Crash Mat Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "crude-explosives",
+      "name": "Crude Explosives",
+      "stackSize": 10
+    },
+    {
+      "id": "crumpled-plastic-bottle",
+      "name": "Crumpled Plastic Bottle",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-arc-motion-core",
+      "name": "Damaged ARC Motion Core",
+      "stackSize": 5
+    },
+    {
+      "id": "damaged-arc-powercell",
+      "name": "Damaged ARC Powercell",
+      "stackSize": 5
+    },
+    {
+      "id": "damaged-fireball-burner",
+      "name": "Damaged Fireball Burner",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-heat-sink",
+      "name": "Damaged Heat Sink",
+      "stackSize": 3
+    },
+    {
+      "id": "danaged-hornet-driver",
+      "name": "Damaged Hornet Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-leaper-pulse-unit",
+      "name": "Damaged Leaper Pulse Unit",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-rocketeer-part",
+      "name": "Damaged Rocketeer Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-snitch-scanner",
+      "name": "Damaged Snitch Scanner",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-tick-pod",
+      "name": "Damaged Tick Pod",
+      "stackSize": 3
+    },
+    {
+      "id": "damaged-wasp-driver",
+      "name": "Damaged Wasp Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "dam-controlled-access-zone-key",
+      "name": "Dam Controlled Access Zone Key",
+      "stackSize": 1
+    },
+    {
+      "id": "dam-control-center-tower-key",
+      "name": "Dam Control Tower Key",
+      "stackSize": 1
+    },
+    {
+      "id": "dam-staff-room-key",
+      "name": "Dam Staff Room Key",
+      "stackSize": 1
+    },
+    {
+      "id": "dam-surveillance-key",
+      "name": "Dam Surveillance Key",
+      "stackSize": 1
+    },
+    {
+      "id": "dam-testing-annex-key",
+      "name": "Dam Testing Annex Key",
+      "stackSize": 1
+    },
+    {
+      "id": "dam-utility-key",
+      "name": "Dam Utility Key",
+      "stackSize": 1
+    },
+    {
+      "id": "dart-board",
+      "name": "Dart Board",
+      "stackSize": 3
+    },
+    {
+      "id": "deadline",
+      "name": "Deadline",
+      "stackSize": 1
+    },
+    {
+      "id": "deadline-blueprint",
+      "name": "Deadline Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "defibrillator",
+      "name": "Defibrillator",
+      "stackSize": 3
+    },
+    {
+      "id": "defibrillator-recipe",
+      "name": "Defibrillator Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "deflated-football",
+      "name": "Deflated Football",
+      "stackSize": 3
+    },
+    {
+      "id": "degraded-arc-rubber",
+      "name": "Degraded ARC Rubber",
+      "stackSize": 3
+    },
+    {
+      "id": "desk-lamp",
+      "name": "Desk Lamp",
+      "stackSize": 1
+    },
+    {
+      "id": "differential-microphone",
+      "name": "Differential Microphone",
+      "stackSize": 3
+    },
+    {
+      "id": "diner-ceiling-lamp-design",
+      "name": "Diner Ceiling Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "diner-cupboard-design",
+      "name": "Diner Cupboard Design",
+      "stackSize": 1
+    },
+    {
+      "id": "diner-shelf-design",
+      "name": "Diner Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "diner-sofa-design",
+      "name": "Diner Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "diner-stool-design",
+      "name": "Diner Stool Design",
+      "stackSize": 1
+    },
+    {
+      "id": "diner-table-design",
+      "name": "Diner Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "diving-googles",
+      "name": "Diving Goggles",
+      "stackSize": 3
+    },
+    {
+      "id": "dockmasters-detector",
+      "name": "Dockmaster's Detector",
+      "stackSize": 1
+    },
+    {
+      "id": "dodger-s-note",
+      "name": "Dodger's Note",
+      "stackSize": 1
+    },
+    {
+      "id": "dog-collar",
+      "name": "Dog Collar",
+      "stackSize": 3
+    },
+    {
+      "id": "dolabra",
+      "name": "Dolabra",
+      "stackSize": 1
+    },
+    {
+      "id": "dolabra-blueprint",
+      "name": "Dolabra Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "doodly-duck",
+      "name": "Doodly Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "door-blocker",
+      "name": "Door Blocker",
+      "stackSize": 3
+    },
+    {
+      "id": "dragons-breath-stencil",
+      "name": "Dragon's Breath Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "draped-debris-a-design",
+      "name": "Draped Debris A Design",
+      "stackSize": 1
+    },
+    {
+      "id": "draped-debris-b-design",
+      "name": "Draped Debris B Design",
+      "stackSize": 1
+    },
+    {
+      "id": "draped-debris-c-design",
+      "name": "Draped Debris C Design",
+      "stackSize": 1
+    },
+    {
+      "id": "draped-debris-e-design",
+      "name": "Draped Debris E Design",
+      "stackSize": 1
+    },
+    {
+      "id": "draped-debris-f-design",
+      "name": "Draped Debris F Design",
+      "stackSize": 1
+    },
+    {
+      "id": "draped-debris-g-design",
+      "name": "Draped Debris G Design",
+      "stackSize": 1
+    },
+    {
+      "id": "dried-out-arc-resin",
+      "name": "Dried-Out ARC Resin",
+      "stackSize": 3
+    },
+    {
+      "id": "duct-tape-recipe",
+      "name": "Duct Tape",
+      "stackSize": 15
+    },
+    {
+      "id": "durable-cloth",
+      "name": "Durable Cloth",
+      "stackSize": 10
+    },
+    {
+      "id": "dusty-camo-stencil",
+      "name": "Dusty Camo Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "dusty-film-reel",
+      "name": "Dusty Film Reel",
+      "stackSize": 1
+    },
+    {
+      "id": "electrical-components",
+      "name": "Electrical Components",
+      "stackSize": 10
+    },
+    {
+      "id": "elephant-obelisk",
+      "name": "Elephant Obelisk",
+      "stackSize": 1
+    },
+    {
+      "id": "embedded-blast-engineering",
+      "name": "Embedded Blast Engineering",
+      "stackSize": 1
+    },
+    {
+      "id": "emperor-beacon",
+      "name": "Emperor Beacon",
+      "stackSize": 3
+    },
+    {
+      "id": "emperor-gateway-conduit",
+      "name": "Emperor Gateway Conduit",
+      "stackSize": 1
+    },
+    {
+      "id": "emperor-gateway-conduit-blueprint",
+      "name": "Emperor Gateway Conduit Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "emperor-modulator",
+      "name": "Emperor Modulator",
+      "stackSize": 1
+    },
+    {
+      "id": "empty-wine-bottle",
+      "name": "Empty Wine Bottle",
+      "stackSize": 5
+    },
+    {
+      "id": "empyrean-stencil",
+      "name": "Empyrean Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "energy-ammo",
+      "name": "Energy Clip",
+      "stackSize": 5
+    },
+    {
+      "id": "epoxy-bucket",
+      "name": "Epoxy Bucket",
+      "stackSize": 5
+    },
+    {
+      "id": "equalizer-i",
+      "name": "Equalizer",
+      "stackSize": 1
+    },
+    {
+      "id": "equalizer-recipe",
+      "name": "Equalizer Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "equatorial-sundial",
+      "name": "Equatorial Sundial",
+      "stackSize": 3
+    },
+    {
+      "id": "espresso-machine-parts",
+      "name": "Espresso Machine Parts",
+      "stackSize": 1
+    },
+    {
+      "id": "esr-analyzer",
+      "name": "ESR Analyzer",
+      "stackSize": 1
+    },
+    {
+      "id": "exodus-modules",
+      "name": "Exodus Modules",
+      "stackSize": 3
+    },
+    {
+      "id": "exodus-technical-handbook",
+      "name": "Exodus Technical Handbook",
+      "stackSize": 5
+    },
+    {
+      "id": "experimental-seed-sample",
+      "name": "Experimental Seed Sample",
+      "stackSize": 1
+    },
+    {
+      "id": "expired-pasta",
+      "name": "Expired Pasta",
+      "stackSize": 15
+    },
+    {
+      "id": "expired-respirator",
+      "name": "Expired Respirator",
+      "stackSize": 3
+    },
+    {
+      "id": "expired-security-code",
+      "name": "Expired Security Code",
+      "stackSize": 1
+    },
+    {
+      "id": "explosive-compound",
+      "name": "Explosive Compound",
+      "stackSize": 5
+    },
+    {
+      "id": "explosive-mine",
+      "name": "Explosive Mine",
+      "stackSize": 3
+    },
+    {
+      "id": "explosive-mine-blueprint",
+      "name": "Explosive Mine Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-barrel-i",
+      "name": "Extended Barrel I",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-barrel-ii",
+      "name": "Extended Barrel II",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-barrel-ii-blueprint",
+      "name": "Extended Barrel II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-barrel",
+      "name": "Extended Barrel III",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-barrel-recipe",
+      "name": "Extended Barrel III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-burst-cycles",
+      "name": "Extended Burst Cycles",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-light-mag-i",
+      "name": "Extended Light Mag I",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-light-mag-ii",
+      "name": "Extended Light Mag II",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-light-mag-ii-recipe",
+      "name": "Extended Light Mag II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-light-mag-iii",
+      "name": "Extended Light Mag III",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-light-mag-iii-recipe",
+      "name": "Extended Light Mag III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-medium-mag-i",
+      "name": "Extended Medium Mag I",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-medium-mag-ii",
+      "name": "Extended Medium Mag II",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-medium-mag-ii-recipe",
+      "name": "Extended Medium Mag II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-medium-mag-iii",
+      "name": "Extended Medium Mag III",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-medium-mag-iii-blueprint",
+      "name": "Extended Medium Mag III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-shotgun-mag-i",
+      "name": "Extended Shotgun Mag I",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-shotgun-mag-ii",
+      "name": "Extended Shotgun Mag II",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-shotgun-mag-ii-recipe",
+      "name": "Extended Shotgun Mag II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-shotgun-mag-iii",
+      "name": "Extended Shotgun Mag III",
+      "stackSize": 1
+    },
+    {
+      "id": "extended-shotgun-mag-iii-recipe",
+      "name": "Extended Shotgun Mag III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "fabric",
+      "name": "Fabric",
+      "stackSize": 50
+    },
+    {
+      "id": "faculty-closet-design",
+      "name": "Faculty Closet Design",
+      "stackSize": 1
+    },
+    {
+      "id": "faculty-dresser-design",
+      "name": "Faculty Dresser Design",
+      "stackSize": 1
+    },
+    {
+      "id": "faded-photograph",
+      "name": "Faded Photograph",
+      "stackSize": 15
+    },
+    {
+      "id": "familiar-duck",
+      "name": "Familiar Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "ferro-i",
+      "name": "Ferro I",
+      "stackSize": 1
+    },
+    {
+      "id": "ferro-ii",
+      "name": "Ferro II",
+      "stackSize": 1
+    },
+    {
+      "id": "ferro-iii",
+      "name": "Ferro III",
+      "stackSize": 1
+    },
+    {
+      "id": "ferro-iv",
+      "name": "Ferro IV",
+      "stackSize": 1
+    },
+    {
+      "id": "fertilizer",
+      "name": "Fertilizer",
+      "stackSize": 5
+    },
+    {
+      "id": "film-reel",
+      "name": "Film Reel",
+      "stackSize": 3
+    },
+    {
+      "id": "fine-wristwatch",
+      "name": "Fine Wristwatch",
+      "stackSize": 3
+    },
+    {
+      "id": "fireball-burner",
+      "name": "Fireball Burner",
+      "stackSize": 3
+    },
+    {
+      "id": "firecracker",
+      "name": "Firecracker",
+      "stackSize": 5
+    },
+    {
+      "id": "firefly-burner",
+      "name": "Firefly Burner",
+      "stackSize": 3
+    },
+    {
+      "id": "fireworks-box",
+      "name": "Fireworks Box",
+      "stackSize": 1
+    },
+    {
+      "id": "fireworks-box-blueprint",
+      "name": "Fireworks Box Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "first-wave-compass",
+      "name": "First Wave Compass",
+      "stackSize": 1
+    },
+    {
+      "id": "first-wave-rations",
+      "name": "First Wave Rations",
+      "stackSize": 1
+    },
+    {
+      "id": "first-wave-tape",
+      "name": "First Wave Tape",
+      "stackSize": 1
+    },
+    {
+      "id": "flame-spray",
+      "name": "Flame Spray",
+      "stackSize": 1
+    },
+    {
+      "id": "flashy-duck",
+      "name": "Flashy Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "floor-lamp-design",
+      "name": "Floor Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "flow-controller",
+      "name": "Flow Controller",
+      "stackSize": 3
+    },
+    {
+      "id": "flushing-terminal-key",
+      "name": "Flushing Terminal Key",
+      "stackSize": 1
+    },
+    {
+      "id": "fluted-rotor-core",
+      "name": "Fluted Rotor Core",
+      "stackSize": 3
+    },
+    {
+      "id": "food-wrapper",
+      "name": "Food Wrapper",
+      "stackSize": 15
+    },
+    {
+      "id": "fortuna-stencil",
+      "name": "Fortuna Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "fossilized-lightning",
+      "name": "Fossilized Lightning",
+      "stackSize": 1
+    },
+    {
+      "id": "free-loadout-augment",
+      "name": "Free Loadout Augment",
+      "stackSize": 1
+    },
+    {
+      "id": "frequency-modulation-box",
+      "name": "Frequency Modulation Box",
+      "stackSize": 3
+    },
+    {
+      "id": "fried-motherboard",
+      "name": "Fried Motherboard",
+      "stackSize": 3
+    },
+    {
+      "id": "frigate-diagnostic-node",
+      "name": "Frigate Diagnostic Node",
+      "stackSize": 1
+    },
+    {
+      "id": "frigate-inductor",
+      "name": "Frigate Inductor",
+      "stackSize": 1
+    },
+    {
+      "id": "frosty-duck",
+      "name": "Frosty Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "fruit-mix",
+      "name": "Fruit Mix",
+      "stackSize": 5
+    },
+    {
+      "id": "frying-pan",
+      "name": "Frying Pan",
+      "stackSize": 3
+    },
+    {
+      "id": "garlic-press",
+      "name": "Garlic Press",
+      "stackSize": 3
+    },
+    {
+      "id": "garnet-stencil",
+      "name": "Garnet Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "gas-grenade",
+      "name": "Gas Grenade",
+      "stackSize": 3
+    },
+    {
+      "id": "gas-grenade-trap",
+      "name": "Gas Grenade Trap",
+      "stackSize": 3
+    },
+    {
+      "id": "gas-mine",
+      "name": "Gas Mine",
+      "stackSize": 3
+    },
+    {
+      "id": "gas-mine-blueprint",
+      "name": "Gas Mine Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "geiger-counter",
+      "name": "Geiger Counter",
+      "stackSize": 3
+    },
+    {
+      "id": "gentle-duck",
+      "name": "Gentle Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "geometric-fabric-chair-design",
+      "name": "Geometric Fabric Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "glass-ceiling-lamp-design",
+      "name": "Glass Ceiling Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "glitched-arc-circuitry",
+      "name": "Glitched ARC Circuitry",
+      "stackSize": 1
+    },
+    {
+      "id": "glitched-arc-light-ring",
+      "name": "Glitched ARC Light Ring",
+      "stackSize": 1
+    },
+    {
+      "id": "glitched-arc-phased-array",
+      "name": "Glitched ARC Phased Array",
+      "stackSize": 1
+    },
+    {
+      "id": "glitched-arc-power-converter",
+      "name": "Glitched ARC Power Converter",
+      "stackSize": 1
+    },
+    {
+      "id": "glitched-arc-transmitter",
+      "name": "Glitched ARC Transmitter",
+      "stackSize": 1
+    },
+    {
+      "id": "grappling-hook",
+      "name": "Grappling Hook",
+      "stackSize": 1
+    },
+    {
+      "id": "grappling-hook-blueprint",
+      "name": "Grappling Hook Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "great-muullein",
+      "name": "Great Mullein",
+      "stackSize": 15
+    },
+    {
+      "id": "green-geometric-chair-design",
+      "name": "Green Geometric Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "green-geometric-sofa-design",
+      "name": "Green Geometric Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "green-lab-sofa-design",
+      "name": "Green Lab Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "green-light-stick",
+      "name": "Green Light Stick",
+      "stackSize": 5
+    },
+    {
+      "id": "green-light-stick-blueprint",
+      "name": "Green Light Stick Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "hairpin-i",
+      "name": "Hairpin I",
+      "stackSize": 1
+    },
+    {
+      "id": "hairpin-ii",
+      "name": "Hairpin II",
+      "stackSize": 1
+    },
+    {
+      "id": "hairpin-iii",
+      "name": "Hairpin III",
+      "stackSize": 1
+    },
+    {
+      "id": "hairpin-iv",
+      "name": "Hairpin IV",
+      "stackSize": 1
+    },
+    {
+      "id": "hand-drill",
+      "name": "Hand Drill",
+      "stackSize": 3
+    },
+    {
+      "id": "harmonica",
+      "name": "Harmonica",
+      "stackSize": 1
+    },
+    {
+      "id": "headphones",
+      "name": "Headphones",
+      "stackSize": 3
+    },
+    {
+      "id": "heavy-ammo",
+      "name": "Heavy Ammo",
+      "stackSize": 60
+    },
+    {
+      "id": "heavy-fuze-grenade",
+      "name": "Heavy Fuze Grenade",
+      "stackSize": 3
+    },
+    {
+      "id": "heavy-gun-parts",
+      "name": "Heavy Gun Parts",
+      "stackSize": 5
+    },
+    {
+      "id": "heavy-gun-parts-recipe",
+      "name": "Heavy Gun Parts Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "heavy-shield",
+      "name": "Heavy Shield",
+      "stackSize": 1
+    },
+    {
+      "id": "herbal-bandage",
+      "name": "Herbal Bandage",
+      "stackSize": 5
+    },
+    {
+      "id": "hidden-bunker-key",
+      "name": "Hidden Bunker Key",
+      "stackSize": 1
+    },
+    {
+      "id": "high-voltage-exposure",
+      "name": "High-Voltage Exposure",
+      "stackSize": 1
+    },
+    {
+      "id": "holly-bush-design",
+      "name": "Holly Bush Design",
+      "stackSize": 1
+    },
+    {
+      "id": "horizontal-grip",
+      "name": "Horizontal Grip",
+      "stackSize": 1
+    },
+    {
+      "id": "hornet-driver",
+      "name": "Hornet Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "hotel-chair-design",
+      "name": "Hotel Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "household-cleaner",
+      "name": "Household Cleaner",
+      "stackSize": 3
+    },
+    {
+      "id": "hullcracker-blueprint",
+      "name": "Hullcracker Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "hullcracker-i",
+      "name": "Hullcracker I",
+      "stackSize": 1
+    },
+    {
+      "id": "hullcracker-ii",
+      "name": "Hullcracker II",
+      "stackSize": 1
+    },
+    {
+      "id": "hullcracker-iii",
+      "name": "Hullcracker III",
+      "stackSize": 1
+    },
+    {
+      "id": "hullcracker-iv",
+      "name": "Hullcracker IV",
+      "stackSize": 1
+    },
+    {
+      "id": "humidifier",
+      "name": "Humidifier",
+      "stackSize": 3
+    },
+    {
+      "id": "husk-lily",
+      "name": "Husk Lily",
+      "stackSize": 3
+    },
+    {
+      "id": "ice-cream-scooper",
+      "name": "Ice Cream Scooper",
+      "stackSize": 3
+    },
+    {
+      "id": "il-toro-recipe",
+      "name": "Il Toro Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "il-toro-i",
+      "name": "Il Toro I",
+      "stackSize": 1
+    },
+    {
+      "id": "il-toro-ii",
+      "name": "Il Toro II",
+      "stackSize": 1
+    },
+    {
+      "id": "il-toro-iiii",
+      "name": "Il Toro III",
+      "stackSize": 1
+    },
+    {
+      "id": "il-toro-iv",
+      "name": "Il Toro IV",
+      "stackSize": 1
+    },
+    {
+      "id": "impure-arc-coolant",
+      "name": "Impure ARC Coolant",
+      "stackSize": 3
+    },
+    {
+      "id": "industrial-battery",
+      "name": "Industrial Battery",
+      "stackSize": 3
+    },
+    {
+      "id": "industrial-charger",
+      "name": "Industrial Charger",
+      "stackSize": 3
+    },
+    {
+      "id": "industrial-magnet",
+      "name": "Industrial Magnet",
+      "stackSize": 3
+    },
+    {
+      "id": "insulation-roll",
+      "name": "Insulation Roll",
+      "stackSize": 3
+    },
+    {
+      "id": "integrated-binoculars",
+      "name": "Integrated Binoculars",
+      "stackSize": 1
+    },
+    {
+      "id": "integrated-defibrillator",
+      "name": "Integrated Defibrillator",
+      "stackSize": 1
+    },
+    {
+      "id": "integrated-shield-recharger",
+      "name": "Integrated Shield Recharger",
+      "stackSize": 1
+    },
+    {
+      "id": "ion-sputter",
+      "name": "Ion Sputter",
+      "stackSize": 3
+    },
+    {
+      "id": "jolt-mine",
+      "name": "Jolt Mine",
+      "stackSize": 3
+    },
+    {
+      "id": "jolt-mine-recipe",
+      "name": "Jolt Mine Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "jupiter-i",
+      "name": "Jupiter",
+      "stackSize": 1
+    },
+    {
+      "id": "jupiter-i-recipe",
+      "name": "Jupiter Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "kettle-i",
+      "name": "Kettle I",
+      "stackSize": 1
+    },
+    {
+      "id": "kettle-ii",
+      "name": "Kettle II",
+      "stackSize": 1
+    },
+    {
+      "id": "kettle-iii",
+      "name": "Kettle III",
+      "stackSize": 1
+    },
+    {
+      "id": "kettle-iv",
+      "name": "Kettle IV",
+      "stackSize": 1
+    },
+    {
+      "id": "kinetic-converter",
+      "name": "Kinetic Converter",
+      "stackSize": 1
+    },
+    {
+      "id": "lab-ceiling-light-design",
+      "name": "Lab Ceiling Light Design",
+      "stackSize": 1
+    },
+    {
+      "id": "laboratory-reagents",
+      "name": "Laboratory Reagents",
+      "stackSize": 3
+    },
+    {
+      "id": "lab-stool-design",
+      "name": "Lab Stool Design",
+      "stackSize": 1
+    },
+    {
+      "id": "lances-mixtape-5th-edition",
+      "name": "Lance's Mixtape (5th edition)",
+      "stackSize": 3
+    },
+    {
+      "id": "laser-level",
+      "name": "Laser Level",
+      "stackSize": 3
+    },
+    {
+      "id": "laser-trap-lure-recipe",
+      "name": "Laser Trap: Lure",
+      "stackSize": 3
+    },
+    {
+      "id": "launcher-ammo",
+      "name": "Launcher Ammo",
+      "stackSize": 24
+    },
+    {
+      "id": "leaper-pulse-unit",
+      "name": "Leaper Pulse Unit",
+      "stackSize": 3
+    },
+    {
+      "id": "lemon",
+      "name": "Lemon",
+      "stackSize": 10
+    },
+    {
+      "id": "leviathans-crown-ship-model",
+      "name": "“Leviathan's Crown” Ship Model",
+      "stackSize": 1
+    },
+    {
+      "id": "library-book",
+      "name": "Library Book",
+      "stackSize": 1
+    },
+    {
+      "id": "lidar-scanner",
+      "name": "LiDAR Scanner",
+      "stackSize": 1
+    },
+    {
+      "id": "light-ammo",
+      "name": "Light Ammo",
+      "stackSize": 100
+    },
+    {
+      "id": "light-bulb",
+      "name": "Light Bulb",
+      "stackSize": 3
+    },
+    {
+      "id": "light-gun-parts",
+      "name": "Light Gun Parts",
+      "stackSize": 5
+    },
+    {
+      "id": "light-gun-parts-recipe",
+      "name": "Light Gun Parts Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "light-impact-grenade",
+      "name": "Light Impact Grenade",
+      "stackSize": 5
+    },
+    {
+      "id": "light-shield",
+      "name": "Light Shield",
+      "stackSize": 1
+    },
+    {
+      "id": "lightweight-stock",
+      "name": "Lightweight Stock",
+      "stackSize": 1
+    },
+    {
+      "id": "lightweight-stock-recipe",
+      "name": "Lightweight Stock Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "lil-smoke-grenade",
+      "name": "Li'l Smoke Grenade",
+      "stackSize": 5
+    },
+    {
+      "id": "looting-mk-1",
+      "name": "Looting Mk. 1",
+      "stackSize": 1
+    },
+    {
+      "id": "looting-mk-2",
+      "name": "Looting Mk. 2",
+      "stackSize": 1
+    },
+    {
+      "id": "looting-mk-3-cautious",
+      "name": "Looting Mk. 3 (Cautious)",
+      "stackSize": 1
+    },
+    {
+      "id": "looting-mk-3-safekeeper",
+      "name": "Looting Mk. 3 (Safekeeper)",
+      "stackSize": 1
+    },
+    {
+      "id": "looting-mk-3-safekeeper-blueprint",
+      "name": "Looting Mk. 3 (Safekeeper) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "looting-mk-3-survivor",
+      "name": "Looting Mk. 3 (Survivor)",
+      "stackSize": 1
+    },
+    {
+      "id": "looting-mk-3-survivor-blueprint",
+      "name": "Looting Mk. 3 (Survivor) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "lure-grenade",
+      "name": "Lure Grenade",
+      "stackSize": 3
+    },
+    {
+      "id": "lure-grenade-recipe",
+      "name": "Lure Grenade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "lure-grenade-trap",
+      "name": "Lure Grenade Trap",
+      "stackSize": 3
+    },
+    {
+      "id": "magazine-geometry-101",
+      "name": "Magazine Geometry 101",
+      "stackSize": 1
+    },
+    {
+      "id": "magnet",
+      "name": "Magnet",
+      "stackSize": 15
+    },
+    {
+      "id": "magnetic-accelerator",
+      "name": "Magnetic Accelerator",
+      "stackSize": 3
+    },
+    {
+      "id": "magnetron",
+      "name": "Magnetron",
+      "stackSize": 3
+    },
+    {
+      "id": "major-aiva-s-mementos",
+      "name": "Major Aiva's Mementos",
+      "stackSize": 1
+    },
+    {
+      "id": "major-aiva-s-patch",
+      "name": "Major Aiva's Patch",
+      "stackSize": 1
+    },
+    {
+      "id": "marano-market-buisness-card",
+      "name": "Marano Market Business Card",
+      "stackSize": 1
+    },
+    {
+      "id": "matriarch-reactor",
+      "name": "Matriarch Reactor",
+      "stackSize": 1
+    },
+    {
+      "id": "mechanical-components",
+      "name": "Mechanical Components",
+      "stackSize": 10
+    },
+    {
+      "id": "medium-ammo",
+      "name": "Medium Ammo",
+      "stackSize": 80
+    },
+    {
+      "id": "medium-gun-parts",
+      "name": "Medium Gun Parts",
+      "stackSize": 5
+    },
+    {
+      "id": "medium-gun-parts-recipe",
+      "name": "Medium Gun Parts Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "medium-shield",
+      "name": "Medium Shield",
+      "stackSize": 1
+    },
+    {
+      "id": "metal-brackets",
+      "name": "Metal Brackets",
+      "stackSize": 3
+    },
+    {
+      "id": "metal-parts",
+      "name": "Metal Parts",
+      "stackSize": 50
+    },
+    {
+      "id": "microscope",
+      "name": "Microscope",
+      "stackSize": 3
+    },
+    {
+      "id": "milky-terraccota-stencil",
+      "name": "Milky Terraccota Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "mini-centrifuge",
+      "name": "Mini Centrifuge",
+      "stackSize": 3
+    },
+    {
+      "id": "mini-pump",
+      "name": "Mini Pump",
+      "stackSize": 5
+    },
+    {
+      "id": "mobile-fire-grip-fittings",
+      "name": "Mobile-Fire Grip Fittings",
+      "stackSize": 1
+    },
+    {
+      "id": "mod-components",
+      "name": "Mod Components",
+      "stackSize": 5
+    },
+    {
+      "id": "moisture-meter",
+      "name": "Moisture Meter",
+      "stackSize": 1
+    },
+    {
+      "id": "moss",
+      "name": "Moss",
+      "stackSize": 10
+    },
+    {
+      "id": "motor",
+      "name": "Motor",
+      "stackSize": 3
+    },
+    {
+      "id": "mountaineers-detector",
+      "name": "Mountaineer's Detector",
+      "stackSize": 1
+    },
+    {
+      "id": "mri-duck",
+      "name": "MRI Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "multicolored-geometric-sofa-design",
+      "name": "Multicolored Geometric Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "mushroom",
+      "name": "Mushroom",
+      "stackSize": 10
+    },
+    {
+      "id": "music-album",
+      "name": "Music Album",
+      "stackSize": 3
+    },
+    {
+      "id": "music-box",
+      "name": "Music Box",
+      "stackSize": 3
+    },
+    {
+      "id": "muzzle-brake-i",
+      "name": "Muzzle Brake I",
+      "stackSize": 1
+    },
+    {
+      "id": "muzzle-brake-ii",
+      "name": "Muzzle Brake II",
+      "stackSize": 1
+    },
+    {
+      "id": "muzzle-brake-ii-recipe",
+      "name": "Muzzle Brake II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "muzzle-brake-iii",
+      "name": "Muzzle Brake III",
+      "stackSize": 1
+    },
+    {
+      "id": "muzzle-brake-iii-recipe",
+      "name": "Muzzle Brake III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "noisemaker",
+      "name": "Noisemaker",
+      "stackSize": 3
+    },
+    {
+      "id": "number-plate",
+      "name": "Number Plate",
+      "stackSize": 3
+    },
+    {
+      "id": "nutrient-meter",
+      "name": "Nutrient Meter",
+      "stackSize": 1
+    },
+    {
+      "id": "ochre-stencil",
+      "name": "Ochre Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "official-shutdown-documentation",
+      "name": "Official Shutdown Documentation",
+      "stackSize": 1
+    },
+    {
+      "id": "oil",
+      "name": "Oil",
+      "stackSize": 15
+    },
+    {
+      "id": "old-world-books",
+      "name": "Old World Books",
+      "stackSize": 1
+    },
+    {
+      "id": "olives",
+      "name": "Olives",
+      "stackSize": 10
+    },
+    {
+      "id": "ornate-den-bed-design",
+      "name": "Ornate Den Bed Design",
+      "stackSize": 1
+    },
+    {
+      "id": "ornate-den-shelf-design",
+      "name": "Ornate Den Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "ornate-stash-design",
+      "name": "Ornate Stash Design",
+      "stackSize": 1
+    },
+    {
+      "id": "ornate-wardrobe-design",
+      "name": "Ornate Wardrobe Design",
+      "stackSize": 1
+    },
+    {
+      "id": "osprey-recipe",
+      "name": "Osprey Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "osprey-i",
+      "name": "Osprey I",
+      "stackSize": 1
+    },
+    {
+      "id": "osprey-ii",
+      "name": "Osprey II",
+      "stackSize": 1
+    },
+    {
+      "id": "osprey-iii",
+      "name": "Osprey III",
+      "stackSize": 1
+    },
+    {
+      "id": "osprey-iv",
+      "name": "Osprey IV",
+      "stackSize": 1
+    },
+    {
+      "id": "padded-stock",
+      "name": "Padded Stock",
+      "stackSize": 1
+    },
+    {
+      "id": "padded-stock-recipe",
+      "name": "Padded Stock Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "painted-box",
+      "name": "Painted Box",
+      "stackSize": 3
+    },
+    {
+      "id": "patrol-car-key",
+      "name": "Patrol Car Key",
+      "stackSize": 1
+    },
+    {
+      "id": "pendola-pass-observatory-key",
+      "name": "Pendola Pass Observatory Key",
+      "stackSize": 1
+    },
+    {
+      "id": "pendola-pass-old-town-key",
+      "name": "Pendola Pass Old Town Key",
+      "stackSize": 1
+    },
+    {
+      "id": "pendola-pass-railyard-key",
+      "name": "Pendola Pass Railyard Key",
+      "stackSize": 1
+    },
+    {
+      "id": "pendola-pass-train-station-key",
+      "name": "Pendola Pass Train Station Key",
+      "stackSize": 1
+    },
+    {
+      "id": "photoelectric-cloak",
+      "name": "Photoelectric Cloak",
+      "stackSize": 1
+    },
+    {
+      "id": "pilgrims-peak-security-code",
+      "name": "Pilgrim's Peak Security Code",
+      "stackSize": 1
+    },
+    {
+      "id": "planks",
+      "name": "Planks",
+      "stackSize": 50
+    },
+    {
+      "id": "plastic-parts",
+      "name": "Plastic Parts",
+      "stackSize": 50
+    },
+    {
+      "id": "plastic-trash",
+      "name": "Plastic Trash",
+      "stackSize": 5
+    },
+    {
+      "id": "playing-cards",
+      "name": "Playing Cards",
+      "stackSize": 3
+    },
+    {
+      "id": "pneumatic-actuator",
+      "name": "Pneumatic Actuator",
+      "stackSize": 3
+    },
+    {
+      "id": "polished-den-bed-design",
+      "name": "Polished Den Bed Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-den-shelf-design",
+      "name": "Polished Den Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-diner-chair-design",
+      "name": "Polished Diner Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-faculty-chair-design",
+      "name": "Polished Faculty Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-faculty-table-design",
+      "name": "Polished Faculty Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-round-sofa-design",
+      "name": "Polished Round Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-stash-design",
+      "name": "Polished Stash Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-study-sofa-design",
+      "name": "Polished Study Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-wardrobe-design",
+      "name": "Polished Wardrobe Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polished-weapon-rack-design",
+      "name": "Polished Weapon Rack Design",
+      "stackSize": 1
+    },
+    {
+      "id": "polluted-air-filter",
+      "name": "Polluted Air Filter",
+      "stackSize": 3
+    },
+    {
+      "id": "pop-trigger",
+      "name": "Pop Trigger",
+      "stackSize": 3
+    },
+    {
+      "id": "portable-television",
+      "name": "Portable TV",
+      "stackSize": 1
+    },
+    {
+      "id": "possibly-toxic-plant",
+      "name": "Possibly Toxic Plant",
+      "stackSize": 1
+    },
+    {
+      "id": "poster-natural-wonder",
+      "name": "Poster of Natural Wonders",
+      "stackSize": 3
+    },
+    {
+      "id": "potted-plant",
+      "name": "Potted Plant",
+      "stackSize": 2
+    },
+    {
+      "id": "pottery",
+      "name": "Pottery",
+      "stackSize": 3
+    },
+    {
+      "id": "power-bank",
+      "name": "Power Bank",
+      "stackSize": 3
+    },
+    {
+      "id": "power-cable",
+      "name": "Power Cable",
+      "stackSize": 3
+    },
+    {
+      "id": "powered-descender",
+      "name": "Powered Descender",
+      "stackSize": 1
+    },
+    {
+      "id": "powered-descender-blueprint",
+      "name": "Powered Descender Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "power-rod",
+      "name": "Power Rod",
+      "stackSize": 3
+    },
+    {
+      "id": "precision-gimbal",
+      "name": "Precision Gimbal",
+      "stackSize": 1
+    },
+    {
+      "id": "pressure-regulator",
+      "name": "Pressure Regulator",
+      "stackSize": 3
+    },
+    {
+      "id": "prickly-pear",
+      "name": "Prickly Pear",
+      "stackSize": 10
+    },
+    {
+      "id": "printed-fabric-chair-design",
+      "name": "Printed Fabric Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "printed-lab-sofa-design",
+      "name": "Printed Lab Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "processor",
+      "name": "Processor",
+      "stackSize": 5
+    },
+    {
+      "id": "project-heartwood-blueprints",
+      "name": "Project Heartwood Blueprints",
+      "stackSize": 1
+    },
+    {
+      "id": "projector",
+      "name": "Projector",
+      "stackSize": 3
+    },
+    {
+      "id": "project-pathos-empathy-core",
+      "name": "Project Pathos Empathy Core",
+      "stackSize": 1
+    },
+    {
+      "id": "propellant-valve-assembly",
+      "name": "Propellant Valve Assembly",
+      "stackSize": 3
+    },
+    {
+      "id": "pulse-mine",
+      "name": "Pulse Mine",
+      "stackSize": 3
+    },
+    {
+      "id": "pulse-mine-blueprint",
+      "name": "Pulse Mine Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "purification-system-blueprint",
+      "name": "Purification System Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "queen-reactor",
+      "name": "Queen Reactor",
+      "stackSize": 1
+    },
+    {
+      "id": "radial-press",
+      "name": "Radial Press",
+      "stackSize": 3
+    },
+    {
+      "id": "radio",
+      "name": "Radio",
+      "stackSize": 3
+    },
+    {
+      "id": "radio-relay",
+      "name": "Radio Relay",
+      "stackSize": 3
+    },
+    {
+      "id": "raider-flag",
+      "name": "Raider Flag",
+      "stackSize": 1
+    },
+    {
+      "id": "raider-hatch-key",
+      "name": "Raider Hatch Key",
+      "stackSize": 1
+    },
+    {
+      "id": "raider-logbook",
+      "name": "Raider Logbook",
+      "stackSize": 5
+    },
+    {
+      "id": "raiders-refuge-security-code",
+      "name": "Raider's Refuge Security Code",
+      "stackSize": 1
+    },
+    {
+      "id": "rascal",
+      "name": "Rascal",
+      "stackSize": 1
+    },
+    {
+      "id": "rascal-blueprint",
+      "name": "Rascal Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "rascal-ii",
+      "name": "Rascal II",
+      "stackSize": 1
+    },
+    {
+      "id": "rascal-iii",
+      "name": "Rascal III",
+      "stackSize": 1
+    },
+    {
+      "id": "rascal-iv",
+      "name": "Rascal IV",
+      "stackSize": 1
+    },
+    {
+      "id": "rattler-i",
+      "name": "Rattler I",
+      "stackSize": 1
+    },
+    {
+      "id": "rattler-ii",
+      "name": "Rattler II",
+      "stackSize": 1
+    },
+    {
+      "id": "rattler-iii",
+      "name": "Rattler III",
+      "stackSize": 1
+    },
+    {
+      "id": "rattler-iv",
+      "name": "Rattler IV",
+      "stackSize": 1
+    },
+    {
+      "id": "recorder",
+      "name": "Recorder",
+      "stackSize": 1
+    },
+    {
+      "id": "red-coral-jewelry",
+      "name": "Red Coral Jewelry",
+      "stackSize": 3
+    },
+    {
+      "id": "red-light-stick",
+      "name": "Red Light Stick",
+      "stackSize": 5
+    },
+    {
+      "id": "red-light-stick-blueprint",
+      "name": "Red Light Stick Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "red-study-sofa-design",
+      "name": "Red Study Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "reinforced-reception-security-code",
+      "name": "Reinforced Reception Security Code",
+      "stackSize": 1
+    },
+    {
+      "id": "remote-control",
+      "name": "Remote Control",
+      "stackSize": 3
+    },
+    {
+      "id": "remote-raider-flare",
+      "name": "Remote Raider Flare",
+      "stackSize": 3
+    },
+    {
+      "id": "remote-raider-flare-blueprint",
+      "name": "Remote Raider Flare Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "renegade-i",
+      "name": "Renegade I",
+      "stackSize": 1
+    },
+    {
+      "id": "renegade-ii",
+      "name": "Renegade II",
+      "stackSize": 1
+    },
+    {
+      "id": "renegade-iii",
+      "name": "Renegade III",
+      "stackSize": 1
+    },
+    {
+      "id": "renegade-iv",
+      "name": "Renegade IV",
+      "stackSize": 1
+    },
+    {
+      "id": "research-points",
+      "name": "Research Points",
+      "stackSize": 2000000000
+    },
+    {
+      "id": "resin",
+      "name": "Resin",
+      "stackSize": 10
+    },
+    {
+      "id": "restaurant-table-design",
+      "name": "Restaurant Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "ripped-safety-vest",
+      "name": "Ripped Safety Vest",
+      "stackSize": 3
+    },
+    {
+      "id": "riven-tides-classifed-records-keycard",
+      "name": "Riven Tides Classified Records Keycard",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-crane-house-keycard",
+      "name": "Riven Tides Crane House Keycard",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-102",
+      "name": "Riven Tides Hotel Keycard No. 102",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-107",
+      "name": "Riven Tides Hotel Keycard No. 107",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-113",
+      "name": "Riven Tides Hotel Keycard No. 113",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-205",
+      "name": "Riven Tides Hotel Keycard No. 205",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-208",
+      "name": "Riven Tides Hotel Keycard No. 208",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-311",
+      "name": "Riven Tides Hotel Keycard No. 311",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-hotel-keycard-no-404",
+      "name": "Riven Tides Hotel Keycard No. 404",
+      "stackSize": 1
+    },
+    {
+      "id": "riven-tides-secure-storage-keycard",
+      "name": "Riven Tides Secure Storage Keycard",
+      "stackSize": 1
+    },
+    {
+      "id": "rocketeer-part",
+      "name": "Rocketeer Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "rocket-thruster",
+      "name": "Rocket Thruster",
+      "stackSize": 3
+    },
+    {
+      "id": "roots",
+      "name": "Roots",
+      "stackSize": 10
+    },
+    {
+      "id": "rope",
+      "name": "Rope",
+      "stackSize": 5
+    },
+    {
+      "id": "rosary",
+      "name": "Rosary",
+      "stackSize": 3
+    },
+    {
+      "id": "rotary-encoder",
+      "name": "Rotary Encoder",
+      "stackSize": 3
+    },
+    {
+      "id": "rubber-bands",
+      "name": "Rubber Bands",
+      "stackSize": 3
+    },
+    {
+      "id": "rubber-duck",
+      "name": "Rubber Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "rubber-pad",
+      "name": "Rubber Pad",
+      "stackSize": 3
+    },
+    {
+      "id": "rubber-parts-recipe",
+      "name": "Rubber Parts",
+      "stackSize": 50
+    },
+    {
+      "id": "ruined-accordion",
+      "name": "Ruined Accordion",
+      "stackSize": 3
+    },
+    {
+      "id": "ruined-augment",
+      "name": "Ruined Augment",
+      "stackSize": 1
+    },
+    {
+      "id": "ruined-baton",
+      "name": "Ruined Baton",
+      "stackSize": 3
+    },
+    {
+      "id": "ruined-emperor-beacon",
+      "name": "Ruined Emperor Beacon",
+      "stackSize": 8
+    },
+    {
+      "id": "ruined-handcuffs",
+      "name": "Ruined Handcuffs",
+      "stackSize": 3
+    },
+    {
+      "id": "ruined-parachute",
+      "name": "Ruined Parachute",
+      "stackSize": 3
+    },
+    {
+      "id": "ruined-riot-shield",
+      "name": "Ruined Riot Shield",
+      "stackSize": 3
+    },
+    {
+      "id": "ruined-tactical-vest",
+      "name": "Ruined Tactical Vest",
+      "stackSize": 3
+    },
+    {
+      "id": "rusted-bolts",
+      "name": "Rusted Bolts",
+      "stackSize": 3
+    },
+    {
+      "id": "rusted-gear",
+      "name": "Rusted Gear",
+      "stackSize": 3
+    },
+    {
+      "id": "rusted-shut-medical-kit",
+      "name": "Rusted Shut Medical Kit",
+      "stackSize": 3
+    },
+    {
+      "id": "rusted-tools",
+      "name": "Rusted Tools",
+      "stackSize": 3
+    },
+    {
+      "id": "rusty-arc-steel",
+      "name": "Rusty ARC Steel",
+      "stackSize": 3
+    },
+    {
+      "id": "sacrifice-stencil",
+      "name": "Sacrifice Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "sample-cleaner",
+      "name": "Sample Cleaner",
+      "stackSize": 3
+    },
+    {
+      "id": "scout-patrol-note",
+      "name": "Scout Patrol Note",
+      "stackSize": 1
+    },
+    {
+      "id": "secret-meeting-info",
+      "name": "Secret Meeting Info",
+      "stackSize": 1
+    },
+    {
+      "id": "security-chair-design",
+      "name": "Security Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "seed-vault-box-key",
+      "name": "Seed Vault Box Key",
+      "stackSize": 1
+    },
+    {
+      "id": "seeker-grenade",
+      "name": "Seeker Grenade",
+      "stackSize": 5
+    },
+    {
+      "id": "seeker-grenade-blueprint",
+      "name": "Seeker Grenade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "sensors-recipe",
+      "name": "Sensors",
+      "stackSize": 5
+    },
+    {
+      "id": "sentinel-part",
+      "name": "Sentinel Firing Core",
+      "stackSize": 3
+    },
+    {
+      "id": "serac-stencil",
+      "name": "Serac Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "sextant",
+      "name": "Sextant",
+      "stackSize": 5
+    },
+    {
+      "id": "shaker",
+      "name": "Shaker",
+      "stackSize": 1
+    },
+    {
+      "id": "sheet-metal",
+      "name": "Sheet Metal",
+      "stackSize": 50
+    },
+    {
+      "id": "shield-recharger",
+      "name": "Shield Recharger",
+      "stackSize": 5
+    },
+    {
+      "id": "shield-stress-testing",
+      "name": "Shield Stress Testing",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-ammo",
+      "name": "Shotgun Ammo",
+      "stackSize": 20
+    },
+    {
+      "id": "shotgun-choke-i",
+      "name": "Shotgun Choke I",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-choke-ii",
+      "name": "Shotgun Choke II",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-choke-ii-recipe",
+      "name": "Shotgun Choke II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-choke-iii",
+      "name": "Shotgun Choke III",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-choke-iii-recipe",
+      "name": "Shotgun Choke III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-silencer",
+      "name": "Shotgun Silencer",
+      "stackSize": 1
+    },
+    {
+      "id": "shotgun-silencer-blueprint",
+      "name": "Shotgun Silencer Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "showstopper",
+      "name": "Showstopper",
+      "stackSize": 5
+    },
+    {
+      "id": "showstopper-blueprint",
+      "name": "Showstopper Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "shrapnel-grenade",
+      "name": "Shrapnel Grenade",
+      "stackSize": 5
+    },
+    {
+      "id": "shredder-gyro",
+      "name": "Shredder Gyro",
+      "stackSize": 3
+    },
+    {
+      "id": "signal-amplifier",
+      "name": "Signal Amplifier",
+      "stackSize": 3
+    },
+    {
+      "id": "silencer-i",
+      "name": "Silencer I",
+      "stackSize": 1
+    },
+    {
+      "id": "silencer-i-recipe",
+      "name": "Silencer I Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "silencer-ii",
+      "name": "Silencer II",
+      "stackSize": 1
+    },
+    {
+      "id": "silencer-ii-recipe",
+      "name": "Silencer II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "silencer-iii",
+      "name": "Silencer III",
+      "stackSize": 1
+    },
+    {
+      "id": "silver-teaspoon-set",
+      "name": "Silver Teaspoon Set",
+      "stackSize": 3
+    },
+    {
+      "id": "simple-gun-parts",
+      "name": "Simple Gun Parts",
+      "stackSize": 10
+    },
+    {
+      "id": "sirena-dorata-ship-model",
+      "name": "\"Sirena Dorata\" Ship Model",
+      "stackSize": 3
+    },
+    {
+      "id": "skulker-driver",
+      "name": "Skulker Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "skulker-targeter",
+      "name": "Skulker Targeter",
+      "stackSize": 3
+    },
+    {
+      "id": "slipstream-stencil",
+      "name": "Slipstream Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "small-lab-cabinet-design",
+      "name": "Small Lab Cabinet Design",
+      "stackSize": 1
+    },
+    {
+      "id": "smoke-grenade",
+      "name": "Smoke Grenade",
+      "stackSize": 5
+    },
+    {
+      "id": "smoke-grenade-blueprint",
+      "name": "Smoke Grenade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "laser-trap-smoke-recipe",
+      "name": "Smoke Grenade Trap",
+      "stackSize": 3
+    },
+    {
+      "id": "snap-blast-grenade",
+      "name": "Snap Blast Grenade",
+      "stackSize": 3
+    },
+    {
+      "id": "snap-hook",
+      "name": "Snap Hook",
+      "stackSize": 1
+    },
+    {
+      "id": "snap-hook-recipe",
+      "name": "Snap Hook Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "snitch-scanner",
+      "name": "Snitch Scanner",
+      "stackSize": 3
+    },
+    {
+      "id": "snowball",
+      "name": "Snowball",
+      "stackSize": 5
+    },
+    {
+      "id": "solid-core-casting-tech",
+      "name": "Solid-Core Casting Tech",
+      "stackSize": 1
+    },
+    {
+      "id": "solid-green-chair-design",
+      "name": "Solid Green Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "spaceport-container-storage-key",
+      "name": "Spaceport Container Storage Key",
+      "stackSize": 1
+    },
+    {
+      "id": "spaceport-ground-control-key",
+      "name": "Spaceport Control Tower Key",
+      "stackSize": 1
+    },
+    {
+      "id": "spaceport-trench-tower-key",
+      "name": "Spaceport Trench Tower Key",
+      "stackSize": 1
+    },
+    {
+      "id": "spaceport-warehouse-key",
+      "name": "Spaceport Warehouse Key",
+      "stackSize": 1
+    },
+    {
+      "id": "speaker-component",
+      "name": "Speaker Component",
+      "stackSize": 5
+    },
+    {
+      "id": "spectrometer",
+      "name": "Spectrometer",
+      "stackSize": 3
+    },
+    {
+      "id": "spectrum-analyzer",
+      "name": "Spectrum Analyzer",
+      "stackSize": 3
+    },
+    {
+      "id": "spotter-relay",
+      "name": "Spotter Relay",
+      "stackSize": 3
+    },
+    {
+      "id": "spring-cushion",
+      "name": "Spring Cushion",
+      "stackSize": 3
+    },
+    {
+      "id": "stable-stock-i",
+      "name": "Stable Stock I",
+      "stackSize": 1
+    },
+    {
+      "id": "stable-stock-ii",
+      "name": "Stable Stock II",
+      "stackSize": 1
+    },
+    {
+      "id": "stable-stock-ii-recipe",
+      "name": "Stable Stock II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "stable-stock-iii",
+      "name": "Stable Stock III",
+      "stackSize": 1
+    },
+    {
+      "id": "stable-stock-iii-recipe",
+      "name": "Stable Stock III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "stack-of-movie-tapes",
+      "name": "Stack of Movie Tapes",
+      "stackSize": 1
+    },
+    {
+      "id": "statuette",
+      "name": "Statuette",
+      "stackSize": 3
+    },
+    {
+      "id": "steel-cable",
+      "name": "Steel Cable",
+      "stackSize": 5
+    },
+    {
+      "id": "spring",
+      "name": "Steel Spring",
+      "stackSize": 15
+    },
+    {
+      "id": "stella-montis-archives-key",
+      "name": "Stella Montis Archives Key",
+      "stackSize": 1
+    },
+    {
+      "id": "stella-montis-assembly-admin-key",
+      "name": "Stella Montis Assembly Admin Key",
+      "stackSize": 1
+    },
+    {
+      "id": "stella-montis-medical-storage-key",
+      "name": "Stella Montis Medical Storage Key",
+      "stackSize": 1
+    },
+    {
+      "id": "stella-montis-security-checkpoint-key",
+      "name": "Stella Montis Security Checkpoint Key",
+      "stackSize": 1
+    },
+    {
+      "id": "stencil-parts",
+      "name": "Stencil Parts",
+      "stackSize": 500
+    },
+    {
+      "id": "sterilized-bandage",
+      "name": "Sterilized Bandage",
+      "stackSize": 3
+    },
+    {
+      "id": "stiletto-blueprint",
+      "name": "Stiletto Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "stiletto",
+      "name": "Stiletto I",
+      "stackSize": 1
+    },
+    {
+      "id": "stiletto-ii",
+      "name": "Stiletto II",
+      "stackSize": 1
+    },
+    {
+      "id": "stiletto-iii",
+      "name": "Stiletto III",
+      "stackSize": 1
+    },
+    {
+      "id": "stiletto-iv",
+      "name": "Stiletto IV",
+      "stackSize": 1
+    },
+    {
+      "id": "stitcher-i",
+      "name": "Stitcher I",
+      "stackSize": 1
+    },
+    {
+      "id": "stitcher-ii",
+      "name": "Stitcher II",
+      "stackSize": 1
+    },
+    {
+      "id": "stitcher-iii",
+      "name": "Stitcher III",
+      "stackSize": 1
+    },
+    {
+      "id": "stitcher-iv",
+      "name": "Stitcher IV",
+      "stackSize": 1
+    },
+    {
+      "id": "study-armchair-design-res-armchair-01-a",
+      "name": "Study Armchair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "study-armchair-design-res-sofa-01-y150-a",
+      "name": "Study Armchair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "study-ceiling-lamp-design",
+      "name": "Study Ceiling Lamp Design",
+      "stackSize": 1
+    },
+    {
+      "id": "study-piano-design",
+      "name": "Study Piano Design",
+      "stackSize": 1
+    },
+    {
+      "id": "study-tv-stand-design",
+      "name": "Study TV Stand Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-aviary-table-design",
+      "name": "Sturdy Aviary Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-bureau-chair-design",
+      "name": "Sturdy Bureau Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-bureau-sofa-design",
+      "name": "Sturdy Bureau Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-den-bed-design",
+      "name": "Sturdy Den Bed Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-den-shelf-design",
+      "name": "Sturdy Den Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-faculty-chair-design",
+      "name": "Sturdy Faculty Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-faculty-table-design",
+      "name": "Sturdy Faculty Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-lab-cabinet-design",
+      "name": "Sturdy Lab Cabinet Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-lab-cabinet-wide-design",
+      "name": "Sturdy Lab Cabinet (Wide) Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-lab-chair-design",
+      "name": "Sturdy Lab Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-shelf-design",
+      "name": "Sturdy Shelf Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-stash-design",
+      "name": "Sturdy Stash Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-wardrobe-design",
+      "name": "Sturdy Wardrobe Design",
+      "stackSize": 1
+    },
+    {
+      "id": "sturdy-weapon-rack-design",
+      "name": "Sturdy Weapon Rack Design",
+      "stackSize": 1
+    },
+    {
+      "id": "surge-coil",
+      "name": "Surge Coil",
+      "stackSize": 3
+    },
+    {
+      "id": "surge-coil-blueprint",
+      "name": "Surge Coil Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "surge-shield-recharger",
+      "name": "Surge Shield Recharger",
+      "stackSize": 5
+    },
+    {
+      "id": "surveyor-vault",
+      "name": "Surveyor Vault",
+      "stackSize": 3
+    },
+    {
+      "id": "synthesized-fuel",
+      "name": "Synthesized Fuel",
+      "stackSize": 5
+    },
+    {
+      "id": "syringe",
+      "name": "Syringe",
+      "stackSize": 5
+    },
+    {
+      "id": "tactical-mk-1",
+      "name": "Tactical Mk. 1",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk-2",
+      "name": "Tactical Mk. 2",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk3-defensive",
+      "name": "Tactical Mk. 3 (Defensive)",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk3-defensive-blueprint",
+      "name": "Tactical Mk. 3 (Defensive) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk-3-healing",
+      "name": "Tactical Mk. 3 (Healing)",
+      "stackSize": 1
+    },
+    {
+      "id": "tacical-mk3-healing-blueprint",
+      "name": "Tactical Mk. 3 (Healing) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk-3-revival",
+      "name": "Tactical Mk. 3 (Revival)",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk-3-revival-blueprint",
+      "name": "Tactical Mk. 3 (Revival) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "tactical-mk-3-smoke",
+      "name": "Tactical Mk. 3 (Smoke)",
+      "stackSize": 1
+    },
+    {
+      "id": "utility-augment-t3-smoke-blueprint",
+      "name": "Tactical Mk. 3 (Smoke) Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "tagging-grenade",
+      "name": "Tagging Grenade",
+      "stackSize": 3
+    },
+    {
+      "id": "tagging-grenade-recipe",
+      "name": "Tagging Grenade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "targeted-component-trial",
+      "name": "Targeted Component Trial",
+      "stackSize": 1
+    },
+    {
+      "id": "tattered-arc-lining",
+      "name": "Tattered ARC Lining",
+      "stackSize": 3
+    },
+    {
+      "id": "tattered-clothes",
+      "name": "Tattered Clothes",
+      "stackSize": 3
+    },
+    {
+      "id": "telemetry-transceiver",
+      "name": "Telemetry Transceiver",
+      "stackSize": 3
+    },
+    {
+      "id": "tellurion",
+      "name": "Tellurion",
+      "stackSize": 1
+    },
+    {
+      "id": "tempest-i-recipe",
+      "name": "Tempest Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "tempest-i",
+      "name": "Tempest I",
+      "stackSize": 1
+    },
+    {
+      "id": "tempest-ii",
+      "name": "Tempest II",
+      "stackSize": 1
+    },
+    {
+      "id": "tempest-iii",
+      "name": "Tempest III",
+      "stackSize": 1
+    },
+    {
+      "id": "tempest-iv",
+      "name": "Tempest IV",
+      "stackSize": 1
+    },
+    {
+      "id": "tether-launcher",
+      "name": "Tether Launcher",
+      "stackSize": 1
+    },
+    {
+      "id": "tether-launcher-blueprint",
+      "name": "Tether Launcher Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "thermal-shaker",
+      "name": "Thermal Shaker",
+      "stackSize": 3
+    },
+    {
+      "id": "thermite-tipped-rounds",
+      "name": "Thermite-Tipped Rounds",
+      "stackSize": 1
+    },
+    {
+      "id": "thermostat",
+      "name": "Thermostat",
+      "stackSize": 3
+    },
+    {
+      "id": "tick-pod",
+      "name": "Tick Pod",
+      "stackSize": 3
+    },
+    {
+      "id": "toaster",
+      "name": "Toaster",
+      "stackSize": 3
+    },
+    {
+      "id": "top-mounted-optics-retrofittings",
+      "name": "Top Mounted Optics Retrofittings",
+      "stackSize": 1
+    },
+    {
+      "id": "torch-ginger",
+      "name": "Torch Ginger",
+      "stackSize": 15
+    },
+    {
+      "id": "torn-blanket",
+      "name": "Torn Blanket",
+      "stackSize": 3
+    },
+    {
+      "id": "torn-book",
+      "name": "Torn Book",
+      "stackSize": 5
+    },
+    {
+      "id": "torrent-i-recipe",
+      "name": "Torrente Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "torrente-i",
+      "name": "Torrente I",
+      "stackSize": 1
+    },
+    {
+      "id": "torrente-ii",
+      "name": "Torrente II",
+      "stackSize": 1
+    },
+    {
+      "id": "torrente-iii",
+      "name": "Torrente III",
+      "stackSize": 1
+    },
+    {
+      "id": "torrente-iv",
+      "name": "Torrente IV",
+      "stackSize": 1
+    },
+    {
+      "id": "tortoise-stencil",
+      "name": "Tortoise Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "trailblazer-grenade",
+      "name": "Trailblazer",
+      "stackSize": 3
+    },
+    {
+      "id": "trailblazer-grenade-blueprint",
+      "name": "Trailblazer Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "train-model",
+      "name": "Train Model",
+      "stackSize": 10
+    },
+    {
+      "id": "trigger-nade",
+      "name": "Trigger 'Nade",
+      "stackSize": 3
+    },
+    {
+      "id": "trigger-nade-recipe",
+      "name": "Trigger Nade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "trigger-reset-systems",
+      "name": "Trigger Reset Systems",
+      "stackSize": 1
+    },
+    {
+      "id": "tropical-duck",
+      "name": "Tropical Duck",
+      "stackSize": 15
+    },
+    {
+      "id": "tufted-sofa-design",
+      "name": "Tufted Sofa Design",
+      "stackSize": 1
+    },
+    {
+      "id": "turbine-compressor",
+      "name": "Turbine Compressor",
+      "stackSize": 3
+    },
+    {
+      "id": "turbo-pump",
+      "name": "Turbo Pump",
+      "stackSize": 3
+    },
+    {
+      "id": "twilight-compass-ship-model",
+      "name": "\"Twilight Compass\" Ship Model",
+      "stackSize": 5
+    },
+    {
+      "id": "unknown-arc-circuitry",
+      "name": "Unknown ARC Circuitry",
+      "stackSize": 1
+    },
+    {
+      "id": "unusable-weapon",
+      "name": "Unusable Weapon",
+      "stackSize": 3
+    },
+    {
+      "id": "vaporizer-regulator",
+      "name": "Vaporizer Regulator",
+      "stackSize": 3
+    },
+    {
+      "id": "vase",
+      "name": "Vase",
+      "stackSize": 3
+    },
+    {
+      "id": "velocity-ship-model",
+      "name": "\"Velocity\" Ship Model",
+      "stackSize": 3
+    },
+    {
+      "id": "venator-recipe",
+      "name": "Venator Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "venator-i",
+      "name": "Venator I",
+      "stackSize": 1
+    },
+    {
+      "id": "venator-ii",
+      "name": "Venator II",
+      "stackSize": 1
+    },
+    {
+      "id": "venator-iii",
+      "name": "Venator III",
+      "stackSize": 1
+    },
+    {
+      "id": "venator-iv",
+      "name": "Venator IV",
+      "stackSize": 1
+    },
+    {
+      "id": "venetian-dresser-design",
+      "name": "Venetian Dresser Design",
+      "stackSize": 1
+    },
+    {
+      "id": "verdigris-stencil",
+      "name": "Verdigris Stencil",
+      "stackSize": 1
+    },
+    {
+      "id": "vertical-grip-i",
+      "name": "Vertical Grip I",
+      "stackSize": 1
+    },
+    {
+      "id": "vertical-grip-ii",
+      "name": "Vertical Grip II",
+      "stackSize": 1
+    },
+    {
+      "id": "vertical-grip-ii-recipe",
+      "name": "Vertical Grip II Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "vertical-grip-iii",
+      "name": "Vertical Grip III",
+      "stackSize": 1
+    },
+    {
+      "id": "vertical-grip-iii-recipe",
+      "name": "Vertical Grip III Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "very-comfortable-pillow",
+      "name": "Very Comfortable Pillow",
+      "stackSize": 3
+    },
+    {
+      "id": "vintage-steering-wheel",
+      "name": "Vintage Steering Wheel",
+      "stackSize": 5
+    },
+    {
+      "id": "vita-shot",
+      "name": "Vita Shot",
+      "stackSize": 3
+    },
+    {
+      "id": "vita-shot-recipe",
+      "name": "Vita Shot Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "vita-spray",
+      "name": "Vita Spray",
+      "stackSize": 1
+    },
+    {
+      "id": "vita-spray-recipe",
+      "name": "Vita Spray Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "volcanic-rock",
+      "name": "Volcanic Rock",
+      "stackSize": 5
+    },
+    {
+      "id": "voltage-converter",
+      "name": "Voltage Converter",
+      "stackSize": 5
+    },
+    {
+      "id": "vulcano-blueprint",
+      "name": "Vulcano Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "vulcano-i",
+      "name": "Vulcano I",
+      "stackSize": 1
+    },
+    {
+      "id": "vulcano-ii",
+      "name": "Vulcano II",
+      "stackSize": 1
+    },
+    {
+      "id": "vulcano-iii",
+      "name": "Vulcano III",
+      "stackSize": 1
+    },
+    {
+      "id": "vulcano-iv",
+      "name": "Vulcano IV",
+      "stackSize": 1
+    },
+    {
+      "id": "warehouse-chair-design",
+      "name": "Warehouse Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "warehouse-desk-design",
+      "name": "Warehouse Desk Design",
+      "stackSize": 1
+    },
+    {
+      "id": "warehouse-dresser-design",
+      "name": "Warehouse Dresser Design",
+      "stackSize": 1
+    },
+    {
+      "id": "wasp-driver",
+      "name": "Wasp Driver",
+      "stackSize": 3
+    },
+    {
+      "id": "water-filter",
+      "name": "Water Filter",
+      "stackSize": 3
+    },
+    {
+      "id": "water-pump",
+      "name": "Water Pump",
+      "stackSize": 3
+    },
+    {
+      "id": "weather-station-chair-design",
+      "name": "Weather Station Chair Design",
+      "stackSize": 1
+    },
+    {
+      "id": "weather-station-table-design",
+      "name": "Weather Station Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "white-flag",
+      "name": "White Flag",
+      "stackSize": 5
+    },
+    {
+      "id": "white-flag-blueprint",
+      "name": "White Flag Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "wind-sprite-ship-model",
+      "name": "\"Wind Sprite\" Ship Model",
+      "stackSize": 10
+    },
+    {
+      "id": "winter-table-design",
+      "name": "Winter Table Design",
+      "stackSize": 1
+    },
+    {
+      "id": "wires-recipe",
+      "name": "Wires",
+      "stackSize": 15
+    },
+    {
+      "id": "wolfpack",
+      "name": "Wolfpack",
+      "stackSize": 1
+    },
+    {
+      "id": "wolfpack-recipe",
+      "name": "Wolfpack Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "work-light-design",
+      "name": "Work Light Design",
+      "stackSize": 1
+    },
+    {
+      "id": "yank-grenade",
+      "name": "Yank Grenade",
+      "stackSize": 3
+    },
+    {
+      "id": "yank-grenade-blueprint",
+      "name": "Yank Grenade Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "yellow-light-stick",
+      "name": "Yellow Light Stick",
+      "stackSize": 5
+    },
+    {
+      "id": "yellow-light-stick-blueprint",
+      "name": "Yellow Light Stick Blueprint",
+      "stackSize": 1
+    },
+    {
+      "id": "zipline",
+      "name": "Zipline",
+      "stackSize": 3
+    }
+  ]
+}

@@ -19,6 +19,8 @@ Loja principal do site. Exibe itens do catálogo ARC Raiders à venda e kits ger
 - Cards de categoria sem fotos por enquanto; as imagens serão fornecidas depois.
 - Armas: `isWeapon` ou tipo `Weapon`; projetos são excluídos.
 - Todos os itens: exclui armas identificadas por `isWeapon` ou tipo `Weapon`; elas permanecem na aba Armas. A lista, a contagem e os filtros de tipos seguem a mesma exclusão.
+- Nessa aba, itens empilháveis são vendidos somente por stack completo. `src/data/item-stack-sizes.json` registra a consulta ao campo `stat_block.stackSize` do MetaForge (fonte e data inclusas). O limite confirmado por ID ou nome original prevalece sobre o valor antigo do catálogo; em ausência usa o `stack_size` válido cadastrado. Móveis (`Furniture`) sem campo de pilha mantêm venda por unidade; para outros tipos sem limite conhecido a compra fica indisponível. Limite 1 significa venda por unidade. O preço do stack é o preço unitário existente multiplicado pelo limite; cards e modal deixam a quantidade explícita. Estoque parcial não permite vender uma pilha incompleta.
+- O carrinho usa `stack:<itemId>:<tamanho>` e sua quantidade corresponde a stacks. No checkout o servidor consulta novamente o item/preços, valida limite e valor e converte para unidades reais antes de baixar estoque e criar pedido/inventário. Alteração de limite/preço exige adicionar novamente ao carrinho. Categorias, kits livres e loadouts mantêm seus fluxos próprios.
 - Consumíveis: tipo `Consumable` e itens de cura, vigor e escudo classificados como `Quick Use`.
 - Granadas: `Grenade`, `Throwable` e granadas de `Quick Use` identificadas pelo nome; armadilhas e projetos são excluídos.
 - Materiais: `Material`, `Basic Material`, `Advanced Material`, `Refined Material` e `Topside Material`.
