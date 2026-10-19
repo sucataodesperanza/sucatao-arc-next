@@ -10,6 +10,6 @@ export async function readPaintedWeaponItems(ids:string[]): Promise<CatalogItem[
   if(catalog.error||stock.error)throw new Error("Não foi possível conferir a arma e a estampa.")
   return (catalog.data??[]).map(item=>{
     const row=(stock.data??[]).find(s=>s.catalog_item_id===item.id)
-    return {id:item.id,name:item.name,nameEn:item.name_en,type:item.item_type,isWeapon:item.is_weapon,rarity:item.rarity,image:item.icon_url,weightKg:item.weight_kg,stackSize:item.stack_size,value:row?.value??0,quantity:row?.quantity??0,pricePoints:row?.price_points??undefined,priceCash:row?.price_cash??undefined}
+    return {id:item.id,name:item.name,nameEn:item.name_en,type:item.item_type,isWeapon:item.is_weapon,rarity:item.rarity,image:item.icon_url,weightKg:item.weight_kg,stackSize:item.stack_size,value:row?.value??0,quantity:row?.quantity??0,pricePoints:row?.price_points>0?row.price_points:undefined,priceCash:row?.price_cash>0?row.price_cash:undefined}
   })
 }
