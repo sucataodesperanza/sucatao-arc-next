@@ -1,0 +1,16 @@
+.admin-weapon-kits { color: var(--text, #eee); padding: 24px; max-width: 1200px; }
+.admin-weapon-kits h1 { margin: 0 0 10px; font-size: 26px; }
+.admin-weapon-kits h2 { font-size: 17px; }
+.admin-weapon-kits p, .admin-weapon-kits li { color: var(--muted, #99a5b5); font-size: 13px; line-height: 1.6; }
+.admin-weapon-kits button { cursor: pointer; padding: 10px 14px; border: 1px solid var(--line, #38404b); border-radius: 6px; background: var(--surface-2, #192029); color: inherit; font-weight: 700; }
+.admin-weapon-kits button:disabled { opacity: .5; cursor: not-allowed; }
+.admin-weapon-kits button:focus-visible, .admin-weapon-kits input:focus-visible, .admin-weapon-kits select:focus-visible { outline: 2px solid var(--red, #f21); }
+.admin-kit-list { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); margin: 20px 0; }
+.admin-kit-list article, .admin-kit-form, .admin-weapon-kits > section { padding: 20px; border: 1px solid var(--line, #38404b); border-radius: 8px; background: var(--surface, #121820); }
+.admin-kit-list article > div, .admin-kit-form > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-kit-form { display: grid; gap: 16px; margin-top: 20px; }
+.admin-kit-form label { display: grid; gap: 7px; font-size: 13px; }
+.admin-kit-form input, .admin-kit-form select { width: 100%; padding: 10px; color: inherit; background: #10151d; border: 1px solid var(--line, #38404b); border-radius: 6px; }
+.admin-kit-form .admin-kit-checkbox { display: flex; align-items: center; gap: 10px; }
+.admin-kit-checkbox input { width: auto; }
+@media (max-width: 650px) { .admin-weapon-kits { padding: 12px; } .admin-kit-list { grid-template-columns: 1fr; } }

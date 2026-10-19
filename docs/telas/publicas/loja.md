@@ -100,6 +100,10 @@ A aba `/loja?tab=loadouts` usa o mesmo visual da loja, sem banner e sem catálog
 
 ### Kits de armas
 
+Gestão em `/admin/kits-de-armas`, acessível pelo menu Kits de armas. Permite criar e editar nome, arma/tier, acessórios compatíveis, posição (menores primeiro), ativo e destaque. Desativar ou retirar destaque oculta o card na próxima abertura/atualização da loja. Sem kits cadastrados, permanecem as sugestões iniciais; o botão Cadastrar as três sugestões iniciais as transforma em registros editáveis. Após o primeiro cadastro, apenas registros ativos e em destaque aparecem; desligar todos não recria sugestões.
+
+Persistência na tabela existente `app_entities`, com `entity_type = weapon_kit` e dados no `payload`. A tabela tem RLS habilitada; as rotas administrativas exigem `requireAdmin` e usam o cliente de serviço somente no servidor. A rota pública retorna apenas kits ativos/em destaque e seus componentes públicos. POST valida nome, posição, quantidade e encaixes usando o catálogo ativo; alterações não permitem mudar o tipo da entidade. Não requer migração de banco. Rotas: `/api/admin/weapon-kits` e `/api/store/weapon-kits`.
+
 A aba Armas inclui três combinações sugeridas (Águia-Pescadora IV, Renegado IV e Afélio Amplified), editor de uma arma com seus encaixes dinâmicos e resumo à direita. A aba fica focada nos kits: sem catálogo avulso, filtros ou cards adicionais abaixo. Armas individuais continuam acessíveis em Todos os itens. Os acessórios sugeridos priorizam estoque e podem ser trocados ou removidos; trocar arma/tier limpa os acessórios para evitar combinações inválidas. Sem preços ou descontos fictícios: valores são a soma de `pricePoints`/`priceCash` dos componentes. Quantidade de kits multiplica todos os componentes. A compra valida estoque, moeda e quantidades já no carrinho para o conjunto completo, exige login e adiciona os componentes ao carrinho existente. A montagem não reserva estoque. A escolha é mantida enquanto o componente está aberto. Validação adicional: `node --test tests/weapon-kits.test.cjs`.
 
 ### Validação

@@ -19,6 +19,17 @@ for (const name of ['loadout', 'weapon-kits']) {
 const loadout = modules['@/lib/loadout']
 const kits = modules['@/lib/weapon-kits']
 
+test('admin kit validation rejects invalid mounts, unknown items and malformed settings', () => {
+  const items = loadout.buildLoadoutItems([])
+  const weapon = kits.suggestedKitWeapons(items)[0]
+  const valid = { name: '  Kit em destaque  ', active: true, featured: true, position: 2, draft: kits.suggestedWeaponKit(weapon, items) }
+  assert.equal(kits.validateWeaponKit(valid, items).value.name, 'Kit em destaque')
+  for (const field of [{ name: '' }, { active: 'true' }, { position: -1 }, { draft: {} }, { draft: { ...valid.draft, invented: { itemId: weapon.id, quantity: 1 } } }]) assert.ok(kits.validateWeaponKit({ ...valid, ...field }, items).error)
+  const wrong = { 'weapon-1': { itemId: weapon.id, quantity: 1 }, 'attachment-1-stock': { itemId: weapon.id, quantity: 1 } }
+  assert.ok(kits.validateWeaponKit({ ...valid, draft: wrong }, items).error)
+  assert.ok(kits.validateWeaponKit({ ...valid, draft: { 'weapon-1': { itemId: 'missing', quantity: 1 } } }, items).error)
+})
+
 test('suggested kits use exact tiers, compatible mounts and actual stock identities', () => {
   const local = game.items.find(item => item.nameEn === 'Osprey IV')
   const items = loadout.buildLoadoutItems([{ ...local, id: 'real-stock-weapon', quantity: 10, pricePoints: 500 }])

@@ -12,6 +12,7 @@ const PAGE_NAMES: Record<string, string> = {
   streamers:    "Streamers",
   pedidos:      "Pedidos",
   catalogo:     "Catálogo",
+  "kits-de-armas": "Kits de armas",
   estoque:      "Estoque",
   trades:       "Trades",
   recompensas:  "Recompensas",
