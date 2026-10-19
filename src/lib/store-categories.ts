@@ -15,6 +15,7 @@ export function matchesStoreCategory(item: CatalogItem, category: string) {
   const isGrenade = type === "throwable" || type === "grenade" ||
     (type === "quick use" && /granada|grenade|wolfpack|matilha de lobos|trigger nade/.test(name) && !/armadilha|trap/.test(name))
   switch (category) {
+    case "itens": return item.isWeapon !== true && type !== "weapon"
     case "loadouts": return type === "loadout"
     case "armas": return item.isWeapon === true || type === "weapon"
     case "consumiveis": return type === "consumable" ||

@@ -18,6 +18,7 @@ Loja principal do site. Exibe itens do catálogo ARC Raiders à venda e kits ger
 - Navegação principal: Destaques, Loadouts, Armas, Consumíveis, Granadas e Materiais.
 - Cards de categoria sem fotos por enquanto; as imagens serão fornecidas depois.
 - Armas: `isWeapon` ou tipo `Weapon`; projetos são excluídos.
+- Todos os itens: exclui armas identificadas por `isWeapon` ou tipo `Weapon`; elas permanecem na aba Armas. A lista, a contagem e os filtros de tipos seguem a mesma exclusão.
 - Consumíveis: tipo `Consumable` e itens de cura, vigor e escudo classificados como `Quick Use`.
 - Granadas: `Grenade`, `Throwable` e granadas de `Quick Use` identificadas pelo nome; armadilhas e projetos são excluídos.
 - Materiais: `Material`, `Basic Material`, `Advanced Material`, `Refined Material` e `Topside Material`.
