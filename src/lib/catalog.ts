@@ -20,6 +20,7 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   "Research": "Pesquisa",
   "Research Item": "Item de Pesquisa",
   "Shield": "Escudo",
+  "Stencil": "Estampas",
   "Throwable": "Arremessável",
   "Topside Material": "Material de Superfície",
   "Trinket": "Bugiganga",

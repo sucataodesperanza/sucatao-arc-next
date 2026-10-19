@@ -11,6 +11,7 @@ Gerenciamento do catálogo de itens sincronizados via MetaForge. Permite ativar/
 
 - **Busca + filtros** — por nome, raridade e tipo
 - **Pesquisa** — o filtro reúne os tipos `Research` e `Research Item` do catálogo.
+- **Estampas** — corresponde ao tipo `Stencil`, tanto no filtro quanto no nome da categoria exibido nos itens. Também consta na lista de opções usada em caso de falha no carregamento dos tipos.
 - **Tipos do catálogo** — opções carregadas de `/api/admin/catalog/types`, incluindo Design e novas categorias existentes no banco, sem depender apenas de uma lista fixa. Inclui itens ativos e inativos; mantém Pesquisa agrupando os dois tipos equivalentes. Em falha de carregamento usa a lista de opções conhecida.
 - **Botão "Sincronizar com MetaForge"** — dispara o sync e exibe resultado (itens atualizados / traduzidos)
 - **Tabela paginada** — imagem, nome, tipo, raridade, toggle ativo/inativo
