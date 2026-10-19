@@ -20,7 +20,7 @@ const RARITIES = ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 const TYPES = [
   "Advanced Material", "Ammunition", "Augment", "Basic Material", "Blueprint", "Consumable",
   "Cosmetic", "Deployable", "Gadget", "Key", "Material", "Misc", "Modification", "Nature",
-  "Quest Item", "Quick Use", "Recyclable", "Refined Material", "Shield", "Throwable",
+  "Quest Item", "Quick Use", "Recyclable", "Refined Material", "Research", "Shield", "Throwable",
   "Topside Material", "Trinket", "Weapon",
 ]
 

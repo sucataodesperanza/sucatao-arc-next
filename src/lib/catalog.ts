@@ -17,6 +17,8 @@ export const ITEM_TYPE_LABELS: Record<string, string> = {
   "Quick Use": "Uso Rápido",
   "Recyclable": "Reciclável",
   "Refined Material": "Material Refinado",
+  "Research": "Pesquisa",
+  "Research Item": "Item de Pesquisa",
   "Shield": "Escudo",
   "Throwable": "Arremessável",
   "Topside Material": "Material de Superfície",

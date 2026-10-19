@@ -10,6 +10,7 @@ Gerenciamento do catálogo de itens sincronizados via MetaForge. Permite ativar/
 ## Conteúdo Visível
 
 - **Busca + filtros** — por nome, raridade e tipo
+- **Pesquisa** — o filtro reúne os tipos `Research` e `Research Item` do catálogo.
 - **Botão "Sincronizar com MetaForge"** — dispara o sync e exibe resultado (itens atualizados / traduzidos)
 - **Tabela paginada** — imagem, nome, tipo, raridade, toggle ativo/inativo
 - **Traduções no site** — nome em português ao lado do original em inglês, botão Editar nome e ações Salvar/Cancelar. Enter salva; Escape cancela. A busca consulta os dois idiomas. Erros mantêm o texto para tentar novamente.

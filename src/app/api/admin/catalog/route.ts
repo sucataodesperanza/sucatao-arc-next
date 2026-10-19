@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     query = query.or(`name.ilike."${pattern}",name_en.ilike."${pattern}"`)
   }
   if (rarity !== "all") query = query.eq("rarity", rarity)
-  if (type !== "all") query = query.eq("item_type", type)
+  if (type === "Research") query = query.in("item_type", ["Research", "Research Item"])
+  else if (type !== "all") query = query.eq("item_type", type)
 
   const { data, error, count } = await query.range(from, to)
 
