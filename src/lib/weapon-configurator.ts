@@ -1,5 +1,6 @@
 import type { CatalogItem } from "@/lib/catalog"
 import { acceptsLoadoutItem, getWeaponAttachmentSlots, getWeaponProfile, type LoadoutDraft } from "@/lib/loadout"
+import { acceptsWeaponStencil } from "@/lib/weapon-stencils"
 
 export function weaponLevel(item: CatalogItem) {
   const profile = getWeaponProfile(item)
@@ -20,6 +21,8 @@ export function findWeaponConfiguration(items: CatalogItem[], family: string, le
 export function changeConfiguredWeapon(draft: LoadoutDraft, target: CatalogItem, items: CatalogItem[]) {
   const next: LoadoutDraft = { "weapon-1": { itemId: target.id, quantity: 1 } }
   const previous = items.find(item => item.id === draft["weapon-1"]?.itemId)
+  const stencil = items.find(item=>item.id===draft["weapon-stencil"]?.itemId)
+  if(stencil && acceptsWeaponStencil(target,stencil)) next["weapon-stencil"]={itemId:stencil.id,quantity:1}
   if (previous && getWeaponProfile(previous)?.family === getWeaponProfile(target)?.family) {
     for (const slot of getWeaponAttachmentSlots(target, "weapon-1")) {
       const mod = items.find(item => item.id === draft[slot.id]?.itemId)

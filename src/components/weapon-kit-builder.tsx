@@ -10,6 +10,7 @@ import { suggestedKitWeapons, suggestedWeaponKit, weaponKitPurchaseIssues } from
 import { getItemGlowColor } from "@/lib/use-items-catalog"
 import "@/styles/weapon-kits.css"
 import { changeConfiguredWeapon, describeWeaponConfiguration } from "@/lib/weapon-configurator"
+import { acceptsWeaponStencil, expandPaintedCart, paintedWeaponId, stencilItems, stencilSource } from "@/lib/weapon-stencils"
 
 const cash = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
 const image = (item: CatalogItem) => item.image?.startsWith("http") || item.image?.startsWith("/") ? item.image : item.image ? `/${item.image}` : undefined
@@ -20,11 +21,13 @@ function Prices({ rows }: { rows: { item: CatalogItem; quantity: number }[] }) {
 }
 
 export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogItem[]; loading: boolean; userId: string | null }) {
-  const items = useMemo(() => buildLoadoutItems(stock), [stock])
+  const items = useMemo(() => buildLoadoutItems([...stock,...stencilItems.filter(s=>!stock.some(i=>i.id===s.id))]), [stock])
   const initialDraft = useMemo(() => { const first = suggestedKitWeapons(items)[0]; return first ? suggestedWeaponKit(first, items) : {} }, [items])
   const [custom, setCustom] = useState<LoadoutDraft | null>(null)
   const draft = custom ?? initialDraft
   const weapon = items.find(item => item.id === draft["weapon-1"]?.itemId)
+  const stencil = items.find(item => item.id === draft["weapon-stencil"]?.itemId)
+  const compatibleStencils = items.filter(item=>acceptsWeaponStencil(weapon,item))
   const mounts = getWeaponAttachmentSlots(weapon, "weapon-1")
   const configurations = useMemo(() => {
     const map = new Map<string, NonNullable<ReturnType<typeof describeWeaponConfiguration>>>()
@@ -47,7 +50,7 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
   const [count, setCount] = useState(1)
   const [mode, setMode] = useState<CartMode>("points")
   const [query, setQuery] = useState("")
-  const [selection, setSelection] = useState<LoadoutSlot | "weapon" | null>(null)
+  const [selection, setSelection] = useState<LoadoutSlot | "weapon" | "stencil" | null>(null)
   const [message, setMessage] = useState("")
   const dialog = useRef<HTMLDialogElement>(null)
   const search = useRef<HTMLInputElement>(null)
@@ -56,26 +59,31 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
   const router = useRouter()
   const rows = summarizeLoadout(draft, items)
   const totals = rows.map(row => ({ ...row, quantity: row.quantity * count }))
-  const issues = weaponKitPurchaseIssues(rows, count, mode, stock, cart.items)
-  const purchasable = !!weapon && issues.length === 0
-  const choices = selection ? items.filter(item => selection === "weapon" ? acceptsLoadoutItem("weapon", item) : acceptsLoadoutItem("attachment", item, weapon, selection.attachmentType))
+  const issues = weaponKitPurchaseIssues(rows, count, mode, stock, expandPaintedCart(cart.items))
+  const purchasable = !!weapon && issues.length === 0 && (!stencil || acceptsWeaponStencil(weapon,stencil))
+  const choices = selection ? items.filter(item => selection === "weapon" ? acceptsLoadoutItem("weapon", item) : selection === "stencil" ? acceptsWeaponStencil(weapon,item) : acceptsLoadoutItem("attachment", item, weapon, selection.attachmentType))
     .filter(item => loadoutItemSearchText(item).includes(normalizeLoadoutText(query)))
     .sort((a, b) => Number((b.quantity ?? 0) > 0) - Number((a.quantity ?? 0) > 0) || a.name.localeCompare(b.name, "pt-BR")) : []
 
-  function open(slot: LoadoutSlot | "weapon") {
+  function open(slot: LoadoutSlot | "weapon" | "stencil") {
     setSelection(slot); setQuery(""); setMessage("")
     dialog.current?.showModal()
     search.current?.focus()
   }
   function choose(item: CatalogItem) {
-    if (selection === "weapon") setCustom({ "weapon-1": { itemId: item.id, quantity: 1 } })
+    if (selection === "weapon") configure(item)
+    else if (selection === "stencil") { if (acceptsWeaponStencil(weapon,item)) setCustom({...draft,"weapon-stencil":{itemId:item.id,quantity:1}}) }
     else if (selection && acceptsLoadoutItem("attachment", item, weapon, selection.attachmentType)) setCustom({ ...draft, [selection.id]: { itemId: item.id, quantity: 1 } })
     dialog.current?.close()
   }
   function buy() {
     if (!purchasable) return
     if (!userId) { router.push("/login"); return }
-    for (const { item, quantity } of totals) cart.addItem({ itemId: item.id, name: item.name, type: item.type, rarity: item.rarity, value: item.value ?? 0, pricePoints: item.pricePoints, priceCash: item.priceCash, image: item.image, weightKg: item.weightKg, mode }, quantity)
+    for (const { item, quantity } of totals) {
+      if (stencil && item.id === stencil.id) continue
+      const painted = stencil && item.id === weapon?.id
+      cart.addItem({ itemId: painted ? paintedWeaponId(item.id,stencil.id) : item.id, name: painted ? `${item.name} · Estampa: ${stencil.name}` : item.name, type: painted ? "Arma com estampa" : item.type, rarity: item.rarity, value: item.value ?? 0, pricePoints: painted ? Math.round(((item.pricePoints??0)+(stencil.pricePoints??0))*100)/100 : item.pricePoints, priceCash: painted ? Math.round(((item.priceCash??0)+(stencil.priceCash??0))*100)/100 : item.priceCash, image: item.image, weightKg: item.weightKg, mode }, quantity)
+    }
     setMessage(`${count} kit(s) adicionado(s) ao carrinho.`)
     cart.openDrawer()
   }
@@ -98,6 +106,7 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
           const mod = items.find(item => item.id === draft[slot.id]?.itemId)
           return <div className="weapon-kit-mount" key={slot.id}><button type="button" onClick={() => open(slot)} aria-label={`Escolher ${slot.label}${mod ? `: ${mod.name}` : ""}`}><strong>{attachmentLabels[slot.attachmentType!]}</strong><div className="weapon-kit-art" style={mod ? glow(mod) : undefined}>{mod && image(mod) ? <img src={image(mod)} alt="" /> : <Plus />}</div><span>{mod?.name ?? "Selecionar acessório"}</span></button>{mod && <button className="weapon-kit-remove" type="button" aria-label={`Remover ${mod.name}`} onClick={() => { const next = { ...draft }; delete next[slot.id]; setCustom(next) }}><X size={14} /></button>}</div>
         })}</div>
+        <section className="weapon-stencil-picker" aria-label="Estampa da arma"><h3>Estampa</h3><button type="button" disabled={!compatibleStencils.length} onClick={()=>open("stencil")} aria-label="Escolher estampa"><div className="weapon-kit-art" style={stencil?glow(stencil):undefined}>{stencil&&image(stencil)?<img src={image(stencil)} alt=""/>:<Plus/>}</div><strong>{stencil?.name??"Sem estampa"}</strong><span>Escolher estampa compatível</span></button>{stencil&&<button type="button" onClick={()=>{const next={...draft};delete next["weapon-stencil"];setCustom(next)}}>Remover estampa</button>}<p>{level==="V"?"Compatibilidade de estampas com armas Amplified ainda não confirmada.":!compatibleStencils.length?"Não há estampas com compatibilidade confirmada para esta arma.":"O preço da estampa escolhida será somado ao da arma, por unidade."}</p><small>Compatibilidade: <a href={stencilSource} target="_blank" rel="noreferrer">MetaForge</a></small></section>
         {level === "V" && <div className="weapon-config-selected"><h4>Modificações da variante</h4><p>{upgrades.length ? upgrades.join(" + ") : "Amplificada base · sem melhorias adicionais selecionadas"}</p></div>}
         {weapon && mounts.length === 0 && <p>{getWeaponProfile(weapon)?.slots ? "Esta arma não possui encaixes de acessórios." : "Encaixes desta arma ainda não confirmados."}</p>}
       </div>
@@ -123,8 +132,8 @@ export function WeaponKitBuilder({ stock, loading, userId }: { stock: CatalogIte
       </aside>
     </div>
     <dialog ref={dialog} className="weapon-kit-dialog" onClose={() => setSelection(null)} onClick={event => { if (event.target === event.currentTarget) dialog.current?.close() }} aria-labelledby="weapon-kit-dialog-title">
-      <header><h3 id="weapon-kit-dialog-title">{selection === "weapon" ? "Escolher arma e tier" : selection?.label}</h3><button type="button" aria-label="Fechar seleção de kit" onClick={() => dialog.current?.close()}><X /></button></header>
-      <input ref={search} type="search" placeholder="Buscar arma ou acessório…" value={query} onChange={event => setQuery(event.target.value)} />
+      <header><h3 id="weapon-kit-dialog-title">{selection === "weapon" ? "Escolher arma e tier" : selection === "stencil" ? "Escolher estampa compatível" : selection?.label}</h3><button type="button" aria-label="Fechar seleção de kit" onClick={() => dialog.current?.close()}><X /></button></header>
+      <input ref={search} type="search" placeholder="Buscar arma, acessório ou estampa…" value={query} onChange={event => setQuery(event.target.value)} />
       <div className="weapon-kit-choices">{choices.map(item => <button type="button" key={item.id} onClick={() => choose(item)}><div className="weapon-kit-art" style={glow(item)}>{image(item) && <img src={image(item)} alt="" loading="lazy" />}</div><strong>{item.name}</strong><Prices rows={[{ item, quantity: 1 }]} /><small>{(item.quantity ?? 0) > 0 ? "Em estoque" : "Sem estoque · montagem"}</small></button>)}</div>
       {!choices.length && <p>Nenhum item compatível encontrado.</p>}
     </dialog>

@@ -10,6 +10,8 @@ import { alertPedidoPontos, alertPedidoPix, alertCofresExpedicao } from "@/lib/d
 import { sendDiscordDM, dmPedidoConfirmado } from "@/lib/discord-bot"
 import { readReadyKits, readReadyKitItems } from "@/lib/ready-kit-store"
 import { prepareReadyKitPurchase, validateReadyKit } from "@/lib/ready-kits"
+import { parsePaintedWeaponId, preparePaintedWeaponPurchase } from "@/lib/weapon-stencils"
+import { readPaintedWeaponItems } from "@/lib/painted-weapon-store"
 
 type CheckoutItem = {
   itemId: string
@@ -20,6 +22,8 @@ type CheckoutItem = {
   pricePoints?: number
   priceCash?: number
   kitContents?: string
+  stencilId?: string
+  stencilName?: string
   weightKg?: number
   image?: string
   mode: "points" | "cash"
@@ -49,6 +53,22 @@ export async function POST(request: NextRequest) {
   }
 
   const readyKitLines = new Set<CheckoutItem>()
+  const paintedLines = new Set<CheckoutItem>()
+  if(items.some(i=>i.itemId.startsWith("painted:") || i.type==="painted_weapon")) {
+    try {
+      const ids=[...new Set(items.filter(i=>i.itemId.startsWith("painted:") || i.type==="painted_weapon").flatMap(i=>Object.values(parsePaintedWeaponId(i.itemId))))]
+      const catalog=await readPaintedWeaponItems(ids)
+      items=items.flatMap(line=>{
+        if(!line.itemId.startsWith("painted:") && line.type!=="painted_weapon")return [line]
+        const {weaponId,stencilId}=parsePaintedWeaponId(line.itemId)
+        return preparePaintedWeaponPurchase(catalog.find(i=>i.id===weaponId),catalog.find(i=>i.id===stencilId),line).map(row=>{
+          const component:CheckoutItem={itemId:row.item.id,name:row.name,type:row.item.type,rarity:row.item.rarity,value:row.item.value??0,pricePoints:row.item.pricePoints,priceCash:row.item.priceCash,image:row.item.image,weightKg:row.item.weightKg,quantity:row.quantity,mode:line.mode,stencilId:row.stencilId,stencilName:row.stencilName}
+          paintedLines.add(component)
+          return component
+        })
+      })
+    }catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Não foi possível validar a estampa."},{status:409})}
+  }
   const pointsUnitPrice = (item: CheckoutItem) => readyKitLines.has(item) ? item.pricePoints! : (item.pricePoints || Math.round(item.value * 24))
   // Resolve packages from the admin's current definition, never from client prices.
   if (items.some(i => i.itemId.startsWith("kit:") || i.type === "ready_kit")) {
@@ -173,6 +193,7 @@ export async function POST(request: NextRequest) {
           source: "catalog",
           itemId: i.itemId,
           name: i.name,
+          ...(paintedLines.has(i) && i.stencilId ? {stencilId:i.stencilId,stencilName:i.stencilName} : {}),
           type: i.type ?? null,
           rarity: i.rarity ?? null,
           weightKg: i.weightKg ?? null,
@@ -264,6 +285,7 @@ export async function POST(request: NextRequest) {
           source: "catalog",
           itemId: i.itemId,
           name: i.name,
+          ...(paintedLines.has(i) && i.stencilId ? {stencilId:i.stencilId,stencilName:i.stencilName} : {}),
           type: i.type ?? null,
           rarity: i.rarity ?? null,
           weightKg: i.weightKg ?? null,

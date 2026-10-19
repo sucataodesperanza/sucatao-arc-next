@@ -1,0 +1,216 @@
+{
+  "reviewedAt": "2026-10-19",
+  "sources": {
+    "api": "https://metaforge.app/api/arc-raiders/items",
+    "compatibility": "https://metaforge.app/arc-raiders/weapon-stencils-in-arc-raiders-everything-you-need-to-know"
+  },
+  "amplifiedConfirmed": false,
+  "stencils": [
+    {
+      "id": "bulwark-stencil",
+      "name": "Bulwark Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261008/c17a502ba779e37e3b43dcfde55f7da15e78708aa624841835d3be7cfd5a301b.png",
+      "rarity": "Legendary",
+      "families": [
+        "hullcracker"
+      ]
+    },
+    {
+      "id": "cerulean-stencil",
+      "name": "Cerulean Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/76a7e1587742c6caa685142f7ec2930675c3e52a62f82745a716e975dfe53294.png",
+      "rarity": "Rare",
+      "families": [
+        "osprey",
+        "bobcat",
+        "vulcano",
+        "venator",
+        "anvil",
+        "bantam",
+        "bettina",
+        "arpeggio"
+      ]
+    },
+    {
+      "id": "dragons-breath-stencil",
+      "name": "Dragon's Breath Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261008/690eaa0dc2d8aef7d7640005954010054790687f659f2a52462cf932419a4215.png",
+      "rarity": "Legendary",
+      "families": [
+        "tempest"
+      ]
+    },
+    {
+      "id": "dusty-camo-stencil",
+      "name": "Dusty Camo Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/88fb7d20703544cb7f61f2b24aa34188e8948176cd8a2c76d15ffec1c2c11068.png",
+      "rarity": "Rare",
+      "families": [
+        "il toro",
+        "burletta",
+        "torrente",
+        "stiletto",
+        "rattler",
+        "tempest"
+      ]
+    },
+    {
+      "id": "empyrean-stencil",
+      "name": "Empyrean Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261008/4430d2166dcc774ee1949cd7b966aea9be3169d405921e1b505a012867079ca8.png",
+      "rarity": "Epic",
+      "families": [
+        "osprey"
+      ]
+    },
+    {
+      "id": "fortuna-stencil",
+      "name": "Fortuna Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261008/7f0888ecb59d3fa2241914d7bc950567459e5f18826940f9c59089f9c6f94f52.png",
+      "rarity": "Epic",
+      "families": [
+        "anvil"
+      ]
+    },
+    {
+      "id": "garnet-stencil",
+      "name": "Garnet Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/83fce91d879ce1504d5bc49d0dfe35f60d0e5db82248dcf9cf5c57bc74352979.png",
+      "rarity": "Uncommon",
+      "families": [
+        "anvil",
+        "arpeggio",
+        "bantam",
+        "bettina",
+        "bobcat",
+        "burletta",
+        "canto",
+        "ferro",
+        "hairpin",
+        "hullcracker",
+        "il toro",
+        "kettle",
+        "osprey",
+        "rattler",
+        "renegade",
+        "stiletto",
+        "stitcher",
+        "tempest",
+        "torrente",
+        "venator",
+        "vulcano"
+      ]
+    },
+    {
+      "id": "milky-terraccota-stencil",
+      "name": "Milky Terraccota Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/bed64ea949610120bb720aa94659991ae06d02ece15a9b3c473e740be141cd8e.png",
+      "rarity": "Rare",
+      "families": [
+        "canto",
+        "hairpin",
+        "burletta",
+        "renegade",
+        "ferro",
+        "kettle"
+      ]
+    },
+    {
+      "id": "ochre-stencil",
+      "name": "Ochre Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/eb3d651efd8e8f4d63be9e4b31b86612a44f36afe8023a9c8dc309cebff1bfe9.png",
+      "rarity": "Uncommon",
+      "families": [
+        "anvil",
+        "arpeggio",
+        "bantam",
+        "bettina",
+        "bobcat",
+        "burletta",
+        "canto",
+        "ferro",
+        "hairpin",
+        "hullcracker",
+        "il toro",
+        "kettle",
+        "osprey",
+        "rattler",
+        "renegade",
+        "stiletto",
+        "stitcher",
+        "tempest",
+        "torrente",
+        "venator",
+        "vulcano"
+      ]
+    },
+    {
+      "id": "sacrifice-stencil",
+      "name": "Sacrifice Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261008/9e972a8296b2501f2ff1fbe4a8be56bec9b0e818737e1f8c87c01d185dd70074.png",
+      "rarity": "Epic",
+      "families": [
+        "renegade"
+      ]
+    },
+    {
+      "id": "serac-stencil",
+      "name": "Serac Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261008/6da20d22003bfd29ea86b6965e713c25599c04bcade59439d7f898a9d38de49e.png",
+      "rarity": "Legendary",
+      "families": [
+        "bobcat"
+      ]
+    },
+    {
+      "id": "slipstream-stencil",
+      "name": "Slipstream Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/8f6339e9776d675ede2c6b042e6235b8a467fb371d25d04f2c24d85a4e79d007.png",
+      "rarity": "Epic",
+      "families": [
+        "il toro",
+        "anvil",
+        "rattler"
+      ]
+    },
+    {
+      "id": "tortoise-stencil",
+      "name": "Tortoise Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/a6242669bb50e425376188a29b58c4d187edadcab27ac1713ca124d9bb108614.png",
+      "rarity": "Epic",
+      "families": [
+        "anvil",
+        "rattler"
+      ]
+    },
+    {
+      "id": "verdigris-stencil",
+      "name": "Verdigris Stencil",
+      "image": "https://static.metaforge.app/arc-raiders/preview/20261007/7e41b77e367cb17adc7db82845acb31833b355c0933968b22c54eecb0e586d16.png",
+      "rarity": "Uncommon",
+      "families": [
+        "anvil",
+        "arpeggio",
+        "bantam",
+        "bettina",
+        "bobcat",
+        "burletta",
+        "canto",
+        "ferro",
+        "hairpin",
+        "hullcracker",
+        "il toro",
+        "kettle",
+        "osprey",
+        "rattler",
+        "renegade",
+        "stiletto",
+        "stitcher",
+        "tempest",
+        "torrente",
+        "venator",
+        "vulcano"
+      ]
+    }
+  ]
+}
