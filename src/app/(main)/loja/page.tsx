@@ -511,10 +511,11 @@ export default function LojaPage() {
 
           ) : activeTab === "loadouts" ? (
             <LoadoutBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />
+          ) : activeTab === "armas" ? (
+            <WeaponKitBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />
           ) : isCatalogTab ? (
             <>
-              {activeTab === "armas" && <WeaponKitBuilder stock={catalog.catalogItems} loading={catalog.loadingCatalog} userId={catalog.userId} />}
-              <section aria-label="Sobre o catálogo de itens" hidden={activeTab === "armas"}>
+              <section aria-label="Sobre o catálogo de itens">
                 <div className="hero-banner hero-banner-compact" style={{ backgroundImage: "url(/assets/bots/arc_sentinel.png)" }}>
                   <div className="hero-banner-content">
                     <span className="hero-banner-tag">
@@ -594,7 +595,7 @@ export default function LojaPage() {
 
               <section aria-label="Itens do catálogo">
                 <div className="store-section-head">
-                  <h2>{activeTab === "armas" ? "Armas avulsas" : selectedCategory?.title ?? "Itens"}</h2>
+                  <h2>{selectedCategory?.title ?? "Itens"}</h2>
                   <span>Exibindo {storeCatalog.filteredItems.length} de {categoryItems.length}</span>
                 </div>
                 <CatalogFilters catalog={storeCatalog} />
