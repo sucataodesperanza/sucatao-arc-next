@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeftRight, CheckCircle, ChevronLeft, Coins, Handshake, History, Search, Sparkles } from "lucide-react"
 import "../../../styles/trades.css"
@@ -10,6 +10,7 @@ import { BrandMark } from "@/components/brand-mark"
 import type { Trade } from "@/app/api/trades/route"
 import type { MyTrade } from "@/app/api/trades/my/route"
 import type { TradeSlot } from "@/app/api/trades/slots/route"
+import { tradeDate, TRADE_TIME_ZONE } from "@/lib/trade-scheduling"
 
 const PANEL_KEY = "trades-panel-open"
 
@@ -65,7 +66,19 @@ export default function TradesPage() {
   const [acceptSelectedSlot, setAcceptSelectedSlot] = useState<string | null>(null)
   const [acceptSubmitting, setAcceptSubmitting]     = useState(false)
   const [acceptMsg, setAcceptMsg]                   = useState("")
+  const [acceptDate, setAcceptDate] = useState("")
+  const [acceptSlotsError, setAcceptSlotsError] = useState(false)
+  const acceptRequest = useRef(0)
   const [gameId, setGameId]                         = useState("")
+  const slotsByDay = useMemo(() => {
+    const groups = new Map<string, TradeSlot[]>()
+    for (const slot of acceptSlots) {
+      const date = tradeDate(slot.scheduled_for)
+      groups.set(date, [...(groups.get(date) ?? []), slot])
+    }
+    return groups
+  }, [acceptSlots])
+  const selectedAcceptDate = acceptDate || slotsByDay.keys().next().value || ""
 
   // Abas com indicador
   const navigatedRef = useRef(false)
@@ -140,12 +153,16 @@ export default function TradesPage() {
     setAcceptingId(id)
     setAcceptSelectedSlot(null)
     setAcceptMsg("")
+    setAcceptDate("")
+    setAcceptSlots([])
+    setAcceptSlotsError(false)
+    const request = ++acceptRequest.current
     setAcceptLoadingSlots(true)
-    fetch("/api/trades/slots")
-      .then(r => r.json())
-      .then(d => setAcceptSlots(d.slots ?? []))
-      .catch(() => setAcceptSlots([]))
-      .finally(() => setAcceptLoadingSlots(false))
+    fetch("/api/trades/slots", { cache: "no-store" })
+      .then(async r => { const body = await r.json(); if (!r.ok) throw new Error(body.error ?? "Não foi possível carregar os horários."); return body })
+      .then(d => { if (request === acceptRequest.current) setAcceptSlots(d.slots ?? []) })
+      .catch(error => { if (request === acceptRequest.current) { setAcceptSlotsError(true); setAcceptMsg(error instanceof Error ? error.message : "Não foi possível carregar os horários. Tente novamente.") } })
+      .finally(() => { if (request === acceptRequest.current) setAcceptLoadingSlots(false) })
   }
 
   async function confirmAccept(id: string) {
@@ -159,7 +176,7 @@ export default function TradesPage() {
       body: JSON.stringify({ slot_id: acceptSelectedSlot, game_id: gameId.trim() }),
     })
     setAcceptSubmitting(false)
-    if (res.ok || res.status === 409) {
+    if (res.ok) {
       setAcceptingId(null)
       const tradeData = trades.find(t => t.id === id)
       const slot      = acceptSlots.find(s => s.id === acceptSelectedSlot)
@@ -402,18 +419,23 @@ export default function TradesPage() {
                           <div style={{ padding: "12px 14px", borderTop: "1px solid var(--stroke)" }} onClick={e => e.stopPropagation()}>
                             {acceptLoadingSlots ? (
                               <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--gray-500)" }}>Carregando horários...</p>
+                            ) : acceptSlotsError ? (
+                              <button type="button" onClick={() => openAcceptForm(trade.id)}>Tentar carregar horários novamente</button>
                             ) : acceptSlots.length === 0 ? (
                               <p style={{ margin: "0 0 8px", fontSize: 12, color: "var(--gray-500)" }}>Nenhum horário disponível no momento.</p>
                             ) : (
                               <div style={{ marginBottom: 8 }}>
-                                <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Escolha um horário</p>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                                  {acceptSlots.map(slot => {
+                                <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Escolha um horário · Cuiabá (UTC−4)</p>
+                                <select aria-label="Dia da entrega" value={selectedAcceptDate} onChange={e => { setAcceptDate(e.target.value); setAcceptSelectedSlot(null); setAcceptMsg("") }} style={{ marginBottom: 8 }}>
+                                  {[...slotsByDay.keys()].map(date => <option key={date} value={date}>{date.split("-").reverse().join("/")}</option>)}
+                                </select>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, maxHeight: 220, overflowY: "auto", marginBottom: 8 }}>
+                                  {(slotsByDay.get(selectedAcceptDate) ?? []).map(slot => {
                                     const dt      = new Date(slot.scheduled_for)
-                                    const isToday = dt.toDateString() === new Date().toDateString()
+                                    const isToday = tradeDate(dt) === tradeDate(new Date())
                                     const label   = isToday
-                                      ? dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
-                                      : dt.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " + dt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+                                      ? dt.toLocaleTimeString("pt-BR", { timeZone: TRADE_TIME_ZONE, hour: "2-digit", minute: "2-digit" })
+                                      : dt.toLocaleDateString("pt-BR", { timeZone: TRADE_TIME_ZONE, day: "2-digit", month: "2-digit" }) + " " + dt.toLocaleTimeString("pt-BR", { timeZone: TRADE_TIME_ZONE, hour: "2-digit", minute: "2-digit" })
                                     return (
                                       <button key={slot.id} type="button"
                                         className={`my-trade-slot${acceptSelectedSlot === slot.id ? " selected" : ""}`}
@@ -580,7 +602,7 @@ export default function TradesPage() {
                             <span style={{ fontSize: 12, color: "var(--paper-dim)" }}>
                               Entrega:{" "}
                               <strong style={{ color: "var(--blue)" }}>
-                                {new Date(mt.scheduled_at).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                                {new Date(mt.scheduled_at).toLocaleString("pt-BR", { timeZone: TRADE_TIME_ZONE, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })} · Cuiabá
                               </strong>
                               {mt.game_id && (
                                 <> · <span style={{ color: "var(--cyan)", fontFamily: "monospace" }}>{mt.game_id}</span></>

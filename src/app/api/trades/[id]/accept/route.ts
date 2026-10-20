@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createPrivateChannel, embedTradeTicket } from "@/lib/discord-bot"
+import { readTradeAvailability } from "@/lib/trade-scheduling-store"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -13,17 +14,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // Lê slot_id + game_id do body
   const body = await req.json().catch(() => ({}))
   const { slot_id, game_id } = body as { slot_id?: string; game_id?: string }
-  if (!slot_id) return NextResponse.json({ error: "Selecione um horário." }, { status: 400 })
-  if (!game_id?.trim()) return NextResponse.json({ error: "Informe seu Game ID." }, { status: 400 })
+  if (typeof slot_id !== "string" || !slot_id) return NextResponse.json({ error: "Selecione um horário." }, { status: 400 })
+  if (typeof game_id !== "string" || !game_id.trim()) return NextResponse.json({ error: "Informe seu Game ID." }, { status: 400 })
 
-  // Valida slot
-  const { data: slot } = await supabase
+  const admin = createAdminClient()
+  let slot: { id: string; scheduled_for: string; label: string } | null = null
+  if (slot_id.startsWith("daily:")) {
+    try { slot = (await readTradeAvailability()).find(candidate => candidate.id === slot_id) ?? null }
+    catch (error) { return NextResponse.json({ error: error instanceof Error ? error.message : "Não foi possível conferir os horários." }, { status: 503 }) }
+    if (!slot) return NextResponse.json({ error: "Este horário não está mais disponível. Abra novamente a solicitação e escolha outro." }, { status: 409 })
+  } else {
+  // Compatibilidade com janelas manuais já existentes.
+  const { data: manual, error: slotError } = await admin
     .from("trade_slots")
-    .select("id, scheduled_for, label")
+    .select("id, scheduled_for, label, capacity")
     .eq("id", slot_id)
     .eq("active", true)
+    .gt("scheduled_for", new Date().toISOString())
     .single()
-  if (!slot) return NextResponse.json({ error: "Horário não encontrado." }, { status: 400 })
+  if (slotError || !manual) return NextResponse.json({ error: "Horário não encontrado ou expirado." }, { status: 400 })
+  const reserved = await admin.from("trade_acceptances").select("id", { count: "exact", head: true }).eq("scheduled_at", manual.scheduled_for).neq("status", "cancelled")
+  if (reserved.error) return NextResponse.json({ error: "Não foi possível conferir o horário." }, { status: 503 })
+  if ((reserved.count ?? 0) >= manual.capacity) return NextResponse.json({ error: "Este horário já está ocupado. Escolha outro." }, { status: 409 })
+  slot = manual
+  }
 
   // Verifica se o trade existe e está ativo
   const { data: trade } = await supabase
@@ -36,13 +50,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!trade) return NextResponse.json({ error: "Trade não encontrado ou inativo." }, { status: 404 })
 
   // Garante que apenas UMA pessoa pode aceitar este trade
-  const { data: existingAcceptance } = await supabase
+  const { data: existingAcceptances, error: acceptanceError } = await admin
     .from("trade_acceptances")
     .select("id, user_id")
     .eq("trade_id", id)
     .neq("status", "cancelled")
-    .single()
+    .limit(1)
 
+  if (acceptanceError) return NextResponse.json({ error: "Não foi possível conferir a trade. Tente novamente." }, { status: 503 })
+  const existingAcceptance = existingAcceptances?.[0]
   if (existingAcceptance) {
     if (existingAcceptance.user_id === user.id) {
       return NextResponse.json({ error: "Você já aceitou este trade.", code: "already_accepted" }, { status: 409 })
@@ -56,7 +72,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       trade_id:     id,
       user_id:      user.id,
       status:       "scheduled",
-      slot_id,
+      slot_id: slot_id.startsWith("daily:") ? null : slot_id,
       game_id:      game_id.trim(),
       scheduled_at: slot.scheduled_for,
     })

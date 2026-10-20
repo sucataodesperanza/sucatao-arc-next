@@ -377,7 +377,7 @@ function OperatingHoursSection() {
     <div className="utility-panel" style={{ marginTop: 16 }}>
       <div className="utility-panel-head">
         <strong>Horário de Funcionamento dos Trades</strong>
-        <small>Intervalo em que os usuários podem agendar entregas in-game (todos os dias)</small>
+        <small>Entregas in-game todos os dias · horário de Cuiabá (UTC−4). As opções são geradas automaticamente para os próximos 7 dias.</small>
       </div>
       <div style={{ display: "flex", alignItems: "end", gap: 16, flexWrap: "wrap" }}>
         <label style={{ display: "grid", gap: 4 }}>
@@ -479,7 +479,7 @@ function AcceptancesSection() {
                   </td>
                   <td style={{ padding: "8px" }}>
                     {a.scheduled_at
-                      ? <span style={{ color: "var(--green)", fontWeight: 800 }}>{new Date(a.scheduled_at).toLocaleString("pt-BR", { day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })} in-game</span>
+                      ? <span style={{ color: "var(--green)", fontWeight: 800 }}>{new Date(a.scheduled_at).toLocaleString("pt-BR", { timeZone: "America/Cuiaba", day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit" })} in-game · Cuiabá</span>
                       : <em style={{ opacity: 0.4, color: "var(--muted)" }}>Aguardando agendamento</em>}
                   </td>
                   <td style={{ padding: "8px" }}>
@@ -533,7 +533,7 @@ function AcceptancesSection() {
                 { label: "Game ID",           value: confirmModal.game_id ?? "—", mono: true, accent: "var(--cyan)" },
                 { label: "Item a receber",    value: `${confirmModal.trades?.want_item_qty}× ${confirmModal.trades?.want_item_name}`, mono: false, accent: undefined },
                 { label: "Pontos a creditar", value: `${(confirmModal.trades?.offer_points ?? 0).toLocaleString("pt-BR")} pts`, mono: false, accent: "var(--yellow)" },
-                { label: "Agendado para",     value: confirmModal.scheduled_at ? new Date(confirmModal.scheduled_at).toLocaleString("pt-BR") + " in-game" : "—", mono: false, accent: undefined },
+                { label: "Agendado para",     value: confirmModal.scheduled_at ? new Date(confirmModal.scheduled_at).toLocaleString("pt-BR", { timeZone: "America/Cuiaba" }) + " in-game · Cuiabá" : "—", mono: false, accent: undefined },
               ] as const).map(({ label, value, mono, accent }) => (
                 <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 6, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                   <span style={{ color: "var(--gray-500)", fontWeight: 800 }}>{label}</span>

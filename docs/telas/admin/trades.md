@@ -34,8 +34,10 @@ Admin define o intervalo de horário em que os usuários podem agendar entregas 
 
 - Dois campos time picker: **Início** e **Fim** (ex: 09:00 às 00:00)
 - Botão "Salvar" — persiste em `trade_settings`
-- Slots gerados automaticamente de 5 em 5 minutos dentro deste intervalo
-- 1 agendamento por slot (nenhuma concorrência)
+- Horários gerados automaticamente para hoje e os seis dias seguintes, no fuso America/Cuiaba (UTC−4), em intervalos configurados (padrão 5 minutos)
+- Intervalos que passam da meia-noite são respeitados. Não é necessário cadastrar janelas manuais em trade_slots
+- Configurações inválidas ou falhas ao gravar retornam erro; configurações e agendamentos existentes são preservados
+- Horários já ocupados são retirados da lista; a confirmação relê a disponibilidade. Abrir o formulário não reserva horário.
 
 ### Fontes de Dados
 

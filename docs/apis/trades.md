@@ -45,6 +45,8 @@ Aceita um trade. Garante exclusividade — apenas **uma aceitação ativa** por 
 3. Se existir e for do mesmo usuário → 409 `already_accepted`
 4. Se existir e for de outro usuário → 409 `taken`
 
+**Solicitação atual:** envia slot_id (identificador daily: retornado por GET /api/trades/slots) e game_id. O servidor relê configurações e reservas com acesso administrativo, sem expor identidades de outros clientes. Valida o horário futuro, a grade diária e a ocupação; grava status scheduled, scheduled_at e game_id com slot_id nulo para horários automáticos. IDs de janelas manuais antigas continuam aceitos quando ativos, futuros e com capacidade. Conflito de horário retorna 409; falha na consulta de agenda retorna 503.
+
 **Resposta de sucesso:** `200 { ok: true }`
 
 **Erros:**
@@ -256,3 +258,15 @@ Conclui um trade: credita os pontos ao usuário e marca como `completed`.
 | `operating_hours_end` | text | Fim (ex: `"00:00"`, pode passar da meia-noite) |
 | `slot_duration_minutes` | integer | Intervalo entre slots (padrão: 5) |
 | `updated_at` | timestamptz | — |
+
+## Agenda automática — revisão de 20/10/2026
+
+### GET /api/trades/slots
+
+Consulta trade_settings e gera opções para hoje e os seis dias seguintes. Usa America/Cuiaba (UTC−4), respeita virada do dia e intervalos que atravessam meia-noite. Horários passados e instantes presentes em trade_acceptances com status diferente de cancelled são removidos. A leitura de reservas é paginada e administrativa para considerar todos os clientes, sem devolver seus dados.
+
+Resposta: slots com id, label, scheduled_for (ISO UTC), capacity e booked. Os identificadores automáticos usam daily:<ISO>; não são UUIDs e não são gravados como chaves estrangeiras. Os horários são gravados no campo scheduled_at existente. Cache-Control: no-store. Falha de consulta retorna 503 com erro, nunca uma agenda vazia de sucesso.
+
+O formulário atual utiliza este endpoint. GET /api/trades/available-times e PATCH /api/trades/my/:id/schedule são caminhos legados, não usados na seleção atual. Não é necessário popular trade_slots para a agenda diária; nenhum cadastro ou agendamento existente é removido.
+
+Validação: node --test tests/trade-scheduling.test.cjs. Testes cobrem horários futuros sem janelas manuais, Cuiabá versus UTC, meia-noite, funcionamento noturno, ocupação por instante, configuração inválida, login e confirmação/rejeição sem criar solicitações reais.
