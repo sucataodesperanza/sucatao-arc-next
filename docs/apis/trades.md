@@ -272,3 +272,7 @@ O formulário atual utiliza este endpoint. GET /api/trades/available-times e PAT
 Validação: node --test tests/trade-scheduling.test.cjs. Testes cobrem horários futuros sem janelas manuais, Cuiabá versus UTC, meia-noite, funcionamento noturno, ocupação por instante, configuração inválida, login e confirmação/rejeição sem criar solicitações reais.
 
 O gerador aceita tanto HH:mm quanto HH:mm:00, formato retornado por campos time do PostgreSQL. O intervalo salvo é respeitado (por exemplo, 60 minutos); o painel mostra esse intervalo sem substituí-lo pelo padrão de 5.
+
+## Disponibilidade após solicitação — 20/10/2026
+
+GET /api/trades consulta o banco sem cache e exclui todas as trades com aceitação não cancelada, independentemente do cliente, inclusive concluídas. A leitura é paginada. Erros não são tratados como uma lista vazia válida. Após confirmar, a trade sai imediatamente de Todos e permanece em Meus Trades e no admin. Outras abas abertas atualizam a lista a cada 15 segundos enquanto visíveis e ao recuperar foco. Uma solicitação cancelada libera novamente a trade se o cadastro continuar ativo e não houver outra aceitação ativa. Nenhuma solicitação é apagada para ocultar o anúncio.

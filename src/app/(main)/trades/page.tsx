@@ -120,11 +120,27 @@ export default function TradesPage() {
           })
       })
     })
-    fetch("/api/trades")
-      .then(r => r.json())
-      .then(d => setTrades(d.trades ?? []))
-      .catch(() => {})
-      .finally(() => setLoadingTrades(false))
+    let current = true
+    async function refreshTrades() {
+      try {
+        const response = await fetch("/api/trades", { cache: "no-store" })
+        if (!response.ok) return
+        const body = await response.json()
+        if (current) setTrades(body.trades ?? [])
+      } catch { /* Preserve the last valid list on a connection failure. */ }
+      finally { if (current) setLoadingTrades(false) }
+    }
+    void refreshTrades()
+    const refreshVisible = () => { if (document.visibilityState === "visible") void refreshTrades() }
+    const interval = window.setInterval(refreshVisible, 15000)
+    window.addEventListener("focus", refreshVisible)
+    document.addEventListener("visibilitychange", refreshVisible)
+    return () => {
+      current = false
+      window.clearInterval(interval)
+      window.removeEventListener("focus", refreshVisible)
+      document.removeEventListener("visibilitychange", refreshVisible)
+    }
   }, [])
 
   // Meus trades — carrega quando userId fica disponível
@@ -179,6 +195,7 @@ export default function TradesPage() {
     if (res.ok) {
       setAcceptingId(null)
       const tradeData = trades.find(t => t.id === id)
+      setTrades(previous => previous.filter(trade => trade.id !== id))
       const slot      = acceptSlots.find(s => s.id === acceptSelectedSlot)
       setMyTrades(prev => {
         if (prev.some(m => m.trades?.id === id)) return prev
@@ -227,6 +244,7 @@ export default function TradesPage() {
 
   const filteredTrades = trades
     .filter(t => {
+      if (acceptedTradeIds.has(t.id)) return false
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         if (!t.want_item_name.toLowerCase().includes(q)) return false

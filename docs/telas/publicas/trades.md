@@ -69,3 +69,7 @@ O servidor confere novamente a disponibilidade ao confirmar. Um conflito retorna
 ## Correção de 20/10/2026
 
 O formulário antigo consultava trade_slots, apesar de o admin configurar a agenda diária em trade_settings. Sem janelas futuras manuais, nenhuma opção aparecia. A consulta atual gera horários pelo funcionamento diário, preserva trades/agendamentos existentes e não exige migração. Janelas manuais antigas ainda são reconhecidas ao confirmar solicitações antigas; os novos horários são identificados por daily: e gravados em scheduled_at, com slot_id nulo.
+
+## Disponibilidade após solicitação — 20/10/2026
+
+GET /api/trades consulta o banco sem cache e exclui todas as trades com aceitação não cancelada, independentemente do cliente, inclusive concluídas. A leitura é paginada. Erros não são tratados como uma lista vazia válida. Após confirmar, a trade sai imediatamente de Todos e permanece em Meus Trades e no admin. Outras abas abertas atualizam a lista a cada 15 segundos enquanto visíveis e ao recuperar foco. Uma solicitação cancelada libera novamente a trade se o cadastro continuar ativo e não houver outra aceitação ativa. Nenhuma solicitação é apagada para ocultar o anúncio.
