@@ -350,12 +350,13 @@ function OperatingHoursSection() {
   const toast = useToast()
   const [startTime, setStartTime] = useState("09:00")
   const [endTime, setEndTime]     = useState("00:00")
+  const [slotDuration, setSlotDuration] = useState(5)
   const [saving, setSaving]       = useState(false)
 
   useEffect(() => {
     fetch("/api/admin/trades/settings")
       .then(r => r.json())
-      .then(d => { setStartTime(d.operating_hours_start ?? "09:00"); setEndTime(d.operating_hours_end ?? "00:00") })
+      .then(d => { setStartTime((d.operating_hours_start ?? "09:00").slice(0, 5)); setEndTime((d.operating_hours_end ?? "00:00").slice(0, 5)); setSlotDuration(d.slot_duration_minutes ?? 5) })
       .catch(() => {})
   }, [])
 
@@ -389,7 +390,7 @@ function OperatingHoursSection() {
           <span style={{ fontSize: 10, fontWeight: 950, textTransform: "uppercase", color: "var(--gray-500)" }}>Fim</span>
           <input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} style={inp} />
         </label>
-        <span style={{ fontSize: 11, color: "var(--muted)", paddingBottom: 10 }}>todos os dias · slots de 5 em 5 min · 1 trade por vez</span>
+        <span style={{ fontSize: 11, color: "var(--muted)", paddingBottom: 10 }}>todos os dias · intervalos de {slotDuration} min · 1 trade por vez</span>
         <button type="button" onClick={save} disabled={saving}
           style={{ border: "1px solid var(--cyan)", background: "rgba(0,217,255,0.08)", color: "var(--cyan)", padding: "8px 16px", fontSize: 11, fontWeight: 950, textTransform: "uppercase", cursor: "pointer", borderRadius: 4, font: "inherit", opacity: saving ? 0.6 : 1, alignSelf: "end" }}>
           {saving ? "Salvando..." : "Salvar"}

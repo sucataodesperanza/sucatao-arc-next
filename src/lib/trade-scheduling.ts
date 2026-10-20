@@ -10,12 +10,12 @@ export function tradeDate(value: Date | string): string {
 }
 
 export function validateTradeHours(value: TradeHours): boolean {
-  return [value.operating_hours_start, value.operating_hours_end].every(t => typeof t === "string" && /^([01]\d|2[0-3]):[0-5]\d$/.test(t)) && Number.isInteger(value.slot_duration_minutes) && value.slot_duration_minutes >= 1 && value.slot_duration_minutes <= 1440
+  return [value.operating_hours_start, value.operating_hours_end].every(t => typeof t === "string" && /^([01]\d|2[0-3]):[0-5]\d(?::00(?:\.0+)?)?$/.test(t)) && Number.isInteger(value.slot_duration_minutes) && value.slot_duration_minutes >= 1 && value.slot_duration_minutes <= 1440
 }
 
 export function generateTradeSlots(hours: TradeHours, now = new Date(), days = 7): TradeSlot[] {
   if (!validateTradeHours(hours)) throw new Error("Horário de funcionamento inválido. Revise em Admin → Trades.")
-  const minutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3))
+  const minutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5))
   const start = minutes(hours.operating_hours_start)
   let end = minutes(hours.operating_hours_end)
   if (end <= start) end += 1440

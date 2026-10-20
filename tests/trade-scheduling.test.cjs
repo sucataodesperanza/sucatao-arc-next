@@ -8,6 +8,15 @@ vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/lib/trade-scheduling.
 const { generateTradeSlots, availableTradeSlots, tradeDate, validateTradeHours, defaultTradeHours } = exportsObject
 const hours = { operating_hours_start: '09:00', operating_hours_end: '10:00', slot_duration_minutes: 5 }
 
+test('Postgres time fields with seconds preserve production opening hours and hourly interval', () => {
+  const stored = { operating_hours_start: '08:00:00', operating_hours_end: '22:00:00', slot_duration_minutes: 60 }
+  assert.equal(validateTradeHours(stored), true)
+  const slots = generateTradeSlots(stored, new Date('2026-10-20T15:12:00Z'), 1)
+  assert.equal(slots[0].scheduled_for, '2026-10-20T16:00:00.000Z')
+  assert.equal(slots.at(-1).scheduled_for, '2026-10-21T01:00:00.000Z')
+  assert.equal(slots.length, 10)
+})
+
 test('daily hours generate future delivery times without manual slots', () => {
   const now = new Date('2026-10-20T13:12:00Z') // 09:12 Cuiaba
   const slots = generateTradeSlots(hours, now, 1)

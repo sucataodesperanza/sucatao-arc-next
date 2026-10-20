@@ -270,3 +270,5 @@ Resposta: slots com id, label, scheduled_for (ISO UTC), capacity e booked. Os id
 O formulário atual utiliza este endpoint. GET /api/trades/available-times e PATCH /api/trades/my/:id/schedule são caminhos legados, não usados na seleção atual. Não é necessário popular trade_slots para a agenda diária; nenhum cadastro ou agendamento existente é removido.
 
 Validação: node --test tests/trade-scheduling.test.cjs. Testes cobrem horários futuros sem janelas manuais, Cuiabá versus UTC, meia-noite, funcionamento noturno, ocupação por instante, configuração inválida, login e confirmação/rejeição sem criar solicitações reais.
+
+O gerador aceita tanto HH:mm quanto HH:mm:00, formato retornado por campos time do PostgreSQL. O intervalo salvo é respeitado (por exemplo, 60 minutos); o painel mostra esse intervalo sem substituí-lo pelo padrão de 5.

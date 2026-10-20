@@ -79,3 +79,5 @@ Lista todas as aceitações não canceladas com dados do usuário, trade, horár
 5. Admin vê aceitação agendada  →  clica Concluir  →  modal  →  confirma
 6. Trade status = "completed"  →  pontos creditados automaticamente
 ```
+
+O gerador aceita tanto HH:mm quanto HH:mm:00, formato retornado por campos time do PostgreSQL. O intervalo salvo é respeitado (por exemplo, 60 minutos); o painel mostra esse intervalo sem substituí-lo pelo padrão de 5.
